@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0b0f19;
+  --color-surface: #121826;
+  --color-surface-hover: #1f2937;
+  --color-surface-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #7c3aed; /* Violet 600 */
+  --color-primary-hover: #6d28d9; /* Violet 700 */
+  
+  /* Status Colors from screenshots */
+  --color-status-critical: #ef4444; /* Red 500 */
+  --color-status-high: #f97316; /* Orange 500 */
+  --color-status-medium: #eab308; /* Yellow 500 */
+  --color-status-low: #22c55e; /* Green 500 */
+  --color-status-info: #3b82f6; /* Blue 500 */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: #d1d5db; /* gray-300 */
+  }
+  
+  html.theme-light {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  html.theme-light img, 
+  html.theme-light video {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  /* Custom scrollbar for webkit */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-[var(--color-surface)] border border-[var(--color-surface-border)] shadow-xl;
+  }
+}
+
