@@ -2,26 +2,156 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Search, CheckCircle2, Activity, Edit2, Trash2, X, Clock, Play, MoreVertical, Download, AlertTriangle, Shield, Headphones, Settings, MapPin, FileText, Check, ChevronRight, PowerOff } from 'lucide-react';
+import { Plus, Search, CheckCircle2, Activity, Edit2, Trash2, X, Clock, Play, MoreVertical, Download, AlertTriangle, Shield, Headphones, Settings, MapPin, FileText, Check, ChevronRight, ChevronLeft, PowerOff, BellRing, UserMinus, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
 
 type ActionItem = {
   id: string;
   title: string;
   description: string;
-  priority: 'Alta' | 'Média' | 'Baixa';
-  status: 'Pendente' | 'Em andamento' | 'Concluída' | 'Atrasada';
-  deadline: string;
-  origin: string;
+  priority: 'P1' | 'P2' | 'P3';
+  priorityIcon: 'alert' | 'clock' | 'play' | 'activity';
+  status: 'Atrasada' | 'Vence hoje' | 'Em andamento' | 'Pendente' | 'Monitorando' | 'Concluída';
+  deadlineTime: string;
+  deadlineRelative: string;
+  deadlineColor: 'red' | 'yellow' | 'blue' | 'gray';
+  originText: string;
+  originIcon: 'shield-blue' | 'shield-yellow' | 'shield-purple' | 'triangle-green' | 'fire-red';
   responsible: { name: string; role: string; avatar: string };
-  progress: number;
+  nextStep: string;
   category: string;
+  reasons: string[];
+  checklist: { label: string; checked: boolean }[];
 };
 
 const initialActions: ActionItem[] = [
-  { id: '1', title: 'Instalar proteção fixa na máquina', origin: 'Inspeção de Máquinas #INS-2024-0050', category: 'Máquinas', responsible: { name: 'Carlos Mendes', role: 'Manutenção', avatar: 'https://i.pravatar.cc/150?u=carlos' }, priority: 'Alta', status: 'Atrasada', deadline: '2024-05-25', progress: 0, description: 'Instalar proteção fixa na máquina prensa hidráulica localizada no setor de produção para evitar acesso à área de risco.' },
-  { id: '2', title: 'Sinalizar área de empilhadeiras', origin: 'Inspeção de Segurança #INS-2024-0048', category: 'Segurança', responsible: { name: 'Juliana Costa', role: 'SSO', avatar: 'https://i.pravatar.cc/150?u=juliana' }, priority: 'Média', status: 'Em andamento', deadline: '2024-05-28', progress: 40, description: 'Colocar faixas de segurança refletivas no entorno do corredor B.' },
-  { id: '3', title: 'Treinar equipe em NR-12', origin: 'Risco #R-1023 - Risco Alto', category: 'Treinamento', responsible: { name: 'Beatriz Lima', role: 'Recursos Humanos', avatar: 'https://i.pravatar.cc/150?u=beatriz' }, priority: 'Alta', status: 'Em andamento', deadline: '2024-05-30', progress: 60, description: 'Realizar treinamento teórico e prático de NR-12 com os operadores.' },
-  { id: '4', title: 'Substituir EPI danificado', origin: 'Inspeção de EPI #INS-2024-0046', category: 'EPI', responsible: { name: 'Rafael Oliveira', role: 'SSO', avatar: 'https://i.pravatar.cc/150?u=rafael' }, priority: 'Média', status: 'Pendente', deadline: '2024-06-01', progress: 0, description: 'Substituir protetores auriculares e óculos de proteção.' },
+  { 
+    id: '1', 
+    title: 'Instalar proteção fixa na máquina', 
+    originText: 'Inspeção de Máquinas', 
+    originIcon: 'shield-blue',
+    category: 'Máquinas', 
+    responsible: { name: 'Carlos Mendes', role: 'Manutenção', avatar: 'https://i.pravatar.cc/150?u=carlos' }, 
+    priority: 'P1', 
+    priorityIcon: 'alert',
+    status: 'Atrasada', 
+    deadlineTime: 'Hoje 14h',
+    deadlineRelative: 'Atrasado',
+    deadlineColor: 'red',
+    nextStep: 'Validar instalação e evidência',
+    description: 'Instalar proteção fixa na máquina prensa hidráulica localizada no setor de produção para evitar acesso à área de risco.',
+    reasons: [
+      'Máquina sem proteção fixa instalada.',
+      'Risco de contato com partes móveis.',
+      'Ação vencida hoje.'
+    ],
+    checklist: [
+      { label: 'Verificar proteção instalada conforme padrão', checked: false },
+      { label: 'Validar bloqueio e sinalização de segurança', checked: false },
+      { label: 'Registrar foto da proteção instalada', checked: false },
+      { label: 'Confirmar responsável e assinatura', checked: false },
+    ]
+  },
+  { 
+    id: '2', 
+    title: 'Sinalizar área de empilhadeiras', 
+    originText: 'Inspeção de Segurança', 
+    originIcon: 'shield-yellow',
+    category: 'Segurança', 
+    responsible: { name: 'Juliana Costa', role: 'SSO', avatar: 'https://i.pravatar.cc/150?u=juliana' }, 
+    priority: 'P1', 
+    priorityIcon: 'alert',
+    status: 'Vence hoje', 
+    deadlineTime: 'Hoje 16h',
+    deadlineRelative: 'Vence hoje',
+    deadlineColor: 'yellow',
+    nextStep: 'Isolar área e anexar foto',
+    description: 'Colocar faixas de segurança refletivas no entorno do corredor B.',
+    reasons: [
+      'Risco alto de atropelamento.',
+      'Sinalização antiga está muito gasta.',
+      'Área de alta circulação de pedestres.'
+    ],
+    checklist: [
+      { label: 'Comprar fita demarcação', checked: true },
+      { label: 'Aplicar fita no piso', checked: false },
+      { label: 'Instalar placas de aviso', checked: false },
+    ]
+  },
+  { 
+    id: '3', 
+    title: 'Treinar equipe em NR-12', 
+    originText: 'Risco #R-1023',
+    originIcon: 'triangle-green',
+    category: 'Treinamento', 
+    responsible: { name: 'Beatriz Lima', role: 'Recursos Humanos', avatar: 'https://i.pravatar.cc/150?u=beatriz' }, 
+    priority: 'P1', 
+    priorityIcon: 'play',
+    status: 'Em andamento', 
+    deadlineTime: 'Amanhã 10h',
+    deadlineRelative: 'Em 22h',
+    deadlineColor: 'blue',
+    nextStep: 'Agendar turma e confirmar presença',
+    description: 'Realizar treinamento teórico e prático de NR-12 com os operadores.',
+    reasons: [
+      'Nova máquina adquirida sem treinamento',
+      'Exigência legal vigente'
+    ],
+    checklist: [
+      { label: 'Contratar instrutor', checked: true },
+      { label: 'Reservar sala de treinamento', checked: false },
+      { label: 'Convocar 15 operadores', checked: false },
+    ]
+  },
+  { 
+    id: '4', 
+    title: 'Substituir EPI danificado', 
+    originText: 'Inspeção de EPI', 
+    originIcon: 'shield-purple',
+    category: 'EPI', 
+    responsible: { name: 'Rafael Oliveira', role: 'SSO', avatar: 'https://i.pravatar.cc/150?u=rafael' }, 
+    priority: 'P2', 
+    priorityIcon: 'clock',
+    status: 'Pendente', 
+    deadlineTime: 'Amanhã 15h',
+    deadlineRelative: 'Em 1 dia',
+    deadlineColor: 'gray',
+    nextStep: 'Entregar novo kit e registrar',
+    description: 'Substituir protetores auriculares e óculos de proteção.',
+    reasons: [
+      'EPI do funcionário sem condições de uso',
+      'Alto ruído no local'
+    ],
+    checklist: [
+      { label: 'Solicitar EPI no almoxarifado', checked: true },
+      { label: 'Entregar para funcionário', checked: false },
+      { label: 'Assinar ficha de EPI', checked: false },
+    ]
+  },
+  { 
+    id: '5', 
+    title: 'Revisar isolamento da área quente', 
+    originText: 'Trabalho a quente', 
+    originIcon: 'fire-red',
+    category: 'Manutenção', 
+    responsible: { name: 'Marcos Silva', role: 'Manutenção', avatar: 'https://i.pravatar.cc/150?u=marcos' }, 
+    priority: 'P2', 
+    priorityIcon: 'activity',
+    status: 'Monitorando', 
+    deadlineTime: '48h',
+    deadlineRelative: 'Em 2 dias',
+    deadlineColor: 'gray',
+    nextStep: 'Revisar barreiras e liberar área',
+    description: 'Revisar isolamento devido a serviço temporário de soldagem.',
+    reasons: [
+      'Serviço requer isolamento especial',
+      'Área com material inflamável próximo'
+    ],
+    checklist: [
+      { label: 'Montar tapumes ignífugos', checked: true },
+      { label: 'Validar extintor próximo', checked: true },
+      { label: 'Inspecionar após 2h do término', checked: false },
+    ]
+  },
 ];
 
 export default function AcoesPage() {
@@ -33,40 +163,66 @@ export default function AcoesPage() {
   const [activeTab, setActiveTab] = useState('Resumo');
 
   const [formData, setFormData] = useState<Partial<ActionItem>>({
-    title: '', description: '', priority: 'Média', status: 'Pendente', deadline: new Date().toISOString().split('T')[0]
+    title: '', description: '', priority: 'P2', status: 'Pendente', deadlineTime: ''
   });
 
   const handleOpenDetails = (item: ActionItem) => {
     setEditingItem(item);
     setFormData(item);
     setIsDrawerOpen(true);
-    setActiveTab('Resumo');
   };
 
   const handleOpenAdd = () => {
     setEditingItem(null);
-    setFormData({ title: '', description: '', priority: 'Média', status: 'Pendente', deadline: new Date().toISOString().split('T')[0] });
+    setFormData({ title: '', description: '', priority: 'P2', status: 'Pendente', deadlineTime: '' });
     setIsModalOpen(true);
   };
 
   const handleSaveModal = () => {
-    // Creating NEW action
     setItems(prev => [{ 
       ...formData, 
       id: Math.random().toString(),
-      origin: 'Ação Avulsa',
+      originText: 'Ação Avulsa',
+      originIcon: 'shield-blue',
       responsible: { name: 'Não atribuído', role: '', avatar: 'https://i.pravatar.cc/150?u=unassigned' },
-      progress: 0,
-      category: 'Geral'
+      category: 'Geral',
+      priorityIcon: 'clock',
+      deadlineRelative: 'Em breve',
+      deadlineColor: 'gray',
+      nextStep: 'Definir',
+      reasons: [],
+      checklist: []
     } as ActionItem, ...prev]);
     setIsModalOpen(false);
   };
 
-  const handleSaveDrawer = () => {
-     // Save edit
-     if (editingItem) {
-        setItems(prev => prev.map(r => r.id === editingItem.id ? { ...r, ...formData } as ActionItem : r));
-     }
+  const handleConcluir = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setItems(prev => prev.map(item => item.id === id ? { ...item, status: 'Concluída' } as ActionItem : item));
+    if (editingItem?.id === id) {
+      setEditingItem(prev => prev ? { ...prev, status: 'Concluída' } as ActionItem : null);
+    }
+  };
+
+  const handleCobrar = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    alert('Notificação de cobrança enviada ao responsável!');
+  };
+
+  const handleExecutar = () => {
+    if (!editingItem) return;
+    const updated = { ...editingItem, status: 'Em andamento' } as ActionItem;
+    setEditingItem(updated);
+    setItems(prev => prev.map(r => r.id === updated.id ? updated : r));
+  };
+
+  const handleToggleChecklist = (idx: number) => {
+    if (!editingItem) return;
+    const newChecklist = [...(editingItem.checklist || [])];
+    newChecklist[idx] = { ...newChecklist[idx], checked: !newChecklist[idx].checked };
+    const updatedItem = { ...editingItem, checklist: newChecklist };
+    setEditingItem(updatedItem);
+    setItems(prev => prev.map(r => r.id === updatedItem.id ? updatedItem : r));
   };
 
   const handleDelete = (id: string, e?: React.MouseEvent) => {
@@ -79,48 +235,54 @@ export default function AcoesPage() {
 
   const getPriorityColor = (level: string) => {
     switch (level) {
-      case 'Alta': return 'text-red-500';
-      case 'Média': return 'text-orange-500';
-      case 'Baixa': return 'text-emerald-500';
+      case 'P1': return 'text-red-500';
+      case 'P2': return 'text-orange-500';
+      case 'P3': return 'text-emerald-500';
       default: return 'text-gray-500';
     }
   };
 
-  const getCategoryIcon = (category: string, status: string) => {
-     if (status === 'Concluída') return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
-     switch (category) {
-        case 'Máquinas': return <AlertTriangle className="w-5 h-5 text-red-500" />;
-        case 'Segurança': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-        case 'EPI': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-        case 'Treinamento': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-        case 'Auditoria': return <Headphones className="w-5 h-5 text-blue-500" />;
-        case 'Riscos': return <MapPin className="w-5 h-5 text-emerald-400" />;
-        default: return <AlertTriangle className="w-5 h-5 text-gray-400" />;
-     }
+  const getPriorityIcon = (iconName: string, className = "w-4 h-4") => {
+    switch (iconName) {
+      case 'alert': return <AlertTriangle className={className} />;
+      case 'clock': return <Clock className={className} />;
+      case 'play': return <Play className={className} />;
+      case 'activity': return <Activity className={className} />;
+      default: return <Activity className={className} />;
+    }
   };
-  
-  const getCategoryBgColor = (category: string, status: string) => {
-      if (status === 'Concluída') return 'bg-emerald-500/10 border-emerald-500/20';
-      switch (category) {
-        case 'Máquinas': return 'bg-red-500/10 border-red-500/20';
-        case 'Segurança': return 'bg-yellow-500/10 border-yellow-500/20';
-        case 'EPI': return 'bg-yellow-500/10 border-yellow-500/20';
-        case 'Treinamento': return 'bg-emerald-500/10 border-emerald-500/20';
-        case 'Auditoria': return 'bg-blue-500/10 border-blue-500/20';
-        case 'Riscos': return 'bg-emerald-500/10 border-emerald-500/20';
-        default: return 'bg-gray-500/10 border-gray-500/20';
-     }
+
+  const getOriginIconComponent = (icon: string) => {
+    switch(icon) {
+       case 'shield-blue': return <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center"><Shield className="w-3.5 h-3.5 text-blue-400" /></div>;
+       case 'shield-yellow': return <div className="w-6 h-6 rounded-md bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center"><Shield className="w-3.5 h-3.5 text-yellow-400" /></div>;
+       case 'shield-purple': return <div className="w-6 h-6 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center"><Shield className="w-3.5 h-3.5 text-purple-400" /></div>;
+       case 'triangle-green': return <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><AlertTriangle className="w-3.5 h-3.5 text-emerald-400" /></div>;
+       case 'fire-red': return <div className="w-6 h-6 rounded-md bg-red-500/10 border border-red-500/20 flex items-center justify-center"><Flame className="w-3.5 h-3.5 text-red-500" /></div>;
+       default: return <div className="w-6 h-6 rounded-md bg-gray-500/10 border border-gray-500/20 flex items-center justify-center"><AlertCircle className="w-3.5 h-3.5 text-gray-400" /></div>;
+    }
   }
 
   const getStatusStyle = (status: string) => {
       switch (status) {
-         case 'Pendente': return 'text-orange-400';
-         case 'Em andamento': return 'text-blue-400';
-         case 'Concluída': return 'text-emerald-400';
-         case 'Atrasada': return 'text-red-500 bg-red-500/10 px-2.5 py-1 rounded-md';
-         default: return 'text-gray-400';
+         case 'Pendente': return 'text-gray-400 border-gray-500/30 bg-transparent';
+         case 'Em andamento': return 'text-blue-400 border-blue-500/30 bg-blue-500/10';
+         case 'Concluída': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+         case 'Atrasada': return 'text-red-400 border-red-500/30 bg-red-500/10';
+         case 'Vence hoje': return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
+         case 'Monitorando': return 'text-teal-400 border-teal-500/30 bg-teal-500/10';
+         default: return 'text-gray-400 border-gray-500/30 bg-transparent';
       }
   };
+
+  const getDeadlineColorClass = (colorName: string) => {
+      switch(colorName) {
+         case 'red': return 'text-red-500';
+         case 'yellow': return 'text-yellow-500';
+         case 'blue': return 'text-blue-400';
+         default: return 'text-gray-500';
+      }
+  }
 
   return (
     <div className="flex w-full h-full overflow-hidden">
@@ -131,8 +293,8 @@ export default function AcoesPage() {
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           <header className="flex items-center justify-between gap-4 mb-6 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">Ações</h1>
-          <p className="text-sm text-gray-400 mt-1">Gerencie todas as ações corretivas e preventivas do sistema.</p>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">Ações prioritárias</h1>
+          <p className="text-sm text-gray-400 mt-1">Execute, acompanhe e destrave ações corretivas e preventivas com prioridade clara.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
@@ -148,57 +310,76 @@ export default function AcoesPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 shrink-0">
-         <div className="bg-[#121826] border border-white/5 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-               <FileText className="w-5 h-5 text-purple-400" />
+         <div className="bg-[#121826] border border-red-500/30 p-5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            <div className="flex items-center gap-3 mb-4">
+               <BellRing className="w-5 h-5 text-red-500" />
+               <h3 className="text-sm font-medium text-gray-300">Ação imediata</h3>
             </div>
-            <div>
-               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total de Ações</h3>
-               <div className="text-2xl font-bold text-white leading-none mb-1">48</div>
-               <p className="text-[10px] text-gray-500">Todas as ações cadastradas</p>
-            </div>
-         </div>
-         <div className="bg-[#121826] border border-white/5 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-               <Clock className="w-5 h-5 text-orange-400" />
-            </div>
-            <div>
-               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pendentes</h3>
-               <div className="text-2xl font-bold text-white leading-none mb-1">18</div>
-               <p className="text-[10px] text-gray-500">37,5% do total</p>
+            <div className="flex flex-col">
+               <div className="text-3xl font-bold text-white mb-1">6</div>
+               <p className="text-xs text-gray-500 font-medium">urgentes hoje</p>
             </div>
          </div>
-         <div className="bg-[#121826] border border-white/5 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-               <Play className="w-5 h-5 text-yellow-400" />
+         <div className="bg-[#121826] border border-white/5 p-5 rounded-xl flex flex-col justify-between">
+            <div className="flex items-center gap-3 mb-4">
+               <Clock className="w-5 h-5 text-yellow-500" />
+               <h3 className="text-sm font-medium text-gray-300">Vencem hoje</h3>
             </div>
-            <div>
-               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Em Andamento</h3>
-               <div className="text-2xl font-bold text-white leading-none mb-1">12</div>
-               <p className="text-[10px] text-gray-500">25% do total</p>
-            </div>
-         </div>
-         <div className="bg-[#121826] border border-white/5 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Concluídas</h3>
-               <div className="text-2xl font-bold text-white leading-none mb-1">16</div>
-               <p className="text-[10px] text-gray-500">33,3% do total</p>
+            <div className="flex flex-col">
+               <div className="text-3xl font-bold text-white mb-1">4</div>
+               <p className="text-xs text-gray-500 font-medium">vencendo hoje</p>
             </div>
          </div>
-         <div className="bg-[#121826] border border-white/5 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+         <div className="bg-[#121826] border border-white/5 p-5 rounded-xl flex flex-col justify-between">
+            <div className="flex items-center gap-3 mb-4">
                <AlertTriangle className="w-5 h-5 text-red-500" />
+               <h3 className="text-sm font-medium text-gray-300">Em atraso</h3>
             </div>
-            <div>
-               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Atrasadas</h3>
-               <div className="text-2xl font-bold text-white leading-none mb-1">6</div>
-               <p className="text-[10px] text-gray-500">12,5% do total</p>
+            <div className="flex flex-col">
+               <div className="text-3xl font-bold text-white mb-1">6</div>
+               <p className="text-xs text-gray-500 font-medium">atrasadas</p>
+            </div>
+         </div>
+         <div className="bg-[#121826] border border-white/5 p-5 rounded-xl flex flex-col justify-between">
+            <div className="flex items-center gap-3 mb-4">
+               <UserX className="w-5 h-5 text-purple-400" />
+               <h3 className="text-sm font-medium text-gray-300">Aguardando responsável</h3>
+            </div>
+            <div className="flex flex-col">
+               <div className="text-3xl font-bold text-white mb-1">3</div>
+               <p className="text-xs text-gray-500 font-medium">sem responsável</p>
+            </div>
+         </div>
+         <div className="bg-[#121826] border border-white/5 p-5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+            <div className="flex items-center gap-3 mb-4">
+               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+               <h3 className="text-sm font-medium text-gray-300">Concluídas esta semana</h3>
+            </div>
+            <div className="flex flex-col">
+               <div className="text-3xl font-bold text-white mb-1">16</div>
+               <p className="text-xs text-gray-500 font-medium">concluídas</p>
             </div>
          </div>
       </div>
+
+      {/* Recomendação Operacional */}
+      <div className="bg-[#121826] border border-white/5 p-5 rounded-xl flex items-center justify-between gap-4 mb-6 shrink-0 group cursor-pointer hover:bg-white/5 transition-colors">
+         <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
+               <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+               <h3 className="text-sm font-bold text-purple-300 mb-1 leading-none">Recomendação operacional</h3>
+               <p className="text-sm text-gray-300">Priorize proteção de máquina, empilhadeiras e treinamento NR-12. Há 6 ações urgentes e 4 vencendo hoje.</p>
+            </div>
+         </div>
+         <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+      </div>
+
+      {/* Fila de execução Header */}
+      <h2 className="text-lg font-bold text-white mb-4 shrink-0">Fila de execução</h2>
 
       {/* Filters Bar */}
       <div className="flex gap-4 mb-4 shrink-0 bg-[#121826] p-2 rounded-xl border border-white/5">
@@ -237,79 +418,105 @@ export default function AcoesPage() {
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-[#121826] z-10 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-white/5">
                 <tr>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Ação</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Origem</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap text-center">Prioridade</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsável</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Prazo</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap text-center">Status</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]">Progresso</th>
-                  <th className="px-4 py-3 w-10"></th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Prioridade</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Ação</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Origem</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsável</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Prazo</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Próxima etapa</th>
+                  <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[220px]">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filtered.map(item => {
-                  const isOverdue = new Date(item.deadline) < new Date() && item.status !== 'Concluída';
                   return (
                   <tr 
                     key={item.id} 
-                    onClick={() => handleOpenDetails(item)}
-                    className="hover:bg-white/5 transition-colors cursor-pointer group"
+                    className="hover:bg-white/5 transition-colors group"
                   >
-                    <td className="px-4 py-4">
-                      <div className="flex gap-3">
-                        <div className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${getCategoryBgColor(item.category, item.status)}`}>
-                          {getCategoryIcon(item.category, item.status)}
-                        </div>
+                    <td className="px-5 py-4 text-center">
+                      <div className="flex items-center gap-1.5 bg-white/5 w-fit px-2.5 py-1 rounded border border-white/10">
+                        <span className={`text-[11px] font-bold ${getPriorityColor(item.priority)}`}>{item.priority}</span>
+                        <span className={`${getPriorityColor(item.priority)}`}>{getPriorityIcon(item.priorityIcon, "w-3 h-3")}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                        <h3 className="text-[13px] font-semibold text-white cursor-pointer hover:underline" onClick={() => handleOpenDetails(item)}>{item.title}</h3>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        {getOriginIconComponent(item.originIcon)}
                         <div>
-                           <h3 className="text-sm font-semibold text-white mb-0.5">{item.title}</h3>
-                           <p className="text-[11px] text-gray-500">{item.origin}</p>
+                           <p className="text-xs text-gray-300">{item.originText}</p>
+                           <p className="text-[10px] text-gray-500">{item.category}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="text-sm text-gray-300">{item.category}</span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`text-[11px] font-medium tracking-wide ${getPriorityColor(item.priority)}`}>{item.priority}</span>
-                    </td>
-                    <td className="px-4 py-4">
+                    <td className="px-5 py-4">
                        <div className="flex items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={item.responsible.avatar} alt="Avatar" className="w-6 h-6 rounded-full bg-gray-800" />
                           <div>
-                             <p className="text-sm text-gray-300 leading-tight">{item.responsible.name}</p>
+                             <p className="text-[13px] text-gray-300 leading-tight">{item.responsible.name}</p>
                              <p className="text-[10px] text-gray-500">{item.responsible.role}</p>
                           </div>
                        </div>
                     </td>
-                    <td className="px-4 py-4 relative">
+                    <td className="px-5 py-4">
                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-300 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-500" /> {new Date(item.deadline).toLocaleDateString('pt-BR')}</span>
-                          {isOverdue && <span className="text-[10px] text-red-500 flex items-center gap-1 mt-0.5"><AlertTriangle className="w-3 h-3" /> Vence hoje</span>}
+                          <span className="text-[13px] text-gray-300 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-500" /> {item.deadlineTime}</span>
+                          <span className={`text-[11px] font-medium mt-0.5 ${getDeadlineColorClass(item.deadlineColor)}`}>{item.deadlineRelative}</span>
                        </div>
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`text-[11px] font-medium tracking-wide ${getStatusStyle(item.status)}`}>
+                    <td className="px-5 py-4 text-center">
+                      <span className={`text-[11px] px-2.5 py-1 rounded border ${getStatusStyle(item.status)}`}>
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-4 py-4">
-                       <div className="flex flex-col gap-1.5">
-                          <span className="text-xs text-gray-400">{item.progress}%</span>
-                          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                             <div className={`h-full ${item.status === 'Concluída' ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${item.progress}%` }}></div>
-                          </div>
-                       </div>
+                    <td className="px-5 py-4">
+                       <span className="text-xs text-gray-400 block max-w-[150px] truncate" title={item.nextStep}>{item.nextStep}</span>
                     </td>
-                    <td className="px-4 py-4 text-center">
-                       <button className="p-1.5 text-gray-500 hover:text-white rounded transition-colors" onClick={(e) => { e.stopPropagation(); handleOpenDetails(item); }}>
-                          <MoreVertical className="w-5 h-5" />
-                       </button>
+                    <td className="px-5 py-4">
+                       <div className="flex gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); handleOpenDetails(item); }} className="px-3 py-1.5 text-xs font-medium text-white bg-[#121826] hover:bg-white/10 rounded transition-colors border border-white/10 focus:outline-none">
+                             Abrir
+                          </button>
+                          <button onClick={(e) => handleCobrar(item.id, e)} className="px-3 py-1.5 text-xs font-medium text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded transition-colors border border-orange-500/30 focus:outline-none">
+                             Cobrar
+                          </button>
+                          <button onClick={(e) => handleConcluir(item.id, e)} className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/30 focus:outline-none">
+                             Concluir
+                          </button>
+                       </div>
                     </td>
                   </tr>
                 )})}
               </tbody>
             </table>
+            
+            <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#121826]">
+                 <span>Exibindo 1 a 5 de 48 ações</span>
+                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                       <button className="px-2.5 py-1 rounded bg-purple-600 text-white font-medium">1</button>
+                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">2</button>
+                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">3</button>
+                       <span className="px-1 text-gray-600">...</span>
+                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">10</button>
+                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <span>Itens por página:</span>
+                       <select className="bg-[#0b0f19] border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-purple-500">
+                          <option>5</option>
+                          <option>10</option>
+                          <option>20</option>
+                       </select>
+                    </div>
+                 </div>
+              </div>
       </div>
     </div>
   </motion.div>
@@ -357,25 +564,25 @@ export default function AcoesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Prioridade</label>
-                    <select 
-                      value={formData.priority} 
-                      onChange={e => setFormData({...formData, priority: e.target.value as any})}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
-                    >
-                      <option value="Alta">Alta</option>
-                      <option value="Média">Média</option>
-                      <option value="Baixa">Baixa</option>
-                    </select>
+                     <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Prioridade</label>
+                     <select 
+                        value={formData.priority} 
+                        onChange={e => setFormData({...formData, priority: e.target.value as any})}
+                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
+                     >
+                        <option value="P1">P1 - Alta</option>
+                        <option value="P2">P2 - Média</option>
+                        <option value="P3">P3 - Baixa</option>
+                     </select>
                   </div>
                   <div className="col-span-1">
-                    <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Prazo Limite</label>
-                    <input 
-                      type="date" 
-                      value={formData.deadline} 
-                      onChange={e => setFormData({...formData, deadline: e.target.value})}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
-                    />
+                     <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Prazo (Ex: Hoje 14h)</label>
+                     <input 
+                        type="text" 
+                        value={formData.deadlineTime} 
+                        onChange={e => setFormData({...formData, deadlineTime: e.target.value})}
+                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+                     />
                   </div>
                 </div>
               </div>
@@ -397,134 +604,115 @@ export default function AcoesPage() {
       <AnimatePresence>
         {isDrawerOpen && editingItem && (
           <motion.div 
-            initial={{ width: 0, borderLeftWidth: 0, opacity: 0 }} 
-            animate={{ width: 480, borderLeftWidth: 1, opacity: 1 }} 
-            exit={{ width: 0, borderLeftWidth: 0, opacity: 0 }}
+            initial={{ width: 0, opacity: 0, x: 50 }} 
+            animate={{ width: 420, opacity: 1, x: 0 }} 
+            exit={{ width: 0, opacity: 0, x: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="shrink-0 h-full bg-[#121826] border-white/10 shadow-2xl z-40 flex flex-col overflow-hidden"
+            className="shrink-0 h-full bg-[#121826] border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-40 flex flex-col overflow-hidden"
           >
-             <div className="w-[480px] h-full flex flex-col">
-               {/* Header Info */}
-               <div className="p-6 border-b border-white/5 shrink-0 bg-[#0B0F19]/50">
-                   <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Detalhes da Ação</h3>
-                      <button onClick={() => setIsDrawerOpen(false)} className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
-                        <X className="w-5 h-5" />
-                      </button>
-                   </div>
-                   <div className="flex gap-4 items-start mb-4">
-                      <div className={`mt-1 w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${getCategoryBgColor(editingItem.category, editingItem.status)}`}>
-                        {getCategoryIcon(editingItem.category, editingItem.status)}
-                      </div>
-                      <div>
-                         <h2 className="text-xl font-bold text-white leading-tight mb-2">{editingItem.title}</h2>
-                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 border rounded-md inline-block ${
-                            editingItem.status === 'Atrasada' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
-                            editingItem.status === 'Concluída' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            editingItem.status === 'Em andamento' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                            'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                         }`}>
-                            {editingItem.status}
-                         </span>
-                      </div>
-                   </div>
-
-                   {/* Tabs */}
-                   <div className="flex border-b border-white/10 mt-6">
-                      {['Resumo', 'Histórico', 'Anexos', 'Comentários'].map(tab => (
-                         <button 
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                               activeTab === tab ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-300'
-                            }`}
-                         >
-                            {tab}
-                         </button>
-                      ))}
-                   </div>
+             <div className="w-[420px] h-full flex flex-col pt-safe-top overflow-y-auto">
+               
+               <div className="flex items-center justify-between p-6 pb-2 shrink-0">
+                  <h3 className="text-[13px] font-bold text-gray-400 uppercase tracking-wider">Ação Imediata —</h3>
+                  <button onClick={() => setIsDrawerOpen(false)} className="p-1 text-gray-500 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
+                     <X className="w-5 h-5" />
+                  </button>
+               </div>
+               
+               <div className="px-6 mb-6 shrink-0">
+                  <h2 className="text-xl font-bold text-white leading-tight">{editingItem.title}</h2>
                </div>
 
-               {/* Scrolling Content */}
-               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                   {activeTab === 'Resumo' && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                         <div>
-                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Descrição</h4>
-                            <p className="text-sm text-gray-300 leading-relaxed">{editingItem.description}</p>
-                         </div>
-                         <div>
-                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Origem</h4>
-                            <p className="text-sm text-purple-400 hover:underline cursor-pointer">{editingItem.origin}</p>
-                         </div>
-                         <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Risco Associado</h4>
-                            <p className="text-sm text-gray-300">Risco de esmagamento por partes móveis</p>
-                         </div>
-                         
-                         <div className="grid grid-cols-2 gap-6">
-                            <div>
-                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Prioridade</h4>
-                               <p className={`text-sm font-medium flex items-center gap-1.5 ${getPriorityColor(editingItem.priority)}`}>
-                                 <span className={`w-2 h-2 rounded-full ${editingItem.priority === 'Alta' ? 'bg-red-500' : editingItem.priority === 'Média' ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
-                                 {editingItem.priority}
-                               </p>
-                            </div>
-                            <div>
-                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Prazo</h4>
-                               <p className="text-sm text-white flex items-center gap-2">
-                                 <Clock className="w-4 h-4 text-gray-400" />
-                                 {new Date(editingItem.deadline).toLocaleDateString('pt-BR')}
-                                 {new Date(editingItem.deadline) < new Date() && editingItem.status !== 'Concluída' && (
-                                    <span className="text-[10px] text-red-500 uppercase font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Vence hoje</span>
-                                 )}
-                               </p>
-                            </div>
-                         </div>
+               <div className="flex-1 overflow-y-auto px-6 space-y-6 pb-6">
+                  {/* Por que agir agora Box */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-[#1c2333] to-[#121826] border border-white/10">
+                     <div className="flex items-center gap-2 mb-3 text-red-400">
+                        <AlertTriangle className="w-5 h-5" />
+                        <h4 className="text-sm font-bold">Por que agir agora</h4>
+                     </div>
+                     <ul className="space-y-2.5">
+                        {editingItem.reasons && editingItem.reasons.length > 0 ? (
+                           editingItem.reasons.map((reason, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-[13px] text-gray-300">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></span>
+                                 <span className="leading-snug">{reason}</span>
+                              </li>
+                           ))
+                        ) : (
+                           <li className="text-[13px] text-gray-400">Nenhum motivo específico registrado.</li>
+                        )}
+                     </ul>
+                  </div>
 
-                         <div>
-                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">Responsável</h4>
-                            <div className="flex items-center gap-3">
-                               <img src={editingItem.responsible.avatar} alt="Avatar" className="w-10 h-10 rounded-full bg-gray-800" />
-                               <div>
-                                  <p className="text-sm font-medium text-white">{editingItem.responsible.name}</p>
-                                  <p className="text-xs text-gray-500">{editingItem.responsible.role}</p>
-                               </div>
-                            </div>
-                         </div>
+                  {/* Checklist Imediato */}
+                  <div className="p-5 rounded-2xl bg-black/20 border border-white/10">
+                     <div className="flex items-center gap-2 mb-4 text-purple-400">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <h4 className="text-sm font-bold">Checklist imediato</h4>
+                     </div>
+                     <div className="space-y-3">
+                        {editingItem.checklist && editingItem.checklist.length > 0 ? (
+                           editingItem.checklist.map((item, idx) => (
+                              <label key={idx} className="flex items-start gap-3 cursor-pointer group hover:bg-white/5 p-2 -mx-2 rounded-lg transition-colors border border-transparent hover:border-white/5">
+                                 <input type="checkbox" checked={item.checked} onChange={() => handleToggleChecklist(idx)} className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-transparent checked:bg-purple-500 checked:border-purple-500 focus:ring-offset-0 focus:ring-0" />
+                                 <span className="text-[13px] text-gray-300 group-hover:text-white leading-snug">{item.label}</span>
+                              </label>
+                           ))
+                        ) : (
+                           <span className="text-[13px] text-gray-400">Nenhum item de checklist definido.</span>
+                        )}
+                     </div>
+                  </div>
 
-                         <div>
-                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Status</h4>
-                            <div className="flex items-center justify-between mb-2">
-                               <p className="text-sm text-white flex items-center gap-2">
-                                 <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                                 Progresso
-                               </p>
-                               <span className="text-sm font-medium text-gray-300">{editingItem.progress}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                               <div className="h-full bg-purple-500" style={{ width: `${editingItem.progress}%` }}></div>
-                            </div>
-                         </div>
-                      </motion.div>
-                   )}
-                   {activeTab !== 'Resumo' && (
-                       <div className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
-                          <p className="text-sm">Conteúdo da aba {activeTab} em construção.</p>
-                       </div>
-                   )}
+                  {/* Responsavel / Prazo Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="p-4 rounded-xl border border-white/5 bg-[#0b0f19]">
+                        <div className="flex items-center gap-2 mb-3">
+                           <User className="w-4 h-4 text-gray-500" />
+                           <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Responsável</h4>
+                        </div>
+                        <div className="flex gap-3 items-center">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
+                           <img src={editingItem.responsible.avatar} alt="Avatar" className="w-8 h-8 rounded-full bg-gray-800" />
+                           <div>
+                              <p className="text-sm font-semibold text-white leading-tight">{editingItem.responsible.name}</p>
+                              <p className="text-[11px] text-gray-500">{editingItem.responsible.role}</p>
+                           </div>
+                        </div>
+                     </div>
+                     <div className="p-4 rounded-xl border border-white/5 bg-[#0b0f19]">
+                        <div className="flex items-center gap-2 mb-3">
+                           <Clock className="w-4 h-4 text-gray-500" />
+                           <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Prazo</h4>
+                        </div>
+                        <div>
+                           <p className="text-sm font-bold text-white">{editingItem.deadlineTime}</p>
+                           <p className={`text-[11px] font-medium mt-0.5 ${getDeadlineColorClass(editingItem.deadlineColor)}`}>{editingItem.deadlineRelative}</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Próxima etapa */}
+                  <div className="p-5 rounded-xl border border-white/10 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
+                     <div className="flex items-center gap-2 mb-2 text-blue-400">
+                        <Activity className="w-4 h-4" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider">Próxima etapa</h4>
+                     </div>
+                     <p className="text-[13px] text-gray-200">{editingItem.nextStep}</p>
+                  </div>
+
                </div>
 
                {/* Action Buttons */}
-               <div className="p-6 border-t border-white/5 bg-[#0B0F19]/50 flex flex-col gap-3 shrink-0">
-                  <button className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-purple-500/20">
-                     <Edit2 className="w-4 h-4" /> Editar ação
+               <div className="p-6 border-t border-white/5 bg-[#0B0F19] flex flex-col gap-3 shrink-0">
+                  <button onClick={handleExecutar} className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white p-3.5 rounded-xl text-sm font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50">
+                     <PlayCircle className="w-5 h-5 flex-shrink-0" /> Executar agora
                   </button>
-                  <button className="w-full flex items-center justify-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 border border-white/10 p-3 rounded-lg text-sm font-medium transition-colors">
-                     <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Marcar como concluída
+                  <button onClick={() => handleDelete(editingItem.id)} className="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 p-3.5 rounded-xl text-sm font-medium transition-colors">
+                     <Trash2 className="w-4 h-4 flex-shrink-0" /> Excluir Ação
                   </button>
-                  <button onClick={() => handleDelete(editingItem.id)} className="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 p-3 rounded-lg text-sm font-medium transition-colors mt-2">
-                     <Trash2 className="w-4 h-4" /> Cancelar ação
+                  <button onClick={() => setIsDrawerOpen(false)} className="w-full flex items-center justify-center gap-2 bg-[#121826] hover:bg-white/10 text-gray-300 border border-white/10 p-3.5 rounded-xl text-sm font-medium transition-colors">
+                     Fechar
                   </button>
                </div>
              </div>

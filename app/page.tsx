@@ -9,13 +9,15 @@ import {
   ShieldCheck, HardHat, TrendingUp as TrendingUpIcon
 } from 'lucide-react';
 import Image from 'next/image';
-import { ResponsiveContainer, LineChart, Line } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 // --- MOCK COMPONENTS FOR DASHBOARD ---
 
-const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Icon, data, lineColor = '#c084fc' }: any) => (
-  <div className="glass-panel p-4 flex flex-col justify-between border border-transparent hover:border-purple-500/50 hover:bg-purple-500/5 transition-all cursor-pointer rounded-xl group relative">
-    <div className="flex justify-between items-start mb-2">
+const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Icon, data, lineColor = '#c084fc' }: any) => {
+  const gradientId = `gradient-${title.replace(/\s+/g, '')}`;
+  return (
+  <div className="glass-panel p-4 flex flex-col justify-between border border-transparent hover:border-purple-500/50 hover:bg-purple-500/5 transition-all cursor-pointer rounded-xl group relative overflow-hidden">
+    <div className="flex justify-between items-start mb-2 relative z-10">
       <h3 className="text-gray-400 text-xs font-medium tracking-wider flex items-center gap-1.5 group-hover:text-gray-300 transition-colors">
         {title} <Info className="w-3.5 h-3.5 text-gray-500" />
       </h3>
@@ -24,7 +26,7 @@ const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Ic
       </div>
     </div>
     
-    <div>
+    <div className="relative z-10">
       <div className="text-3xl font-bold text-white mb-2">{value}</div>
       <div className="flex items-center justify-between">
         <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
@@ -36,41 +38,48 @@ const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Ic
     </div>
     
     {data && (
-       <div className="h-10 w-full mt-4 pt-2 border-t border-white/5">
+       <div className="mt-4 pt-4 border-t border-white/5 h-20 opacity-70 group-hover:opacity-100 transition-opacity">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <Line 
+          <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 0 }}>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={lineColor} stopOpacity={0.4}/>
+                <stop offset="100%" stopColor={lineColor} stopOpacity={0}/>
+              </linearGradient>
+              <filter id={`shadow-${gradientId}`} x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor={lineColor} floodOpacity="0.3"/>
+              </filter>
+            </defs>
+            <Area 
               type="monotone" 
               dataKey="value" 
               stroke={lineColor} 
-              strokeWidth={2} 
-              dot={false}
+              strokeWidth={3} 
+              fill={`url(#${gradientId})`}
+              activeDot={{ r: 4, fill: '#121826', stroke: lineColor, strokeWidth: 2 }}
+              dot={{ r: 0 }}
+              style={{ filter: `url(#shadow-${gradientId})` }}
               isAnimationActive={true}
+              animationDuration={1500}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     )}
   </div>
-);
+)};
 
 const RiskDonut = () => (
   <div className="relative w-32 h-32 flex items-center justify-center">
-    {/* Background Circle */}
     <svg className="w-full h-full transform -rotate-90">
+      {/* Background */}
       <circle cx="64" cy="64" r="56" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-      {/* Red segment (Critical - 15%) */}
-      <circle cx="64" cy="64" r="56" fill="transparent" stroke="#ef4444" strokeWidth="12" strokeDasharray="351" strokeDashoffset="298" className="transition-all duration-1000" />
-      {/* Orange segment (High - 30%) */}
-      <circle cx="64" cy="64" r="56" fill="transparent" stroke="#f97316" strokeWidth="12" strokeDasharray="351" strokeDashoffset="193" className="transition-all duration-1000" />
-      {/* Yellow segment (Medium - 35%) */}
-      <circle cx="64" cy="64" r="56" fill="transparent" stroke="#eab308" strokeWidth="12" strokeDasharray="351" strokeDashoffset="70" className="transition-all duration-1000" />
-      {/* Green segment (Low - 20%) */}
-      <circle cx="64" cy="64" r="56" fill="transparent" stroke="#22c55e" strokeWidth="12" strokeDasharray="351" strokeDashoffset="0" className="transition-all duration-1000" />
+      {/* Gauge (68% fill) */}
+      <circle cx="64" cy="64" r="56" fill="transparent" stroke="#f97316" strokeWidth="12" strokeDasharray="351" strokeDashoffset="112.32" className="transition-all duration-1000 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" strokeLinecap="round" />
     </svg>
-    <div className="absolute inset-0 flex flex-col items-center justify-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
       <span className="text-3xl font-bold text-white leading-none">68</span>
-      <span className="text-[10px] text-gray-400">/100</span>
+      <span className="text-[10px] text-orange-500 font-bold tracking-wider mt-1 uppercase">Alto</span>
     </div>
   </div>
 );
@@ -79,158 +88,206 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0b0f19] shrink-0">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0b0f19] shrink-0 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             Bom dia, Rafael! <span className="text-xl">👋</span>
           </h1>
           <p className="text-sm text-gray-400 mt-1">Aqui está o panorama da segurança hoje.</p>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-[#121826] border border-white/5 rounded-lg px-3 py-2 text-sm text-gray-300">
+        <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center shrink-0 bg-[#121826] border border-white/5 rounded-lg px-3 py-2 text-sm text-gray-300">
             <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-            01/05/2024 - 31/05/2024
+            <span className="hidden sm:inline">01/05/2024 - 31/05/2024</span>
+            <span className="sm:hidden">Maio 2024</span>
             <ChevronRight className="w-4 h-4 ml-3 text-gray-500 rotate-90" />
           </div>
           
-          <button className="relative p-2 text-gray-400 hover:text-white transition-colors bg-white/5 rounded-lg border border-white/5">
+          <button className="relative shrink-0 p-2 text-gray-400 hover:text-white transition-colors bg-white/5 rounded-lg border border-white/5">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#0b0f19]"></span>
           </button>
           
-          <button className="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-purple-500/20">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar
+          <button className="flex items-center shrink-0 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-purple-500/20">
+            <Download className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exportar</span>
           </button>
         </div>
       </header>
 
       {/* Split Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row overflow-hidden w-full">
         {/* Main Content Scrollable Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-none">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-none w-full">
           <div className="space-y-4">
-            {/* Top Hero Section */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-              
-              {/* Main Risk Score Card */}
-              <div className="glass-panel p-5 rounded-xl xl:col-span-5 flex flex-col justify-between bg-gradient-to-br from-[#121826] to-[#1a1625]">
-                <div className="flex flex-col gap-4 h-full relative">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                    <h2 className="text-[10px] text-purple-400 font-bold tracking-widest uppercase">SST Inteligência</h2>
-                    <span className="text-[9px] text-gray-500 flex items-center gap-1"><Info className="w-3 h-3"/> Insights automáticos</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-6 border-b border-white/5 pb-5">
-                    <div className="shrink-0 scale-90 origin-left">
-                      <RiskDonut />
+              {/* SST Brain Core Section */}
+              <div className="xl:col-span-12 glass-panel p-6 rounded-xl bg-gradient-to-br from-[#121826] to-[#1e1a30] border border-purple-500/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl opacity-50"></div>
+                <div className="absolute bottom-0 left-10 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl opacity-40"></div>
+                
+                <div className="flex items-center justify-between mb-8 relative z-10 border-b border-white/5 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl relative">
+                      <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-purple-400 animate-ping"></div>
+                      <Activity className="w-6 h-6 text-purple-400" />
                     </div>
                     <div>
-                      <h3 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1">NÍVEL DE RISCO GERAL <Info className="w-3.5 h-3.5"/></h3>
-                      <div className="text-3xl font-bold text-red-500 mb-1 leading-none tracking-tight">ALTO</div>
-                      <p className="text-[11px] text-gray-300 leading-snug">Probabilidade de incidente<br/><strong className="text-white">68% nas próximas 2 semanas</strong></p>
-                      <p className="text-[10px] text-red-500 mt-2 flex items-center gap-1 font-medium"><TrendingUp className="w-3 h-3"/> 18% vs. período anterior</p>
+                      <h2 className="text-xl font-bold text-white tracking-tight">SST Inteligência Central</h2>
+                      <p className="text-sm text-gray-400">Análise contínua, cruzamento de dados e recomendações automáticas.</p>
                     </div>
                   </div>
-                  
-                  <div className="pt-2">
-                    <p className="text-[9px] text-gray-500 mb-2 uppercase tracking-widest font-medium">PRINCIPAIS FATORES QUE AUMENTAM O RISCO:</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent border border-red-500/20 text-red-500 text-[10px] font-medium">
-                        <Clock className="w-3.5 h-3.5" /> Horas extras elevadas
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent border border-orange-500/20 text-orange-500 text-[10px] font-medium">
-                        <ShieldAlert className="w-3.5 h-3.5" /> EPIs vencidos ou não utilizados
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-transparent border border-yellow-500/20 text-yellow-500 text-[10px] font-medium">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Falhas em inspeções
-                      </span>
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Confiança: 94%</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action CTA within Hero */}
-              <div className="xl:col-span-3 bg-[#1e1a30] rounded-xl p-5 flex flex-col justify-between relative overflow-hidden border-2 border-transparent" style={{ backgroundClip: 'padding-box', backgroundImage: 'linear-gradient(#1e1a30, #1e1a30), linear-gradient(to bottom right, rgba(124,58,237,0.5), rgba(124,58,237,0.1))', backgroundOrigin: 'border-box' }}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/20 rounded-full blur-3xl opacity-50"></div>
-                
-                <div className="relative z-10 w-full mb-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-purple-400 text-[10px] font-bold uppercase tracking-wider">Ação Prioritária</h3>
-                    <div className="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-1 py-0.5 rounded text-[9px] font-bold border border-emerald-400/20">
-                      <span className="bg-emerald-500/20 px-1 rounded-sm">$</span> IMPACTO FINANCEIRO
-                    </div>
-                  </div>
-                  
-                  <h2 className="text-base font-bold text-white leading-tight mb-1">
-                    Regularizar EPIs vencidos
-                  </h2>
-                  <p className="text-[11px] text-gray-400 mb-6">(12 colaboradores)</p>
-
-                  <div className="text-[11px] text-gray-400 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Prazo:</span>
-                      <span className="text-purple-400 font-medium">Hoje</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Impacto:</span>
-                      <span className="text-emerald-500 font-medium">-2 riscos críticos</span>
-                    </div>
+                    <span className="text-[10px] text-gray-500 mt-1">Baseado em +1.2k pontos de dados</span>
                   </div>
                 </div>
 
-                <div className="relative z-10 mt-auto">
-                  <div className="text-2xl font-bold text-emerald-400 mb-1 flex items-center justify-between">
-                    R$ 32.400
-                  </div>
-                  <p className="text-[10px] text-gray-400 leading-relaxed mb-4">Economia estimada evitando correção ou multas.</p>
-                  
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 text-xs rounded-lg flex items-center justify-between transition-colors shadow-[0_0_15px_rgba(124,58,237,0.2)] hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-purple-500/30">
-                    <span>Executar agora</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Dicas Banner (moved to top row) */}
-              <div className="xl:col-span-4 glass-panel p-5 rounded-xl border-t-2 border-t-[#121826]/10 flex flex-col justify-between">
-                <h3 className="text-gray-300 text-[10px] font-bold flex items-center gap-2 mb-4 uppercase tracking-wider">
-                  DICAS PARA REDUZIR RISCOS <Info className="w-3.5 h-3.5 text-gray-500" />
-                </h3>
-                <div className="flex flex-col gap-3 flex-1">
-                  <div className="bg-[#121826]/60 p-4 rounded-xl flex items-center justify-between border border-emerald-500/10 flex-1 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="flex items-center gap-3 relative z-10">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-200 font-medium leading-snug">Se reduzir horas extras em 20%</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5">Impacto estimado no risco geral</p>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+                  {/* Left Column: Analysis & Reasoning */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div>
+                      <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <ArrowRight className="w-4 h-4" /> Cruzamento de Dados
+                      </h3>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/5 shadow-inner">
+                        <p className="text-[14px] text-gray-200 leading-relaxed font-medium">
+                          Identificamos <strong className="text-red-400">12 inspeções críticas vencidas</strong> no setor de Manutenção combinadas com <strong className="text-orange-400">8 ações corretivas atrasadas</strong> (NR-12).
+                        </p>
+                        <div className="mt-3 flex items-center gap-2 text-[12px] text-gray-400">
+                          <TrendingUp className="w-4 h-4 text-red-500" /> Isso indica um rápido declínio na conformidade de maquinário.
+                        </div>
                       </div>
                     </div>
-                    <div className="text-lg font-bold text-emerald-400 flex items-center gap-1 relative z-10">
-                      -35% <TrendingDown className="w-4 h-4" />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#121826]/60 p-4 rounded-xl flex items-center justify-between border border-emerald-500/10 flex-1 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="flex items-center gap-3 relative z-10">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-200 font-medium leading-snug">Se 100% dos EPIs estiverem conformes</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5">Impacto estimado no risco geral</p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
+                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">O Que Mudou</h4>
+                        <p className="text-sm text-white font-medium">Aumento de 24% na taxa de exposição a riscos mecânicos.</p>
+                      </div>
+                      <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
+                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Impacto Provável</h4>
+                        <p className="text-sm text-red-400 font-bold">Risco Acidente + Multa (NR-12) est. R$32k+</p>
                       </div>
                     </div>
-                    <div className="text-lg font-bold text-emerald-400 flex items-center gap-1 relative z-10">
-                      -52% <TrendingDown className="w-4 h-4" />
+
+                    <div className="bg-gradient-to-r from-emerald-500/10 to-transparent p-5 rounded-xl border-l-2 border-emerald-500">
+                      <h3 className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Decisão Recomendada</h3>
+                      <p className="text-base text-white font-bold leading-tight mb-2">
+                        Priorizar vistorias imediatas e paralisação das prensas não inspecionadas na Manutenção.
+                      </p>
+                      <p className="text-[12px] text-emerald-300/80">
+                        <strong>Por que agir agora?</strong> A combinação de atrasos cria um passivo iminente. Bloquear agora previne paradas longas na próxima semana.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Priority Queue */}
+                  <div className="lg:col-span-7 flex flex-col">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-400" /> Fila de Prioridade Ativa
+                    </h3>
+                    
+                    <div className="flex-1 bg-[#0b0f19]/80 border border-white/5 rounded-xl overflow-hidden flex flex-col">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/5 bg-[#121826]/50">
+                              <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-[28%]">Ação Sugerida / Origem</th>
+                              <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Responsável / Prazo</th>
+                              <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Próxima Etapa</th>
+                              <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                              <th className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Execução</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* Task 1 */}
+                            <tr className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                              <td className="p-3">
+                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Bloquear Prensa Hidráulica 03</span>
+                                <span className="text-[10px] text-gray-500 uppercase">Origem: Risco Crítico</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-xs text-gray-300 font-medium block">João Silva (Manut.)</span>
+                                <span className="text-[10px] text-red-400 font-bold">Prazo: Imediato</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Aplicar LOTO no painel principal e notificar supervisão</span>
+                              </td>
+                              <td className="p-3 text-center">
+                                <span className="inline-flex items-center bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-1 rounded border border-orange-500/20 uppercase">Pendente</span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors" title="Ver Detalhes">Abrir</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-orange-500/50 hover:text-white transition-colors" title="Cobrar Responsável">Cobrar</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50" title="Tratar Agora">Executar agora</button>
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            {/* Task 2 */}
+                            <tr className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                              <td className="p-3">
+                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Inspecionar Soldas (NR-12)</span>
+                                <span className="text-[10px] text-gray-500 uppercase">Origem: Inspeção Vencida</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-xs text-gray-300 font-medium block">Equipe Manutenção</span>
+                                <span className="text-[10px] text-orange-400 font-bold">Prazo: Hoje</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Enviar formulário via tablet</span>
+                              </td>
+                              <td className="p-3 text-center">
+                                <span className="inline-flex items-center bg-blue-500/10 text-blue-400 text-[9px] font-bold px-2 py-1 rounded border border-blue-500/20 uppercase">Em Andamento</span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors" title="Ver Detalhes">Abrir</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-emerald-500/50 hover:text-white transition-colors" title="Finalizar Atividade">Concluir</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50" title="Tratar Agora">Executar agora</button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* Task 3 */}
+                            <tr className="hover:bg-white/5 transition-colors group">
+                              <td className="p-3">
+                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Substituir Mangotes</span>
+                                <span className="text-[10px] text-gray-500 uppercase">Origem: Ação Atrasada</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-xs text-gray-300 font-medium block">Carlos Lima</span>
+                                <span className="text-[10px] text-yellow-500 font-bold">Prazo: Amanhã</span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Solicitar material no almoxarifado</span>
+                              </td>
+                              <td className="p-3 text-center">
+                                <span className="inline-flex items-center bg-purple-500/10 text-purple-400 text-[9px] font-bold px-2 py-1 rounded border border-purple-500/20 uppercase">Agendado</span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors">Abrir</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-orange-500/50 hover:text-white transition-colors">Cobrar</button>
+                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50">Executar agora</button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-auto p-3 border-t border-white/5 bg-[#121826]/30 text-center">
+                        <button className="text-[11px] text-purple-400 hover:text-purple-300 font-bold transition-colors uppercase tracking-wider">Ver Fila Completa (18 itens)</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <p className="text-[9px] text-[#121826] mt-1 select-none">Espaçamento do fundo da tela.</p>
               </div>
-            </div>
 
             {/* 4 Mini Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -302,7 +359,15 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="mt-0.5 shrink-0">
-                              {item.isCheck ? <CheckCircle2 className={`w-5 h-5 ${item.color}`} /> : <AlertTriangle className={`w-5 h-5 text-[#0b0f19] ${item.color.replace('text-', 'fill-')}`} />}
+                              {item.isCheck ? (
+                                <div className={`p-1.5 rounded-full border ${item.bg} ${item.border} ${item.color}`}>
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </div>
+                              ) : (
+                                <div className={`p-1.5 rounded-full border ${item.bg} ${item.border} ${item.color}`}>
+                                  <AlertTriangle className="w-4 h-4" />
+                                </div>
+                              )}
                             </div>
                             <div>
                               <p className="text-[13px] font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">{item.title}</p>
@@ -369,7 +434,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Sidebar Lists */}
-        <div className="w-[360px] shrink-0 border-l border-white/5 bg-[#121826]/30 overflow-y-auto p-6 space-y-6 scrollbar-none">
+        <div className="w-full xl:w-[360px] shrink-0 xl:border-l border-t xl:border-t-0 border-white/5 bg-[#121826]/30 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-none xl:h-full">
           
           {/* Alertas Críticos */}
           <div className="glass-panel rounded-xl overflow-hidden flex flex-col">

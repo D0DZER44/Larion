@@ -7,7 +7,7 @@ import FloatingChat from '@/components/FloatingChat';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Larion SST Inteligência',
+  title: 'ApexShield SST Inteligência',
   description: 'Plataforma de gestão de Saúde e Segurança do Trabalho',
 };
 

@@ -2,402 +2,458 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Sparkles, Calendar, Filter, FileText, Send, Paperclip, ChevronRight, AlertTriangle, Activity, ClipboardCheck, ArrowUp, Briefcase } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUp, Calendar, ChevronRight, Clock, FileText, Filter, Lock, MessageSquare, Send, ShieldCheck, Zap } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+
+type ActionItem = {
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+  icon?: React.ReactNode;
+};
+
+type MessageContent = {
+  text: string;
+  component?: React.ReactNode;
+};
 
 type Message = {
   id: string;
-  sender: 'lari' | 'user';
-  text: string | React.ReactNode;
-  time: string;
-  quickActions?: { label: string; action: () => void; icon?: React.ReactNode }[];
+  sender: 'user' | 'bot';
+  content: MessageContent;
+  actions?: ActionItem[];
 };
 
 export default function ChatPage() {
-  const [inputVal, setInputVal] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const isTypingRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const [messages, setMessages] = useState<Message[]>([]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'lari',
-      text: "Olá, sou a Lari, sua assistente pessoal de Saúde e Segurança do Trabalho.\nEm que posso ajudar?",
-      time: '09:15',
-      quickActions: [
-        { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-4 h-4 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
-        { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-4 h-4 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
-        { label: 'Resumo das inspeções pendentes', icon: <ClipboardCheck className="w-4 h-4 text-blue-400" />, action: () => handleSend('Resumo das inspeções pendentes') },
-        { label: 'Gerar relatório executivo', icon: <FileText className="w-4 h-4 text-emerald-400" />, action: () => handleSend('Gerar relatório executivo') },
-      ]
-    }
-  ]);
-
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  const handleSend = (text: string) => {
-    if (!text.trim()) return;
+  function handleSend(text: string) {
+    if (!text.trim() || isTypingRef.current) return;
+    
+    isTypingRef.current = true;
+    const userMsg: Message = {
+      id: crypto.randomUUID(),
+      sender: 'user',
+      content: { text: text.trim() }
+    };
+    
+    setMessages(prev => [...prev, userMsg]);
+    setInputValue('');
+    setIsTyping(true);
+    getBotResponse(text.trim());
+  }
 
-    const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    setMessages(prev => [...prev, { id: Math.random().toString(), sender: 'user', text, time }]);
-    setInputVal('');
+  const welcomeMessage = (
+    <div className="flex flex-col items-center w-full pb-8 pt-8">
+      <div className="flex flex-col items-center mb-8">
+         <div className="relative mb-4">
+            <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+            <div className="w-20 h-20 rounded-full border border-purple-500/30 bg-gradient-to-b from-[#1E1B4B] to-[#121826] flex items-center justify-center relative z-10 shadow-[0_0_30px_rgba(124,58,237,0.2)]">
+               <span className="text-3xl font-bold text-white">L</span>
+               <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 border-2 border-[#121826] rounded-full"></div>
+            </div>
+         </div>
+         <h2 className="text-xl font-bold text-white mb-1">Lari</h2>
+         <p className="text-sm text-gray-400">Assistente de SST</p>
+      </div>
 
-    // Mock responses
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mb-8 text-center text-gray-300 text-[15px] leading-relaxed mx-auto">
+         <p>Olá, sou a Lari, sua assistente intelgênte de Saúde e Segurança.</p>
+         <p className="mt-1">Posso te ajudar rapidamente com riscos, inspeções, ações e relatórios.</p>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-3 mb-12 max-w-3xl mx-auto">
+         {[
+            { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, label: 'Ver inspeções pendentes', msg: 'Mostre as inspeções pendentes' },
+            { icon: <Clock className="w-4 h-4 text-orange-400" />, label: 'Mostrar ações atrasadas', msg: 'O que está atrasado hoje?' },
+            { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, label: 'Resumo dos riscos', msg: 'Quais riscos estão críticos?' },
+            { icon: <FileText className="w-4 h-4 text-purple-400" />, label: 'Gerar resumo executivo', msg: 'Gere relatório do mês' },
+         ].map((action, idx) => (
+            <button 
+              key={idx} 
+              onClick={() => handleSend(action.msg)}
+              className="flex items-center gap-2 bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 px-4 py-2.5 rounded-xl transition-colors text-sm text-gray-300"
+            >
+               {action.icon}
+               {action.label}
+            </button>
+         ))}
+      </div>
+
+      <div className="w-full max-w-3xl pt-4 mx-auto">
+         <div className="flex items-center gap-2 text-purple-400 mb-4 px-2">
+            <Zap className="w-4 h-4" />
+            <span className="text-sm font-medium">O que você pode fazer aqui</span>
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+               { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, title: 'Consultar riscos críticos', desc: 'Veja os principais riscos e seu status atual.', msg: 'Consultar riscos críticos' },
+               { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, title: 'Abrir inspeções pendentes', desc: 'Acompanhe inspeções não realizadas ou em aberto.', msg: 'Abrir inspeções pendentes' },
+               { icon: <Clock className="w-4 h-4 text-orange-400" />, title: 'Cobrar ações atrasadas', desc: 'Identifique ações vencidas e ganhe agilidade.', msg: 'Cobrar ações atrasadas' },
+            ].map((card, idx) => (
+               <div 
+                 key={idx} 
+                 onClick={() => handleSend(card.msg)}
+                 className="bg-transparent border border-white/10 hover:bg-white/5 hover:border-white/20 p-5 rounded-2xl cursor-pointer transition-colors group flex flex-col justify-between h-[130px]"
+               >
+                  <div className="flex items-center gap-2 mb-2">
+                     {card.icon}
+                     <h4 className="text-[14px] font-bold text-gray-200">{card.title}</h4>
+                  </div>
+                  <div className="flex items-end justify-between gap-4">
+                     <p className="text-[12px] text-gray-500 leading-relaxed flex-1">{card.desc}</p>
+                     <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
+                  </div>
+               </div>
+            ))}
+         </div>
+      </div>
+    </div>
+  );
+
+  const getBotResponse = (text: string) => {
+    const lowerText = text.toLowerCase();
+    
     setTimeout(() => {
-      let lariResponse: React.ReactNode = "Desculpe, ainda estou aprendendo, mas posso te ajudar a navegar no sistema.";
-      
-      if (text === 'Quais ações estão atrasadas?') {
-        lariResponse = (
-          <div className="space-y-4">
-            <p>Você tem <strong>18 ações atrasadas</strong> no período selecionado.</p>
-            <div className="flex flex-wrap gap-4">
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <Activity className="w-4 h-4 text-red-500" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">18</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Atrasadas</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">12</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Críticas</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-orange-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">4</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Altas</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <Briefcase className="w-4 h-4 text-yellow-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">2</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Médias</span>
-                  </div>
-               </div>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white mb-2">Principais ações atrasadas:</p>
-              <ul className="space-y-2">
-                <li className="flex items-center justify-between text-sm">
+      setIsTyping(false);
+      isTypingRef.current = false;
+      let response: Message;
+
+      if (lowerText.includes('risco') || lowerText.includes('crítico') || lowerText.includes('criticos')) {
+        response = {
+          id: crypto.randomUUID(),
+          sender: 'bot',
+          content: {
+            text: 'Atualmente temos 12 riscos registrados. Um deles requer sua atenção imediata:',
+            component: (
+              <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between pointer-events-none">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                    <span className="text-gray-300">Isolar área de risco - Prensa hidráulica PCH-200 (14 dias)</span>
-                    <span className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded">Crítica</span>
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
                   </div>
-                  <button className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300">Abrir ação <ChevronRight className="w-3 h-3" /></button>
-                </li>
-                <li className="flex items-center justify-between text-sm">
+                  <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
+                </div>
+                <div className="pointer-events-none">
+                  <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
+                  <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva (Manutenção)</p>
+                </div>
+                <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
+                  <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
+                </div>
+              </div>
+            )
+          },
+          actions: [
+            { label: 'Bloquear Máquina (LOTO)', primary: true, onClick: () => alert('Solicitação de bloqueio enviada para manutenção!') },
+            { label: 'Notificar João Silva', onClick: () => alert('João Silva notificado!') },
+            { label: 'Ver todos os riscos', onClick: () => alert('Abrindo módulo de Riscos...') }
+          ]
+        };
+      } else if (lowerText.includes('atrasado') || lowerText.includes('ação') || lowerText.includes('acoes') || lowerText.includes('inspeções') || lowerText.includes('inspecoes')) {
+        response = {
+          id: crypto.randomUUID(),
+          sender: 'bot',
+          content: {
+            text: 'Temos 18 ações e inspeções atrasadas no momento. A mais crítica é a troca do mangote de exaustão na Solda 02.',
+            component: (
+              <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between pointer-events-none">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                    <span className="text-gray-300">Substituir EPIs danificados - Setor de Manutenção (9 dias)</span>
-                    <span className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Alta</span>
+                     <Clock className="w-5 h-5 text-orange-400" />
+                    <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
                   </div>
-                  <button className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300">Abrir ação <ChevronRight className="w-3 h-3" /></button>
-                </li>
-                <li className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                    <span className="text-gray-300">Treinamento NR-33 - Equipe de manutenção (7 dias)</span>
-                    <span className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Alta</span>
+                </div>
+                <div className="pointer-events-none">
+                  <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
+                  <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
+                </div>
+              </div>
+            )
+          },
+          actions: [
+            { label: 'Cobrar Responsável', primary: true, onClick: () => alert('Cobrança enviada ao Marcos Antônio!') },
+            { label: 'Reagendar prazo (+2 dias)', onClick: () => alert('Prazo reagendado preventivamente.') },
+            { label: 'Ver todas', onClick: () => alert('Abrindo módulo de Ações...') }
+          ]
+        };
+      } else if (lowerText.includes('relatório') || lowerText.includes('relatorio') || lowerText.includes('mes') || lowerText.includes('mês')) {
+        response = {
+          id: crypto.randomUUID(),
+          sender: 'bot',
+          content: {
+            text: 'Claro, aqui está o resumo do mês com base nos dados do sistema:',
+            component: (
+              <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+                <div className="flex items-center gap-2 pointer-events-none">
+                  <FileText className="w-5 h-5 text-purple-400" />
+                  <span className="text-[15px] font-bold text-white">Resumo Executivo (Maio 2024)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pointer-events-none">
+                  <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                    <span className="text-xs text-gray-400 font-medium">Inspeções realizadas</span>
+                    <span className="text-sm font-bold text-white">342</span>
                   </div>
-                  <button className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300">Abrir ação <ChevronRight className="w-3 h-3" /></button>
-                </li>
-              </ul>
-            </div>
-            <button className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center gap-1">Ver todas as ações atrasadas <ChevronRight className="w-4 h-4" /></button>
-          </div>
-        );
-      } else if (text === 'Mostre os riscos críticos agora') {
-        lariResponse = (
-          <div className="space-y-4">
-            <p>Há <strong>7 riscos críticos</strong> ativos no período.</p>
-            <div className="flex flex-wrap gap-4">
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">7</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Críticos</span>
+                  <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                    <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
+                    <span className="text-sm font-bold text-emerald-400">89%</span>
                   </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-orange-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">18</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Altos</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <Briefcase className="w-4 h-4 text-yellow-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">24</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Médios</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <Briefcase className="w-4 h-4 text-emerald-400" />
-                  <div>
-                    <span className="font-bold text-white block leading-none">4</span>
-                    <span className="text-[10px] text-gray-500 uppercase">Baixos</span>
-                  </div>
-               </div>
-            </div>
-             <div className="flex items-center gap-4">
-              <button className="text-sm text-purple-400 font-medium hover:text-purple-300 flex items-center gap-1">Ver riscos críticos <ChevronRight className="w-4 h-4" /></button>
-              <button className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300 bg-purple-500/10 px-2 py-1 rounded">Ver risco <ChevronRight className="w-3 h-3" /></button>
-            </div>
-          </div>
-        );
-      } else if (text === 'Resumo das inspeções pendentes') {
-        lariResponse = "Há 53 inspeções pendentes. 23% a mais que o período anterior. Recomendação: alocar mais auditores para a próxima semana.";
-      }
-
-      setMessages(prev => [...prev, {
-        id: Math.random().toString(),
-        sender: 'lari',
-        text: lariResponse,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      }]);
-    }, 800);
-  };
-
-  return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#0B0F19] p-4 gap-4">
-      <header className="flex items-center justify-between shrink-0 mb-2">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-              <span className="font-black text-white text-lg">L</span>
-            </div>
-            Chat SST
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Sua assistente contextual conectada a todo o sistema de SST.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-[#121826] border border-white/5 rounded-lg px-3 py-1.5 text-sm text-gray-300">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            01/05/2024 - 31/05/2024
-          </div>
-          <button className="flex items-center gap-2 bg-[#121826] border border-white/5 hover:bg-white/5 rounded-lg px-3 py-1.5 text-sm text-gray-300 transition-colors">
-            <Filter className="w-4 h-4" />
-            Filtros
-          </button>
-          <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white border border-purple-500 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors shadow-lg shadow-purple-500/20">
-            <FileText className="w-4 h-4" />
-            Gerar relatório
-          </button>
-        </div>
-      </header>
-      
-      <div className="flex-1 flex gap-4 min-h-0">
-        
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-[#121826] border border-white/5 rounded-2xl overflow-hidden relative">
-           
-           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {messages.map((msg, i) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={msg.id} 
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    {msg.sender === 'lari' && (
-                      <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                        <span className="text-white font-bold text-xs">L</span>
-                      </div>
-                    )}
-                    <span className="text-xs font-medium text-gray-400">
-                      {msg.sender === 'lari' ? 'Lari' : 'Você'}
-                    </span>
-                    <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-gray-500">{msg.sender === 'lari' ? 'IA' : msg.time}</span>
-                    {msg.sender === 'lari' && <span className="text-[10px] text-gray-600">{msg.time}</span>}
-                  </div>
-                  
-                  <div className={`p-4 rounded-2xl max-w-[85%] text-sm leading-relaxed ${
-                    msg.sender === 'user' 
-                      ? 'bg-purple-600/10 border border-purple-500/20 text-gray-200 rounded-tr-sm' 
-                      : 'bg-white/5 border border-white/5 text-gray-300 rounded-tl-sm'
-                  }`}>
-                    {typeof msg.text === 'string' ? msg.text.split('\n').map((l, i) => <p key={i}>{l}</p>) : msg.text}
-                  </div>
-
-                  {msg.quickActions && (
-                    <div className="mt-3 flex flex-wrap gap-2 max-w-[85%]">
-                      {msg.quickActions.map((action, i) => (
-                        <button 
-                          key={i}
-                          onClick={action.action}
-                          className="flex items-center gap-2 bg-[#1A2234] hover:bg-[#232D42] border border-white/10 text-gray-300 px-3 py-2 rounded-lg text-sm transition-colors text-left"
-                        >
-                          {action.icon}
-                          {action.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-              <div ref={messagesEndRef} />
-           </div>
-
-           {/* Input Area */}
-           <div className="p-4 bg-[#0B0F19]/50 border-t border-white/5 flex flex-col gap-2">
-              <div className="relative flex items-end gap-2">
-                <button className="p-3 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-xl transition-colors shrink-0">
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <div className="flex-1 bg-black/30 border border-white/10 rounded-xl flex items-center pr-2">
-                  <input 
-                    type="text" 
-                    value={inputVal}
-                    onChange={(e) => setInputVal(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend(inputVal)}
-                    placeholder="Pergunte algo sobre riscos, ações, inspeções, SLAs ou alertas..." 
-                    className="w-full bg-transparent pl-4 py-3.5 text-sm text-white focus:outline-none placeholder:text-gray-600"
-                  />
-                  <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-gray-600 hover:text-gray-400 rounded-lg">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                    </button>
-                    <button className="p-1.5 text-gray-600 hover:text-gray-400 rounded-lg">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-                    </button>
-                    <div className="w-px h-4 bg-white/10 mx-1"></div>
-                    <button 
-                      onClick={() => handleSend(inputVal)}
-                      className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex flex-col col-span-2">
+                    <span className="text-xs text-red-400 font-medium mb-1">Atenção Necessária</span>
+                    <span className="text-sm font-bold text-white">Índice de riscos não tratados subiu 16% em relação ao mês passado. Foco sugerido na área de manutenção preventiva.</span>
                   </div>
                 </div>
               </div>
-              <p className="text-center text-[10px] text-gray-500">Lari pode cometer erros. Verifique as informações críticas.</p>
-           </div>
-        </div>
+            )
+          },
+          actions: [
+            { label: 'Baixar PDF Completo', primary: true, onClick: () => alert('Baixando relatório...') },
+            { label: 'Agendar com liderança', onClick: () => alert('Redirecionando para agenda...') }
+          ]
+        };
+      } else {
+        response = {
+          id: crypto.randomUUID(),
+          sender: 'bot',
+          content: {
+            text: 'Entendido. Com base nisso, posso puxar mais informações dos módulos de Segurança ou acionar responsáveis para as medidas cabíveis. Qual área você quer priorizar agora?'
+          },
+          actions: [
+            { label: 'Ver Riscos', onClick: () => handleSend('Riscos') },
+            { label: 'Ver Inspeções', onClick: () => handleSend('Inspeções') },
+            { label: 'Ver Ações', onClick: () => handleSend('Ações') }
+          ]
+        };
+      }
 
-        {/* Right Sidebar Panel */}
-        <div className="w-[320px] shrink-0 flex flex-col gap-4 overflow-y-auto scrollbar-none">
+      setMessages(prev => [...prev, response]);
+    }, 1500);
+  };
+
+  return (
+    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
-          <div className="bg-[#121826] border border-white/5 rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white">Contexto do sistema</h3>
-              <span className="flex items-center gap-1.5 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Atualizado agora</span>
+          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+                L
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Chat SST</h1>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">Assistente operacional conectada a riscos, inspeções ações e alertas.</p>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3 mb-3">
-              <span className="text-gray-400">Período ativo</span>
-              <span className="text-gray-300">01/05/2024 - 31/05/2024</span>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              <button className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
+                <Calendar className="w-4 h-4 text-gray-500" /> <span className="hidden sm:inline">01/05/2024 – 31/05/2024</span><span className="sm:hidden">Maio 2024</span> <ChevronRight className="w-4 h-4 text-gray-600 rotate-90" />
+              </button>
+              <button className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
+                <Filter className="w-4 h-4 text-gray-500" /> Filtros
+              </button>
+              <button className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
+                <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Gerar relatório</span><span className="sm:hidden">Relatório</span>
+              </button>
             </div>
+          </header>
+
+          <div className="flex-1 flex gap-6 overflow-hidden mt-2">
             
-            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">Resumo geral</h4>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-               <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-1.5 text-red-500 text-[11px] font-medium mb-1"><AlertTriangle className="w-3 h-3" /> Riscos críticos</div>
-                 <div className="text-xl font-bold text-white mb-1">7</div>
-                 <div className="text-[10px] text-gray-500 flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> <span className="text-red-500">16%</span> vs período anterior</div>
+            <div className="flex-[2.5] bg-[#121826] border border-white/5 rounded-2xl flex flex-col shadow-lg overflow-hidden relative">
+               <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
+                  <AnimatePresence initial={false}>
+                    {messages.length === 0 && welcomeMessage}
+                    {messages.map((msg) => (
+                      <motion.div 
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} max-w-full`}
+                      >
+                        {msg.sender === 'bot' && (
+                          <div className="flex items-center gap-2 mb-2 ml-1">
+                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
+                             <span className="text-xs font-bold text-gray-400">Lari</span>
+                          </div>
+                        )}
+                        
+                        <div className={`
+                          ${msg.sender === 'user' ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(124,58,237,0.2)] ml-12' : 'max-w-[90%]'}
+                          px-5 py-3.5 rounded-2xl
+                          ${msg.sender === 'bot' ? 'bg-white/5 border border-white/10 text-gray-200' : ''}
+                        `}>
+                          {msg.content.text && <p className="leading-relaxed whitespace-pre-wrap text-[15px]">{msg.content.text}</p>}
+                          {msg.content.component}
+                        </div>
+
+                        {msg.actions && msg.actions.length > 0 && (
+                          <div className={`mt-3 flex flex-wrap gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start max-w-[90%]'}`}>
+                             {msg.actions.map((act, i) => (
+                               <button 
+                                  key={i}
+                                  onClick={act.onClick}
+                                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
+                                    act.primary 
+                                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30' 
+                                      : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
+                                  }`}
+                               >
+                                  {act.icon}
+                                  {act.label}
+                               </button>
+                             ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                    
+                    {isTyping && (
+                      <motion.div 
+                        key="typing"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex flex-col items-start"
+                      >
+                         <div className="flex items-center gap-2 mb-2 ml-1">
+                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
+                             <span className="text-xs font-bold text-gray-400">Lari está digitando...</span>
+                          </div>
+                          <div className="bg-white/5 border border-white/10 px-5 py-4 rounded-2xl flex gap-1.5 items-center">
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                          </div>
+                      </motion.div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </AnimatePresence>
                </div>
-               <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-1.5 text-orange-400 text-[11px] font-medium mb-1"><Activity className="w-3 h-3" /> Ações atrasadas</div>
-                 <div className="text-xl font-bold text-white mb-1">18</div>
-                 <div className="text-[10px] text-gray-500 flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> <span className="text-red-500">37%</span> vs período anterior</div>
-               </div>
-               <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-1.5 text-yellow-500 text-[11px] font-medium mb-1"><ClipboardCheck className="w-3 h-3" /> Inspeções pendentes</div>
-                 <div className="text-xl font-bold text-white mb-1">53</div>
-                 <div className="text-[10px] text-gray-500 flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> <span className="text-red-500">23%</span> vs período anterior</div>
-               </div>
-               <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-medium mb-1"><Briefcase className="w-3 h-3" /> Conformidade geral</div>
-                 <div className="text-xl font-bold text-white mb-1">78%</div>
-                 <div className="text-[10px] text-gray-500 flex items-center gap-1"><ArrowUp className="w-3 h-3 text-emerald-500" /> <span className="text-emerald-500">8 p.p.</span> vs período anterior</div>
+
+               <div className="p-5 md:p-6 shrink-0 bg-transparent relative z-10 border-t border-white/5">
+                  <div className="flex items-center gap-3">
+                     <button className="w-[52px] h-[52px] rounded-xl border border-white/10 bg-[#0b0f19] flex items-center justify-center text-purple-400 hover:bg-white/5 transition-colors shrink-0">
+                        <Activity className="w-5 h-5" />
+                     </button>
+                     <div className="flex-1 relative">
+                        <input 
+                           type="text" 
+                           value={inputValue}
+                           onChange={(e) => setInputValue(e.target.value)}
+                           onKeyDown={(e) => {
+                              if (e.key === 'Enter' && inputValue.trim()) {
+                                 handleSend(inputValue);
+                              }
+                           }}
+                           placeholder="Pergunte sobre riscos, inspeções, ações ou alertas..."
+                           className="w-full bg-[#121826] border border-white/10 rounded-xl pl-5 pr-12 h-[52px] text-[15px] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
+                        />
+                     </div>
+                     <button 
+                        onClick={() => handleSend(inputValue)}
+                        className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
+                           inputValue.trim() 
+                              ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-[0_0_15px_rgba(124,58,237,0.4)] border border-purple-500/50' 
+                              : 'bg-[#121826] text-gray-400 border border-white/10'
+                        }`}
+                     >
+                        <Send className="w-5 h-5 ml-0.5" />
+                     </button>
+                  </div>
+                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
+                     <Lock className="w-3 h-3" /> As respostas da Lari são baseadas nos dados do sistema e podem não refletir todas as particularidades.
+                  </div>
                </div>
             </div>
 
-            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Módulos conectados</h4>
-            <div className="flex flex-wrap gap-2">
-               {['Riscos', 'Inspeções', 'Ações', 'Alertas', 'SLAs', 'Relatórios', 'Configurações'].map((mod, i) => (
-                 <span key={i} className="text-[11px] bg-white/5 text-gray-300 border border-white/10 px-2 py-1 rounded flex items-center gap-1">
-                   {i === 0 && <AlertTriangle className="w-3 h-3 text-red-400" />}
-                   {i === 1 && <ClipboardCheck className="w-3 h-3 text-blue-400" />}
-                   {i === 2 && <Activity className="w-3 h-3 text-purple-400" />}
-                   {i === 3 && <AlertTriangle className="w-3 h-3 text-yellow-400" />}
-                   {i === 4 && <AlertTriangle className="w-3 h-3 text-purple-400" />}
-                   {i === 5 && <FileText className="w-3 h-3 text-gray-400" />}
-                   {mod}
-                 </span>
-               ))}
-            </div>
-          </div>
+            <div className="flex-1 flex flex-col gap-6 w-full max-w-[340px] shrink-0 hidden lg:flex">
+               <div className="bg-[#121826] border border-white/5 rounded-2xl flex flex-col pt-2 shadow-lg">
+                  <div className="flex items-center justify-between p-5 border-b border-white/5 mx-1">
+                     <div className="flex items-center gap-2 text-gray-300">
+                        <Activity className="w-[18px] h-[18px] text-purple-400" />
+                        <h3 className="text-[14px] font-bold text-white">Contexto do sistema</h3>
+                     </div>
+                     <div className="flex items-center gap-1.5 justify-end">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
+                        <span className="text-[10px] text-gray-500 font-medium">Atualizado agora</span>
+                     </div>
+                  </div>
 
-          <div className="bg-[#121826] border border-white/5 rounded-2xl p-5">
-            <h3 className="text-sm font-bold text-white mb-4">Atalhos inteligentes</h3>
-            <div className="space-y-4">
-               <div className="flex items-start justify-between group cursor-pointer">
-                  <div className="flex gap-3">
-                     <div className="mt-0.5 bg-white/5 p-1.5 rounded"><Activity className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" /></div>
-                     <div>
-                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Ações críticas atrasadas</p>
-                        <p className="text-[11px] text-gray-500">Listar ações críticas fora do prazo.</p>
-                     </div>
+                  <div className="flex flex-col py-2">
+                     {[
+                        { title: 'Riscos críticos', subtitle: 'vs período anterior', val: '7', stat: '16%', up: true, icon: <AlertTriangle className="w-4 h-4 text-red-500" />, iconBg: 'bg-[#1e1b1d] border-red-500/20' },
+                        { title: 'Inspeções pendentes', subtitle: 'vs período anterior', val: '53', stat: '23%', up: true, icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, iconBg: 'bg-[#1a1e28] border-blue-500/20' },
+                        { title: 'Ações atrasadas', subtitle: 'vs período anterior', val: '18', stat: '37%', up: true, icon: <Clock className="w-4 h-4 text-orange-400" />, iconBg: 'bg-[#221e1a] border-orange-500/20' },
+                     ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between py-4 px-6 hover:bg-white/5 transition-colors cursor-pointer relative group">
+                           {i !== 2 && <div className="absolute bottom-0 left-6 right-6 h-px bg-white/5"></div>}
+                           <div className="flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${item.iconBg}`}>
+                                 {item.icon}
+                              </div>
+                              <div className="flex flex-col">
+                                 <span className="text-[13px] font-bold text-white leading-tight mb-0.5 group-hover:text-purple-400 transition-colors">{item.title}</span>
+                                 <span className="text-[11px] text-gray-500">{item.subtitle}</span>
+                              </div>
+                           </div>
+                           <div className="flex flex-col items-end">
+                              <span className="text-[22px] font-bold text-white leading-tight mb-1">{item.val}</span>
+                              <span className={`text-[11px] font-bold flex items-center gap-0.5 ${item.up ? 'text-red-400' : 'text-emerald-400'}`}>
+                                 <ArrowUp className="w-3 h-3" /> {item.stat}
+                              </span>
+                           </div>
+                        </div>
+                     ))}
                   </div>
-                  <button className="text-[10px] text-purple-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Abrir ação <ChevronRight className="w-3 h-3" /></button>
                </div>
-               <div className="flex items-start justify-between group cursor-pointer">
-                  <div className="flex gap-3">
-                     <div className="mt-0.5 bg-white/5 p-1.5 rounded"><AlertTriangle className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" /></div>
-                     <div>
-                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Riscos por setor</p>
-                        <p className="text-[11px] text-gray-500">Ver riscos agrupados por setor.</p>
-                     </div>
+
+               <div className="bg-[#121826] border border-white/5 rounded-2xl overflow-hidden flex flex-col shadow-lg">
+                  <div className="flex items-center gap-2 p-5 border-b border-white/5 mx-1">
+                     <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px] text-purple-400" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m13 2-2 2.5h3L11 22l2-2.5h-3L13 2z"/>
+                     </svg>
+                     <h3 className="text-[14px] font-bold text-white">Acesso rápido</h3>
                   </div>
-                  <button className="text-[10px] text-purple-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Ver riscos <ChevronRight className="w-3 h-3" /></button>
-               </div>
-               <div className="flex items-start justify-between group cursor-pointer">
-                  <div className="flex gap-3">
-                     <div className="mt-0.5 bg-white/5 p-1.5 rounded"><ClipboardCheck className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" /></div>
-                     <div>
-                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Inspeções pendentes</p>
-                        <p className="text-[11px] text-gray-500">Filtrar inspeções não realizadas.</p>
-                     </div>
+                  
+                  <div className="flex flex-col px-3 py-3">
+                     {[
+                        { title: 'Riscos', icon: <AlertTriangle className="w-4 h-4 text-red-500" /> },
+                        { title: 'Inspeções', icon: <ShieldCheck className="w-4 h-4 text-blue-400" /> },
+                        { title: 'Ações', icon: <Clock className="w-4 h-4 text-orange-400" /> },
+                     ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between p-3.5 px-4 hover:bg-white/5 rounded-xl cursor-pointer transition-colors group">
+                           <div className="flex items-center gap-3">
+                              {item.icon}
+                              <span className="text-[13px] font-medium text-gray-300 group-hover:text-white transition-colors">{item.title}</span>
+                           </div>
+                           <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
+                        </div>
+                     ))}
                   </div>
-                  <button className="text-[10px] text-purple-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Filtrar inspeções <ChevronRight className="w-3 h-3" /></button>
-               </div>
-               <div className="flex items-start justify-between group cursor-pointer">
-                  <div className="flex gap-3">
-                     <div className="mt-0.5 bg-white/5 p-1.5 rounded"><AlertTriangle className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" /></div>
-                     <div>
-                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Alertas ativos</p>
-                        <p className="text-[11px] text-gray-500">Mostrar alertas não resolvidos.</p>
-                     </div>
+                  
+                  <div className="p-4 px-6 border-t border-white/5">
+                     <button className="text-[13px] font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors">
+                        Ver todos os módulos <ChevronRight className="w-3.5 h-3.5" />
+                     </button>
                   </div>
-                  <button className="text-[10px] text-purple-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Ver alertas <ChevronRight className="w-3 h-3" /></button>
-               </div>
-               <div className="flex items-start justify-between group cursor-pointer">
-                  <div className="flex gap-3">
-                     <div className="mt-0.5 bg-white/5 p-1.5 rounded"><FileText className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" /></div>
-                     <div>
-                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Relatório executivo</p>
-                        <p className="text-[11px] text-gray-500">Gerar resumo executivo do período.</p>
-                     </div>
-                  </div>
-                  <button className="text-[10px] text-purple-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Gerar relatório <ChevronRight className="w-3 h-3" /></button>
                </div>
             </div>
           </div>
-          
         </div>
-
-      </div>
+      </main>
     </div>
   );
 }

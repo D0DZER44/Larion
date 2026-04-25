@@ -33,7 +33,7 @@ const navGroups = [
   }
 ];
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(true);
 
@@ -50,13 +50,27 @@ export function Sidebar() {
       {/* Logo Area */}
       <div className="p-6 pb-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-600/20">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-white">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-gradient-to-br from-[#121826] to-[#1e1a30] border border-blue-500/30 overflow-hidden relative group shrink-0">
+            <Image 
+              src="/logo.jpg" 
+              alt="ApexShield Logo" 
+              width={32} 
+              height={32} 
+              className="object-cover w-full h-full relative z-10" 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
+              }}
+            />
+            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[#121826] z-0">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-400">
+                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+               </svg>
+            </div>
+            <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity z-20"></div>
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">LARION</h1>
+            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">ApexShield</h1>
             <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">SST Inteligência</p>
           </div>
         </Link>
@@ -72,6 +86,7 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               prefetch={true}
+              onClick={onClose}
               className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 isActive 
                   ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/10' 

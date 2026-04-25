@@ -1,86 +1,967 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'motion/react';
-import { Settings, User, Bell, Shield, Database } from 'lucide-react';
-import Image from 'next/image';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useAppStore } from '@/lib/store';
+import { 
+  Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
+  ChevronRight, Sparkles, ShieldCheck, FileText, AlertTriangle, PlayCircle, 
+  Plus, Search, Edit2, Trash2, GripVertical, CheckCircle2, Monitor, Phone, 
+  Mail, MapPin, Globe, Lock, Activity, Eye, FileOutput, Shield, RefreshCw, X
+} from 'lucide-react';
+
+const TABS = [
+  { id: 'geral', label: 'Geral', icon: <Settings className="w-4 h-4" /> },
+  { id: 'empresa', label: 'Empresa', icon: <Building2 className="w-4 h-4" /> },
+  { id: 'usuarios', label: 'Usuários', icon: <Users className="w-4 h-4" /> },
+  { id: 'checklists', label: 'Checklists', icon: <CheckSquare className="w-4 h-4" /> },
+  { id: 'regras', label: 'Regras de Risco', icon: <ShieldAlert className="w-4 h-4" /> },
+  { id: 'slas', label: 'Prazos e SLAs', icon: <Clock className="w-4 h-4" /> },
+  { id: 'alertas', label: 'Alertas', icon: <Bell className="w-4 h-4" /> },
+  { id: 'perfil', label: 'Perfil', icon: <User className="w-4 h-4" /> },
+];
 
 export default function ConfiguracoesPage() {
+  const [activeTab, setActiveTab] = useState('geral');
+
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full">
-      <header className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">Configurações</h1>
-          <p className="text-sm text-gray-400 mt-1">Ajuste as preferências do sistema e do seu perfil.</p>
-        </div>
-      </header>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-2">
-          {[
-            { label: 'Perfil', icon: User, active: true },
-            { label: 'Notificações', icon: Bell, active: false },
-            { label: 'Segurança', icon: Shield, active: false },
-            { label: 'Gerenciamento de Dados', icon: Database, active: false },
-            { label: 'Preferências do Sistema', icon: Settings, active: false },
-          ].map((item, i) => (
-            <button 
-              key={i}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${
-                item.active 
-                  ? 'bg-purple-600/10 text-purple-400 border border-purple-500/20' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </button>
-          ))}
-        </div>
+    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
-        <div className="md:col-span-2 glass-panel p-6 rounded-2xl flex flex-col items-start min-h-[500px]">
-          <h2 className="text-lg font-bold text-white mb-6">Informações do Perfil</h2>
-          <div className="flex items-center gap-6 mb-8 w-full border-b border-white/5 pb-8">
-            <div className="w-20 h-20 bg-gray-800 rounded-full border-2 border-white/10 flex items-center justify-center overflow-hidden">
-               <Image src="https://picsum.photos/seed/rafael/80/80" alt="Rafael" width={80} height={80} className="w-full h-full object-cover" />
+        {/* Background elements for depth */}
+        <div className="absolute top-0 inset-x-0 h-[300px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none"></div>
+
+        <div className="p-6 md:p-8 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden relative z-10">
+          
+          <header className="flex items-center justify-between gap-4 mb-6 shrink-0">
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Configurações</h1>
+              <p className="text-sm text-gray-400 mt-1">Gerencie as principais configurações e regras do sistema.</p>
             </div>
             <div>
-              <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors mb-2">
-                Alterar Foto
+               <button className="relative p-2 bg-[#121826] hover:bg-white/5 text-gray-300 rounded-lg transition-colors border border-white/10">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500"></span>
+               </button>
+            </div>
+          </header>
+
+          <div className="border-b border-white/10 mb-6 flex space-x-1 overflow-x-auto custom-scrollbar no-scrollbar-y shrink-0">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                  activeTab === tab.id ? 'text-purple-400' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                {activeTab === tab.id && (
+                  <motion.div 
+                    layoutId="config-active-tab"
+                    className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-500"
+                  />
+                )}
               </button>
-              <p className="text-xs text-gray-500">JPG, GIF ou PNG. Tamanho máximo 800K.</p>
-            </div>
+            ))}
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-            <div className="space-y-1.5">
-               <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Nome</label>
-               <input type="text" defaultValue="Rafael Oliveira" className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" />
-            </div>
-            <div className="space-y-1.5">
-               <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Email</label>
-               <input type="email" defaultValue="rafael@larionsst.com.br" className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" />
-            </div>
-            <div className="space-y-1.5">
-               <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Cargo</label>
-               <input type="text" defaultValue="Engenheiro de Segurança" className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" />
-            </div>
-            <div className="space-y-1.5">
-               <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Empresa</label>
-               <input type="text" defaultValue="Larion SST Inteligência" disabled className="w-full bg-black/10 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed" />
-            </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+             <AnimatePresence mode="wait">
+               <motion.div
+                 key={activeTab}
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 transition={{ duration: 0.2 }}
+                 className="h-full flex flex-col"
+               >
+                 {activeTab === 'geral' && <TabGeral />}
+                 {activeTab === 'empresa' && <TabEmpresa />}
+                 {activeTab === 'usuarios' && <TabUsuarios />}
+                 {activeTab === 'checklists' && <TabChecklists />}
+                 {activeTab === 'regras' && <TabRegras />}
+                 {activeTab === 'slas' && <TabSlas />}
+                 {activeTab === 'alertas' && <TabAlertas />}
+                 {activeTab === 'perfil' && <TabPerfil />}
+               </motion.div>
+             </AnimatePresence>
           </div>
-          
-          <div className="mt-8 pt-6 border-t border-white/5 w-full flex justify-end gap-3">
-             <button className="px-5 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
-               Descartar
-             </button>
-             <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg">
-               Salvar Alterações
-             </button>
-          </div>
+
         </div>
-      </div>
+      </main>
     </div>
   );
+}
+
+// ==========================================
+// TABS COMPONENTS
+// ==========================================
+
+function TabGeral() {
+  return (
+    <div className="space-y-6 flex-1">
+      {/* Banner */}
+      <div className="bg-[#1e1b4b]/40 border border-purple-500/30 rounded-2xl p-5 flex items-center justify-between gap-4">
+         <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+               <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+               <h3 className="text-white font-bold mb-1">Ação recomendada</h3>
+               <p className="text-sm text-gray-400">Revise os prazos da prioridade <span className="text-purple-400 font-medium">Crítica</span>. Última alteração há 45 dias.</p>
+            </div>
+         </div>
+         <button className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+            Revisar prazos
+         </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         {[
+            { title: "Configurações críticas", val: "3", desc: "requerem atenção", icon: <AlertTriangle className="text-red-400" />, border: "border-red-500/20", bg: "bg-red-500/5", color: "text-red-400" },
+            { title: "Integrações ativas", val: "6", desc: "serviços conectados", icon: <CheckCircle2 className="text-emerald-400" />, border: "border-emerald-500/20", bg: "bg-emerald-500/5", color: "text-emerald-400" },
+            { title: "Alertas ativos", val: "12", desc: "notificações habilitadas", icon: <Bell className="text-blue-400" />, border: "border-blue-500/20", bg: "bg-blue-500/5", color: "text-blue-400" },
+         ].map((card, i) => (
+            <div key={i} className={`bg-[#121826] border overflow-hidden p-5 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-white/5 transition-colors relative ${card.border}`}>
+               <div className="flex gap-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${card.bg} ${card.border}`}>
+                     {card.icon}
+                  </div>
+                  <div className="flex flex-col">
+                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{card.title}</span>
+                     <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-white">{card.val}</span>
+                        <span className="text-xs text-gray-400">{card.desc}</span>
+                     </div>
+                  </div>
+               </div>
+               <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" />
+            </div>
+         ))}
+      </div>
+
+      {/* Masonry-like Grid for Settings Blocks */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+         
+         {/* Block 1 */}
+         <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+               <Building2 className="w-5 h-5 text-purple-400" />
+               <h3 className="text-[15px] font-bold text-white">Informações da Empresa</h3>
+            </div>
+            <h4 className="font-bold text-white mb-4 text-lg">Larion Indústria Ltda.</h4>
+            <div className="space-y-4 mb-6">
+               <div className="grid grid-cols-2">
+                  <span className="text-[13px] text-gray-400 flex items-center gap-2"><MapPin className="w-3.5 h-3.5"/> Segmento</span>
+                  <span className="text-[13px] text-gray-200">Indústria</span>
+               </div>
+               <div className="grid grid-cols-2">
+                  <span className="text-[13px] text-gray-400 flex items-center gap-2"><FileText className="w-3.5 h-3.5"/> CNPJ</span>
+                  <span className="text-[13px] text-gray-200">12.345.678/0001-90</span>
+               </div>
+               <div className="grid grid-cols-2">
+                  <span className="text-[13px] text-gray-400 flex items-center gap-2"><Phone className="w-3.5 h-3.5"/> Telefone</span>
+                  <span className="text-[13px] text-gray-200">(11) 3456-7890</span>
+               </div>
+               <div className="grid grid-cols-2">
+                  <span className="text-[13px] text-gray-400 flex items-center gap-2"><Mail className="w-3.5 h-3.5"/> E-mail</span>
+                  <span className="text-[13px] text-gray-200">contato@larion.com.br</span>
+               </div>
+            </div>
+            <button className="text-[13px] font-medium text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10 w-full flex items-center justify-center gap-2 transition-colors">
+               <Edit2 className="w-4 h-4" /> Editar informações
+            </button>
+         </div>
+
+         {/* Block 2 */}
+         <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+               <Settings className="w-5 h-5 text-purple-400" />
+               <h3 className="text-[15px] font-bold text-white">Configurações do Sistema</h3>
+            </div>
+            <div className="space-y-5 mb-6">
+               {[
+                  { t: 'Exigir justificativa (atrasos)', d: 'Obriga input no motivo.' },
+                  { t: 'Bloquear edição pós-fechamento', d: 'Impede alteração em inspeções.' },
+                  { t: 'Habilitar anexos (fotos)', d: 'Permite arquivos em evidências.' },
+               ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center gap-4">
+                     <div>
+                        <p className="text-[13px] font-bold text-gray-200">{item.t}</p>
+                        <p className="text-[11px] text-gray-500">{item.d}</p>
+                     </div>
+                     <div className="w-9 h-5 bg-purple-600 rounded-full relative cursor-pointer flex items-center px-0.5">
+                        <div className="w-4 h-4 bg-white rounded-full translate-x-4"></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <button className="text-[13px] font-medium text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-4 py-2 rounded-lg border border-purple-500/20 w-full transition-colors">
+               Gerenciar sistema
+            </button>
+         </div>
+
+         {/* Block 3 */}
+         <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+             <div className="flex items-center gap-3 mb-6">
+               <Clock className="w-5 h-5 text-purple-400" />
+               <h3 className="text-[15px] font-bold text-white">Prazos Padrão (SLAs)</h3>
+            </div>
+            <div className="space-y-3 mb-6">
+               {[
+                  { lvl: 'Crítica', tempo: 'Imediato (4h)', color: 'bg-red-500' },
+                  { lvl: 'Alta', tempo: '1 dia útil', color: 'bg-orange-500' },
+                  { lvl: 'Média', tempo: '3 dias úteis', color: 'bg-yellow-500' },
+                  { lvl: 'Baixa', tempo: '7 dias úteis', color: 'bg-emerald-500' },
+               ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 group hover:border-white/10 transition-colors">
+                     <div className="flex items-center gap-2.5">
+                        <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+                        <span className="text-[13px] font-semibold text-gray-300">{item.lvl}</span>
+                     </div>
+                     <div className="flex items-center gap-3">
+                        <span className="text-[13px] text-gray-400">{item.tempo}</span>
+                        <button className="p-1 rounded text-gray-500 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all">
+                           <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <button className="text-[13px] font-medium text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10 w-full transition-colors">
+               Ajustar SLA base
+            </button>
+         </div>
+
+      </div>
+    </div>
+  )
+}
+
+function TabEmpresa() {
+   const { sectors, addSector, updateSector, deleteSector } = useAppStore();
+
+   const handleAddSector = () => {
+      addSector({ name: 'Novo Setor' });
+   };
+
+   return (
+      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+         
+         <div className="flex-1 space-y-6">
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <div className="mb-6">
+                  <h3 className="text-lg font-bold text-white">Dados Essenciais</h3>
+                  <p className="text-sm text-gray-400">Informações principais que aparecem em laudos e cabeçalhos.</p>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Razão Social</label>
+                     <input type="text" defaultValue="Larion Indústria Ltda." className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">CNPJ</label>
+                     <input type="text" defaultValue="12.345.678/0001-90" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Telefone</label>
+                     <input type="text" defaultValue="(11) 3456-7890" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">E-mail Corporativo</label>
+                     <input type="email" defaultValue="contato@larion.com.br" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Endereço Completo</label>
+                     <input type="text" defaultValue="Rua das Indústrias, 123, Galpão A - São Paulo/SP" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  </div>
+               </div>
+
+               <div className="flex justify-end pt-4 border-t border-white/5">
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                     Salvar dados
+                  </button>
+               </div>
+            </div>
+
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <div className="mb-6 flex justify-between items-center">
+                  <div>
+                     <h3 className="text-lg font-bold text-white">Prefêrencias Locais</h3>
+                     <p className="text-sm text-gray-400">Padrões regionais da planta.</p>
+                  </div>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fuso Horário</label>
+                     <select className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none">
+                        <option>Brasília (UTC-3)</option>
+                        <option>Manaus (UTC-4)</option>
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Idioma</label>
+                     <select className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none">
+                        <option>Português (BR)</option>
+                        <option>English</option>
+                        <option>Español</option>
+                     </select>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div className="w-full lg:w-[450px] space-y-6">
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <h3 className="text-[15px] font-bold text-white mb-4">Logo da Empresa</h3>
+               <div className="border border-dashed border-white/20 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-white/5 hover:border-purple-500/50 transition-colors cursor-pointer group">
+                  <div className="w-16 h-16 bg-[#0b0f19] border border-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                     <Building2 className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <button className="text-sm font-medium text-white bg-white/5 px-4 py-2 rounded-lg border border-white/10 mb-2">Alterar logo</button>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">PNG ou JPG. Máx 2MB.<br/>Recomendado: 512x512</p>
+               </div>
+            </div>
+
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6 flex flex-col h-[400px]">
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[15px] font-bold text-white">Setores</h3>
+                  <button onClick={handleAddSector} className="text-[11px] font-bold text-purple-400 uppercase tracking-wider hover:text-purple-300 transition-colors flex items-center gap-1">
+                     <Plus className="w-3.5 h-3.5" /> Setor
+                  </button>
+               </div>
+               <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
+                  {sectors.map((setor) => (
+                     <div key={setor.id} className="flex items-center gap-3 p-3 bg-[#0b0f19] border border-white/5 rounded-xl group hover:border-white/10 transition-colors cursor-move">
+                        <GripVertical className="w-4 h-4 text-gray-600 group-hover:text-gray-400" />
+                        <input 
+                           value={setor.name} 
+                           onChange={(e) => updateSector(setor.id, e.target.value)}
+                           className="bg-transparent border-none text-[13px] font-medium text-gray-200 flex-1 focus:outline-none focus:border-b border-purple-500" 
+                        />
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button onClick={() => deleteSector(setor.id)} className="text-red-500/70 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+
+      </div>
+   )
+}
+
+function TabUsuarios() {
+   const { users, addUser, updateUser, deleteUser } = useAppStore();
+   const [search, setSearch] = useState('');
+   
+   const filteredUsers = users.filter((u) => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+
+   const handleAdd = () => {
+      addUser({ name: 'Novo Usuário', role: 'Cargo', email: 'email@larion.com', status: 'Ativo', avatar: 'https://i.pravatar.cc/150' });
+   };
+
+   return (
+      <div className="bg-[#121826] border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+         <div className="p-5 border-b border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative w-full sm:w-[300px]">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+               <input 
+                  type="text" 
+                  placeholder="Buscar usuários..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" 
+               />
+            </div>
+            <button onClick={handleAdd} className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
+               <Plus className="w-4 h-4" /> Novo usuário
+            </button>
+         </div>
+
+         <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+               <thead className="bg-[#0b0f19] border-b border-white/5">
+                  <tr>
+                     <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Usuário</th>
+                     <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Cargo</th>
+                     <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">E-mail</th>
+                     <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                     <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-white/5">
+                  {filteredUsers.map((u) => (
+                     <tr key={u.id} className="hover:bg-white/5 transition-colors group">
+                        <td className="px-5 py-4">
+                           <div className="flex items-center gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full bg-gray-800" />
+                              <input 
+                                 className="bg-transparent border-none text-[13px] font-bold text-gray-200 focus:outline-none focus:border-b-2 focus:border-purple-500"
+                                 value={u.name}
+                                 onChange={(e) => updateUser(u.id, { name: e.target.value })}
+                              />
+                           </div>
+                        </td>
+                        <td className="px-5 py-4">
+                           <input 
+                              className="bg-transparent border-none text-[13px] text-gray-400 focus:outline-none focus:border-b-2 focus:border-purple-500"
+                              value={u.role}
+                              onChange={(e) => updateUser(u.id, { role: e.target.value })}
+                           />
+                        </td>
+                        <td className="px-5 py-4">
+                           <input 
+                              className="bg-transparent border-none text-[13px] text-gray-400 focus:outline-none focus:border-b-2 focus:border-purple-500"
+                              value={u.email}
+                              onChange={(e) => updateUser(u.id, { email: e.target.value })}
+                           />
+                        </td>
+                        <td className="px-5 py-4">
+                           <button 
+                              onClick={() => updateUser(u.id, { status: u.status === 'Ativo' ? 'Inativo' : 'Ativo' })}
+                              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                              u.status === 'Ativo' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-gray-400 bg-white/5 border-white/10'
+                           }`}>{u.status}</button>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                           <button onClick={() => deleteUser(u.id)} className="p-1.5 text-gray-500 hover:text-red-400 rounded transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                           </button>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+      </div>
+   )
+}
+
+function TabChecklists() {
+   const { checklists, addChecklist, updateChecklist, deleteChecklist } = useAppStore();
+   const [search, setSearch] = useState('');
+   const [selectedId, setSelectedId] = useState(checklists[0]?.id);
+
+   const filteredChecklists = checklists.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+   const activeChecklist = checklists.find(c => c.id === selectedId) || checklists[0];
+
+   const handleAdd = () => {
+      addChecklist({ name: 'Novo Modelo', category: 'Segurança Geral', status: 'Rascunho', sections: [] });
+   };
+
+   return (
+      <div className="flex flex-col xl:flex-row gap-6 w-full items-start h-[600px]">
+         
+         {/* Left: Templates */}
+         <div className="w-full xl:w-[280px] bg-[#121826] border border-white/5 rounded-2xl p-5 flex flex-col h-full shrink-0">
+            <h3 className="text-sm font-bold text-white mb-4">Modelos de Checklist</h3>
+            <div className="relative mb-4">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+               <input 
+                  type="text" 
+                  placeholder="Buscar modelo..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-[#0b0f19] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" 
+               />
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+               {filteredChecklists.map((c) => {
+                  const isActive = c.id === selectedId;
+                  let color = 'bg-gray-500';
+                  if(c.status === 'Ativo') color = 'bg-emerald-500';
+                  if(c.status === 'Rascunho') color = 'bg-orange-500';
+
+                  return (
+                     <div key={c.id} onClick={() => setSelectedId(c.id)} className={`p-3 rounded-xl border transition-colors cursor-pointer ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                           <span className={`w-2 h-2 rounded-full mt-1 ${color}`}></span>
+                           <span className="text-[10px] text-gray-500 uppercase font-bold">{c.status}</span>
+                        </div>
+                        <p className={`text-[13px] font-bold ${isActive ? 'text-white' : 'text-gray-300'}`}>{c.name}</p>
+                     </div>
+                  );
+               })}
+            </div>
+            <button onClick={handleAdd} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 border border-white/10">
+               <Plus className="w-3.5 h-3.5" /> Novo modelo
+            </button>
+         </div>
+
+         {/* Middle: Builder */}
+         {activeChecklist ? (
+            <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full overflow-hidden shadow-lg">
+               <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
+                  <div>
+                     <h2 className="text-lg font-bold text-white mb-0.5">Construtor de Checklist</h2>
+                     <p className="text-xs text-gray-500">Edite perguntas e regras (Modelo: {activeChecklist.name})</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                  </div>
+               </div>
+
+               <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[#0A0D14]">
+                  
+                  <div className="max-w-3xl mx-auto space-y-6">
+                     {/* Basic Info */}
+                     <div className="bg-[#121826] border border-white/5 p-5 rounded-2xl space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nome do checklist</label>
+                              <input 
+                                 type="text" 
+                                 value={activeChecklist.name} 
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { name: e.target.value })}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" 
+                              />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</label>
+                              <select 
+                                 value={activeChecklist.status}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { status: e.target.value as any })}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                              >
+                                 <option value="Ativo">Ativo</option>
+                                 <option value="Rascunho">Rascunho</option>
+                                 <option value="Inativo">Inativo</option>
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Sections */}
+                     <div className="space-y-4">
+                        {activeChecklist.sections.map((section, sIndex) => (
+                           <div key={section.id} className="bg-[#1e1b4b]/20 border border-purple-500/20 p-1 rounded-2xl relative group/section">
+                              <div className="bg-[#121826] rounded-xl overflow-hidden border border-white/5">
+                                 <div className="p-3 bg-[#0b0f19] border-b border-white/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3 flex-1">
+                                       <GripVertical className="w-4 h-4 text-gray-600 cursor-move" />
+                                       <input 
+                                          type="text" 
+                                          value={section.title} 
+                                          onChange={(e) => {
+                                             const newSections = [...activeChecklist.sections];
+                                             newSections[sIndex].title = e.target.value;
+                                             updateChecklist(activeChecklist.id, { sections: newSections });
+                                          }}
+                                          className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-sm font-bold text-white focus:outline-none w-full max-w-[250px] transition-colors" 
+                                       />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                       <button 
+                                          onClick={() => {
+                                             const newSections = activeChecklist.sections.filter((_, idx) => idx !== sIndex);
+                                             updateChecklist(activeChecklist.id, { sections: newSections });
+                                          }}
+                                          className="text-[11px] px-2 py-1 text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/section:opacity-100"
+                                       >Excluir</button>
+                                       <span className="text-[11px] text-gray-500 font-medium">{section.questions.length} perguntas</span>
+                                    </div>
+                                 </div>
+                                 <div className="px-4 py-2 space-y-1">
+                                    {section.questions.map((item, qIndex) => (
+                                       <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0 group">
+                                          <GripVertical className="w-3.5 h-3.5 text-gray-600 cursor-move opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                          <input 
+                                             type="text"
+                                             value={item.text}
+                                             onChange={(e) => {
+                                                const newSections = [...activeChecklist.sections];
+                                                newSections[sIndex].questions[qIndex].text = e.target.value;
+                                                updateChecklist(activeChecklist.id, { sections: newSections });
+                                             }}
+                                             className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-[13px] text-gray-300 focus:outline-none flex-1 transition-colors"
+                                          />
+                                          <div className="flex items-center gap-3 shrink-0">
+                                             <select 
+                                                value={item.type}
+                                                onChange={(e) => {
+                                                   const newSections = [...activeChecklist.sections];
+                                                   newSections[sIndex].questions[qIndex].type = e.target.value;
+                                                   updateChecklist(activeChecklist.id, { sections: newSections });
+                                                }}
+                                                className="bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded px-2 py-1 text-[10px] font-medium outline-none appearance-none cursor-pointer"
+                                             >
+                                                <option value="Aprovação (Sim/Não)">Aprovação (Sim/Não)</option>
+                                                <option value="Múltipla Escolha">Múltipla Escolha</option>
+                                                <option value="Texto Longo">Texto Longo</option>
+                                                <option value="Data/Hora">Data/Hora</option>
+                                                <option value="Anexo/Foto">Anexo/Foto</option>
+                                             </select>
+                                             <select
+                                                value={item.riskMap}
+                                                onChange={(e) => {
+                                                   const newSections = [...activeChecklist.sections];
+                                                   newSections[sIndex].questions[qIndex].riskMap = e.target.value;
+                                                   updateChecklist(activeChecklist.id, { sections: newSections });
+                                                }}
+                                                className={`w-24 px-1 py-1 text-[10px] font-medium rounded border bg-[#0b0f19] outline-none cursor-pointer ${item.riskMap === 'Crítico' ? 'text-red-500 border-red-500/30' : item.riskMap === 'Médio' ? 'text-orange-500 border-orange-500/30' : item.riskMap === 'Leve' ? 'text-emerald-500 border-emerald-500/30' : 'text-gray-500 border-gray-500/30'}`}
+                                             >
+                                                <option value="Nenhum">Sem risco</option>
+                                                <option value="Leve">Risco Leve</option>
+                                                <option value="Médio">Risco Médio</option>
+                                                <option value="Crítico">Risco Crítico</option>
+                                             </select>
+                                             <button 
+                                                onClick={() => {
+                                                   const newSections = [...activeChecklist.sections];
+                                                   newSections[sIndex].questions = newSections[sIndex].questions.filter((_, idx) => idx !== qIndex);
+                                                   updateChecklist(activeChecklist.id, { sections: newSections });
+                                                }}
+                                                className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                             >
+                                                <X className="w-3.5 h-3.5" />
+                                             </button>
+                                          </div>
+                                       </div>
+                                    ))}
+                                    <button 
+                                       onClick={() => {
+                                          const newSections = [...activeChecklist.sections];
+                                          newSections[sIndex].questions.push({ id: Date.now().toString(), text: 'Nova pergunta', type: 'Aprovação (Sim/Não)', riskMap: 'Nenhum' });
+                                          updateChecklist(activeChecklist.id, { sections: newSections });
+                                       }}
+                                       className="w-full py-2.5 text-xs text-purple-400 font-bold hover:bg-purple-500/5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2 border border-transparent hover:border-purple-500/10"
+                                    >
+                                       <Plus className="w-3.5 h-3.5" /> Adicionar Pergunta
+                                    </button>
+                                 </div>
+                              </div>
+                           </div>
+                        ))}
+
+                        <button 
+                           onClick={() => {
+                              const newSections = [...activeChecklist.sections, { id: Date.now().toString(), title: 'Nova Seção', questions: [] }];
+                              updateChecklist(activeChecklist.id, { sections: newSections });
+                           }}
+                           className="w-full py-4 rounded-xl border border-dashed border-white/20 hover:border-purple-500/50 hover:bg-purple-500/5 text-gray-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2 font-bold text-xs"
+                        >
+                           <Plus className="w-4 h-4" /> Nova Seção
+                        </button>
+                     </div>
+                  </div>
+
+               </div>
+            </div>
+         ) : null}
+
+      </div>
+   )
+}
+
+function TabRegras() {
+   const { rules, addRule, updateRule, deleteRule } = useAppStore();
+   const [selectedId, setSelectedId] = useState(rules[0]?.id);
+
+   const activeRule = rules.find(r => r.id === selectedId) || rules[0];
+
+   const handleAdd = () => {
+      addRule({
+         name: 'Nova Regra Automática',
+         checklistOrigin: 'Máquinas e Equip.',
+         question: 'Nova pergunta?',
+         condition: 'NÃO',
+         severity: 'Médio',
+         autoAction: 'Corrigir falha',
+         assignTo: 'Equipe de Manutenção',
+         deadline: '3 dias úteis',
+         justification: '...',
+         isActive: true
+      });
+   };
+
+   return (
+      <div className="flex flex-col w-full h-[600px] gap-6 xl:flex-row">
+         {/* Left Side: Rule List */}
+         <div className="w-full xl:w-[280px] bg-[#121826] border border-white/5 rounded-2xl p-5 flex flex-col h-full shrink-0">
+            <h3 className="text-sm font-bold text-white mb-4">Regras Cadastradas</h3>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+               {rules.map((r) => {
+                  const isActive = r.id === selectedId;
+                  return (
+                     <div key={r.id} onClick={() => setSelectedId(r.id)} className={`p-3 rounded-xl border transition-colors cursor-pointer ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                           <span className={`w-2 h-2 rounded-full mt-1 ${r.isActive ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
+                           <span className="text-[10px] text-gray-500 uppercase font-bold">{r.severity}</span>
+                        </div>
+                        <p className={`text-[13px] font-bold ${isActive ? 'text-white' : 'text-gray-300'}`}>{r.name}</p>
+                     </div>
+                  );
+               })}
+            </div>
+            <button onClick={handleAdd} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 border border-white/10">
+               <Plus className="w-3.5 h-3.5" /> Nova regra
+            </button>
+         </div>
+
+         {/* Left Side: Rule Builder */}
+         {activeRule ? (
+         <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full shadow-lg">
+            <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
+               <div>
+                  <h2 className="text-lg font-bold text-white mb-0.5">Construtor de Regra (Risco Automático)</h2>
+                  <p className="text-xs text-gray-500">Transforme respostas em ações proativas no sistema.</p>
+               </div>
+               <div className="flex items-center gap-2">
+                  <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-[13px] font-bold transition-colors" onClick={() => updateRule(activeRule.id, { isActive: !activeRule.isActive })}>
+                     {activeRule.isActive ? 'Desativar Regra' : 'Ativar Regra'}
+                  </button>
+               </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
+               <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Nome da Regra</label>
+                  <input type="text" value={activeRule.name} onChange={e => updateRule(activeRule.id, { name: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+               </div>
+
+               {/* Fluxo */}
+               <div className="relative pt-4 pb-8 pl-6 border-l-2 border-white/10 ml-4 space-y-8">
+                  
+                  {/* Step 1 */}
+                  <div className="relative">
+                     <div className="absolute w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center -left-[30px] top-1 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(124,58,237,0.5)]">1</div>
+                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-purple-400" /> Evento Gatilho
+                     </h4>
+                     <div className="grid grid-cols-2 gap-4">
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.checklistOrigin} onChange={(e) => updateRule(activeRule.id, { checklistOrigin: e.target.value })} />
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.question} onChange={(e) => updateRule(activeRule.id, { question: e.target.value })} />
+                     </div>
+                     <div className="mt-3 flex items-center gap-3">
+                        <span className="text-[13px] text-gray-400">Quando a resposta for exata a:</span>
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none max-w-[120px]" value={activeRule.condition} onChange={(e) => updateRule(activeRule.id, { condition: e.target.value })} />
+                     </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="relative">
+                     <div className="absolute w-5 h-5 bg-red-500 rounded-full flex items-center justify-center -left-[30px] top-1 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]">2</div>
+                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-500" /> Risco Gerado
+                     </h4>
+                     <div className="bg-[#0b0f19] border border-white/5 p-4 rounded-xl flex gap-6">
+                        <div className="space-y-1">
+                           <label className="text-[10px] text-gray-500 uppercase font-bold">Severidade</label>
+                           <select value={activeRule.severity} onChange={e => updateRule(activeRule.id, { severity: e.target.value as any })} className="bg-transparent text-white font-bold text-[13px] border-none focus:outline-none cursor-pointer text-red-400">
+                              <option>Crítico</option>
+                              <option>Alto</option>
+                              <option>Médio</option>
+                              <option>Baixo</option>
+                           </select>
+                        </div>
+                        <div className="w-px bg-white/10"></div>
+                        <div className="space-y-1 flex-1">
+                           <label className="text-[10px] text-gray-500 uppercase font-bold">Justificativa automática</label>
+                           <input type="text" value={activeRule.justification} onChange={e => updateRule(activeRule.id, { justification: e.target.value })} className="w-full bg-transparent border-none text-[13px] text-gray-300 focus:outline-none" />
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="relative">
+                     <div className="absolute w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center -left-[30px] top-1 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(249,115,22,0.5)]">3</div>
+                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-orange-400" /> Ação Corretiva
+                     </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[11px] text-gray-400 uppercase font-bold">Ação Padrão</label>
+                           <input type="text" value={activeRule.autoAction} onChange={e => updateRule(activeRule.id, { autoAction: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[11px] text-gray-400 uppercase font-bold">Atribuir para</label>
+                           <input type="text" value={activeRule.assignTo} onChange={e => updateRule(activeRule.id, { assignTo: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
+                        </div>
+                     </div>
+                  </div>
+
+               </div>
+            </div>
+         </div>
+         ) : null}
+
+         {/* Right Side: Simulation Summary */}
+         <div className="w-full xl:w-[320px] shrink-0 bg-[#121826] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+             {/* decorative gradient */}
+            <div className="absolute top-[-50px] right-[-50px] w-40 h-40 bg-purple-500/10 blur-3xl rounded-full"></div>
+            
+            <Monitor className="w-10 h-10 text-white/20 mb-4" />
+            <h3 className="text-center font-bold text-white text-[15px] mb-2 leading-tight">Como isso<br/>funciona na prática?</h3>
+            <p className="text-center text-xs text-gray-400 mb-6 px-4">Se um inspetor responder &quot;{activeRule?.condition}&quot; para a proteção, o sistema instantaneamente criará:</p>
+            
+            <div className="w-full bg-[#0b0f19] border border-white/5 rounded-xl p-4 space-y-3 relative z-10">
+               <div className="flex items-center gap-2">
+                  <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase">{activeRule?.severity}</span>
+                  <p className="text-xs font-bold text-white">Risco Registrado</p>
+               </div>
+               <div className="flex items-center gap-2 ml-1">
+                  <Clock className="w-3.5 h-3.5 text-gray-600" />
+                  <p className="text-[11px] text-gray-400">Prazo Acionado: <strong className="text-white">{activeRule?.deadline}</strong></p>
+               </div>
+               <div className="flex items-center gap-2 ml-1">
+                  <User className="w-3.5 h-3.5 text-gray-600" />
+                  <p className="text-[11px] text-gray-400">{activeRule?.assignTo} é notificado.</p>
+               </div>
+            </div>
+
+            <div className="mt-6 flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 text-xs font-bold w-full justify-center">
+               <CheckCircle2 className="w-4 h-4" /> Lógica validada sem conflitos
+            </div>
+         </div>
+      </div>
+   )
+}
+
+function TabSlas() {
+   return (
+      <div className="flex flex-col items-center justify-center h-[500px] text-center max-w-lg mx-auto">
+         <div className="w-16 h-16 bg-[#121826] border border-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-xl relative">
+            <Clock className="w-8 h-8 text-purple-400 relative z-10" />
+            <div className="absolute inset-0 bg-purple-500/20 blur-xl"></div>
+         </div>
+         <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Modelo de SLAs em Construção</h2>
+         <p className="text-sm text-gray-400 leading-relaxed mb-8">
+            Nesta área, você definirá políticas de escalonamento. Ex: Se um risco Crítico não for tratado em 4h, ele notifica o Coordenador. Aos 24h, notifica a Diretoria.
+         </p>
+         <button className="bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+            Visualizar Roadmap
+         </button>
+      </div>
+   )
+}
+
+function TabAlertas() {
+   return (
+      <div className="flex flex-col items-center justify-center h-[500px] text-center max-w-lg mx-auto">
+         <div className="w-16 h-16 bg-[#121826] border border-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-xl relative">
+            <Bell className="w-8 h-8 text-blue-400 relative z-10" />
+            <div className="absolute inset-0 bg-blue-500/20 blur-xl"></div>
+         </div>
+         <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Central de Notificações Inteligente</h2>
+         <p className="text-sm text-gray-400 leading-relaxed mb-8">
+            Configure alertas omnichannel (E-mail, Whats, Push) para anomalias operacionais e conectividade do sistema.
+         </p>
+         <button className="bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+            Visualizar Roadmap
+         </button>
+      </div>
+   )
+}
+
+function TabPerfil() {
+   return (
+      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+         <div className="flex-1 space-y-6">
+            
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <h3 className="text-lg font-bold text-white mb-6">Meu Perfil Corporativo</h3>
+               <div className="flex flex-col md:flex-row gap-8 items-start">
+                  <div className="flex flex-col items-center gap-3 shrink-0">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" className="w-24 h-24 rounded-2xl object-cover bg-gray-800 shadow-xl" />
+                     <button className="text-[11px] font-medium text-white bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
+                        Alterar foto
+                     </button>
+                  </div>
+                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-5">
+                     <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nome Completo</label>
+                        <input type="text" defaultValue="Rafael Oliveira" className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Cargo / Setor</label>
+                        <input type="text" readOnly defaultValue="Engenheiro de Segurança" className="w-full bg-transparent border-b border-white/5 px-1 py-2.5 text-sm text-gray-400 focus:outline-none select-none" />
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">E-mail de Login</label>
+                        <input type="email" readOnly defaultValue="rafael@larion.com" className="w-full bg-transparent border-b border-white/5 px-1 py-2.5 text-sm text-gray-400 focus:outline-none select-none" />
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Telefone (Opcional)</label>
+                        <input type="text" defaultValue="(11) 98765-4321" className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     </div>
+                  </div>
+               </div>
+               <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
+                  <button className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors border border-white/10">
+                     Salvar perfil
+                  </button>
+               </div>
+            </div>
+
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-6 text-emerald-400">
+                  <Shield className="w-5 h-5" />
+                  <h3 className="text-lg font-bold text-white">Segurança da Conta</h3>
+               </div>
+               <div className="space-y-5">
+                  <div className="flex items-center justify-between p-4 bg-[#0b0f19] border border-white/5 rounded-xl">
+                     <div>
+                        <p className="text-[14px] font-bold text-white">Senha de Acesso</p>
+                        <p className="text-[12px] text-gray-400 mt-1">Última alteração: há 45 dias.</p>
+                     </div>
+                     <button className="text-[12px] font-medium text-white px-4 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5"/> Alterar
+                     </button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-[#0b0f19] border border-white/5 rounded-xl group relative overflow-hidden">
+                     <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500"></div>
+                     <div className="pl-3">
+                        <div className="flex items-center gap-2">
+                           <p className="text-[14px] font-bold text-white">Autenticação 2FA</p>
+                           <span className="text-[9px] font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Ativa</span>
+                        </div>
+                        <p className="text-[12px] text-gray-400 mt-1">Proteção por app autenticador ligada.</p>
+                     </div>
+                     <button className="text-[12px] font-medium text-gray-400 px-4 py-2 hover:bg-white/5 rounded-lg transition-colors">
+                        Gerenciar
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+         </div>
+
+         <div className="w-full lg:w-[400px] h-fit bg-[#121826] border border-white/5 rounded-2xl p-6">
+            <h3 className="text-[15px] font-bold text-white mb-6">Preferências de Notificação</h3>
+            <div className="space-y-5">
+               {[
+                  { t: 'Alertas Críticos', d: 'Riscos, não conformidades graves.', on: true },
+                  { t: 'Ações Atrasadas', d: 'Lembretes de ações sob minha tutela.', on: true },
+                  { t: 'Inspeções Pendentes', d: 'Quando serei auditor ou responsável.', on: false },
+                  { t: 'Resumos Semanais', d: 'Insights por e-mail toda segunda-feira.', on: true },
+               ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center gap-4">
+                     <div>
+                        <p className="text-[13px] font-bold text-gray-200">{item.t}</p>
+                        <p className="text-[11px] text-gray-500">{item.d}</p>
+                     </div>
+                     <div className={`w-9 h-5 rounded-full relative cursor-pointer flex items-center px-0.5 transition-colors ${item.on ? 'bg-purple-600' : 'bg-white/10'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${item.on ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <div className="mt-6 pt-5 border-t border-white/5">
+                <button className="text-[12px] font-bold text-purple-400 uppercase tracking-wide hover:text-purple-300 w-full text-center transition-colors">
+                  Gerenciar canais (E-mail/Apps)
+               </button>
+            </div>
+         </div>
+
+      </div>
+   )
 }
