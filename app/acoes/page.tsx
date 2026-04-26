@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { NormativeEngine, EconomicImpactEngine } from '@/lib/engines';
 import { Plus, Search, CheckCircle2, Activity, Edit2, Trash2, X, Clock, Play, MoreVertical, Download, AlertTriangle, Shield, Headphones, Settings, MapPin, FileText, Check, ChevronRight, ChevronLeft, PowerOff, BellRing, UserMinus, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
+
 
 type ActionItem = {
   id: string;
@@ -165,6 +167,8 @@ export default function AcoesPage() {
   const [formData, setFormData] = useState<Partial<ActionItem>>({
     title: '', description: '', priority: 'P2', status: 'Pendente', deadlineTime: ''
   });
+
+  const normativeDetection = NormativeEngine.detect(`${formData.title} ${formData.description}`);
 
   const handleOpenDetails = (item: ActionItem) => {
     setEditingItem(item);
@@ -585,6 +589,26 @@ export default function AcoesPage() {
                      />
                   </div>
                 </div>
+
+                {normativeDetection && (
+                   <div className="bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3 mt-4">
+                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                        <Shield className="w-4 h-4" /> Contexto: {normativeDetection.nr}
+                      </h4>
+                      <p className="text-xs text-gray-300">
+                        <strong>Severidade Estimada:</strong> <span className={normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normativeDetection.severity.toUpperCase()}</span>
+                      </p>
+                      <p className="text-xs text-gray-300">
+                        <strong>Recomendação:</strong> {normativeDetection.recommendedAction}
+                      </p>
+                      <button 
+                         onClick={() => setFormData({...formData, description: `${formData.description}\n\nRecomendação: ${normativeDetection.recommendedAction}`, priority: 'P1'})}
+                         className="w-full py-2 bg-purple-600/20 text-purple-400 text-xs font-bold rounded-lg border border-purple-500/30 hover:bg-purple-600/30 mt-2"
+                       >
+                        Aplicar Recomendação na Ação
+                      </button>
+                   </div>
+                )}
               </div>
               
               <div className="p-5 border-t border-white/5 flex justify-end gap-3 bg-black/20 rounded-b-2xl">
@@ -700,6 +724,28 @@ export default function AcoesPage() {
                      </div>
                      <p className="text-[13px] text-gray-200">{editingItem.nextStep}</p>
                   </div>
+
+                  {/* Impacto Financeiro (P1/P2) */}
+                  {(editingItem.priority === 'P1' || editingItem.priority === 'P2') && (() => {
+                    const estimate = EconomicImpactEngine.estimate({ 
+                      severityLevel: editingItem.priority === 'P1' ? 'crítico' : 'alto', 
+                      exposedPeople: 1, 
+                      recurrence: false 
+                    });
+                    return (
+                      <div className="p-5 rounded-xl border border-red-500/20 bg-red-500/5">
+                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                           Economia Estimada (Ação Preventiva)
+                         </h4>
+                         <div className="text-red-400 font-bold text-sm mb-1">
+                           {EconomicImpactEngine.formatCurrency(estimate.min)} a {EconomicImpactEngine.formatCurrency(estimate.max)}
+                         </div>
+                         <div className="text-[9px] text-gray-500 italic mt-2">
+                           Estimativa preventiva. O valor real depende de fiscalização, enquadramento, número de empregados, reincidência e contexto do evento.
+                         </div>
+                      </div>
+                    );
+                  })()}
 
                </div>
 

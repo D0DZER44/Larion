@@ -100,6 +100,8 @@ export default function ConfiguracoesPage() {
 // ==========================================
 
 function TabGeral() {
+  const { engineConfig, updateEngineConfig } = useAppStore();
+
   return (
     <div className="space-y-6 flex-1">
       {/* Banner */}
@@ -207,33 +209,54 @@ function TabGeral() {
          {/* Block 3 */}
          <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
              <div className="flex items-center gap-3 mb-6">
-               <Clock className="w-5 h-5 text-purple-400" />
-               <h3 className="text-[15px] font-bold text-white">Prazos Padrão (SLAs)</h3>
+               <Activity className="w-5 h-5 text-emerald-400" />
+               <h3 className="text-[15px] font-bold text-white">Impacto Econômico</h3>
             </div>
-            <div className="space-y-3 mb-6">
-               {[
-                  { lvl: 'Crítica', tempo: 'Imediato (4h)', color: 'bg-red-500' },
-                  { lvl: 'Alta', tempo: '1 dia útil', color: 'bg-orange-500' },
-                  { lvl: 'Média', tempo: '3 dias úteis', color: 'bg-yellow-500' },
-                  { lvl: 'Baixa', tempo: '7 dias úteis', color: 'bg-emerald-500' },
-               ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 group hover:border-white/10 transition-colors">
-                     <div className="flex items-center gap-2.5">
-                        <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
-                        <span className="text-[13px] font-semibold text-gray-300">{item.lvl}</span>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <span className="text-[13px] text-gray-400">{item.tempo}</span>
-                        <button className="p-1 rounded text-gray-500 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all">
-                           <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                     </div>
+            
+            <div className="space-y-4 mb-6">
+               <div className="flex justify-between items-center gap-4">
+                  <div>
+                     <p className="text-[13px] font-bold text-gray-200">Habilitar cálculo</p>
+                     <p className="text-[11px] text-gray-500">Mostrar nas áreas de risco.</p>
                   </div>
-               ))}
+                  <div 
+                     onClick={() => updateEngineConfig({ economia: { ...engineConfig.economia, enabled: !engineConfig.economia.enabled }})}
+                     className={`w-9 h-5 rounded-full relative cursor-pointer flex items-center px-0.5 transition-colors ${engineConfig.economia.enabled ? 'bg-emerald-600' : 'bg-white/10'}`}
+                  >
+                     <div className={`w-4 h-4 bg-white rounded-full transition-transform ${engineConfig.economia.enabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                  </div>
+               </div>
+
+               <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Custo Hora Parada (R$)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.economia.custoHoraParada}
+                     onChange={(e) => updateEngineConfig({ economia: { ...engineConfig.economia, custoHoraParada: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" 
+                  />
+               </div>
+               <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Nº de Empregados (Total)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.economia.numEmpregados}
+                     onChange={(e) => updateEngineConfig({ economia: { ...engineConfig.economia, numEmpregados: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" 
+                  />
+               </div>
+               <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Fator Reincidência (Auto)</label>
+                  <input 
+                     type="number" 
+                     step="0.1"
+                     value={engineConfig.economia.fatorReincidencia}
+                     onChange={(e) => updateEngineConfig({ economia: { ...engineConfig.economia, fatorReincidencia: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" 
+                  />
+               </div>
+
             </div>
-            <button className="text-[13px] font-medium text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/10 w-full transition-colors">
-               Ajustar SLA base
-            </button>
          </div>
 
       </div>
@@ -826,37 +849,98 @@ function TabRegras() {
 }
 
 function TabSlas() {
+   const { engineConfig, updateEngineConfig } = useAppStore();
+
    return (
-      <div className="flex flex-col items-center justify-center h-[500px] text-center max-w-lg mx-auto">
-         <div className="w-16 h-16 bg-[#121826] border border-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-xl relative">
-            <Clock className="w-8 h-8 text-purple-400 relative z-10" />
-            <div className="absolute inset-0 bg-purple-500/20 blur-xl"></div>
+      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+         <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl p-6">
+            <div className="mb-6">
+               <h3 className="text-lg font-bold text-white">Configuração de SLAs</h3>
+               <p className="text-sm text-gray-400">Prazos de resolução e regras de escalonamento com base na severidade.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-red-400 uppercase tracking-wider">Risco Crítico (em Horas)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.slas.criticoHoras} 
+                     onChange={(e) => updateEngineConfig({ slas: { ...engineConfig.slas, criticoHoras: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-red-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500" 
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-orange-400 uppercase tracking-wider">Risco Alto (em Horas)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.slas.altoHoras} 
+                     onChange={(e) => updateEngineConfig({ slas: { ...engineConfig.slas, altoHoras: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-orange-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500" 
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Risco Médio (em Dias)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.slas.medioDias} 
+                     onChange={(e) => updateEngineConfig({ slas: { ...engineConfig.slas, medioDias: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-yellow-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500" 
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Risco Baixo (em Dias)</label>
+                  <input 
+                     type="number" 
+                     value={engineConfig.slas.baixoDias} 
+                     onChange={(e) => updateEngineConfig({ slas: { ...engineConfig.slas, baixoDias: Number(e.target.value) }})}
+                     className="w-full bg-[#0b0f19] border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500" 
+                  />
+               </div>
+            </div>
          </div>
-         <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Modelo de SLAs em Construção</h2>
-         <p className="text-sm text-gray-400 leading-relaxed mb-8">
-            Nesta área, você definirá políticas de escalonamento. Ex: Se um risco Crítico não for tratado em 4h, ele notifica o Coordenador. Aos 24h, notifica a Diretoria.
-         </p>
-         <button className="bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
-            Visualizar Roadmap
-         </button>
       </div>
    )
 }
 
 function TabAlertas() {
+   const { engineConfig, updateEngineConfig } = useAppStore();
+
    return (
-      <div className="flex flex-col items-center justify-center h-[500px] text-center max-w-lg mx-auto">
-         <div className="w-16 h-16 bg-[#121826] border border-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-xl relative">
-            <Bell className="w-8 h-8 text-blue-400 relative z-10" />
-            <div className="absolute inset-0 bg-blue-500/20 blur-xl"></div>
+      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+         <div className="w-full max-w-lg bg-[#121826] border border-white/5 rounded-2xl p-6">
+            <div className="mb-6">
+               <h3 className="text-lg font-bold text-white">Central de Notificações</h3>
+               <p className="text-sm text-gray-400">Gerencie a cadência e comportamento dos alertas gerados.</p>
+            </div>
+            
+            <div className="space-y-5">
+               <div className="flex items-center justify-between p-4 bg-[#0b0f19] border border-white/5 rounded-xl">
+                  <div>
+                     <p className="text-sm font-bold text-white">Notificar Atrasos Imediatos</p>
+                     <p className="text-xs text-gray-400 mt-1">Disparar notificação assim que um SLA estourar.</p>
+                  </div>
+                  <div 
+                     onClick={() => updateEngineConfig({ alertas: { ...engineConfig.alertas, notificarAtraso: !engineConfig.alertas.notificarAtraso }})}
+                     className={`w-10 h-5 rounded-full relative cursor-pointer flex items-center px-0.5 transition-colors ${engineConfig.alertas.notificarAtraso ? 'bg-purple-600' : 'bg-white/10'}`}
+                  >
+                     <div className={`w-4 h-4 bg-white rounded-full transition-transform ${engineConfig.alertas.notificarAtraso ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                  </div>
+               </div>
+               
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Frequência do Resumo</label>
+                  <select 
+                     value={engineConfig.alertas.frequencia}
+                     onChange={(e) => updateEngineConfig({ alertas: { ...engineConfig.alertas, frequencia: e.target.value as any }})}
+                     className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                  >
+                     <option value="Imediata">Imediata</option>
+                     <option value="Diária">Diária</option>
+                     <option value="Semanal">Semanal</option>
+                  </select>
+               </div>
+            </div>
          </div>
-         <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Central de Notificações Inteligente</h2>
-         <p className="text-sm text-gray-400 leading-relaxed mb-8">
-            Configure alertas omnichannel (E-mail, Whats, Push) para anomalias operacionais e conectividade do sistema.
-         </p>
-         <button className="bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
-            Visualizar Roadmap
-         </button>
       </div>
    )
 }

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
+import { NormativeEngine, RiskEngine, EconomicImpactEngine } from '@/lib/engines';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, Star, 
   Download, Plus, Settings as SettingsIcon, Calendar, 
@@ -35,6 +36,9 @@ export default function InspecoesPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFormDrawerOpen, setIsFormDrawerOpen] = useState(false);
   const [formType, setFormType] = useState<'Inspecao' | 'Modelo'>('Inspecao');
+  const [formData, setFormData] = useState({ nome: '', ondeUsar: '' });
+
+  const normativeDetection = NormativeEngine.detect(formData.nome || '');
 
   const [inspecoes, setInspecoes] = useState<Inspecao[]>(mockInspecoes);
 
@@ -401,7 +405,7 @@ export default function InspecoesPage() {
                       <span className="text-xs font-bold text-gray-400">Itens para a inspeção</span>
                       <span className="text-xs font-bold text-gray-500">0/5 completos</span>
                    </div>
-                   <div className="space-y-3">
+                   <div className="space-y-3 mb-6">
                       {[
                          'Verificar proteções fixas e móveis',
                          'Checar dispositivos de bloqueio',
@@ -415,6 +419,31 @@ export default function InspecoesPage() {
                          </label>
                       ))}
                    </div>
+                   
+                   {(() => {
+                      const normMatch = NormativeEngine.detect(selectedInspecao.checklist);
+                      if (normMatch && (normMatch.severity === 'crítica' || normMatch.severity === 'alta')) {
+                        const estimate = EconomicImpactEngine.estimate({ 
+                          severityLevel: normMatch.severity, 
+                          exposedPeople: 3, 
+                          recurrence: false 
+                        });
+                        return (
+                          <div className="mb-6 p-5 rounded-xl border border-red-500/20 bg-red-500/5">
+                             <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                               Economia Estimada (Ação Preventiva)
+                             </h4>
+                             <div className="text-red-400 font-bold text-sm mb-1">
+                               {EconomicImpactEngine.formatCurrency(estimate.min)} a {EconomicImpactEngine.formatCurrency(estimate.max)}
+                             </div>
+                             <div className="text-[9px] text-gray-500 italic mt-2">
+                               Estimativa preventiva. O valor real depende de fiscalização, enquadramento, número de empregados, reincidência e contexto do evento.
+                             </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                   })()}
                 </div>
 
              </div>
@@ -499,7 +528,41 @@ export default function InspecoesPage() {
                   <>
                     <div>
                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Nome do Modelo</label>
-                      <input type="text" placeholder="Ex: NR-12 Máquinas Específicas" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Ex: NR-12 Máquinas Específicas" 
+                        value={formData.nome}
+                        onChange={e => setFormData({ ...formData, nome: e.target.value })}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 mb-3" 
+                      />
+
+                      {normativeDetection && (
+                        <div className="bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3 mb-4">
+                           <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                             <ShieldAlert className="w-4 h-4" /> Relacionado: {normativeDetection.nr}
+                           </h4>
+                           <p className="text-xs text-gray-300">
+                             <strong>Risco:</strong> {normativeDetection.riskType} <br/>
+                             <strong>Severidade:</strong> <span className={normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normativeDetection.severity.toUpperCase()}</span>
+                           </p>
+                           {normativeDetection.documents.length > 0 && (
+                             <div>
+                               <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Checklists Recomendados</span>
+                               <div className="flex flex-wrap gap-1.5">
+                                 {normativeDetection.documents.map((doc: string) => (
+                                   <span key={doc} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{doc}</span>
+                                 ))}
+                               </div>
+                             </div>
+                           )}
+                           <button 
+                              onClick={() => {}}
+                              className="w-full py-2 bg-purple-600/20 text-purple-400 text-xs font-bold rounded-lg border border-purple-500/30 hover:bg-purple-600/30 mt-2"
+                            >
+                             Autopreencher itens sugeridos
+                           </button>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Categoria</label>

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
+import { NormativeEngine, RiskEngine, EconomicImpactEngine } from '@/lib/engines';
 import { 
   Plus, Search, AlertTriangle, X, ChevronRight,
   Shield, Activity, Settings, Settings2, Clock, CheckCircle2,
@@ -47,130 +48,72 @@ const ATIVIDADES_OPCOES = [
 ];
 
 function applyNRLules(payload: Partial<RiskInstance>): RiskInstance {
+  const { atividade, hasEpiEpc, hasTreinamento, hasProcedimento } = payload;
+  const norm = NormativeEngine.detect(atividade || '');
+  
+  let tipoDeRisco = 'Geral / Acidente';
+  let gravidade = 'Moderada';
+  let probabilidade = 'Baixa';
   let nivel: NivelRisco = 'Baixo';
   let prioridade: 'P1' | 'P2' | 'P3' | 'P4' = 'P4';
   let problemaPrincipal = 'Conformidade adequada';
   let acaoRecomendada = 'Manter monitoramento de rotina';
   let responsavel = 'Líder da área';
   let prazo = 'Rotina diária';
-  
-  let tipoDeRisco = 'Acidente';
-  let gravidade = 'Leve';
-  let probabilidade = 'Baixa';
+  let nr = 'NR-XX';
 
-  const { atividade, hasEpiEpc, hasTreinamento, hasProcedimento } = payload;
+  if (norm) {
+    nr = norm.nr;
+    tipoDeRisco = norm.riskType;
+    gravidade = norm.severity === 'crítica' ? 'Fatal/Grave' : norm.severity === 'alta' ? 'Grave' : 'Moderada';
+    
+    let nonConformities = 0;
+    if (!hasEpiEpc) nonConformities++;
+    if (!hasTreinamento) nonConformities++;
+    if (!hasProcedimento) nonConformities++;
 
-  if (atividade === 'Trabalho em altura') { // NR-35
-    tipoDeRisco = 'Físico / Queda';
-    gravidade = 'Fatal/Grave';
+    let isCritical = false;
+    let isHigh = false;
+
     if (!hasEpiEpc || !hasProcedimento) {
-      nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Muito Alta';
-      problemaPrincipal = 'Falha em APR/PT e ancoragem / Sem Cinto';
-      acaoRecomendada = 'Revisar APR, validar PT, inspecionar cinto e linha de vida';
-      responsavel = 'Supervisor + SST'; prazo = 'Hoje (Imediato)';
+      isCritical = norm.severity === 'crítica' || norm.severity === 'alta';
+      if (!isCritical) isHigh = true;
     } else if (!hasTreinamento) {
-      nivel = 'Alto'; prioridade = 'P2'; probabilidade = 'Média';
-      problemaPrincipal = 'Treinamento NR-35 deficiente/vencido';
-      acaoRecomendada = 'Bloquear colaborador. Agendar reciclagem NR-35';
-      responsavel = 'RH + SST'; prazo = '24h';
-    } else {
-      nivel = 'Baixo'; prioridade = 'P4'; probabilidade = 'Baixa';
+      isHigh = true;
     }
-  } 
-  else if (atividade === 'Manutenção elétrica') { // NR-10
-    tipoDeRisco = 'Acidente / Choque';
-    gravidade = 'Fatal/Grave';
-    if (!hasProcedimento) { // LOTO
-      nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Muito Alta';
-      problemaPrincipal = 'Bloqueio parcial / Autorização incompleta';
-      acaoRecomendada = 'Conferir bloqueio, aterramento e habilitação LOTO';
-      responsavel = 'Líder elétrica + SST'; prazo = 'Hoje (Imediato)';
-    } else if (!hasEpiEpc) {
-      nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Alta';
-      problemaPrincipal = 'Falta vestimenta ATPV ou luvas isolantes';
-      acaoRecomendada = 'Substituir EPI imediatamente antes da tarefa';
-      responsavel = 'SST'; prazo = 'Hoje (Imediato)';
-    } else if (!hasTreinamento) {
-      nivel = 'Alto'; prioridade = 'P2'; probabilidade = 'Média';
-      problemaPrincipal = 'Treinamento NR-10 ou SEP ausente';
-      acaoRecomendada = 'Suspender tarefa até adequação de treinamento';
-      responsavel = 'RH + Elétrica'; prazo = '24h';
+
+    if (isCritical) {
+      probabilidade = 'Alta';
+      problemaPrincipal = `Falta de ${!hasEpiEpc ? 'EPIs/EPCs' : ''} ${!hasEpiEpc && !hasProcedimento ? 'e' : ''} ${!hasProcedimento ? 'Procedimento/PT' : ''}`;
+      acaoRecomendada = norm.recommendedAction;
+      responsavel = 'Supervisor + SST';
+      prazo = 'Hoje (Imediato)';
+    } else if (isHigh) {
+      probabilidade = 'Média';
+      problemaPrincipal = `Pendência de ${!hasTreinamento ? 'Treinamento' : 'EPI/Procedimento'}`;
+      acaoRecomendada = norm.recommendedAction;
+      responsavel = 'RH + SST';
+      prazo = '24h';
     } else {
-      nivel = 'Baixo'; prioridade = 'P4'; probabilidade = 'Baixa';
+      probabilidade = 'Baixa';
     }
-  }
-  else if (atividade === 'Espaço confinado') { // NR-33
-    tipoDeRisco = 'Físico/Químico / Asfixia';
-    gravidade = 'Fatal';
-    if (!hasProcedimento || !hasEpiEpc) { 
-      nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Alta';
-      problemaPrincipal = 'Sem liberação PET ou medidor de gases';
-      acaoRecomendada = 'Abortar entrada. Inspecionar atmosfera e ventilar';
-      responsavel = 'Supervisor EC + SST'; prazo = 'Hoje (Imediato)';
-    } else if (!hasTreinamento) {
-      nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Média';
-      problemaPrincipal = 'Vigia ou Entrante sem certificação válida';
-      acaoRecomendada = 'Trocar profissional pela equipe capacitada';
-      responsavel = 'RH + SST'; prazo = 'Hoje (Imediato)';
-    } else {
-      nivel = 'Médio'; prioridade = 'P3'; probabilidade = 'Baixa';
-    }
-  }
-  else if (atividade === 'Operação de máquinas') { // NR-12
-    tipoDeRisco = 'Acidente / Esmagamento';
-    gravidade = 'Grave';
-    if (!hasEpiEpc) { 
-      nivel = 'Alto'; prioridade = 'P2'; probabilidade = 'Alta';
-      problemaPrincipal = 'Proteções e checklist insuficientes';
-      acaoRecomendada = 'Validar proteções, intertravamento e treinamento';
-      responsavel = 'Produção'; prazo = '24h';
-      if (!hasTreinamento) { nivel = 'Crítico'; prioridade = 'P1'; probabilidade = 'Muito Alta'; responsavel = 'RH + Produção'; prazo = 'Hoje (Imediato)';}
-    } else if (!hasProcedimento) {
-      nivel = 'Médio'; prioridade = 'P3'; probabilidade = 'Média';
-      problemaPrincipal = 'Checklist de set-up desatualizado';
-      acaoRecomendada = 'Reforçar check diário e checklist digital';
-      responsavel = 'Supervisor'; prazo = '48h';
-    } else {
-      nivel = 'Baixo'; prioridade = 'P4'; probabilidade = 'Baixa';
-    }
-  }
-  else if (atividade === 'Movimentação de cargas') { // NR-11
-    tipoDeRisco = 'Acidente / Prensamento';
-    gravidade = 'Grave';
-    if (!hasProcedimento) {
-      nivel = 'Alto'; prioridade = 'P2'; probabilidade = 'Alta';
-      problemaPrincipal = 'Sinalização e isolamento frágeis';
-      acaoRecomendada = 'Reforçar isolamento e revisar procedimento';
-      responsavel = 'Operação'; prazo = '24h';
-    } else {
-      nivel = 'Médio'; prioridade = 'P3'; probabilidade = 'Baixa';
-    }
-  }
-  else if (atividade === 'Trabalho a quente') { // NR-34
-    tipoDeRisco = 'Físico / Incêndio e Queimadura';
-    gravidade = 'Grave';
-    if (!hasProcedimento) {
-      nivel = 'Médio'; prioridade = 'P3'; probabilidade = 'Média';
-      problemaPrincipal = 'Permissão e vigia inadequados';
-      acaoRecomendada = 'Revisar PT, vigia e extintores';
-      responsavel = 'Manutenção'; prazo = '48h';
-    } else {
-      nivel = 'Baixo'; prioridade = 'P4'; probabilidade = 'Baixa';
-    }
-  }
-  else { // Outras
-    tipoDeRisco = 'Geral / Ergonomia / Acidente';
-    gravidade = 'Moderada';
-    if (!hasEpiEpc && !hasProcedimento) {
-      nivel = 'Alto'; prioridade = 'P2'; probabilidade = 'Alta';
-      problemaPrincipal = 'Ausência de processos básicos de segurança';
-      acaoRecomendada = 'Redesenhar procedimento e cobrar EPI';
-      responsavel = 'Eng. Segurança'; prazo = '48h';
-    } else if (!hasTreinamento) {
-      nivel = 'Médio'; prioridade = 'P3'; probabilidade = 'Média';
-      problemaPrincipal = 'Falta capacitação operacional';
-      acaoRecomendada = 'Agendar diálogo de segurança / DSS';
-      responsavel = 'Téc. Sup.'; prazo = 'Semana atual';
+
+    const calculatedRiskScore = RiskEngine.calculateRisk({
+      severity: norm.severity,
+      exposedPeople: 2, // valor padrao mockado
+      overdueInspections: 0,
+      overdueActions: 0,
+      nonConformities: nonConformities,
+      recurrence: false,
+      criticalActivity: norm.severity === 'crítica' || norm.severity === 'alta'
+    });
+
+    const calculatedLevel = RiskEngine.getRiskLevel(calculatedRiskScore);
+    switch (calculatedLevel) {
+      case 'crítico': nivel = 'Crítico'; prioridade = 'P1'; break;
+      case 'alto': nivel = 'Alto'; prioridade = 'P2'; break;
+      case 'médio': nivel = 'Médio'; prioridade = 'P3'; break;
+      case 'baixo': nivel = 'Baixo'; prioridade = 'P4'; break;
     }
   }
 
@@ -179,7 +122,7 @@ function applyNRLules(payload: Partial<RiskInstance>): RiskInstance {
     id: payload.id || Math.random().toString(36).substr(2, 9),
     atividade: payload.atividade!,
     setor: payload.setor!,
-    nr: payload.nr || 'NR-XX',
+    nr: payload.nr || nr,
     hasEpiEpc: payload.hasEpiEpc!,
     hasTreinamento: payload.hasTreinamento!,
     hasProcedimento: payload.hasProcedimento!,
@@ -230,6 +173,8 @@ export default function RiscosPage() {
   });
   
   const [selectedAction, setSelectedAction] = useState<RiskInstance | null>(null);
+
+  const normativeDetection = useMemo(() => NormativeEngine.detect(formData.atividade || ''), [formData.atividade]);
 
   const getNivelColor = (nivel?: NivelRisco) => {
     switch(nivel) {
@@ -629,6 +574,27 @@ export default function RiscosPage() {
                  </h4>
                  <div className={`${selectedAction.nivel === 'Crítico' ? 'text-red-400' : 'text-orange-400'} font-bold text-lg mb-2 relative z-10`}>{selectedAction.prazo}</div>
                  <div className="text-[11px] text-gray-400 leading-snug relative z-10">Prazo estipulado com base na gravidade do risco avaliado.</div>
+                 
+                 {(selectedAction.nivel === 'Crítico' || selectedAction.nivel === 'Alto') && (() => {
+                    const estimate = EconomicImpactEngine.estimate({ 
+                      severityLevel: selectedAction.nivel.toLowerCase() as 'alto' | 'crítico', 
+                      exposedPeople: 2, 
+                      recurrence: false 
+                    });
+                    return (
+                      <div className="mt-4 pt-4 border-t border-white/5 relative z-10">
+                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                          Impacto Reversível / Economia Estimada
+                        </h4>
+                        <div className="text-red-400 font-bold text-sm mb-1">
+                          {EconomicImpactEngine.formatCurrency(estimate.min)} a {EconomicImpactEngine.formatCurrency(estimate.max)}
+                        </div>
+                        <div className="text-[9px] text-gray-500 italic">
+                          Estimativa preventiva. O valor real depende de fiscalização, enquadramento, número de empregados, reincidência e contexto do evento.
+                        </div>
+                      </div>
+                    );
+                 })()}
                </div>
 
              </div>
@@ -697,10 +663,54 @@ export default function RiscosPage() {
                     <select 
                       value={formData.atividade} 
                       onChange={e => setFormData({...formData, atividade: e.target.value})}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
                     >
                       {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
                     </select>
+
+                    {normativeDetection && (
+                      <div className="bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3">
+                         <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                           <Shield className="w-4 h-4" /> {normativeDetection.nr} - {normativeDetection.riskType}
+                         </h4>
+                         <div className="grid grid-cols-2 gap-2 text-[11px]">
+                           <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
+                             <span className="text-gray-500 block mb-0.5">Severidade</span>
+                             <span className={`font-bold uppercase ${normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}`}>
+                               {normativeDetection.severity}
+                             </span>
+                           </div>
+                           <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
+                             <span className="text-gray-500 block mb-0.5">Ação Inicial Recomendada</span>
+                             <span className="text-gray-300 font-medium leading-tight">
+                               {normativeDetection.recommendedAction}
+                             </span>
+                           </div>
+                         </div>
+                         
+                         {normativeDetection.documents.length > 0 && (
+                           <div>
+                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Documentos Exigidos</span>
+                             <div className="flex flex-wrap gap-1.5">
+                               {normativeDetection.documents.map((doc: string) => (
+                                 <span key={doc} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{doc}</span>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+
+                         {normativeDetection.ppe.length > 0 && (
+                           <div>
+                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">EPI / EPC Mínimos</span>
+                             <div className="flex flex-wrap gap-1.5">
+                               {normativeDetection.ppe.map((epi: string) => (
+                                 <span key={epi} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{epi}</span>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">

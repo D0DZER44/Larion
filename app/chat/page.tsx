@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity, AlertTriangle, ArrowUp, Calendar, ChevronRight, Clock, FileText, Filter, Lock, MessageSquare, Send, ShieldCheck, Zap } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { LariContextEngine, NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine } from '@/lib/engines';
 
 type ActionItem = {
   label: string;
@@ -124,121 +125,136 @@ export default function ChatPage() {
   );
 
   const getBotResponse = (text: string) => {
-    const lowerText = text.toLowerCase();
-    
     setTimeout(() => {
       setIsTyping(false);
       isTypingRef.current = false;
-      let response: Message;
+      const lowerText = text.toLowerCase();
+      
+      const intent = LariContextEngine.classifyIntent(text);
+      const engineText = LariContextEngine.respond(text, {}); // Pass state if needed
+      
+      let component: React.ReactNode = undefined;
+      let actions: ActionItem[] = [];
 
-      if (lowerText.includes('risco') || lowerText.includes('crítico') || lowerText.includes('criticos')) {
-        response = {
-          id: crypto.randomUUID(),
-          sender: 'bot',
-          content: {
-            text: 'Atualmente temos 12 riscos registrados. Um deles requer sua atenção imediata:',
-            component: (
-              <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between pointer-events-none">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-red-500" />
-                    <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
-                  </div>
-                  <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
-                </div>
-                <div className="pointer-events-none">
-                  <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
-                  <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva (Manutenção)</p>
-                </div>
-                <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
-                  <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
-                </div>
+      if (intent === 'Check_Risks') {
+        component = (
+          <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between pointer-events-none">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
               </div>
-            )
-          },
-          actions: [
-            { label: 'Bloquear Máquina (LOTO)', primary: true, onClick: () => alert('Solicitação de bloqueio enviada para manutenção!') },
-            { label: 'Notificar João Silva', onClick: () => alert('João Silva notificado!') },
-            { label: 'Ver todos os riscos', onClick: () => alert('Abrindo módulo de Riscos...') }
-          ]
-        };
-      } else if (lowerText.includes('atrasado') || lowerText.includes('ação') || lowerText.includes('acoes') || lowerText.includes('inspeções') || lowerText.includes('inspecoes')) {
-        response = {
-          id: crypto.randomUUID(),
-          sender: 'bot',
-          content: {
-            text: 'Temos 18 ações e inspeções atrasadas no momento. A mais crítica é a troca do mangote de exaustão na Solda 02.',
-            component: (
-              <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between pointer-events-none">
-                  <div className="flex items-center gap-2">
-                     <Clock className="w-5 h-5 text-orange-400" />
-                    <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
-                  </div>
-                </div>
-                <div className="pointer-events-none">
-                  <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
-                  <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
-                </div>
+              <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
+            </div>
+            <div className="pointer-events-none">
+              <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
+              <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva</p>
+            </div>
+            <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
+              <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
+            </div>
+          </div>
+        );
+        actions = [
+          { label: 'Bloquear Máquina (LOTO)', primary: true, onClick: () => alert('Bloqueio solicitado!') },
+          { label: 'Notificar João', onClick: () => alert('Notificado!') },
+        ];
+      } else if (intent === 'Check_Actions') {
+        component = (
+          <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between pointer-events-none">
+              <div className="flex items-center gap-2">
+                 <Clock className="w-5 h-5 text-orange-400" />
+                <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
               </div>
-            )
-          },
-          actions: [
-            { label: 'Cobrar Responsável', primary: true, onClick: () => alert('Cobrança enviada ao Marcos Antônio!') },
-            { label: 'Reagendar prazo (+2 dias)', onClick: () => alert('Prazo reagendado preventivamente.') },
-            { label: 'Ver todas', onClick: () => alert('Abrindo módulo de Ações...') }
-          ]
-        };
-      } else if (lowerText.includes('relatório') || lowerText.includes('relatorio') || lowerText.includes('mes') || lowerText.includes('mês')) {
-        response = {
-          id: crypto.randomUUID(),
-          sender: 'bot',
-          content: {
-            text: 'Claro, aqui está o resumo do mês com base nos dados do sistema:',
-            component: (
-              <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
-                <div className="flex items-center gap-2 pointer-events-none">
-                  <FileText className="w-5 h-5 text-purple-400" />
-                  <span className="text-[15px] font-bold text-white">Resumo Executivo (Maio 2024)</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pointer-events-none">
-                  <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
-                    <span className="text-xs text-gray-400 font-medium">Inspeções realizadas</span>
-                    <span className="text-sm font-bold text-white">342</span>
-                  </div>
-                  <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
-                    <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
-                    <span className="text-sm font-bold text-emerald-400">89%</span>
-                  </div>
-                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex flex-col col-span-2">
-                    <span className="text-xs text-red-400 font-medium mb-1">Atenção Necessária</span>
-                    <span className="text-sm font-bold text-white">Índice de riscos não tratados subiu 16% em relação ao mês passado. Foco sugerido na área de manutenção preventiva.</span>
-                  </div>
-                </div>
+            </div>
+            <div className="pointer-events-none">
+              <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
+              <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
+            </div>
+          </div>
+        );
+        actions = [
+          { label: 'Cobrar Responsável', primary: true, onClick: () => alert('Cobrança enviada!') },
+          { label: 'Reagendar', onClick: () => alert('Reagendado!') }
+        ];
+      } else if (intent === 'Get_Report') {
+        component = (
+          <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+            <div className="flex items-center gap-2 pointer-events-none">
+              <FileText className="w-5 h-5 text-purple-400" />
+              <span className="text-[15px] font-bold text-white">Resumo Executivo (Este Mês)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pointer-events-none">
+              <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">Inspeções</span>
+                <span className="text-sm font-bold text-white">142</span>
               </div>
-            )
-          },
-          actions: [
-            { label: 'Baixar PDF Completo', primary: true, onClick: () => alert('Baixando relatório...') },
-            { label: 'Agendar com liderança', onClick: () => alert('Redirecionando para agenda...') }
-          ]
-        };
-      } else {
-        response = {
-          id: crypto.randomUUID(),
-          sender: 'bot',
-          content: {
-            text: 'Entendido. Com base nisso, posso puxar mais informações dos módulos de Segurança ou acionar responsáveis para as medidas cabíveis. Qual área você quer priorizar agora?'
-          },
-          actions: [
-            { label: 'Ver Riscos', onClick: () => handleSend('Riscos') },
-            { label: 'Ver Inspeções', onClick: () => handleSend('Inspeções') },
-            { label: 'Ver Ações', onClick: () => handleSend('Ações') }
-          ]
-        };
+              <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
+                <span className="text-sm font-bold text-emerald-400">89%</span>
+              </div>
+            </div>
+          </div>
+        );
+        actions = [
+          { label: 'Baixar PDF', primary: true, onClick: () => alert('Baixando relatorio...') }
+        ];
+      } else if (intent === 'Get_Decision') {
+        const decision = DecisionEngine.getMainDecision({});
+        component = (
+           <div className="mt-4 bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3">
+             <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+               <ShieldCheck className="w-4 h-4" /> Decisão: {decision.title}
+             </h4>
+             <div className="text-[12px] text-gray-300">
+                <span className="block mb-1"><strong>Status:</strong> {decision.decision}</span>
+                <span className="block mb-1"><strong>Impacto:</strong> <span className={decision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-blue-400'}>{decision.operationalImpact}</span></span>
+                <span className="block mb-1"><strong>Efeito Estimado:</strong> {decision.causeAndEffect.effect}</span>
+             </div>
+           </div>
+        );
+      } else if (intent === 'Doubt_Normative') {
+        const normMatch = NormativeEngine.detect(text);
+        if (normMatch) {
+          const riskLevelData = RiskEngine.generateRiskFromActivity(text);
+          component = (
+             <div className="mt-4 bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3">
+               <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                 <ShieldCheck className="w-4 h-4" /> Detecção Normativa: {normMatch.nr}
+               </h4>
+               <div className="text-[12px] text-gray-300">
+                  <span className="block mb-1"><strong>Risco Específico:</strong> {normMatch.riskType}</span>
+                  <span className="block mb-1"><strong>Severidade:</strong> <span className={normMatch.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normMatch.severity.toUpperCase()}</span></span>
+                  {riskLevelData && <span className="block mb-1"><strong>Nível de Risco:</strong> <span className={RiskEngine.getRiskColor(riskLevelData.level)} style={{padding: '0.1rem 0.3rem', borderRadius: '4px'}}>{riskLevelData.level.toUpperCase()}</span></span>}
+                  <span className="block mb-1"><strong>Documentos:</strong> {normMatch.documents.join(', ')}</span>
+                  <span className="block mb-1"><strong>EPI:</strong> {normMatch.ppe.join(', ')}</span>
+               </div>
+             </div>
+          );
+          actions = [
+            { label: 'Gerar Ação', primary: true, onClick: () => alert('Ação gerada!') },
+            { label: 'Ver NR na íntegra', onClick: () => alert('Abrindo norma...') }
+          ];
+        }
       }
 
-      setMessages(prev => [...prev, response]);
+      if (actions.length === 0) {
+        actions = [
+          { label: 'Ver Riscos', onClick: () => handleSend('riscos') },
+          { label: 'Ver Inspeções', onClick: () => handleSend('inspeções') },
+          { label: 'Decisão sugerida', onClick: () => handleSend('o que fazer?') }
+        ];
+      }
+
+      const responseMessage: Message = {
+        id: crypto.randomUUID(),
+        sender: 'bot',
+        content: { text: engineText, component },
+        actions
+      };
+
+      setMessages(prev => [...prev, responseMessage]);
     }, 1500);
   };
 
@@ -261,10 +277,16 @@ export default function ChatPage() {
               <button className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
                 <Calendar className="w-4 h-4 text-gray-500" /> <span className="hidden sm:inline">01/05/2024 – 31/05/2024</span><span className="sm:hidden">Maio 2024</span> <ChevronRight className="w-4 h-4 text-gray-600 rotate-90" />
               </button>
-              <button className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
-                <Filter className="w-4 h-4 text-gray-500" /> Filtros
+              <button onClick={() => setMessages([])} className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
+                <MessageSquare className="w-4 h-4 text-gray-500" /> Nova conversa
               </button>
-              <button className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
+              <button 
+                onClick={() => {
+                  /* Lógica de gerar relatório atualizada */
+                  alert("Gerando relatório com base no contexto atual...");
+                }}
+                className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
+              >
                 <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Gerar relatório</span><span className="sm:hidden">Relatório</span>
               </button>
             </div>

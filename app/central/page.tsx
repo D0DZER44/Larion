@@ -2,11 +2,14 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine } from '@/lib/engines';
 import { 
   Bell, FileText, CheckCircle2, AlertTriangle, ArrowRight,
+
   Filter, Calendar, X, Activity, PlayCircle, MoreVertical,
   Clock, CheckSquare, Shield, AlertCircle, ChevronRight, User
 } from 'lucide-react';
+
 
 type PriorityRowItem = {
   id: string;
@@ -150,6 +153,8 @@ export default function CentralPage() {
   const [rows, setRows] = useState<PriorityRowItem[]>(initialRows);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PriorityRowItem | null>(null);
+  
+  const currentDecision = DecisionEngine.getMainDecision({});
 
   const handleOpenDetails = (item: PriorityRowItem) => {
     setSelectedItem(item);
@@ -186,6 +191,8 @@ export default function CentralPage() {
   };
 
   const todayStr = "20/05/2025 - 20/05/2025";
+  const normativeDetection = selectedItem ? NormativeEngine.detect(`${selectedItem.title} ${selectedItem.reasons.join(' ')}`) : null;
+  const riskDetection = normativeDetection ? RiskEngine.generateRiskFromActivity(`${selectedItem?.title} ${selectedItem?.reasons.join(' ')}`) : null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
@@ -205,11 +212,14 @@ export default function CentralPage() {
               <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
                 <Filter className="w-4 h-4" /> Filtros
               </button>
-              <button className="relative p-2 bg-[#121826] hover:bg-white/5 text-gray-300 rounded-lg transition-colors border border-white/10">
+              <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500"></span>
               </button>
-              <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
+              <button 
+                onClick={() => alert(`BRIEFING EXECUTIVO:\n\nSituação: ${currentDecision.title}\nDecisão: ${currentDecision.decision}\nImpacto: ${currentDecision.operationalImpact}\nPróximos Passos: ${currentDecision.nextSteps.join(', ')}`)}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
+              >
                 <FileText className="w-4 h-4" /> Gerar briefing
               </button>
             </div>
@@ -218,27 +228,36 @@ export default function CentralPage() {
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 pb-6">
             
             {/* Top Recommended Action Banner */}
-            <div className="bg-gradient-to-r from-[#1E1B4B] to-[#121826] border border-purple-500/30 rounded-2xl p-6 flex flex-col lg:flex-row items-stretch gap-6 relative overflow-hidden group shrink-0">
-              <div className="absolute inset-0 bg-purple-500/5 mix-blend-overlay"></div>
+            <div className={`border rounded-2xl p-6 flex flex-col lg:flex-row items-stretch gap-6 relative overflow-hidden group shrink-0 ${
+              currentDecision.title === 'Intervenção Crítica Necessária' 
+                ? 'bg-gradient-to-r from-[#1e1b1d] to-[#121826] border-red-500/30' 
+                : 'bg-gradient-to-r from-emerald-900/20 to-[#121826] border-emerald-500/30'
+            }`}>
+              <div className={`absolute inset-0 mix-blend-overlay ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`}></div>
               
               <div className="flex-1 relative z-10 flex flex-col justify-center lg:border-r border-white/10 lg:pr-6 pb-6 lg:pb-0 border-b lg:border-b-0">
-                <h3 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-2">Decisão Recomendada Agora</h3>
-                <h2 className="text-3xl font-bold text-white mb-6">Priorizar inspeções críticas na manutenção</h2>
+                <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'}`}>
+                  Decisão Recomendada Agora
+                </h3>
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3 line-clamp-2">{currentDecision.decision}</h2>
                 <button 
                   onClick={() => handleOpenDetails(rows[0])}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors w-fit shadow-[0_0_20px_rgba(124,58,237,0.4)]"
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-colors w-fit ${
+                    currentDecision.title === 'Intervenção Crítica Necessária'
+                      ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                  }`}
                 >
-                  Ver plano de ação <ArrowRight className="w-4 h-4" />
+                  {currentDecision.title === 'Intervenção Crítica Necessária' ? 'Ver plano de ação' : 'Revisar monitoramento'} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="flex-1 relative z-10 flex flex-col justify-center px-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Motivo</h3>
+                  <AlertCircle className={`w-4 h-4 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'}`} />
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Motivo Principal</h3>
                 </div>
-                <div className="text-4xl font-bold text-purple-400 mb-1">+27%</div>
-                <p className="text-xs text-gray-400 font-medium leading-snug">em inspeções pendentes<br/>nas últimas 24h</p>
+                <p className="text-sm text-gray-300 font-medium leading-snug">{currentDecision.reason}</p>
               </div>
 
               <div className="w-[1px] bg-white/10 shrink-0 hidden lg:block mx-2"></div>
@@ -248,7 +267,9 @@ export default function CentralPage() {
                   <Activity className="w-4 h-4 text-blue-400" />
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Impacto Provável</h3>
                 </div>
-                <div className="text-xl font-bold text-white mb-2 leading-tight">Maior probabilidade<br/>de falhas e incidentes</div>
+                <div className={`text-lg font-bold mb-2 leading-tight ${currentDecision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-emerald-400'}`}>
+                  Risco {currentDecision.operationalImpact} de passivo ou falhas operacionais
+                </div>
               </div>
 
               <div className="w-[1px] bg-white/10 shrink-0 hidden lg:block mx-2"></div>
@@ -258,9 +279,9 @@ export default function CentralPage() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Confiança</h3>
                 </div>
-                <div className="text-4xl font-bold text-emerald-400 mb-4 tracking-tight">94%</div>
+                <div className="text-4xl font-bold text-emerald-400 mb-4 tracking-tight">{currentDecision.confidence}</div>
                 <div className="h-[6px] w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style={{ width: '94%' }}></div>
+                   <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style={{ width: currentDecision.confidence }}></div>
                 </div>
               </div>
             </div>
@@ -296,23 +317,18 @@ export default function CentralPage() {
                <div className="lg:col-span-3 bg-[#121826] border border-white/5 rounded-xl p-5 flex flex-col">
                   <div className="flex items-center gap-2 mb-6">
                      <Clock className="w-4 h-4 text-gray-400" />
-                     <h3 className="text-sm font-bold text-white">Linha do tempo operacional</h3>
+                     <h3 className="text-sm font-bold text-white">Linha do tempo e Evidências</h3>
                   </div>
                   <div className="flex-1 space-y-5 relative before:absolute before:inset-y-0 before:left-2 before:w-[2px] before:bg-white/5">
-                     {[
-                        { time: '09:42', title: 'Risco crítico identificado', desc: 'Esmagamento em prensa hidráulica', dot: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]', color: 'text-red-400' },
-                        { time: '09:15', title: 'Inspeção vencida', desc: 'Máquina Prensa 03 - vencida há 2 dias', dot: 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]', color: 'text-yellow-500' },
-                        { time: '08:47', title: 'Ação vencida', desc: 'Protetor de grade danificado - vencida desde 18/05', dot: 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]', color: 'text-yellow-500' },
-                        { time: '07:31', title: 'SLA em risco', desc: 'Tratamento de risco crítico com prazo crítico', dot: 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]', color: 'text-purple-400' },
-                     ].map((item, i) => (
+                     {currentDecision.evidences?.map((evidence: string, i: number) => (
                         <div key={i} className="relative pl-6 hover:bg-white/5 -ml-2 -mr-2 p-2 rounded-lg transition-colors cursor-pointer group">
-                           <div className={`absolute left-[11px] top-[14px] w-2 h-2 rounded-full ${item.dot}`}></div>
+                           <div className={`absolute left-[11px] top-[14px] w-2 h-2 rounded-full ${i === 0 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
                            <div className="flex items-start justify-between gap-2">
                               <div>
-                                 <p className={`text-[13px] font-bold mb-0.5 ${item.color}`}>{item.title}</p>
-                                 <p className="text-[11px] text-gray-400 leading-snug">{item.desc}</p>
+                                 <p className={`text-[13px] font-bold mb-0.5 ${i === 0 ? 'text-red-400' : 'text-yellow-500'}`}>Evidência Registrada</p>
+                                 <p className="text-[11px] text-gray-400 leading-snug">{evidence}</p>
                               </div>
-                              <span className="text-[10px] text-gray-500 shrink-0 font-medium">{item.time}</span>
+                              <span className="text-[10px] text-gray-500 shrink-0 font-medium">{currentDecision.timeline}</span>
                            </div>
                         </div>
                      ))}
@@ -331,20 +347,14 @@ export default function CentralPage() {
                   <div className="flex-1 flex flex-col items-center justify-center p-4 py-8">
                      
                      <div className="flex gap-4 mb-4 w-full justify-center">
-                        <div className="px-3 py-3 bg-[#0b0f19] border border-white/5 rounded-xl text-center flex-1 max-w-[150px] shadow-lg">
-                           <div className="flex items-center justify-center gap-1.5 mb-1 text-gray-300">
-                              <FileText className="w-3.5 h-3.5 text-purple-400" />
-                              <span className="text-[11px] font-medium leading-tight">Inspeções pendentes</span>
-                           </div>
-                           <div className="text-xl font-bold text-white">37</div>
-                        </div>
-                        <div className="px-3 py-3 bg-[#0b0f19] border border-white/5 rounded-xl text-center flex-1 max-w-[150px] shadow-lg">
-                           <div className="flex items-center justify-center gap-1.5 mb-1 text-gray-300">
-                              <Activity className="w-3.5 h-3.5 text-orange-400" />
-                              <span className="text-[11px] font-medium leading-tight">Ações vencidas</span>
-                           </div>
-                           <div className="text-xl font-bold text-white">28</div>
-                        </div>
+                        {currentDecision.causeAndEffect?.causes?.map((cause: string, i: number) => (
+                          <div key={i} className="px-3 py-3 bg-[#0b0f19] border border-white/5 rounded-xl text-center flex-1 max-w-[150px] shadow-lg flex flex-col items-center justify-center">
+                             <div className="flex items-center justify-center gap-1.5 mb-1 text-gray-300">
+                                <Activity className="w-3.5 h-3.5 text-orange-400" />
+                                <span className="text-[11px] font-medium leading-tight line-clamp-2">{cause}</span>
+                             </div>
+                          </div>
+                        ))}
                      </div>
 
                      <div className="relative w-full flex justify-center mb-6">
@@ -352,23 +362,11 @@ export default function CentralPage() {
                            <path d="M 120 0 Q 160 16 160 32 M 200 0 Q 160 16 160 32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="4 4" className="animate-[dash_20s_linear_infinite]" />
                            <style dangerouslySetInnerHTML={{__html:`@keyframes dash { to { stroke-dashoffset: -100; } }`}} />
                         </svg>
-                        <div className="px-4 py-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-center flex items-center gap-2.5 z-10 w-full max-w-[220px] justify-center mt-2 shadow-[0_0_15px_rgba(239,68,68,0.15)] relative overflow-hidden">
-                           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-red-500/10 to-transparent"></div>
-                           <AlertTriangle className="w-4 h-4 text-red-500 relative z-10" />
-                           <span className="text-xs font-bold text-red-400 relative z-10">Riscos críticos elevados</span>
+                        <div className={`px-4 py-2.5 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'} border rounded-lg text-center flex items-center gap-2.5 z-10 w-full max-w-[220px] justify-center mt-2 shadow-[0_0_15px_rgba(239,68,68,0.15)] relative overflow-hidden`}>
+                           <div className={`absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'from-red-500/10' : 'from-emerald-500/10'} to-transparent`}></div>
+                           <AlertTriangle className={`w-4 h-4 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-500' : 'text-emerald-500'} relative z-10`} />
+                           <span className={`text-xs font-bold ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'} relative z-10`}>{currentDecision.causeAndEffect?.effect || 'Operação Estável'}</span>
                         </div>
-                     </div>
-
-                     <div className="flex justify-center mt-2">
-                        <svg width="2" height="24" className="text-white/10">
-                           <line x1="1" y1="0" x2="1" y2="24" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3"/>
-                           <polygon points="1,24 5,16 -3,16" fill="currentColor" />
-                        </svg>
-                     </div>
-
-                     <div className="mt-1 px-5 py-3 bg-[#0b0f19] border border-white/5 rounded-xl text-center flex items-center gap-2.5 w-full max-w-[220px] justify-center shadow-lg">
-                        <Shield className="w-4 h-4 text-gray-400" />
-                        <span className="text-[12px] font-semibold text-gray-200">Maior probabilidade<br/>de incidentes</span>
                      </div>
                   </div>
                </div>
@@ -380,28 +378,23 @@ export default function CentralPage() {
                         <Activity className="w-4 h-4 text-blue-400" />
                         <h3 className="text-sm font-bold text-white">Próximas ações</h3>
                      </div>
-                     <button className="text-[11px] font-medium text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                        Ver todas
-                     </button>
+                     <a href="/acoes" className="text-[11px] font-medium text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                        Abrir ações
+                     </a>
                   </div>
                   <div className="flex-1 space-y-3">
-                     {[
-                        { title: 'Priorizar inspeções críticas em manutenção', desc: 'Falhas de verificação aumentam probabilidade de incidentes.', prio: 'Alta', prioColor: 'text-red-400 border-red-500/30 bg-red-500/10' },
-                        { title: 'Tratar ações corretivas vencidas', desc: 'Ações vencidas em máquinas e EPIs elevam riscos operacionais.', prio: 'Alta', prioColor: 'text-red-400 border-red-500/30 bg-red-500/10' },
-                        { title: 'Reforçar uso e conformidade de EPIs', desc: 'Alertas de EPI fora do padrão em setores críticos.', prio: 'Média', prioColor: 'text-orange-400 border-orange-500/30 bg-orange-500/10' }
-                     ].map((a, i) => (
-                        <div key={i} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group" onClick={() => handleOpenDetails(rows[i])}>
+                     {currentDecision.nextSteps?.map((step: string, i: number) => (
+                        <div key={i} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group">
                            <div className="flex-1">
-                              <h4 className="text-[13px] font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">{a.title}</h4>
-                              <p className="text-[11px] text-gray-400 line-clamp-1">{a.desc}</p>
+                              <h4 className="text-[13px] font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">{step}</h4>
                            </div>
                            <div className="flex flex-col items-end gap-2 shrink-0">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1 ${a.prioColor}`}>
-                                 <AlertTriangle className="w-3 h-3" /> {a.prio}
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'}`}>
+                                 <AlertTriangle className="w-3 h-3" /> {currentDecision.title === 'Intervenção Crítica Necessária' ? 'Ação' : 'Prev'}
                               </span>
-                              <button className="text-[11px] font-medium text-gray-300 hover:text-white px-3 py-1 rounded bg-[#121826] border border-white/10 hover:bg-white/5 transition-colors">
-                                 Abrir ação
-                              </button>
+                              <a href="/acoes" className="text-[11px] font-medium text-gray-300 hover:text-white px-3 py-1 rounded bg-[#121826] border border-white/10 hover:bg-white/5 transition-colors">
+                                 Abrir
+                              </a>
                            </div>
                         </div>
                      ))}
@@ -548,6 +541,50 @@ export default function CentralPage() {
                         ))}
                      </ul>
                   </div>
+
+                  {normativeDetection && (
+                     <div className="bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3 mt-4">
+                        <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                           <Shield className="w-3.5 h-3.5" /> Referência: {normativeDetection.nr}
+                        </h4>
+                        <div className="text-[12px] text-gray-300">
+                           <span className="block mb-1"><strong>Risco Específico:</strong> {normativeDetection.riskType}</span>
+                           <span className="block mb-1"><strong>Severidade:</strong> <span className={normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normativeDetection.severity.toUpperCase()}</span></span>
+                           {riskDetection && <span className="block mb-1"><strong>Nível de Risco:</strong> <span className={RiskEngine.getRiskColor(riskDetection.level)} style={{padding: '0.1rem 0.3rem', borderRadius: '4px'}}>{riskDetection.level.toUpperCase()}</span></span>}
+                           <span className="block leading-snug"><strong>Recomendação Técnica:</strong> {normativeDetection.recommendedAction}</span>
+                        </div>
+                        {normativeDetection.ppe.length > 0 && (
+                          <div className="mt-2 text-[11px] text-gray-400">
+                            <strong>EPIs / Controle Sugeridos:</strong> {normativeDetection.ppe.join(', ')}
+                          </div>
+                        )}
+                        {normativeDetection.documents && normativeDetection.documents.length > 0 && (
+                          <div className="mt-1 text-[11px] text-gray-400">
+                            <strong>Documentos Recomendados:</strong> {normativeDetection.documents.join(', ')}
+                          </div>
+                        )}
+                        {(normativeDetection.severity === 'crítica' || normativeDetection.severity === 'alta') && (() => {
+                          const estimate = EconomicImpactEngine.estimate({ 
+                            severityLevel: normativeDetection.severity, 
+                            exposedPeople: 2, 
+                            recurrence: false 
+                          });
+                          return (
+                            <div className="mt-3 p-3 rounded-lg border border-red-500/20 bg-red-500/5">
+                               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                 Economia Estimada (Ação Preventiva)
+                               </h4>
+                               <div className="text-red-400 font-bold text-xs mb-1">
+                                 {EconomicImpactEngine.formatCurrency(estimate.min)} a {EconomicImpactEngine.formatCurrency(estimate.max)}
+                               </div>
+                               <div className="text-[9px] text-gray-500 italic">
+                                 Estimativa preventiva. O valor real depende de fiscalização, enquadramento, número de empregados, reincidência e contexto do evento.
+                               </div>
+                            </div>
+                          );
+                        })()}
+                     </div>
+                  )}
 
                   {/* Responsavel */}
                   <div>
