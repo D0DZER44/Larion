@@ -66,12 +66,12 @@ export default function ChatPage() {
                <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 border-2 border-[#121826] rounded-full"></div>
             </div>
          </div>
-         <h2 className="text-xl font-bold text-white mb-1">Lari</h2>
-         <p className="text-sm text-gray-400">Assistente de SST</p>
+         <h2 className="text-xl font-bold text-white mb-1">L.A.R.I</h2>
+         <p className="text-sm text-gray-400">Copiloto SST</p>
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mb-8 text-center text-gray-300 text-[15px] leading-relaxed mx-auto">
-         <p>Olá, sou a Lari, sua assistente intelgênte de Saúde e Segurança.</p>
+         <p>Olá, sou a L.A.R.I — Copiloto SST, sua assistente inteligente de Saúde e Segurança.</p>
          <p className="mt-1">Posso te ajudar rapidamente com riscos, inspeções, ações e relatórios.</p>
       </div>
 
@@ -269,7 +269,7 @@ export default function ChatPage() {
                 L
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Chat SST</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">L.A.R.I — Copiloto SST</h1>
                 <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">Assistente operacional conectada a riscos, inspeções ações e alertas.</p>
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function ChatPage() {
                         {msg.sender === 'bot' && (
                           <div className="flex items-center gap-2 mb-2 ml-1">
                              <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
-                             <span className="text-xs font-bold text-gray-400">Lari</span>
+                             <span className="text-xs font-bold text-gray-400">L.A.R.I</span>
                           </div>
                         )}
                         
@@ -352,7 +352,7 @@ export default function ChatPage() {
                       >
                          <div className="flex items-center gap-2 mb-2 ml-1">
                              <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
-                             <span className="text-xs font-bold text-gray-400">Lari está digitando...</span>
+                             <span className="text-xs font-bold text-gray-400">L.A.R.I está digitando...</span>
                           </div>
                           <div className="bg-white/5 border border-white/10 px-5 py-4 rounded-2xl flex gap-1.5 items-center">
                             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -396,7 +396,7 @@ export default function ChatPage() {
                      </button>
                   </div>
                   <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                     <Lock className="w-3 h-3" /> As respostas da Lari são baseadas nos dados do sistema e podem não refletir todas as particularidades.
+                     <Lock className="w-3 h-3" /> As respostas da L.A.R.I são baseadas nos dados do sistema e podem não refletir todas as particularidades.
                   </div>
                </div>
             </div>

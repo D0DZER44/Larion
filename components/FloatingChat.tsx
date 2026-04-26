@@ -27,7 +27,7 @@ export default function FloatingChat() {
     {
       id: '1',
       sender: 'lari',
-      text: "Olá, sou a Lari, sua assistente pessoal de SST.\nEm que posso ajudar?",
+      text: "Olá, sou a L.A.R.I — Copiloto SST, em que posso ajudar?",
       time: '09:15',
       quickActions: [
         { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
@@ -117,8 +117,8 @@ export default function FloatingChat() {
                   <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 border border-[#121826] rounded-full"></span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">L.A.R.I.</h3>
-                  <p className="text-[10px] text-gray-400">Assistente SST</p>
+                  <h3 className="font-bold text-sm">L.A.R.I — Copiloto SST</h3>
+                  <p className="text-[10px] text-gray-400">Inteligência Artificial</p>
                 </div>
               </div>
               <button 
@@ -177,7 +177,7 @@ export default function FloatingChat() {
                   value={inputVal}
                   onChange={e => setInputVal(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSend(inputVal)}
-                  placeholder="Pergunte à Lari..." 
+                  placeholder="Pergunte à L.A.R.I..." 
                   className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none px-3 py-2"
                 />
                 <button 

@@ -133,9 +133,9 @@ function applyNRLules(payload: Partial<RiskInstance>): RiskInstance {
     problemaPrincipal,
     acaoRecomendada,
     responsavel,
-    prazo,
+    prazo: payload.prazo || prazo,
     nivel,
-    prioridade
+    prioridade: payload.prioridade || prioridade
   };
 }
 
@@ -163,6 +163,8 @@ export default function RiscosPage() {
   const [isDrawerActionOpen, setIsDrawerActionOpen] = useState(false);
   
   const [editingItem, setEditingItem] = useState<RiskInstance | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formData, setFormData] = useState<Partial<RiskInstance>>({
     atividade: 'Trabalho em altura',
     setor: 'Manutenção',
@@ -233,6 +235,9 @@ export default function RiscosPage() {
   }, [data, activeTab]);
   
   const criticosCount = data.filter(d => d.nivel === 'Crítico').length;
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0b0f19]">
@@ -381,13 +386,13 @@ export default function RiscosPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {filteredData.length === 0 ? (
+                    {currentItems.length === 0 ? (
                        <tr>
                          <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
                             Nenhum risco encontrado neste filtro.
                          </td>
                        </tr>
-                    ) : filteredData.map((item) => (
+                    ) : currentItems.map((item) => (
                       <tr key={item.id} className={`hover:bg-white/5 transition-colors cursor-pointer ${selectedAction?.id === item.id ? 'bg-purple-900/10' : ''}`} onClick={() => { setSelectedAction(item); setIsDrawerActionOpen(true); }}>
                         <td className="px-5 py-4 align-top w-[120px]">
                           <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border tracking-wider ${getNivelColor(item.nivel)}`}>
@@ -448,12 +453,31 @@ export default function RiscosPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500">
-                 <span>Exibindo 1–{filteredData.length} de {filteredData.length} registros</span>
-                 <div className="flex items-center gap-1">
-                    <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                    <button className="px-2.5 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30">1</button>
-                    <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronRight className="w-4 h-4" /></button>
+              <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#121826]">
+                 <span>Exibindo {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filteredData.length)} de {filteredData.length} registros</span>
+                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                         disabled={currentPage === 1}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4 rotate-180" /></button>
+                       <button className="px-2.5 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30">{currentPage}</button>
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                         disabled={currentPage === totalPages || totalPages === 0}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <span>Itens por página:</span>
+                       <select 
+                         value={itemsPerPage}
+                         onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                         className="bg-[#0b0f19] border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-purple-500">
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                       </select>
+                    </div>
                  </div>
               </div>
             </div>
@@ -614,26 +638,25 @@ export default function RiscosPage() {
       </AnimatePresence>
 
 
-      {/* FORM CRUD DRAWER */}
+      {/* FORM CRUD MODAL */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setIsDrawerOpen(false)}
             />
           <motion.div 
-            initial={{ opacity: 0, x: '100%' }} 
-            animate={{ opacity: 1, x: 0 }} 
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 right-0 w-full sm:w-[448px] bg-[#121826] border-l border-white/10 shadow-3xl z-50 flex flex-col overflow-hidden"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }} 
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="bg-[#121826] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
           >
-            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b border-white/5 bg-[#0b0f19]">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#0b0f19] rounded-t-2xl shrink-0">
                 <h2 className="text-sm font-bold text-white uppercase tracking-wider">
                   {editingItem ? `Avaliar Condição Existente` : `Registro de Risco`}
                 </h2>
@@ -653,9 +676,40 @@ export default function RiscosPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 
-                <div className="space-y-4 border-b border-white/5 pb-6">
+                <div className="space-y-4 border-b border-white/5 pb-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                        Prioridade Manual (Opcional)
+                      </label>
+                      <select 
+                        value={formData.prioridade || ''} 
+                        onChange={e => setFormData({...formData, prioridade: e.target.value as any})}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
+                      >
+                        <option value="">Automático</option>
+                        <option value="P1">P1 - Crítico</option>
+                        <option value="P2">P2 - Alto</option>
+                        <option value="P3">P3 - Médio</option>
+                        <option value="P4">P4 - Baixo</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                        Prazo Máximo (Opcional)
+                      </label>
+                      <input 
+                        type="text" 
+                        value={formData.prazo || ''} 
+                        onChange={e => setFormData({...formData, prazo: e.target.value})}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
+                        placeholder="Ex: Imediato"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
                       Atividade Operacional
@@ -793,23 +847,23 @@ export default function RiscosPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-white/5 bg-[#0b0f19] flex gap-4">
+              <div className="p-5 border-t border-white/5 bg-[#0b0f19] flex gap-3 rounded-b-2xl shrink-0">
                 <button 
                   onClick={() => setIsDrawerOpen(false)} 
-                  className="flex-1 px-4 py-3.5 rounded-xl text-[11px] font-bold text-gray-400 bg-[#121826] hover:bg-white/10 hover:text-white transition-colors border border-white/10 uppercase tracking-wider"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold text-gray-400 bg-[#121826] hover:bg-white/10 hover:text-white transition-colors border border-white/10 uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleSaveForm} 
-                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-white px-4 py-3.5 rounded-xl text-[11px] font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50 uppercase tracking-wider"
+                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-[11px] font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50 uppercase tracking-wider"
                 >
                   Salvar Risco
                 </button>
               </div>
             </div>
           </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 

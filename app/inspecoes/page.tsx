@@ -35,12 +35,20 @@ export default function InspecoesPage() {
   const [selectedInspecao, setSelectedInspecao] = useState<Inspecao | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFormDrawerOpen, setIsFormDrawerOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [formType, setFormType] = useState<'Inspecao' | 'Modelo'>('Inspecao');
   const [formData, setFormData] = useState({ nome: '', ondeUsar: '' });
 
   const normativeDetection = NormativeEngine.detect(formData.nome || '');
 
   const [inspecoes, setInspecoes] = useState<Inspecao[]>(mockInspecoes);
+
+  const listToPaginate = activeTab === 'Executar' ? inspecoes : checklists;
+  const totalPages = Math.ceil(listToPaginate.length / itemsPerPage) || 1;
+  const currentItems = listToPaginate.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleOpenDrawer = (item: Inspecao) => {
     setSelectedInspecao(item);
@@ -169,7 +177,7 @@ export default function InspecoesPage() {
             {/* Tabs */}
             <div className="flex items-center gap-6 border-b border-white/10 mb-4 shrink-0 px-2">
                <button 
-                  onClick={() => setActiveTab('Executar')}
+                  onClick={() => { setActiveTab('Executar'); setCurrentPage(1); }}
                   className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Executar' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                >
                   Executar
@@ -178,7 +186,7 @@ export default function InspecoesPage() {
                   )}
                </button>
                <button 
-                  onClick={() => setActiveTab('Modelos')}
+                  onClick={() => { setActiveTab('Modelos'); setCurrentPage(1); }}
                   className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Modelos' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                >
                   Modelos
@@ -216,7 +224,7 @@ export default function InspecoesPage() {
                     )}
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {activeTab === 'Executar' ? inspecoes.map((item) => (
+                    {currentItems.map((item: any) => activeTab === 'Executar' ? (
                       <tr key={item.id} className="hover:bg-white/5 transition-colors group">
                         <td className="px-5 py-4">
                           <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase border ${getPriorityColor(item.prioridade)}`}>
@@ -254,7 +262,7 @@ export default function InspecoesPage() {
                           </div>
                         </td>
                       </tr>
-                    )) : checklists.map((item: any) => (
+                    ) : (
                       <tr key={item.id} className="hover:bg-white/5 transition-colors group">
                         <td className="px-5 py-4">
                            <span className="text-[13px] font-bold text-gray-200">{item.name}</span>
@@ -299,17 +307,28 @@ export default function InspecoesPage() {
                 </table>
               </div>
               <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#0b0f19]">
-                 <span>Exibindo 1 a {activeTab === 'Executar' ? inspecoes.length : checklists.length} de {activeTab === 'Executar' ? inspecoes.length : checklists.length} itens</span>
+                 <span>Exibindo {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, listToPaginate.length)} de {listToPaginate.length} itens</span>
                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
-                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                       <button className="px-3 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30">1</button>
-                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                         disabled={currentPage === 1}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
+                       <button className="px-3 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30">{currentPage}</button>
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                         disabled={currentPage === totalPages}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button>
                     </div>
                     <div className="flex items-center gap-2">
                        <span>Itens por página:</span>
-                       <select className="bg-[#121826] border border-white/10 rounded px-2 py-1 outline-none text-gray-300">
-                          <option>10</option>
+                       <select 
+                         value={itemsPerPage}
+                         onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                         className="bg-[#121826] border border-white/10 rounded px-2 py-1 outline-none text-gray-300 focus:border-purple-500">
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
                        </select>
                     </div>
                  </div>
@@ -473,15 +492,21 @@ export default function InspecoesPage() {
         )}
 
         {isFormDrawerOpen && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="shrink-0 w-[400px] h-full bg-[#121826] border-l border-white/10 shadow-3xl z-50 flex flex-col overflow-hidden relative"
-          >
-            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
-              <div className="p-6 flex justify-between items-center border-b border-white/5 bg-[#0b0f19]">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsFormDrawerOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, y: 20, scale: 0.95 }} 
+              animate={{ opacity: 1, y: 0, scale: 1 }} 
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="bg-[#121826] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#0b0f19] rounded-t-2xl shrink-0">
                 <h2 className="text-sm font-bold text-white uppercase tracking-wider">
                   {formType === 'Inspecao' ? 'Nova Inspeção' : 'Novo Modelo Checklist'}
                 </h2>
@@ -490,7 +515,7 @@ export default function InspecoesPage() {
                 </button>
               </div>
 
-              <div className="flex-1 p-6 overflow-y-auto space-y-5">
+              <div className="flex-1 p-5 overflow-y-auto space-y-5">
                 {formType === 'Inspecao' && (
                   <>
                     <div>
@@ -589,22 +614,22 @@ export default function InspecoesPage() {
                 )}
               </div>
 
-              <div className="p-6 border-t border-white/5 bg-[#0b0f19] flex gap-3">
+              <div className="p-5 border-t border-white/5 bg-[#0b0f19] flex gap-3 rounded-b-2xl shrink-0">
                 <button 
                   onClick={() => setIsFormDrawerOpen(false)} 
-                  className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 bg-[#121826] hover:bg-white/10 hover:text-white transition-colors border border-white/10"
+                  className="flex-1 px-4 py-3 rounded-xl text-[11px] font-bold text-gray-400 bg-[#121826] hover:bg-white/10 hover:text-white transition-colors border border-white/10 uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={() => setIsFormDrawerOpen(false)} 
-                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
+                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl text-[11px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50 uppercase tracking-wider"
                 >
                   Salvar
                 </button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

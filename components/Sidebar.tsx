@@ -27,7 +27,7 @@ const navGroups = [
     items: [
       { name: 'Relatórios', href: '/relatorios', icon: FileText },
       { name: 'Central de Inteligência', href: '/central', icon: BarChart2, color: 'text-purple-400' },
-      { name: 'Chat SST', href: '/chat', icon: MessageSquare, badge: 'Novo', color: 'text-purple-400' },
+      { name: 'L.A.R.I — Copiloto SST', href: '/chat', icon: MessageSquare, badge: 'Novo', color: 'text-purple-400' },
       { name: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   }

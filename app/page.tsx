@@ -345,7 +345,7 @@ export default function Dashboard() {
                     <h3 className="text-white font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
                       RISCOS CRÍTICOS (5)
                     </h3>
-                    <a href="#" className="text-[11px] text-purple-400 hover:text-purple-300">Ver todos</a>
+                    <a href="/riscos" className="text-[11px] text-purple-400 hover:text-purple-300">Ver todos</a>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 scrollbar-none flex flex-col space-y-1">
                   {[
@@ -397,7 +397,7 @@ export default function Dashboard() {
                     <h3 className="text-white font-bold uppercase tracking-wider text-xs flex items-center gap-2">
                       COLABORADORES EM POSSÍVEIS RISCOS
                     </h3>
-                    <a href="#" className="text-[11px] text-purple-400 hover:text-purple-300">Ver todas</a>
+                    <a href="/configuracoes" className="text-[11px] text-purple-400 hover:text-purple-300">Ver todas</a>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 scrollbar-none flex flex-col space-y-1">
                   {[

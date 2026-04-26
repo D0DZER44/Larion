@@ -164,6 +164,9 @@ export default function AcoesPage() {
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [activeTab, setActiveTab] = useState('Resumo');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [formData, setFormData] = useState<Partial<ActionItem>>({
     title: '', description: '', priority: 'P2', status: 'Pendente', deadlineTime: ''
   });
@@ -236,6 +239,9 @@ export default function AcoesPage() {
   };
 
   const filtered = items.filter(r => r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase()));
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getPriorityColor = (level: string) => {
     switch (level) {
@@ -433,7 +439,7 @@ export default function AcoesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filtered.map(item => {
+                {currentItems.map(item => {
                   return (
                   <tr 
                     key={item.id} 
@@ -500,23 +506,28 @@ export default function AcoesPage() {
             </table>
             
             <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#121826]">
-                 <span>Exibindo 1 a 5 de 48 ações</span>
+                 <span>Exibindo {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filtered.length)} de {filtered.length} ações</span>
                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
-                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                       <button className="px-2.5 py-1 rounded bg-purple-600 text-white font-medium">1</button>
-                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">2</button>
-                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">3</button>
-                       <span className="px-1 text-gray-600">...</span>
-                       <button className="px-2.5 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors">10</button>
-                       <button className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                         disabled={currentPage === 1}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
+                       <button className="px-2.5 py-1 rounded bg-purple-600 text-white font-medium">{currentPage}</button>
+                       <button 
+                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                         disabled={currentPage === totalPages || totalPages === 0}
+                         className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button>
                     </div>
                     <div className="flex items-center gap-2">
                        <span>Itens por página:</span>
-                       <select className="bg-[#0b0f19] border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-purple-500">
-                          <option>5</option>
-                          <option>10</option>
-                          <option>20</option>
+                       <select 
+                         value={itemsPerPage}
+                         onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                         className="bg-[#0b0f19] border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-purple-500">
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
                        </select>
                     </div>
                  </div>
