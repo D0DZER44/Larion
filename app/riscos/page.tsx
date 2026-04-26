@@ -466,7 +466,27 @@ export default function RiscosPage() {
                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                          disabled={currentPage === 1}
                          className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                       <button className="px-2.5 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30">{currentPage}</button>
+                       {Array.from({ length: Math.min(5, totalPages || 1) }).map((_, i) => {
+                         let pageNum;
+                         if (totalPages <= 5) {
+                            pageNum = i + 1;
+                         } else if (currentPage <= 3) {
+                            pageNum = i + 1; 
+                         } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                         } else {
+                            pageNum = currentPage - 2 + i;
+                         }
+                         return (
+                            <button 
+                               key={pageNum}
+                               onClick={() => setCurrentPage(pageNum)}
+                               className={`px-2.5 py-1 rounded text-sm ${currentPage === pageNum ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' : 'bg-[#0b0f19] text-gray-400 border border-transparent hover:border-white/5 hover:text-white transition-colors'}`}
+                            >
+                               {pageNum}
+                            </button>
+                         );
+                       })}
                        <button 
                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                          disabled={currentPage === totalPages || totalPages === 0}

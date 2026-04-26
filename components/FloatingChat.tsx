@@ -3,7 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePathname } from 'next/navigation';
-import { MessageSquare, Sparkles, Send, X, AlertTriangle, Activity, ClipboardCheck, Briefcase, FileText, ChevronRight } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, X, AlertTriangle, Activity, ClipboardCheck, Briefcase, FileText, ChevronRight, Clock, ShieldCheck } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { LariContextEngine, NormativeEngine, RiskEngine, DecisionEngine } from '@/lib/engines';
 
 type Message = {
   id: string;
@@ -17,8 +19,12 @@ export default function FloatingChat() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [inputVal, setInputVal] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const isTypingRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  const storeState = useAppStore();
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -28,7 +34,7 @@ export default function FloatingChat() {
       id: '1',
       sender: 'lari',
       text: "Olá, sou a L.A.R.I — Copiloto SST, em que posso ajudar?",
-      time: '09:15',
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
         { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
         { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
@@ -40,7 +46,7 @@ export default function FloatingChat() {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isTyping]);
 
   // Hide on /chat route
   if (pathname === '/chat') {
@@ -48,54 +54,149 @@ export default function FloatingChat() {
   }
 
   const handleSend = (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isTypingRef.current) return;
+    isTypingRef.current = true;
 
     const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     setMessages(prev => [...prev, { id: Math.random().toString(), sender: 'user', text, time }]);
     setInputVal('');
+    setIsTyping(true);
 
-    // Mock responses
     setTimeout(() => {
-      let lariResponse: React.ReactNode = "Desculpe, ainda estou aprendendo, mas posso te ajudar a navegar no sistema.";
+      setIsTyping(false);
+      isTypingRef.current = false;
       
-      if (text === 'Quais ações estão atrasadas?') {
-        lariResponse = (
-          <div className="space-y-3">
-            <p>Você tem <strong>18 ações atrasadas</strong>.</p>
-            <div className="flex flex-col gap-2">
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <Activity className="w-3 h-3 text-red-500" />
-                  <div>
-                    <span className="font-bold text-white text-xs block leading-none">18 Atrasadas</span>
-                  </div>
-               </div>
+      const intent = LariContextEngine.classifyIntent(text);
+      let engineText = LariContextEngine.respond(text, storeState);
+      
+      let component: React.ReactNode = undefined;
+      let quickActions: { label: string; action: () => void; icon?: React.ReactNode }[] = [];
+
+      if (intent === 'Check_Risks') {
+        const criticalRisks = (storeState.riscos || []).filter((r: any) => r.nivel?.toLowerCase() === 'crítico' || r.level?.toLowerCase() === 'crítico');
+        
+        if (criticalRisks.length > 0) {
+          const firstRisk = criticalRisks[0];
+          component = (
+            <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                  <span className="text-[13px] font-bold text-red-400">{criticalRisks.length} Risco{criticalRisks.length > 1 ? 's' : ''} Crítico{criticalRisks.length > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <div className="pointer-events-none">
+                <p className="font-bold text-white text-sm mb-1">{firstRisk.atividade || firstRisk.title || firstRisk.setor}</p>
+                <p className="text-[11px] text-gray-400">Ativo • {firstRisk.responsavel || 'SST'}</p>
+              </div>
             </div>
-            <button className="text-xs text-purple-400 font-medium hover:text-purple-300 flex items-center gap-1">Ver todas as ações <ChevronRight className="w-3 h-3" /></button>
+          );
+          quickActions = [
+            { label: 'Bloquear (LOTO)', action: () => alert('Bloqueio solicitado!') },
+          ];
+        } else {
+           engineText = "Nenhum risco crítico identificado no momento ativo no sistema.";
+        }
+        
+      } else if (intent === 'Check_Actions') {
+         const atrasadas = (storeState.acoes || []).filter((a: any) => a.status === 'Atrasada' || a.status === 'Urgente');
+        
+         if (atrasadas.length > 0) {
+           const firstAcao = atrasadas[0];
+           component = (
+             <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+               <div className="flex items-center justify-between pointer-events-none">
+                 <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-orange-400" />
+                   <span className="text-[13px] font-bold text-orange-400">{atrasadas.length} Ações Atrasadas</span>
+                 </div>
+               </div>
+               <div className="pointer-events-none">
+                 <p className="font-bold text-white text-sm mb-1">{firstAcao.titulo || firstAcao.title}</p>
+                 <p className="text-[11px] text-gray-400">Resp: {firstAcao.responsavel || firstAcao.owner}</p>
+               </div>
+             </div>
+           );
+           quickActions = [
+             { label: 'Cobrar Responsável', action: () => alert('Cobrança enviada!') },
+           ];
+         } else {
+            engineText = "Não constam ações atrasadas na base! Ótimo trabalho.";
+         }
+        
+      } else if (intent === 'Get_Report') {
+        const atrasadas = (storeState.acoes || []).filter((a: any) => a.status === 'Atrasada' || a.status === 'Urgente');
+        component = (
+          <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-4 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+            <div className="flex items-center gap-2 pointer-events-none">
+              <FileText className="w-4 h-4 text-purple-400" />
+              <span className="text-[13px] font-bold text-white">Resumo Atualógico</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pointer-events-none">
+              <div className="bg-[#0b0f19] border border-white/5 p-2 rounded-lg flex flex-col">
+                <span className="text-[10px] text-gray-400 font-medium">Ações Pendentes</span>
+                <span className="text-sm font-bold text-white">{atrasadas.length}</span>
+              </div>
+              <div className="bg-[#0b0f19] border border-white/5 p-2 rounded-lg flex flex-col">
+                <span className="text-[10px] text-gray-400 font-medium">Inspeções</span>
+                <span className="text-sm font-bold text-emerald-400">{storeState.inspecoes?.length || 0}</span>
+              </div>
+            </div>
           </div>
         );
-      } else if (text === 'Mostre os riscos críticos agora') {
-        lariResponse = (
-          <div className="space-y-3">
-            <p>Há <strong>7 riscos críticos</strong> ativos no período.</p>
-            <div className="flex flex-col gap-2">
-               <div className="flex items-center gap-2 bg-[#121826] border border-white/5 py-1.5 px-3 rounded-lg">
-                  <AlertTriangle className="w-3 h-3 text-red-500" />
-                  <div>
-                    <span className="font-bold text-white text-xs block leading-none">7 Críticos</span>
-                  </div>
-               </div>
-            </div>
-          </div>
+        quickActions = [
+          { label: 'Baixar PDF', action: () => alert('Baixando relatorio...') }
+        ];
+      } else if (intent === 'Get_Decision') {
+        const decision = DecisionEngine.getMainDecision(storeState);
+        component = (
+           <div className="mt-4 bg-purple-900/10 border border-purple-500/30 p-3 rounded-xl space-y-2">
+             <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+               <ShieldCheck className="w-3 h-3" /> {decision.title}
+             </h4>
+             <div className="text-[11px] text-gray-300">
+                <span className="block mb-1"><strong>Status:</strong> {decision.decision}</span>
+             </div>
+           </div>
         );
+      } else if (intent === 'Doubt_Normative') {
+        const normMatch = NormativeEngine.detect(text);
+        if (normMatch) {
+          const riskLevelData = RiskEngine.generateRiskFromActivity(text);
+          component = (
+             <div className="mt-4 bg-purple-900/10 border border-purple-500/30 p-3 rounded-xl space-y-2">
+               <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                 <ShieldCheck className="w-3 h-3" /> NR: {normMatch.nr}
+               </h4>
+               <div className="text-[11px] text-gray-300">
+                  <span className="block mb-1"><strong>Risco:</strong> {normMatch.riskType}</span>
+                  {riskLevelData && <span className="block mb-1"><strong>Nível:</strong> {riskLevelData.level.toUpperCase()}</span>}
+               </div>
+             </div>
+          );
+        }
       }
-      
+
+      if (quickActions.length === 0) {
+        quickActions = [
+          { label: 'Ações atrasadas?', action: () => handleSend('ações atrasadas?') },
+          { label: 'Riscos Críticos', action: () => handleSend('riscos cíticos') }
+        ];
+      }
+
       setMessages(prev => [...prev, {
         id: Math.random().toString(),
         sender: 'lari',
-        text: lariResponse,
+        text: (
+           <>
+             {typeof engineText === 'string' ? engineText : JSON.stringify(engineText)}
+             {component}
+           </>
+        ),
+        quickActions,
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       }]);
-    }, 1000);
+    }, 1200);
   };
 
   return (
@@ -149,7 +250,7 @@ export default function FloatingChat() {
                       {msg.time}
                     </div>
 
-                    {msg.quickActions && msg.quickActions.length > 0 && (
+                    {msg.sender === 'lari' && msg.quickActions && msg.quickActions.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {msg.quickActions.map((action, i) => (
                           <button 
@@ -166,6 +267,16 @@ export default function FloatingChat() {
                   </div>
                 </div>
               ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-[#121826] border border-white/5 rounded-2xl p-3 rounded-tl-sm flex items-center gap-2">
+                    <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
+                    <span className="text-[12px] text-gray-400">L.A.R.I está processando...</span>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -207,3 +318,4 @@ export default function FloatingChat() {
     </div>
   );
 }
+
