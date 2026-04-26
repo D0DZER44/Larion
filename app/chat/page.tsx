@@ -75,24 +75,6 @@ export default function ChatPage() {
          <p className="mt-1">Posso te ajudar rapidamente com riscos, inspeções, ações e relatórios.</p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-3 mb-12 max-w-3xl mx-auto">
-         {[
-            { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, label: 'Ver inspeções pendentes', msg: 'Mostre as inspeções pendentes' },
-            { icon: <Clock className="w-4 h-4 text-orange-400" />, label: 'Mostrar ações atrasadas', msg: 'O que está atrasado hoje?' },
-            { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, label: 'Resumo dos riscos', msg: 'Quais riscos estão críticos?' },
-            { icon: <FileText className="w-4 h-4 text-purple-400" />, label: 'Gerar resumo executivo', msg: 'Gere relatório do mês' },
-         ].map((action, idx) => (
-            <button 
-              key={idx} 
-              onClick={() => handleSend(action.msg)}
-              className="flex items-center gap-2 bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 px-4 py-2.5 rounded-xl transition-colors text-sm text-gray-300"
-            >
-               {action.icon}
-               {action.label}
-            </button>
-         ))}
-      </div>
-
       <div className="w-full max-w-3xl pt-4 mx-auto">
          <div className="flex items-center gap-2 text-purple-400 mb-4 px-2">
             <Zap className="w-4 h-4" />

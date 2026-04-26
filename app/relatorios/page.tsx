@@ -418,17 +418,14 @@ export default function RelatoriosPage() {
   ] as const;
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#0b0f19] overflow-hidden pt-safe-top">
+    <div className="h-full w-full flex flex-col bg-[#0b0f19] overflow-hidden pt-safe-top print:bg-white">
       
       {/* Top Header Section */}
-      <div className="p-6 pb-2 shrink-0">
+      <div className="p-6 pb-2 shrink-0 print:hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Relatórios</h1>
             <p className="text-sm text-gray-400 mt-1">Central de documentos e análises operacionais</p>
-          </div>
-          <div className="flex items-center gap-4">
-             {/* Layout should have this, adding here if empty */}
           </div>
         </div>
 
@@ -486,10 +483,10 @@ export default function RelatoriosPage() {
       </div>
 
       {/* Main 3-column layout */}
-      <div className="flex-1 flex overflow-hidden p-6 pt-0 gap-6">
+      <div className="flex-1 flex overflow-hidden p-6 pt-0 gap-6 print:p-0 print:overflow-visible flex-col md:flex-row">
         
         {/* Left Column - Models */}
-        <div className="w-[300px] flex flex-col shrink-0">
+        <div className="w-full md:w-[300px] flex flex-col shrink-0 print:hidden">
           <h3 className="text-sm font-bold text-white mb-4 px-1">Modelos de relatório</h3>
           <div className="space-y-3 overflow-y-auto pr-2 pb-6 scrollbar-thin">
              {models.map((m) => (
@@ -523,12 +520,12 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Center Column - Preview Paper */}
-        <div className="flex-1 flex flex-col min-w-0">
-           <h3 className="text-sm font-bold text-white mb-4 px-1">Prévia do relatório</h3>
-           <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl overflow-hidden flex flex-col relative">
-              <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/5 flex justify-center pb-20">
+        <div className="flex-1 flex flex-col min-w-0 print:block">
+           <h3 className="text-sm font-bold text-white mb-4 px-1 print:hidden">Prévia do relatório</h3>
+           <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl overflow-hidden flex flex-col relative print:bg-white print:border-none print:rounded-none mt-0">
+              <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/5 flex justify-center pb-20 print:p-0 print:overflow-visible">
                  {/* The White Paper */}
-                 <div className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-gray-200">
+                 <div id="printable-report" className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-gray-200 print:shadow-none print:border-none print:max-w-none print:p-0 print:min-h-0">
                     {activeModel === 'Executivo' && <RelatorioExecutivoPreview storeData={{}} />}
                     {activeModel === 'Riscos' && <RelatorioRiscosPreview />}
                     {activeModel === 'Inspeções' && <RelatorioInspecoesPreview />}
@@ -539,7 +536,7 @@ export default function RelatoriosPage() {
               </div>
               
               {/* Paper Controls */}
-              <div className="bg-[#0b0f19]/80 backdrop-blur border-t border-white/5 p-3 flex justify-center gap-4 shrink-0 absolute bottom-0 w-full rounded-b-2xl">
+              <div className="bg-[#0b0f19]/80 backdrop-blur border-t border-white/5 p-3 flex justify-center gap-4 shrink-0 absolute bottom-0 w-full rounded-b-2xl print:hidden">
                  <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">-</button>
                  <span className="flex items-center text-sm font-bold text-white">100%</span>
                  <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">+</button>
@@ -551,7 +548,7 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Right Column - Filters & Actions */}
-        <div className="w-[320px] flex flex-col shrink-0 gap-6">
+        <div className="w-full md:w-[320px] flex flex-col shrink-0 gap-6 print:hidden">
            
            {/* Filters */}
            <div className="bg-[#121826] border border-white/5 rounded-2xl p-5">
@@ -580,10 +577,10 @@ export default function RelatoriosPage() {
                  </div>
 
                  <div className="pt-2 flex flex-col gap-2">
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 flex justify-center items-center gap-2">
+                    <button onClick={() => window.print()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 flex justify-center items-center gap-2">
                        <FileText className="w-4 h-4" /> Gerar relatório
                     </button>
-                    <button className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-white font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
+                    <button onClick={() => window.print()} className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-white font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                        <Download className="w-4 h-4" /> Exportar PDF
                     </button>
                     <button className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-emerald-400 font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">

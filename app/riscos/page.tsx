@@ -215,12 +215,17 @@ export default function RiscosPage() {
     setIsDrawerOpen(false);
   };
 
+  const storeAddRisco = useAppStore(state => state.addRisco);
+  const storeUpdateRisco = useAppStore(state => state.updateRisco);
+
   const handleSaveForm = () => {
     const evaluated = applyNRLules(formData);
     if (editingItem) {
       setData(prev => prev.map(r => r.id === editingItem.id ? evaluated : r));
+      storeUpdateRisco(evaluated.id, evaluated);
     } else {
       setData(prev => [evaluated, ...prev]);
+      storeAddRisco(evaluated);
     }
     setIsDrawerOpen(false);
   };

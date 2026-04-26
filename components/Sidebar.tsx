@@ -46,7 +46,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   }, [isDark]);
 
   return (
-    <aside className="w-[260px] flex-shrink-0 flex flex-col h-screen bg-[#0b0f19] border-r border-white/5 top-0 sticky">
+    <aside className="w-[260px] flex-shrink-0 flex flex-col h-screen bg-[#0b0f19] border-r border-white/5 top-0 sticky print:hidden">
       {/* Logo Area */}
       <div className="p-6 pb-4">
         <Link href="/" className="flex items-center gap-3">

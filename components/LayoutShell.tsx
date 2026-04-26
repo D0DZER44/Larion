@@ -11,7 +11,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-[#0b0f19] overflow-hidden">
       {/* Mobile Top Header */}
-      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-[#0b0f19] border-b border-white/5 z-50 flex items-center justify-between px-4">
+      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-[#0b0f19] border-b border-white/5 z-50 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-gradient-to-br from-[#121826] to-[#1e1a30] border border-blue-500/30 overflow-hidden relative shrink-0">
             <Image 
@@ -56,8 +56,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         <Sidebar onClose={() => setIsSidebarOpen(false)} />
       </div>
 
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pt-16 lg:pt-0">
-        <div className="flex-1 overflow-y-auto w-full custom-scrollbar pt-6 lg:pt-0">
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pt-16 lg:pt-0 print:pt-0">
+        <div className="flex-1 overflow-y-auto w-full custom-scrollbar pt-6 lg:pt-0 print:pt-0 print:overflow-visible">
           {children}
         </div>
       </main>

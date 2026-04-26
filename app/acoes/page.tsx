@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NormativeEngine, EconomicImpactEngine } from '@/lib/engines';
+import { useAppStore } from '@/lib/store';
 import { Plus, Search, CheckCircle2, Activity, Edit2, Trash2, X, Clock, Play, MoreVertical, Download, AlertTriangle, Shield, Headphones, Settings, MapPin, FileText, Check, ChevronRight, ChevronLeft, PowerOff, BellRing, UserMinus, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
 
 
@@ -157,7 +158,41 @@ const initialActions: ActionItem[] = [
 ];
 
 export default function AcoesPage() {
+  const storeAcoes = useAppStore(state => state.acoes);
+  
+  // Mix static and dynamic actions
   const [items, setItems] = useState<ActionItem[]>(initialActions);
+  
+  useEffect(() => {
+    // Map store actions to ActionItem format if needed
+    const mappedStoreActions: ActionItem[] = storeAcoes.map(a => ({
+      id: a.id,
+      title: a.title || 'Sem título',
+      description: a.description || '',
+      priority: (a.priority === 'P1' || a.priority === 'P2' || a.priority === 'P3') ? a.priority : 'P2',
+      priorityIcon: a.priority === 'P1' ? 'alert' : 'clock' as 'alert' | 'clock' | 'play' | 'activity',
+      status: a.status === 'Pendente' && new Date(a.due_date) < new Date() ? 'Atrasada' : 
+              a.status === 'Pendente' ? 'Pendente' : a.status as 'Atrasada' | 'Vence hoje' | 'Em andamento' | 'Pendente' | 'Monitorando' | 'Concluída',
+      deadlineTime: a.prazo || 'Sem prazo',
+      deadlineRelative: '',
+      deadlineColor: (a.priority === 'P1' ? 'red' : 'yellow') as 'red' | 'yellow' | 'blue' | 'gray',
+      originText: a.item_origem_tipo ? `Origem: ${a.item_origem_tipo}` : 'Manual',
+      originIcon: 'shield-blue' as 'shield-blue' | 'shield-yellow' | 'shield-purple' | 'triangle-green' | 'fire-red',
+      responsible: { name: a.responsavel || 'Desconhecido', role: '', avatar: '' },
+      nextStep: 'Verificar ação',
+      category: a.category || 'Geral',
+      reasons: [],
+      checklist: []
+    }));
+    
+    // Simple distinct merge
+    setItems(prev => {
+       const existingIds = new Set(prev.map(p => p.id));
+       const newItems = mappedStoreActions.filter(m => !existingIds.has(m.id));
+       return [...newItems, ...prev];
+    });
+  }, [storeAcoes]);
+
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal for New Action
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer for Edit/View Details

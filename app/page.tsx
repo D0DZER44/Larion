@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   Bell, Download, Calendar, Activity, AlertTriangle, 
   FileText, Clock, Settings, Search, CheckCircle2, 
@@ -10,16 +10,21 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useAppStore } from '@/lib/store';
+import { DecisionEngine, PriorityEngine } from '@/lib/engines';
+import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { calculateDashboardMetrics } from '@/lib/dashboardMetrics';
 
 // --- MOCK COMPONENTS FOR DASHBOARD ---
 
-const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Icon, data, lineColor = '#c084fc' }: any) => {
+const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Icon, data, lineColor = '#c084fc', badge }: any) => {
   const gradientId = `gradient-${title.replace(/\s+/g, '')}`;
   return (
   <div className="glass-panel p-4 flex flex-col justify-between border border-transparent hover:border-purple-500/50 hover:bg-purple-500/5 transition-all cursor-pointer rounded-xl group relative overflow-hidden">
     <div className="flex justify-between items-start mb-2 relative z-10">
       <h3 className="text-gray-400 text-xs font-medium tracking-wider flex items-center gap-1.5 group-hover:text-gray-300 transition-colors">
         {title} <Info className="w-3.5 h-3.5 text-gray-500" />
+        {badge && <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider font-bold bg-white/10 text-white border border-white/20">{badge}</span>}
       </h3>
       <div className="p-1.5 bg-white/5 rounded-md">
         <Icon className="w-4 h-4 text-purple-400" />
@@ -27,12 +32,14 @@ const StatCard = ({ title, value, trend, trendDir, trendColor, subtext, icon: Ic
     </div>
     
     <div className="relative z-10">
-      <div className="text-3xl font-bold text-white mb-2">{value}</div>
+      <div className={`font-bold text-white mb-2 ${value && value.toString().includes('insuficientes') ? 'text-sm text-gray-400 mt-2 font-medium' : 'text-3xl'}`}>{value}</div>
       <div className="flex items-center justify-between">
-        <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
-          {trendDir === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-          <span>{trend}</span>
-        </div>
+        {trend && (
+           <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
+             {trendDir === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+             <span>{trend}</span>
+           </div>
+        )}
       </div>
       <div className="text-[10px] text-gray-500 mt-1">{subtext}</div>
     </div>
@@ -85,6 +92,31 @@ const RiskDonut = () => (
 );
 
 export default function Dashboard() {
+  const storeState = useAppStore();
+  
+  const currentDecision = useMemo(() => DecisionEngine.getMainDecision(storeState), [storeState]);
+  const queue = useMemo(() => PriorityEngine.getQueue(storeState), [storeState]);
+  
+  const [periodStart, setPeriodStart] = useState<Date>(startOfMonth(new Date()));
+  const [periodEnd, setPeriodEnd] = useState<Date>(endOfMonth(new Date()));
+
+  const metrics = useMemo(() => calculateDashboardMetrics(storeState, periodStart, periodEnd), [storeState, periodStart, periodEnd]);
+  
+  const topActions = queue.slice(0, 3);
+  const totalDataPoints = (storeState.acoes?.length || 0) + (storeState.riscos?.length || 0) + (storeState.inspecoes?.length || 0) + (storeState.alertas?.length || 0);
+
+  const validHours = (storeState.work_hours || []).filter(h => h.total_hours > 0);
+  const totalHours = validHours.reduce((acc, curr) => acc + curr.total_hours, 0);
+
+  let modeBadge = "";
+  if (totalHours > 0) {
+     if(validHours.some(w => w.calculation_mode === 'Estimado')) {
+       modeBadge = "Estimado";
+     } else {
+       modeBadge = "Informado";
+     }
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top Header */}
@@ -140,49 +172,66 @@ export default function Dashboard() {
                   <div className="flex flex-col items-end">
                     <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
                       <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Confiança: 94%</span>
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Confiança: {currentDecision.confidence}</span>
                     </div>
-                    <span className="text-[10px] text-gray-500 mt-1">Baseado em +1.2k pontos de dados</span>
+                    <span className="text-[10px] text-gray-500 mt-1">Baseado em {totalDataPoints} pontos de dados</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
                   {/* Left Column: Analysis & Reasoning */}
                   <div className="lg:col-span-5 space-y-6">
-                    <div>
-                      <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4" /> Cruzamento de Dados
-                      </h3>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/5 shadow-inner">
-                        <p className="text-[14px] text-gray-200 leading-relaxed font-medium">
-                          Identificamos <strong className="text-red-400">12 inspeções críticas vencidas</strong> no setor de Manutenção combinadas com <strong className="text-orange-400">8 ações corretivas atrasadas</strong> (NR-12).
-                        </p>
-                        <div className="mt-3 flex items-center gap-2 text-[12px] text-gray-400">
-                          <TrendingUp className="w-4 h-4 text-red-500" /> Isso indica um rápido declínio na conformidade de maquinário.
+                    {totalDataPoints === 0 ? (
+                      <div className="bg-[#121826]/80 p-8 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center h-full">
+                        <Info className="w-8 h-8 text-gray-500 mb-4" />
+                        <h3 className="text-sm font-bold text-gray-300 mb-2">Dados Insuficientes</h3>
+                        <p className="text-[13px] text-gray-500 max-w-sm">O sistema não possui registros ativos de riscos, inspeções ou ações para realizar uma análise confiável e recomendar intervenções.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <ArrowRight className="w-4 h-4" /> Cruzamento de Dados
+                          </h3>
+                          <div className="bg-black/30 p-4 rounded-xl border border-white/5 shadow-inner">
+                            <p className="text-[14px] text-gray-200 leading-relaxed font-medium">
+                              {currentDecision.reason}
+                            </p>
+                            {currentDecision.causeAndEffect?.causes?.length > 0 && (
+                              <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-gray-400">
+                                <TrendingUp className="w-4 h-4 text-red-500 shrink-0" />
+                                {currentDecision.causeAndEffect.causes.map((c: string, idx: number) => (
+                                  <span key={idx} className="bg-white/5 px-2 py-1 rounded truncate max-w-[200px]">{c}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
-                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">O Que Mudou</h4>
-                        <p className="text-sm text-white font-medium">Aumento de 24% na taxa de exposição a riscos mecânicos.</p>
-                      </div>
-                      <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
-                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Impacto Provável</h4>
-                        <p className="text-sm text-red-400 font-bold">Risco Acidente + Multa (NR-12) est. R$32k+</p>
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
+                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">O Que Mudou</h4>
+                            <p className="text-sm text-white font-medium">{currentDecision.evidences?.[0] || 'Sem ocorrências recentes'}</p>
+                          </div>
+                          <div className="bg-[#121826]/80 p-4 rounded-xl border border-white/5">
+                            <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Impacto Provável</h4>
+                            <p className={`text-sm font-bold ${currentDecision.operationalImpact === 'Crítico' ? 'text-red-400' : currentDecision.operationalImpact === 'Alto' ? 'text-orange-400' : 'text-emerald-400'}`}>
+                              Risco {currentDecision.operationalImpact}
+                            </p>
+                          </div>
+                        </div>
 
-                    <div className="bg-gradient-to-r from-emerald-500/10 to-transparent p-5 rounded-xl border-l-2 border-emerald-500">
-                      <h3 className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Decisão Recomendada</h3>
-                      <p className="text-base text-white font-bold leading-tight mb-2">
-                        Priorizar vistorias imediatas e paralisação das prensas não inspecionadas na Manutenção.
-                      </p>
-                      <p className="text-[12px] text-emerald-300/80">
-                        <strong>Por que agir agora?</strong> A combinação de atrasos cria um passivo iminente. Bloquear agora previne paradas longas na próxima semana.
-                      </p>
-                    </div>
+                        <div className={`bg-gradient-to-r ${currentDecision.operationalImpact === 'Crítico' || currentDecision.operationalImpact === 'Alto' ? 'from-red-500/10 border-red-500' : 'from-emerald-500/10 border-emerald-500'} p-5 rounded-xl border-l-2 to-transparent`}>
+                          <h3 className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${currentDecision.operationalImpact === 'Crítico' || currentDecision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-emerald-400'}`}>Decisão Recomendada</h3>
+                          <p className="text-base text-white font-bold leading-tight mb-2">
+                            {currentDecision.decision}
+                          </p>
+                          <p className="text-[12px] text-gray-400 mt-2">
+                            Ações automáticas criadas e priorizadas.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Right Column: Priority Queue */}
@@ -204,85 +253,43 @@ export default function Dashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {/* Task 1 */}
-                            <tr className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                              <td className="p-3">
-                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Bloquear Prensa Hidráulica 03</span>
-                                <span className="text-[10px] text-gray-500 uppercase">Origem: Risco Crítico</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-xs text-gray-300 font-medium block">João Silva (Manut.)</span>
-                                <span className="text-[10px] text-red-400 font-bold">Prazo: Imediato</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Aplicar LOTO no painel principal e notificar supervisão</span>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className="inline-flex items-center bg-orange-500/10 text-orange-400 text-[9px] font-bold px-2 py-1 rounded border border-orange-500/20 uppercase">Pendente</span>
-                              </td>
-                              <td className="p-3 text-right">
-                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors" title="Ver Detalhes">Abrir</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-orange-500/50 hover:text-white transition-colors" title="Cobrar Responsável">Cobrar</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50" title="Tratar Agora">Executar agora</button>
-                                </div>
-                              </td>
-                            </tr>
-                            
-                            {/* Task 2 */}
-                            <tr className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                              <td className="p-3">
-                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Inspecionar Soldas (NR-12)</span>
-                                <span className="text-[10px] text-gray-500 uppercase">Origem: Inspeção Vencida</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-xs text-gray-300 font-medium block">Equipe Manutenção</span>
-                                <span className="text-[10px] text-orange-400 font-bold">Prazo: Hoje</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Enviar formulário via tablet</span>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className="inline-flex items-center bg-blue-500/10 text-blue-400 text-[9px] font-bold px-2 py-1 rounded border border-blue-500/20 uppercase">Em Andamento</span>
-                              </td>
-                              <td className="p-3 text-right">
-                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors" title="Ver Detalhes">Abrir</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-emerald-500/50 hover:text-white transition-colors" title="Finalizar Atividade">Concluir</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50" title="Tratar Agora">Executar agora</button>
-                                </div>
-                              </td>
-                            </tr>
-
-                            {/* Task 3 */}
-                            <tr className="hover:bg-white/5 transition-colors group">
-                              <td className="p-3">
-                                <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors">Substituir Mangotes</span>
-                                <span className="text-[10px] text-gray-500 uppercase">Origem: Ação Atrasada</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-xs text-gray-300 font-medium block">Carlos Lima</span>
-                                <span className="text-[10px] text-yellow-500 font-bold">Prazo: Amanhã</span>
-                              </td>
-                              <td className="p-3">
-                                <span className="text-[11px] text-gray-400 font-medium leading-snug">Solicitar material no almoxarifado</span>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className="inline-flex items-center bg-purple-500/10 text-purple-400 text-[9px] font-bold px-2 py-1 rounded border border-purple-500/20 uppercase">Agendado</span>
-                              </td>
-                              <td className="p-3 text-right">
-                                <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors">Abrir</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-orange-500/50 hover:text-white transition-colors">Cobrar</button>
-                                  <button className="text-[10px] px-2.5 py-1.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-lg shadow-purple-500/20 border border-purple-500/50">Executar agora</button>
-                                </div>
-                              </td>
-                            </tr>
+                            {topActions.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="p-6 text-center text-gray-400 text-sm">Fila limpa. Sem itens pendentes no momento.</td>
+                              </tr>
+                            ) : topActions.map((item: any, i: number) => (
+                              <tr key={item.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                <td className="p-3">
+                                  <span className="font-bold text-sm text-white block mb-0.5 group-hover:text-purple-400 transition-colors truncate max-w-[200px]" title={item.title}>{item.title}</span>
+                                  <span className="text-[10px] text-gray-500 uppercase">Origem: {item.origem}</span>
+                                </td>
+                                <td className="p-3">
+                                  <span className="text-xs text-gray-300 font-medium block truncate max-w-[150px]" title={item.resp}>{item.resp}</span>
+                                  <span className={`text-[10px] font-bold ${item.prio === 'P1' || item.status === 'Urgente' || item.status === 'Atrasada' ? 'text-red-400' : 'text-orange-400'}`}>Prazo: {item.prazo}</span>
+                                </td>
+                                <td className="p-3">
+                                  <span className="text-[11px] text-gray-400 font-medium leading-snug w-[150px] inline-block truncate" title={item.proc}>{item.proc}</span>
+                                </td>
+                                <td className="p-3 text-center">
+                                  <span className={`inline-flex items-center text-[9px] font-bold px-2 py-1 rounded border uppercase ${
+                                    item.status === 'Em andamento' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                    item.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                    (item.status === 'Urgente' || item.status === 'Atrasada') ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                    'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                  }`}>{item.status}</span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <a href="/central" className="text-[10px] px-2.5 py-1.5 rounded bg-[#121826] border border-white/10 hover:border-purple-500/50 hover:text-white transition-colors">Abrir</a>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
                       <div className="mt-auto p-3 border-t border-white/5 bg-[#121826]/30 text-center">
-                        <button className="text-[11px] text-purple-400 hover:text-purple-300 font-bold transition-colors uppercase tracking-wider">Ver Fila Completa (18 itens)</button>
+                        <a href="/central" className="text-[11px] text-purple-400 hover:text-purple-300 font-bold transition-colors uppercase tracking-wider">Ver Fila Completa ({queue.length} itens)</a>
                       </div>
                     </div>
                   </div>
@@ -293,47 +300,49 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <StatCard 
                 title="TFA" 
-                value="12,45" 
-                trend="8,2%" 
-                trendDir="up" 
-                trendColor="text-emerald-500" 
+                value={metrics.tfa.value} 
+                trend={metrics.tfa.trend}  
+                trendDir={metrics.tfa.trendDir} 
+                trendColor={metrics.tfa.trendColor} 
                 subtext="vs. período anterior" 
                 icon={Users} 
                 lineColor="#c084fc"
-                data={[ { value: 12 }, { value: 10 }, { value: 11 }, { value: 9 }, { value: 10 }, { value: 11 }, { value: 15 }, { value: 12 }, { value: 13 }, { value: 17 } ]}
+                badge={modeBadge}
+                data={metrics.tfa.series}
               />
               <StatCard 
                 title="TG" 
-                value="0,98" 
-                trend="15,6%" 
-                trendDir="down" 
-                trendColor="text-red-500" 
+                value={metrics.tg.value} 
+                trend={metrics.tg.trend}  
+                trendDir={metrics.tg.trendDir} 
+                trendColor={metrics.tg.trendColor} 
                 subtext="vs. período anterior" 
                 icon={TrendingUpIcon} 
                 lineColor="#ef4444"
-                data={[ { value: 1.5 }, { value: 1.2 }, { value: 1.1 }, { value: 1.3 }, { value: 1.2 }, { value: 1.0 }, { value: 1.2 }, { value: 0.9 }, { value: 1.1 }, { value: 0.8 } ]}
+                badge={modeBadge}
+                data={metrics.tg.series}
               />
               <StatCard 
                 title="Near Miss" 
-                value="23" 
-                trend="4,1%" 
-                trendDir="up" 
-                trendColor="text-emerald-500" 
+                value={metrics.nearMiss.value} 
+                trend={metrics.nearMiss.trend} 
+                trendDir={metrics.nearMiss.trendDir} 
+                trendColor={metrics.nearMiss.trendColor} 
                 subtext="vs. período anterior" 
                 icon={ShieldCheck} 
                 lineColor="#c084fc"
-                data={[ { value: 18 }, { value: 15 }, { value: 20 }, { value: 19 }, { value: 22 }, { value: 25 }, { value: 21 }, { value: 24 }, { value: 22 }, { value: 26 } ]}
+                data={metrics.nearMiss.series}
               />
               <StatCard 
                 title="EPIs Conformes" 
-                value="78%" 
-                trend="6,3%" 
-                trendDir="down" 
-                trendColor="text-red-500" 
+                value={metrics.epi.value} 
+                trend={metrics.epi.trend} 
+                trendDir={metrics.epi.trendDir} 
+                trendColor={metrics.epi.trendColor} 
                 subtext="vs. período anterior" 
                 icon={HardHat} 
                 lineColor="#c084fc"
-                data={[ { value: 85 }, { value: 83 }, { value: 86 }, { value: 84 }, { value: 81 }, { value: 82 }, { value: 80 }, { value: 77 }, { value: 79 }, { value: 78 } ]}
+                data={metrics.epi.series}
               />
             </div>
 

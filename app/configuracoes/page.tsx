@@ -18,6 +18,7 @@ const TABS = [
   { id: 'regras', label: 'Regras de Risco', icon: <ShieldAlert className="w-4 h-4" /> },
   { id: 'slas', label: 'Prazos e SLAs', icon: <Clock className="w-4 h-4" /> },
   { id: 'alertas', label: 'Alertas', icon: <Bell className="w-4 h-4" /> },
+  { id: 'indicadores', label: 'Indicadores SST', icon: <Activity className="w-4 h-4" /> },
   { id: 'perfil', label: 'Perfil', icon: <User className="w-4 h-4" /> },
 ];
 
@@ -84,6 +85,7 @@ export default function ConfiguracoesPage() {
                  {activeTab === 'regras' && <TabRegras />}
                  {activeTab === 'slas' && <TabSlas />}
                  {activeTab === 'alertas' && <TabAlertas />}
+                 {activeTab === 'indicadores' && <TabIndicadores />}
                  {activeTab === 'perfil' && <TabPerfil />}
                </motion.div>
              </AnimatePresence>
@@ -1048,4 +1050,277 @@ function TabPerfil() {
 
       </div>
    )
+}
+
+function TabIndicadores() {
+   const { work_hours = [], addWorkHours, updateWorkHours, deleteWorkHours, sectors } = useAppStore();
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [editingItem, setEditingItem] = useState<any>(null);
+
+   // Form
+   const [periodStart, setPeriodStart] = useState('');
+   const [periodEnd, setPeriodEnd] = useState('');
+   const [sectorId, setSectorId] = useState('');
+   const [calculationMode, setCalculationMode] = useState<'Manual'|'Estimado'>('Manual');
+   
+   // Estimado fields
+   const [employeeCount, setEmployeeCount] = useState(0);
+   const [hoursPerDay, setHoursPerDay] = useState(8);
+   const [workDays, setWorkDays] = useState(22);
+   const [overtimeHours, setOvertimeHours] = useState(0);
+   const [absenceHours, setAbsenceHours] = useState(0);
+   
+   // Manual fields
+   const [totalHoursManual, setTotalHoursManual] = useState(0);
+
+   const handleAdd = () => {
+      setEditingItem(null);
+      setPeriodStart('');
+      setPeriodEnd('');
+      setSectorId('');
+      setCalculationMode('Manual');
+      setTotalHoursManual(0);
+      setEmployeeCount(0);
+      setHoursPerDay(8);
+      setWorkDays(22);
+      setOvertimeHours(0);
+      setAbsenceHours(0);
+      setIsModalOpen(true);
+   };
+
+   const handleEdit = (item: any) => {
+      setEditingItem(item);
+      setPeriodStart(item.period_start);
+      setPeriodEnd(item.period_end);
+      setSectorId(item.sector_id);
+      setCalculationMode(item.calculation_mode);
+      setEmployeeCount(item.employee_count || 0);
+      setHoursPerDay(item.hours_per_day || 8);
+      setWorkDays(item.work_days || 22);
+      setOvertimeHours(item.overtime_hours || 0);
+      setAbsenceHours(item.absence_hours || 0);
+      setTotalHoursManual(item.total_hours || 0);
+      setIsModalOpen(true);
+   };
+
+   const handleSave = () => {
+      if(!periodStart || !periodEnd || !sectorId) return alert('Preencha período e setor.');
+      
+      let total_hours = 0;
+      if(calculationMode === 'Manual') {
+         total_hours = Number(totalHoursManual);
+      } else {
+         total_hours = (employeeCount * hoursPerDay * workDays) + overtimeHours - absenceHours;
+      }
+
+      const data = {
+         period_start: periodStart,
+         period_end: periodEnd,
+         sector_id: sectorId,
+         calculation_mode: calculationMode,
+         employee_count: employeeCount,
+         hours_per_day: hoursPerDay,
+         work_days: workDays,
+         overtime_hours: overtimeHours,
+         absence_hours: absenceHours,
+         total_hours: total_hours > 0 ? total_hours : 0,
+         updated_at: new Date().toISOString(),
+         created_at: editingItem ? editingItem.created_at : new Date().toISOString(),
+      };
+
+      if (editingItem) {
+         updateWorkHours(editingItem.id, data);
+      } else {
+         addWorkHours(data);
+      }
+      setIsModalOpen(false);
+   };
+
+   return (
+      <div className="bg-[#121826] border border-white/5 rounded-2xl flex flex-col overflow-hidden max-h-full">
+         <div className="p-5 border-b border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+               <h2 className="text-xl font-bold text-white mb-1">Horas Trabalhadas (HET)</h2>
+               <p className="text-sm text-gray-400">Cadastre o tempo de exposição para cálculo correto de TFA e TG.</p>
+            </div>
+            <button 
+               onClick={handleAdd} 
+               className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+            >
+               <Plus className="w-4 h-4" /> Novo registro
+            </button>
+         </div>
+
+         <div className="overflow-x-auto w-full flex-1">
+            {work_hours.length === 0 ? (
+               <div className="p-8 flex flex-col items-center justify-center text-center h-[300px]">
+                  <Activity className="w-12 h-12 text-gray-600 mb-4" />
+                  <h3 className="text-lg font-bold text-gray-300">Nenhum registro de horas</h3>
+                  <p className="text-sm text-gray-500 mt-1 max-w-sm">Os cálculos de TFA e TG apresentarão aviso de "dados insuficientes" até que as horas sejam lançadas.</p>
+               </div>
+            ) : (
+               <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead className="bg-[#0b0f19] border-b border-white/5">
+                     <tr>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Período</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Setor/Unidade</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Modo</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total de Horas</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Lançado em</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                     {work_hours.map((w) => {
+                        const sectorName = sectors.find(s => s.id === w.sector_id)?.name || w.sector_id;
+                        return (
+                           <tr key={w.id} className="hover:bg-white/5 transition-colors group">
+                              <td className="px-5 py-4">
+                                 <span className="text-[13px] font-bold text-gray-200 block">{w.period_start} a {w.period_end}</span>
+                              </td>
+                              <td className="px-5 py-4">
+                                 <span className="text-[13px] text-gray-300">{sectorName}</span>
+                              </td>
+                              <td className="px-5 py-4">
+                                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                                    w.calculation_mode === 'Estimado' 
+                                       ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' 
+                                       : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                 }`}>{w.calculation_mode}</span>
+                              </td>
+                              <td className="px-5 py-4">
+                                 <span className="text-[14px] font-bold text-white">{Number(w.total_hours).toLocaleString('pt-BR')}h</span>
+                              </td>
+                              <td className="px-5 py-4">
+                                 <span className="text-[12px] text-gray-500">{new Date(w.created_at).toLocaleDateString('pt-BR')}</span>
+                              </td>
+                              <td className="px-5 py-4 text-right">
+                                 <div className="flex items-center justify-end gap-2">
+                                    <button onClick={() => handleEdit(w)} className="p-1.5 text-gray-500 hover:text-white rounded transition-colors"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => deleteWorkHours(w.id)} className="p-1.5 text-gray-500 hover:text-red-400 rounded transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                 </div>
+                              </td>
+                           </tr>
+                        );
+                     })}
+                  </tbody>
+               </table>
+            )}
+         </div>
+
+         {/* Modal */}
+         <AnimatePresence>
+            {isModalOpen && (
+               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                  <motion.div 
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     className="bg-[#121826] border border-white/10 rounded-2xl w-full max-w-2xl max-h-full overflow-y-auto custom-scrollbar shadow-2xl relative"
+                  >
+                     <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#121826] z-10">
+                        <h3 className="text-xl font-bold text-white">{editingItem ? 'Editar Lançamento' : 'Novo Lançamento de Horas'}</h3>
+                        <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white p-2">
+                           <X className="w-5 h-5"/>
+                        </button>
+                     </div>
+
+                     <div className="p-6 space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-2">
+                              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Período Incial</label>
+                              <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none focus:border-purple-500 max-h-[46px]" style={{ colorScheme: 'dark' }} />
+                           </div>
+                           <div className="space-y-2">
+                              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Período Final</label>
+                              <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none focus:border-purple-500 max-h-[46px]" style={{ colorScheme: 'dark' }}/>
+                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                           <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Setor / Unidade</label>
+                           <select value={sectorId} onChange={e => setSectorId(e.target.value)} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none focus:border-purple-500 appearance-none">
+                              <option value="">Selecione...</option>
+                              {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                           </select>
+                        </div>
+
+                        <div className="space-y-2 border-t border-white/5 pt-6">
+                           <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Modo de Cálculo</label>
+                           <div className="flex gap-4">
+                              <button 
+                                 onClick={() => setCalculationMode('Manual')}
+                                 className={`flex-1 py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-colors ${calculationMode === 'Manual' ? 'bg-purple-600/20 border-purple-500 text-purple-400' : 'bg-[#0b0f19] border-white/5 text-gray-400 hover:text-white'}`}
+                              >
+                                 <FileText className="w-4 h-4"/> Valor Informado
+                              </button>
+                              <button 
+                                 onClick={() => setCalculationMode('Estimado')}
+                                 className={`flex-1 py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-colors ${calculationMode === 'Estimado' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-[#0b0f19] border-white/5 text-gray-400 hover:text-white'}`}
+                              >
+                                 <Activity className="w-4 h-4"/> Estimado / CCT
+                              </button>
+                           </div>
+                        </div>
+
+                        {calculationMode === 'Manual' ? (
+                           <div className="bg-[#0b0f19]/50 p-5 rounded-xl border border-white/5 space-y-4 shadow-inner">
+                              <div className="space-y-2">
+                                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider items-center flex gap-2"> <FileText className="w-4 h-4 text-emerald-400"/> Total de Horas Trabalhadas</label>
+                                 <div className="relative">
+                                    <input type="number" step="1" value={totalHoursManual} onChange={e => setTotalHoursManual(Number(e.target.value))} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-lg font-bold text-emerald-400 focus:outline-none focus:border-emerald-500" />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">horas totais</span>
+                                 </div>
+                                 <p className="text-[11px] text-gray-500 mt-2">Informe diretamente o total global do período (Extraia do sistema de ponto/RH).</p>
+                              </div>
+                           </div>
+                        ) : (
+                           <div className="bg-[#0b0f19]/50 p-5 rounded-xl border border-white/5 space-y-5 shadow-inner">
+                              <div className="grid grid-cols-3 gap-4">
+                                 <div className="space-y-1.5 focus-within:text-blue-400 text-gray-400 transition-colors">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider block">Total Colaboradores</label>
+                                    <input type="number" value={employeeCount} onChange={e => setEmployeeCount(Number(e.target.value))} className="w-full bg-transparent border-b border-white/10 focus:border-blue-500 text-[16px] font-bold text-white py-1 outline-none transition-colors" />
+                                 </div>
+                                 <div className="space-y-1.5 focus-within:text-blue-400 text-gray-400 transition-colors">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider block">Horas/Dia (Média)</label>
+                                    <input type="number" value={hoursPerDay} onChange={e => setHoursPerDay(Number(e.target.value))} className="w-full bg-transparent border-b border-white/10 focus:border-blue-500 text-[16px] font-bold text-white py-1 outline-none transition-colors" />
+                                 </div>
+                                 <div className="space-y-1.5 focus-within:text-blue-400 text-gray-400 transition-colors">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider block">Dias Trabalhados</label>
+                                    <input type="number" value={workDays} onChange={e => setWorkDays(Number(e.target.value))} className="w-full bg-transparent border-b border-white/10 focus:border-blue-500 text-[16px] font-bold text-white py-1 outline-none transition-colors" />
+                                 </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-1.5 focus-within:text-green-400 text-gray-400 transition-colors border-l-2 border-emerald-500/50 pl-3">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider block">+ Horas Extras Totais</label>
+                                    <input type="number" value={overtimeHours} onChange={e => setOvertimeHours(Number(e.target.value))} className="w-full bg-transparent border-b border-white/10 focus:border-green-500 text-[16px] font-bold text-white py-1 outline-none transition-colors" />
+                                 </div>
+                                 <div className="space-y-1.5 focus-within:text-red-400 text-gray-400 transition-colors border-l-2 border-red-500/50 pl-3">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider block">- Ausência (Absenteísmo)</label>
+                                    <input type="number" value={absenceHours} onChange={e => setAbsenceHours(Number(e.target.value))} className="w-full bg-transparent border-b border-white/10 focus:border-red-500 text-[16px] font-bold text-white py-1 outline-none transition-colors" />
+                                 </div>
+                              </div>
+                              <div className="pt-4 mt-2 border-t border-white/10 flex items-center justify-between">
+                                 <span className="text-sm font-bold text-gray-400">Total HET Calculado:</span>
+                                 <span className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                                    {((employeeCount * hoursPerDay * workDays) + overtimeHours - absenceHours).toLocaleString('pt-BR')}h
+                                 </span>
+                              </div>
+                           </div>
+                        )}
+                        
+                     </div>
+
+                     <div className="p-6 border-t border-white/5 bg-[#0b0f19] rounded-b-2xl flex justify-end gap-3 sticky bottom-0 z-10 w-full">
+                        <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-400 hover:text-white transition-colors">Cancelar</button>
+                        <button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-purple-500/20">
+                           Salvar HET
+                        </button>
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
+      </div>
+   );
 }

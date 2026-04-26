@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine } from '@/lib/engines';
+import { NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine, PriorityEngine, ActionEngine } from '@/lib/engines';
+import { useAppStore } from '@/lib/store';
 import { 
   Bell, FileText, CheckCircle2, AlertTriangle, ArrowRight,
 
   Filter, Calendar, X, Activity, PlayCircle, MoreVertical,
   Clock, CheckSquare, Shield, AlertCircle, ChevronRight, User
 } from 'lucide-react';
-
 
 type PriorityRowItem = {
   id: string;
@@ -23,55 +23,13 @@ type PriorityRowItem = {
   proc: string;
   reasons: string[];
   checklist: { label: string; checked: boolean }[];
+  item_origem_id?: string;
+  item_origem_tipo?: string;
 };
-
-const initialRows: PriorityRowItem[] = [
-  { 
-    id: '1', prio: 'P1', title: 'Priorizar inspeções críticas em manutenção', origem: 'Inspeções', resp: 'Supervisor + SST', prazo: 'Hoje 14h', prazoOriginal: 'Hoje 14h', status: 'Urgente', proc: 'Abrir inspeções pendentes',
-    reasons: ['Aumento de +27% nas inspeções pendentes nas últimas 24h.', 'Risco elevado de falhas em máquinas críticas.'],
-    checklist: [
-      { label: 'Abrir inspeções pendentes críticas', checked: true },
-      { label: 'Verificar ativos de maior risco', checked: false },
-      { label: 'Designar responsáveis', checked: false },
-      { label: 'Concluir e registrar evidências', checked: false }
-    ]
-  },
-  { 
-    id: '2', prio: 'P1', title: 'Tratar ações corretivas vencidas', origem: 'Ações', resp: 'Manutenção', prazo: 'Hoje 16h', prazoOriginal: 'Hoje 16h', status: 'Alta', proc: 'Validar responsáveis',
-    reasons: ['Várias ações preventivas com prazo estourado.', 'Maior risco de autuações do MTE.'],
-    checklist: [
-      { label: 'Levantar todas ações vencidas de manutenção', checked: false },
-      { label: 'Reatribuir prazos críticos', checked: false },
-    ]
-  },
-  { 
-    id: '3', prio: 'P2', title: 'Reforçar uso e conformidade de EPIs', origem: 'Riscos', resp: 'Segurança', prazo: 'Amanhã 10h', prazoOriginal: 'Amanhã 10h', status: 'Média', proc: 'Ver detalhes',
-    reasons: ['Incidentes recentes reportados sem EPI adequado.', 'Necessidade de DDS (Diálogo Diário de Segurança).'],
-    checklist: [
-      { label: 'Preparar material para o DDS', checked: false },
-      { label: 'Revisar estoque de EPIs críticos', checked: false },
-    ]
-  },
-  { 
-    id: '4', prio: 'P2', title: 'Revisar alerta de prensa hidráulica', origem: 'Alertas', resp: 'Técnico SST', prazo: 'Amanhã 15h', prazoOriginal: 'Amanhã 15h', status: 'Monitorar', proc: 'Confirmar evidência',
-    reasons: ['Alerta automático gerado pelo sistema de IoT.', 'Possível falha do bloco de segurança.'],
-    checklist: [
-      { label: 'Solicitar parada da máquina', checked: false },
-      { label: 'Validar logs do equipamento', checked: false },
-    ]
-  },
-  { 
-    id: '5', prio: 'P3', title: 'Atualizar plano de inspeções mensais', origem: 'Inspeções', resp: 'Supervisor + SST', prazo: '22/05 09h', prazoOriginal: '22/05 09h', status: 'Planejado', proc: 'Revisar cronograma',
-    reasons: ['Planejamento mensal pendente de aprovação.'],
-    checklist: [
-      { label: 'Revisar calendário atual', checked: false },
-      { label: 'Agendar reunião estratégica', checked: false },
-    ]
-  },
-];
 
 // Sparkline component 
 const Sparkline = ({ data, color }: { data: number[], color: string }) => {
+  if (!data || data.length === 0) return null;
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -150,23 +108,99 @@ function Share2Icon(props: any) {
 }
 
 export default function CentralPage() {
-  const [rows, setRows] = useState<PriorityRowItem[]>(initialRows);
+  const storeState = useAppStore();
+  const queue = useMemo(() => PriorityEngine.getQueue(storeState), [storeState]);
+  const currentDecision = useMemo(() => DecisionEngine.getMainDecision(storeState), [storeState]);
+  
+  const getTrend = (items: any[], activeCondition: (item: any) => boolean) => {
+    const hasDates = items.some(i => i.createdAt || i.created_at || i.dataCriacao);
+    const currentCount = items.filter(activeCondition).length;
+
+    if (!hasDates || items.length === 0) {
+      return { val: currentCount, stat: "sem histórico suficiente", data: [] };
+    }
+
+    const today = new Date();
+    const trendData: number[] = [];
+    let yesterdayCount = 0;
+
+    for (let i = 6; i >= 0; i--) {
+      const targetDate = new Date();
+      targetDate.setDate(today.getDate() - i);
+      const targetTime = targetDate.getTime();
+
+      const countForDay = items.filter(item => {
+        if (!activeCondition(item)) return false;
+        const cDateStr = item.createdAt || item.created_at || item.dataCriacao;
+        if (!cDateStr) return true; // Include if no date
+        const cTime = new Date(cDateStr).getTime();
+        return cTime <= targetTime;
+      }).length;
+
+      trendData.push(countForDay);
+      if (i === 1) yesterdayCount = countForDay;
+    }
+
+    const diff = currentCount - yesterdayCount;
+    const pct = yesterdayCount === 0 ? (diff > 0 ? 100 : 0) : Math.round((diff / yesterdayCount) * 100);
+    const sign = diff > 0 ? '+' : '';
+    const stat = `${sign}${pct}% vs ontem`;
+
+    return { val: currentCount, stat, data: trendData };
+  };
+
+  const kpis = useMemo(() => {
+    // 1. Riscos Críticos
+    const riscos = storeState.riscos || [];
+    const riscosTrend = getTrend(riscos, (r) => {
+      const nivel = r.nivel || r.level || '';
+      return nivel.toLowerCase() === 'crítico' && r.status !== 'Mitigado' && r.status !== 'Resolvido';
+    });
+
+    // 2. Inspeções Vencidas
+    const inspecoes = storeState.inspecoes || [];
+    const inspTrend = getTrend(inspecoes, (i) => i.status === 'Atrasada' || i.relativeDate === 'Atrasada');
+
+    // 3. Ações Vencidas
+    const acoes = storeState.acoes || [];
+    const acoesTrend = getTrend(acoes, (a) => ActionEngine.isOverdue(a));
+
+    // 4. Alertas Ativos
+    const alertas = storeState.alertas || [];
+    const alertasTrend = getTrend(alertas, (a) => a.status === 'Ativo' || a.status === 'Aberto');
+
+    return [
+      { title: "Riscos Críticos", val: riscosTrend.val.toString(), stat: riscosTrend.stat, statCol: "text-red-400", bg: "border-red-500/20", icon: <AlertTriangle className="w-4 h-4 text-red-500" />, color: "#ef4444", data: riscosTrend.data },
+      { title: "Inspeções Vencidas", val: inspTrend.val.toString(), stat: inspTrend.stat, statCol: "text-purple-400", bg: "border-purple-500/20 border-b-2 border-b-purple-500", icon: <FileText className="w-4 h-4 text-purple-400" />, color: "#a855f7", data: inspTrend.data },
+      { title: "Ações Vencidas", val: acoesTrend.val.toString(), stat: acoesTrend.stat, statCol: "text-orange-400", bg: "border-orange-400/20", icon: <Activity className="w-4 h-4 text-orange-400" />, color: "#f97316", data: acoesTrend.data },
+      { title: "Alertas Ativos", val: alertasTrend.val.toString(), stat: alertasTrend.stat, statCol: "text-emerald-400", bg: "border-yellow-400/20", icon: <Bell className="w-4 h-4 text-yellow-400" />, color: "#eab308", data: alertasTrend.data },
+    ];
+  }, [storeState]);
+  
+  const topActions = queue.slice(0, 3);
+
+  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PriorityRowItem | null>(null);
   
-  const currentDecision = DecisionEngine.getMainDecision({});
+  const [isActionPlanModalOpen, setIsActionPlanModalOpen] = useState(false);
+  
+  const getRowStatus = (row: PriorityRowItem) => localStatuses[row.id] || row.status;
+
+  const rows = queue.map(r => ({ ...r, status: getRowStatus(r) }));
 
   const handleOpenDetails = (item: PriorityRowItem) => {
-    setSelectedItem(item);
+    setSelectedItem({ ...item, status: getRowStatus(item) });
     setIsDrawerOpen(true);
   };
 
   const handleConcluir = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setRows(prev => prev.map(item => item.id === id ? { ...item, status: 'Concluído' } : item));
+    setLocalStatuses(prev => ({ ...prev, [id]: 'Concluído' }));
     if (selectedItem?.id === id) {
       setSelectedItem(prev => prev ? { ...prev, status: 'Concluído' } : null);
     }
+    // Em um app real, chamaria useAppStore updateAction/updateRisk
   };
 
   const handleCobrar = (id: string, e?: React.MouseEvent) => {
@@ -176,18 +210,15 @@ export default function CentralPage() {
 
   const handleExecutar = () => {
     if (!selectedItem) return;
-    const updated = { ...selectedItem, status: 'Em andamento' };
-    setSelectedItem(updated);
-    setRows(prev => prev.map(r => r.id === updated.id ? updated : r));
+    setLocalStatuses(prev => ({ ...prev, [selectedItem.id]: 'Em andamento' }));
+    setSelectedItem(prev => prev ? { ...prev, status: 'Em andamento' } : null);
   };
 
   const handleToggleChecklist = (idx: number) => {
     if (!selectedItem) return;
     const newChecklist = [...selectedItem.checklist];
     newChecklist[idx] = { ...newChecklist[idx], checked: !newChecklist[idx].checked };
-    const updatedItem = { ...selectedItem, checklist: newChecklist };
-    setSelectedItem(updatedItem);
-    setRows(prev => prev.map(r => r.id === updatedItem.id ? updatedItem : r));
+    setSelectedItem({ ...selectedItem, checklist: newChecklist });
   };
 
   const todayStr = "20/05/2025 - 20/05/2025";
@@ -241,14 +272,14 @@ export default function CentralPage() {
                 </h3>
                 <h2 className="text-xl md:text-2xl font-bold text-white mb-3 line-clamp-2">{currentDecision.decision}</h2>
                 <button 
-                  onClick={() => handleOpenDetails(rows[0])}
+                  onClick={() => setIsActionPlanModalOpen(true)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-colors w-fit ${
-                    currentDecision.title === 'Intervenção Crítica Necessária'
+                    currentDecision.title === 'Intervenção Crítica Necessária' || currentDecision.operationalImpact === 'Crítico' || currentDecision.operationalImpact === 'Alto'
                       ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]'
                       : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]'
                   }`}
                 >
-                  {currentDecision.title === 'Intervenção Crítica Necessária' ? 'Ver plano de ação' : 'Revisar monitoramento'} <ArrowRight className="w-4 h-4" />
+                  Ver plano sugerido <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
@@ -288,12 +319,7 @@ export default function CentralPage() {
 
             {/* Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
-               {[
-                 { title: "Riscos Críticos", val: "14", stat: "+12% vs ontem", statCol: "text-red-400", bg: "border-red-500/20", icon: <AlertTriangle className="w-4 h-4 text-red-500" />, color: "#ef4444", data: [12, 11, 14, 13, 15, 14, 16, 14] },
-                 { title: "Inspeções Vencidas", val: "37", stat: "+18% vs ontem", statCol: "text-purple-400", bg: "border-purple-500/20 border-b-2 border-b-purple-500", icon: <FileText className="w-4 h-4 text-purple-400" />, color: "#a855f7", data: [20, 24, 23, 28, 30, 32, 29, 37] },
-                 { title: "Ações Vencidas", val: "28", stat: "+12% vs ontem", statCol: "text-orange-400", bg: "border-orange-400/20", icon: <Activity className="w-4 h-4 text-orange-400" />, color: "#f97316", data: [28, 25, 24, 25, 27, 26, 25, 28] },
-                 { title: "Alertas Ativos", val: "6", stat: "-14% vs ontem", statCol: "text-emerald-400", bg: "border-yellow-400/20", icon: <Bell className="w-4 h-4 text-yellow-400" />, color: "#eab308", data: [8, 9, 7, 8, 6, 8, 7, 6] },
-               ].map((card, i) => (
+               {kpis.map((card, i) => (
                   <div key={i} className={`bg-[#121826] border overflow-hidden p-5 rounded-xl flex flex-col relative group ${card.bg}`}>
                      <div className="flex items-center justify-between mb-4 z-10">
                         <div className="flex items-center gap-2">
@@ -383,18 +409,31 @@ export default function CentralPage() {
                      </a>
                   </div>
                   <div className="flex-1 space-y-3">
-                     {currentDecision.nextSteps?.map((step: string, i: number) => (
-                        <div key={i} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group">
-                           <div className="flex-1">
-                              <h4 className="text-[13px] font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">{step}</h4>
+                     {topActions.length === 0 ? (
+                        <div className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-center text-sm text-gray-400">
+                           Nenhuma ação crítica no momento.
+                        </div>
+                     ) : topActions.map((action: PriorityRowItem, i: number) => (
+                        <div key={action.id} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group" onClick={() => handleOpenDetails(action)}>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="text-[13px] font-bold text-white mb-1 truncate group-hover:text-purple-400 transition-colors" title={action.title}>{action.title}</h4>
+                              <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                 <span>{action.origem}</span>
+                                 <span>•</span>
+                                 <span className="truncate">{action.resp}</span>
+                              </div>
                            </div>
                            <div className="flex flex-col items-end gap-2 shrink-0">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'}`}>
-                                 <AlertTriangle className="w-3 h-3" /> {currentDecision.title === 'Intervenção Crítica Necessária' ? 'Ação' : 'Prev'}
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1 ${
+                                 action.prio === 'P1' || action.status === 'Urgente' || action.status === 'Atrasada' 
+                                 ? 'text-red-400 border-red-500/30 bg-red-500/10' 
+                                 : 'text-orange-400 border-orange-500/30 bg-orange-500/10'
+                              }`}>
+                                 <AlertTriangle className="w-3 h-3" /> {action.prio}
                               </span>
-                              <a href="/acoes" className="text-[11px] font-medium text-gray-300 hover:text-white px-3 py-1 rounded bg-[#121826] border border-white/10 hover:bg-white/5 transition-colors">
+                              <button onClick={(e) => { e.stopPropagation(); handleOpenDetails(action); }} className="text-[11px] font-medium text-gray-300 hover:text-white px-3 py-1 rounded bg-[#121826] border border-white/10 hover:bg-white/5 transition-colors">
                                  Abrir
-                              </a>
+                              </button>
                            </div>
                         </div>
                      ))}
@@ -423,6 +462,13 @@ export default function CentralPage() {
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-white/5">
+                        {rows.length === 0 && (
+                          <tr>
+                            <td colSpan={8} className="px-5 py-8 text-center text-gray-400 text-sm">
+                               Nenhuma prioridade registrada.
+                            </td>
+                          </tr>
+                        )}
                         {rows.map((row) => {
                            const getStatusColor = (s: string) => {
                               switch (s) {
@@ -495,6 +541,53 @@ export default function CentralPage() {
       </main>
 
       {/* Recommended Action Drawer */}
+      {/* Action Plan Modal */}
+      <AnimatePresence>
+        {isActionPlanModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-[#121826] border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setIsActionPlanModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 text-2xl font-bold"
+              >
+                ✕
+              </button>
+              
+              <h2 className="text-xl font-bold text-white mb-2">Plano de Ação Automático</h2>
+              <p className="text-sm text-gray-400 mb-6">Etapas recomendadas com base na inteligência central e estado atual do sistema.</p>
+              
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-none">
+                {currentDecision.nextSteps.map((step: string, idx: number) => (
+                  <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-200 mt-1">{step}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button 
+                  onClick={() => setIsActionPlanModalOpen(false)}
+                  className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors shadow-lg shadow-emerald-500/20 w-full sm:w-auto text-sm"
+                >
+                  Entendi e vou executar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isDrawerOpen && selectedItem && (
           <motion.div 

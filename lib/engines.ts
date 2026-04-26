@@ -1,6 +1,6 @@
 // lib/engines.ts
 
-import { useAppStore } from './store';
+import { useAppStore, AppState } from './store';
 
 // ==================================================
 // NORMATIVE ENGINE
@@ -354,50 +354,111 @@ export const EconomicImpactEngine = {
 // ==================================================
 
 export const DecisionEngine = {
-  getMainDecision(state: any) {
-    const overdueCount = state?.acoes?.filter((a: any) => ActionEngine.isOverdue(a)).length || 18;
-    const criticalRisksCount = state?.riscos?.filter((r: any) => r.nivel === 'Crítico').length || 7;
-    const pendingInspections = state?.inspecoes?.filter((i: any) => i.status === 'Atrasada' || i.status === 'Pendente').length || 12;
+  getMainDecision(state?: any) {
+    const currentState = state || AppState.get();
+    
+    const acoes = currentState?.acoes || [];
+    const riscos = currentState?.riscos || [];
+    const inspecoes = currentState?.inspecoes || [];
+    const alertas = currentState?.alertas || [];
 
-    if (overdueCount > 0 && criticalRisksCount > 0) {
+    const overdueActions = acoes.filter((a: any) => ActionEngine.isOverdue(a) || a.status === 'Atrasada').length;
+    const criticalRisks = riscos.filter((r: any) => r.nivel === 'Crítico' || r.level === 'Crítico' || r.nivel === 'Crítico').length;
+    const highRisks = riscos.filter((r: any) => r.nivel === 'Alto' || r.level === 'Alto' || r.nivel === 'Alto').length;
+    const overdueInspections = inspecoes.filter((i: any) => i.status === 'Atrasada' || i.relativeDate === 'Atrasada').length;
+    const activeAlerts = alertas.filter((a: any) => a.status === 'Ativo' || a.status === 'Aberto').length;
+
+    const totalDataPoints = acoes.length + riscos.length + inspecoes.length + alertas.length;
+
+    if (totalDataPoints === 0) {
+      return {
+        title: 'Dados Insuficientes',
+        decision: 'Dados insuficientes para recomendar uma decisão operacional confiável.',
+        reason: 'O sistema não possui registros ativos de riscos, inspeções ou ações para análise.',
+        operationalImpact: 'Baixo',
+        confidence: '0%',
+        evidences: ['Nenhum registro encontrado no estado central'],
+        timeline: '-',
+        nextSteps: ['Iniciar cadastro de riscos', 'Agendar primeiras inspeções'],
+        causeAndEffect: { causes: [], effect: 'Visibilidade nula da operação' }
+      };
+    }
+
+    // Calcula Nível de Confiança
+    // Começamos com uma base de 50%. Mais dados = mais confiança.
+    // Completo: Evidências convergentes (ex: risco e ação relacionada).
+    let confInt = 50 + Math.min(40, totalDataPoints * 2);
+    if (criticalRisks > 0 && overdueActions > 0) confInt += 5; // Correlação de dados
+    if (confInt > 99) confInt = 98;
+    const confidence = `${confInt}%`;
+
+    const evidences = [];
+    if (criticalRisks > 0) evidences.push(`${criticalRisks} risco(s) crítico(s) não mitigado(s)`);
+    if (overdueActions > 0) evidences.push(`${overdueActions} ação(ões) atrasada(s)`);
+    if (overdueInspections > 0) evidences.push(`${overdueInspections} inspeção(ões) pendente(s)`);
+    if (activeAlerts > 0) evidences.push(`${activeAlerts} alerta(s) ativo(s)`);
+
+    // Regras de Decisão
+    if (criticalRisks > 0 || overdueActions > 2 || (activeAlerts > 0 && criticalRisks > 0)) {
       return {
         title: 'Intervenção Crítica Necessária',
-        decision: 'Priorizar o fechamento das ações atrasadas ligadas a riscos críticos nas próximas 24 horas.',
-        reason: 'Acúmulo de atrasos em ambientes de alta criticidade aumenta exponencialmente a probabilidade de autuação e acidentes.',
-        operationalImpact: 'Alto',
-        confidence: '95%',
-        evidences: [`${overdueCount} ações atrasadas`, `${criticalRisksCount} riscos críticos não mitigados`, `${pendingInspections} inspeções pendentes na área produtiva`],
-        timeline: 'Imediato (0-24h)',
+        decision: 'Paralisar atividades com risco crítico não mitigado e executar plano de ação emergencial.',
+        reason: `Existem ${criticalRisks} riscos críticos abertos em combinação com ${overdueActions} ações vencidas, aumentando a probabilidade de incidentes.`,
+        operationalImpact: 'Crítico',
+        confidence,
+        evidences: evidences.length > 0 ? evidences : ['Sinais de falha sistêmica no compliance'],
+        timeline: 'Imediato (0-2h)',
         nextSteps: [
-          'Verificar prioridades no painel de Ações', 
-          'Acionar responsáveis diretos via sistema',
-          'Executar bloqueio LOTO em máquinas com risco iminente'
+          'Isolar áreas e equipamentos com risco crítico',
+          'Notificar responsáveis pelas ações e inspeções vencidas',
+          'Revisar EPIs e procedimentos operacionais das áreas'
         ],
         causeAndEffect: {
-          causes: ['Acúmulo de inspeções pendentes', 'Falta de tratativa nas ações'],
-          effect: 'Riscos Críticos Elevados e Passivo Trabalhista',
+          causes: ['Atrasos acumulados em tratativas', 'Riscos críticos não mitigados no prazo'],
+          effect: 'Risco iminente de acidente grave e autuações'
+        }
+      };
+    }
+
+    if (highRisks > 0 || overdueActions > 0 || overdueInspections > 0) {
+      return {
+        title: 'Atenção Requerida',
+        decision: 'Acelerar fechamento de inspeções atrasadas e criar ações para mitigar riscos altos.',
+        reason: `Foram detectados ${highRisks} riscos altos e algumas pendências de prazos que precisam de tração.`,
+        operationalImpact: 'Médio',
+        confidence,
+        evidences,
+        timeline: 'Curto Prazo (24h-48h)',
+        nextSteps: [
+          'Cobrar responsáveis por ações e inspeções vencidas',
+          'Avaliar criação de plano de mitigação para riscos altos'
+        ],
+        causeAndEffect: {
+          causes: ['Acúmulo inicial de tarefas atrasadas', 'Riscos de alta severidade expostos'],
+          effect: 'Aumento gradual da vulnerabilidade operacional'
         }
       };
     }
 
     return {
-      title: 'Status Estável Pleno',
-      decision: 'Nenhuma decisão crítica agora. Sistema em monitoramento preventivo.',
-      reason: 'As principais métricas de compliance e relatórios estão dentro do tolerável e não há backlog severo registrado nas últimas 48h.',
+      title: 'Status Estável',
+      decision: 'Manter a cadência de inspeções preventivas e revisar documentações.',
+      reason: 'Indicadores operacionais dentro da normalidade, sem acúmulo de riscos ou atrasos críticos.',
       operationalImpact: 'Baixo',
-      confidence: '92%',
-      evidences: ['Ausência de riscos críticos descontrolados', 'Ações operacionais dentro do prazo estipulado'],
+      confidence,
+      evidences: ['Sem pendências críticas', 'Sem riscos críticos documentados abertos'],
       timeline: 'Longo Prazo',
-      nextSteps: ['Continuar monitoramento preventivo', 'Validar evidências de EPC periodicamente'],
+      nextSteps: ['Continuar monitoramento diário', 'Validar evidências de EPC/EPI periodicamente'],
       causeAndEffect: {
-        causes: ['Manutenção preventiva em dia', 'Uso adequado de EPI'],
-        effect: 'Operação Segura e em Conformidade',
+        causes: ['Processos sendo seguidos', 'Prazos em conformidade'],
+        effect: 'Operação segura e protegida contra passivos'
       }
     };
   },
 
-  getEvidence(state: any) {
-    return "Evidências extraídas do cérebro de dados (AppState).";
+  getEvidence(state?: any) {
+    const currentState = state || AppState.get();
+    return `Evidências do AppState: ${currentState.users?.length || 0} usuários, ${currentState.checklists?.length || 0} checklists cadastrados.`;
   },
 
   getTimeline(decision: any) {
@@ -414,7 +475,111 @@ export const DecisionEngine = {
 };
 
 // ==================================================
-// LARI CONTEXT ENGINE
+// PRIORITY ENGINE
+// ==================================================
+
+export const PriorityEngine = {
+  getQueue(state?: any) {
+    const currentState = state || AppState.get();
+    let queue: any[] = [];
+
+    // Process Actions
+    if (currentState?.acoes) {
+      currentState.acoes.forEach((a: any) => {
+        if (a.status === 'Concluída') return;
+        const isVencida = ActionEngine.isOverdue(a) || a.status === 'Atrasada' || a.deadlineRelative === 'Atrasado';
+        const isP1 = a.prioridade === 'Urgente' || a.prioridade === 'Crítica' || a.priority === 'P1';
+        const isP2 = a.prioridade === 'Alta' || a.priority === 'P2';
+        const respName = typeof a.responsible === 'object' ? a.responsible.name : (a.responsavel || a.responsible || 'Sistema');
+        
+        queue.push({
+          id: a.id,
+          prio: isP1 ? 'P1' : (isVencida ? 'P1' : (isP2 ? 'P2' : 'P3')),
+          title: a.titulo || a.title || 'Ação Pendente',
+          origem: a.originText || a.category || 'Ações',
+          resp: respName,
+          prazo: a.prazo || a.deadlineTime || 'S/ Prazo',
+          prazoOriginal: a.prazoOriginal || a.prazo || a.deadlineTime,
+          status: isVencida ? 'Urgente' : (a.status || 'Pendente'),
+          proc: a.nextStep || 'Executar prioridade',
+          reasons: a.reasons || (isVencida ? ['Ação com prazo estourado'] : ['Ação preventiva']),
+          checklist: a.checklist || [],
+          item_origem_id: a.id,
+          item_origem_tipo: 'acao'
+        });
+      });
+    }
+
+    // Process Risks
+    if (currentState?.riscos) {
+      currentState.riscos.forEach((r: any) => {
+        if (r.nivel === 'Baixo' || r.level === 'Baixo') return;
+        const nivel = r.nivel || r.level || '';
+        const isCrit = nivel.toLowerCase() === 'crítico';
+        const isHigh = nivel.toLowerCase() === 'alto';
+        
+        queue.push({
+          id: r.id || `risk-${Math.random()}`,
+          prio: isCrit ? 'P1' : (isHigh ? 'P2' : 'P3'),
+          title: `Mitigar Risco: ${r.atividade || r.title || r.setor || 'Não especificado'}`,
+          origem: r.source || 'Riscos',
+          resp: r.responsavel || 'SSO',
+          prazo: 'Imediato',
+          prazoOriginal: 'Imediato',
+          status: isCrit ? 'Urgente' : 'Alta',
+          proc: 'Plano de Ação',
+          reasons: r.reasons || [`Risco sinalizado como ${nivel.toUpperCase()}`],
+          checklist: r.checklist || [],
+          item_origem_id: r.id,
+          item_origem_tipo: 'risco'
+        });
+      });
+    }
+
+    // Process Inspections
+    if (currentState?.inspecoes) {
+      currentState.inspecoes.forEach((i: any) => {
+        if (i.status === 'Atrasada' || i.relativeDate === 'Atrasada') {
+          queue.push({
+            id: i.id || `insp-${Math.random()}`,
+            prio: 'P1',
+            title: `Regularizar Inspeção: ${i.nome || i.titulo || i.title || 'Pendente'}`,
+            origem: 'Inspeções',
+            resp: i.responsavel || i.inspector || 'Supervisor',
+            prazo: i.data || i.date || 'Imediato',
+            prazoOriginal: i.data || i.date || 'Imediato',
+            status: 'Atrasada',
+            proc: 'Finalizar',
+            reasons: i.reasons || ['Rotina obrigatória pendente'],
+            checklist: i.checklist || [],
+            item_origem_id: i.id,
+            item_origem_tipo: 'inspecao'
+          });
+        }
+      });
+    }
+
+    // Sort order:
+    // 1. P1
+    // 2. Overdue / Atrasada
+    // 3. Status Urgente
+    // 4. P2, P3
+    return queue.sort((a, b) => {
+      if (a.prio === 'P1' && b.prio !== 'P1') return -1;
+      if (b.prio === 'P1' && a.prio !== 'P1') return 1;
+      if (a.status === 'Atrasada' && b.status !== 'Atrasada') return -1;
+      if (b.status === 'Atrasada' && a.status !== 'Atrasada') return 1;
+      if (a.status === 'Urgente' && b.status !== 'Urgente') return -1;
+      if (b.status === 'Urgente' && a.status !== 'Urgente') return 1;
+      if (a.prio === 'P2' && b.prio !== 'P2') return -1;
+      if (b.prio === 'P2' && a.prio !== 'P2') return 1;
+      return 0;
+    });
+  }
+};
+
+// ==================================================
+// PRIORITIES EXTENSION FOR DECISION ENGINE
 // ==================================================
 
 export const LariContextEngine = {
@@ -449,6 +614,7 @@ export const LariContextEngine = {
   },
 
   respond(message: string, state: any = {}) {
+    const currentState = Object.keys(state).length ? state : AppState.get();
     const text = message.toLowerCase();
     const intent = this.classifyIntent(text);
     
@@ -483,7 +649,7 @@ export const LariContextEngine = {
     }
 
     if (intent === 'Get_Decision') {
-      const decision = DecisionEngine.getMainDecision(state);
+      const decision = DecisionEngine.getMainDecision(currentState);
       return `Baseada nos dados atuais: ${decision.title}.\n\nRecomendo: ${decision.decision}\n\nMotivo: ${decision.reason}`;
     }
 
