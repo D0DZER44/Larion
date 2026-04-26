@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NormativeEngine, EconomicImpactEngine } from '@/lib/engines';
 import { useAppStore } from '@/lib/store';
-import { Plus, Search, CheckCircle2, Activity, Edit2, Trash2, X, Clock, Play, MoreVertical, Download, AlertTriangle, Shield, Headphones, Settings, MapPin, FileText, Check, ChevronRight, ChevronLeft, PowerOff, BellRing, UserMinus, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
+import { Plus, Search, CheckCircle2, Activity, Trash2, X, Clock, Play, Download, AlertTriangle, Shield, Settings, ChevronRight, ChevronLeft, BellRing, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
 
 
 type ActionItem = {
@@ -165,39 +165,60 @@ export default function AcoesPage() {
   
   useEffect(() => {
     // Map store actions to ActionItem format if needed
-    const mappedStoreActions: ActionItem[] = storeAcoes.map(a => ({
-      id: a.id,
-      title: a.title || 'Sem título',
-      description: a.description || '',
-      priority: (a.priority === 'P1' || a.priority === 'P2' || a.priority === 'P3') ? a.priority : 'P2',
-      priorityIcon: a.priority === 'P1' ? 'alert' : 'clock' as 'alert' | 'clock' | 'play' | 'activity',
-      status: a.status === 'Pendente' && new Date(a.due_date) < new Date() ? 'Atrasada' : 
-              a.status === 'Pendente' ? 'Pendente' : a.status as 'Atrasada' | 'Vence hoje' | 'Em andamento' | 'Pendente' | 'Monitorando' | 'Concluída',
-      deadlineTime: a.prazo || 'Sem prazo',
-      deadlineRelative: '',
-      deadlineColor: (a.priority === 'P1' ? 'red' : 'yellow') as 'red' | 'yellow' | 'blue' | 'gray',
-      originText: a.item_origem_tipo ? `Origem: ${a.item_origem_tipo}` : 'Manual',
-      originIcon: 'shield-blue' as 'shield-blue' | 'shield-yellow' | 'shield-purple' | 'triangle-green' | 'fire-red',
-      responsible: { name: a.responsavel || 'Desconhecido', role: '', avatar: '' },
-      nextStep: 'Verificar ação',
-      category: a.category || 'Geral',
-      reasons: [],
-      checklist: []
-    }));
-    
-    // Simple distinct merge
-    setItems(prev => {
-       const existingIds = new Set(prev.map(p => p.id));
-       const newItems = mappedStoreActions.filter(m => !existingIds.has(m.id));
-       return [...newItems, ...prev];
+    const mappedStoreActions: ActionItem[] = storeAcoes.map(a => {
+      let originCombined = a.origem === 'Risco' && a.inspection_id ? 'Risco (da Inspeção)' : (a.origem || a.item_origem_tipo || 'Manual');
+      
+      let basePriority = (a.priority === 'P1' || a.priority === 'P2' || a.priority === 'P3' || a.priority === 'P4' ||
+                 a.prioridade === 'P1' || a.prioridade === 'P2' || a.prioridade === 'P3' || a.prioridade === 'P4') ? (a.priority || a.prioridade) : 'P2';
+      
+      let computedStatus = (a.status === 'Pendente' || a.status === 'Aberta') && new Date(a.due_date || a.prazo) < new Date() ? 'Atrasada' : 
+              (a.status === 'Pendente' || a.status === 'Aberta') ? 'Pendente' : a.status as 'Atrasada' | 'Vence hoje' | 'Em andamento' | 'Pendente' | 'Monitorando' | 'Concluída';
+
+      if (computedStatus === 'Atrasada') {
+         if (basePriority === 'P4') basePriority = 'P3';
+         else if (basePriority === 'P3') basePriority = 'P2';
+         else if (basePriority === 'P2') basePriority = 'P1';
+      }
+
+      return {
+        id: a.id,
+        title: a.title || a.titulo || 'Sem título',
+        description: a.description || a.descricao || '',
+        priority: basePriority,
+        priorityIcon: (basePriority === 'P1') ? 'alert' : 'clock' as 'alert' | 'clock' | 'play' | 'activity',
+        status: computedStatus,
+        deadlineTime: a.prazo || 'Sem prazo',
+        deadlineRelative: '',
+        deadlineColor: (basePriority === 'P1') ? 'red' : 'yellow' as 'red' | 'yellow' | 'blue' | 'gray',
+        originText: originCombined.length > 25 ? originCombined.substring(0, 22) + '...' : originCombined,
+        originIcon: 'shield-purple' as 'shield-blue' | 'shield-yellow' | 'shield-purple' | 'triangle-green' | 'fire-red',
+        responsible: { name: a.responsavel || 'Desconhecido', role: '', avatar: '' },
+        nextStep: 'Verificar ação',
+        category: a.category || a.setor || 'Geral',
+        reasons: [
+          a.inspection_id ? `Inspeção Origem: ${a.inspection_id}` : '',
+          a.risk_id ? `Risco Origem: ${a.risk_id}` : ''
+        ].filter(Boolean),
+        checklist: []
+      }
     });
+
+    // Simple distinct merge with update for existing
+    setTimeout(() => {
+      setItems(prev => {
+        const mapPrev = new Map(prev.map(p => [p.id, p]));
+        mappedStoreActions.forEach(m => {
+          mapPrev.set(m.id, m);
+        });
+        return Array.from(mapPrev.values());
+      });
+    }, 0);
   }, [storeAcoes]);
 
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal for New Action
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer for Edit/View Details
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
-  const [activeTab, setActiveTab] = useState('Resumo');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -238,15 +259,31 @@ export default function AcoesPage() {
     setIsModalOpen(false);
   };
 
+  const updateAcao = useAppStore(state => state.updateAcao);
+  const updateRisco = useAppStore(state => state.updateRisco);
+  const storeRiscos = useAppStore(state => state.riscos);
+
   const handleConcluir = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setItems(prev => prev.map(item => item.id === id ? { ...item, status: 'Concluída' } as ActionItem : item));
     if (editingItem?.id === id) {
       setEditingItem(prev => prev ? { ...prev, status: 'Concluída' } as ActionItem : null);
     }
+    
+    // Update store state for Acao
+    updateAcao(id, { status: 'Concluída' });
+    
+    // Update store state for Risco if linked
+    const storeAcaoRef = storeAcoes.find(a => a.id === id);
+    if (storeAcaoRef && (storeAcaoRef.risk_id || storeAcaoRef.item_origem_id)) {
+      const riskIdToUpdate = storeAcaoRef.risk_id || storeAcaoRef.item_origem_id;
+      if (riskIdToUpdate && storeRiscos.find(r => r.id === riskIdToUpdate)) {
+         updateRisco(riskIdToUpdate, { status: 'Mitigado' }); // or 'Tratado' but 'Mitigado' is common. Also accepted: 'Parcialmente tratado'
+      }
+    }
   };
 
-  const handleCobrar = (id: string, e?: React.MouseEvent) => {
+  const handleCobrar = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     alert('Notificação de cobrança enviada ao responsável!');
   };
@@ -501,7 +538,7 @@ export default function AcoesPage() {
                     <td className="px-5 py-4">
                        <div className="flex items-center gap-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.responsible.avatar} alt="Avatar" className="w-6 h-6 rounded-full bg-gray-800" />
+                          <img src={item.responsible?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.responsible?.name || 'U')}&background=random`} alt="Avatar" className="w-6 h-6 rounded-full bg-gray-800" />
                           <div>
                              <p className="text-[13px] text-gray-300 leading-tight">{item.responsible.name}</p>
                              <p className="text-[10px] text-gray-500">{item.responsible.role}</p>
@@ -527,7 +564,7 @@ export default function AcoesPage() {
                           <button onClick={(e) => { e.stopPropagation(); handleOpenDetails(item); }} className="px-3 py-1.5 text-xs font-medium text-white bg-[#121826] hover:bg-white/10 rounded transition-colors border border-white/10 focus:outline-none">
                              Abrir
                           </button>
-                          <button onClick={(e) => handleCobrar(item.id, e)} className="px-3 py-1.5 text-xs font-medium text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded transition-colors border border-orange-500/30 focus:outline-none">
+                          <button onClick={(e) => handleCobrar(e)} className="px-3 py-1.5 text-xs font-medium text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded transition-colors border border-orange-500/30 focus:outline-none">
                              Cobrar
                           </button>
                           <button onClick={(e) => handleConcluir(item.id, e)} className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/30 focus:outline-none">
@@ -548,16 +585,16 @@ export default function AcoesPage() {
                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                          disabled={currentPage === 1}
                          className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
-                       {Array.from({ length: Math.min(5, totalPages || 1) }).map((_, i) => {
+                       {Array.from({ length: Math.min(3, totalPages || 1) }).map((_, i) => {
                          let pageNum;
-                         if (totalPages <= 5) {
+                         if (totalPages <= 3) {
                             pageNum = i + 1;
-                         } else if (currentPage <= 3) {
+                         } else if (currentPage <= 2) {
                             pageNum = i + 1; 
-                         } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
+                         } else if (currentPage >= totalPages - 1) {
+                            pageNum = totalPages - 2 + i;
                          } else {
-                            pageNum = currentPage - 2 + i;
+                            pageNum = currentPage - 1 + i;
                          }
                          return (
                             <button 
@@ -763,7 +800,7 @@ export default function AcoesPage() {
                         </div>
                         <div className="flex gap-3 items-center">
                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                           <img src={editingItem.responsible.avatar} alt="Avatar" className="w-8 h-8 rounded-full bg-gray-800" />
+                           <img src={editingItem.responsible?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(editingItem.responsible?.name || 'U')}&background=random`} alt="Avatar" className="w-8 h-8 rounded-full bg-gray-800" />
                            <div>
                               <p className="text-sm font-semibold text-white leading-tight">{editingItem.responsible.name}</p>
                               <p className="text-[11px] text-gray-500">{editingItem.responsible.role}</p>

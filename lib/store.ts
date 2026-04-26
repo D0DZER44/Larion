@@ -39,7 +39,8 @@ export type ChecklistTemplate = {
   id: string;
   name: string;
   category: string;
-  status: 'Ativo' | 'Rascunho' | 'Inativo';
+  status: 'Ativo' | 'Rascunho' | 'Inativo' | 'Revisar';
+  proximaRevisao?: string;
   sections: ChecklistSection[];
 };
 
@@ -126,6 +127,7 @@ type AppStore = {
   updateRisco: (id: string, risco: any) => void;
   addInspecao: (inspecao: any) => void;
   updateInspecao: (id: string, inspecao: any) => void;
+  deleteInspecao: (id: string) => void;
 
   // Checklists
   checklists: ChecklistTemplate[];
@@ -163,7 +165,7 @@ const processAutoActions = () => {
           prazo.setDate(prazo.getDate() + (isP1 ? 1 : 3)); // 1 day for P1, 3 days for P2
 
           addAcao({
-            id: `auto-acao-risco-${r.id || Date.now()}`,
+            id: `auto-acao-risco-${r.id || crypto.randomUUID()}`,
             title: `Mitigar Risco Automático: ${r.title || r.atividade || r.setor || 'Não especificado'}`,
             description: `Ação gerada automaticamente a partir do risco classificado como ${r.nivel || r.level}.`,
             priority: isP1 ? 'P1' : 'P2',
@@ -199,7 +201,7 @@ const processAutoActions = () => {
           prazo.setDate(prazo.getDate() + (isP1 ? 1 : 3));
 
           addAcao({
-            id: `auto-acao-insp-${i.id || Date.now()}`,
+            id: `auto-acao-insp-${i.id || crypto.randomUUID()}`,
             title: `Ação para Inspeção: ${i.title || i.nome || i.titulo || 'Pendente'}`,
             description: `Ação gerada automaticamente a partir de problema na inspeção.`,
             priority: isP1 ? 'P1' : 'P2',
@@ -267,7 +269,7 @@ export const useAppStore = create<AppStore>()(
         { id: '3', name: 'Marcos Antônio', role: 'Técnico SST', email: 'marcos@larion.com', status: 'Ativo', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' },
         { id: '4', name: 'Cláudia Ramos', role: 'Gerente Op.', email: 'claudia@larion.com', status: 'Inativo', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026302d' },
       ],
-      addUser: (user) => set((state) => ({ users: [...state.users, { ...user, id: Date.now().toString() }] })),
+      addUser: (user) => set((state) => ({ users: [...state.users, { ...user, id: crypto.randomUUID() }] })),
       updateUser: (id, user) => set((state) => ({ users: state.users.map((u) => u.id === id ? { ...u, ...user } : u) })),
       deleteUser: (id) => set((state) => ({ users: state.users.filter((u) => u.id !== id) })),
 
@@ -279,23 +281,23 @@ export const useAppStore = create<AppStore>()(
         { id: 's5', name: 'Pintura' },
         { id: 's6', name: 'Administrativo' },
       ],
-      addSector: (sector) => set((state) => ({ sectors: [...state.sectors, { ...sector, id: Date.now().toString() }] })),
+      addSector: (sector) => set((state) => ({ sectors: [...state.sectors, { ...sector, id: crypto.randomUUID() }] })),
       updateSector: (id, name) => set((state) => ({ sectors: state.sectors.map((s) => s.id === id ? { ...s, name } : s) })),
       deleteSector: (id) => set((state) => ({ sectors: state.sectors.filter((s) => s.id !== id) })),
       reorderSectors: (sectors) => set({ sectors }),
 
       work_hours: [],
-      addWorkHours: (record) => set((state) => ({ work_hours: [...state.work_hours, { ...record, id: Date.now().toString() }] })),
+      addWorkHours: (record) => set((state) => ({ work_hours: [...state.work_hours, { ...record, id: crypto.randomUUID() }] })),
       updateWorkHours: (id, record) => set((state) => ({ work_hours: state.work_hours.map((r) => r.id === id ? { ...r, ...record } : r) })),
       deleteWorkHours: (id) => set((state) => ({ work_hours: state.work_hours.filter((r) => r.id !== id) })),
 
       accidents: [],
-      addAccident: (record) => set((state) => ({ accidents: [...state.accidents, { ...record, id: Date.now().toString() }] })),
+      addAccident: (record) => set((state) => ({ accidents: [...state.accidents, { ...record, id: crypto.randomUUID() }] })),
       incidents: [],
-      addIncident: (record) => set((state) => ({ incidents: [...state.incidents, { ...record, id: Date.now().toString() }] })),
+      addIncident: (record) => set((state) => ({ incidents: [...state.incidents, { ...record, id: crypto.randomUUID() }] })),
 
       epi_records: [],
-      addEpiRecord: (record) => set((state) => ({ epi_records: [...state.epi_records, { ...record, id: Date.now().toString() }] })),
+      addEpiRecord: (record) => set((state) => ({ epi_records: [...state.epi_records, { ...record, id: crypto.randomUUID() }] })),
 
       rules: [
         {
@@ -312,7 +314,7 @@ export const useAppStore = create<AppStore>()(
           isActive: true,
         }
       ],
-      addRule: (rule) => set((state) => ({ rules: [...state.rules, { ...rule, id: Date.now().toString() }] })),
+      addRule: (rule) => set((state) => ({ rules: [...state.rules, { ...rule, id: crypto.randomUUID() }] })),
       updateRule: (id, rule) => set((state) => ({ rules: state.rules.map((r) => r.id === id ? { ...r, ...rule } : r) })),
       deleteRule: (id) => set((state) => ({ rules: state.rules.filter((r) => r.id !== id) })),
 
@@ -320,11 +322,11 @@ export const useAppStore = create<AppStore>()(
       riscos: [],
       inspecoes: [],
       alertas: [],
-      addAcao: (acao) => set((state) => ({ acoes: [...state.acoes, { ...acao, id: acao.id || Date.now().toString() }] })),
+      addAcao: (acao) => set((state) => ({ acoes: [...state.acoes, { ...acao, id: acao.id || crypto.randomUUID() }] })),
       updateAcao: (id, acao) => set((state) => ({ acoes: state.acoes.map((v) => v.id === id ? { ...v, ...acao } : v) })),
       deleteAcao: (id) => set((state) => ({ acoes: state.acoes.filter((v) => v.id !== id) })),
       addRisco: (risco) => {
-        set((state) => ({ riscos: [...state.riscos, { ...risco, id: risco.id || Date.now().toString() }] }));
+        set((state) => ({ riscos: [...state.riscos, { ...risco, id: risco.id || crypto.randomUUID() }] }));
         // Try to sync Central
         useAppStore.getState().engineConfig && processAutoActions();
       },
@@ -333,12 +335,15 @@ export const useAppStore = create<AppStore>()(
         processAutoActions();
       },
       addInspecao: (inspecao) => {
-        set((state) => ({ inspecoes: [...state.inspecoes, { ...inspecao, id: inspecao.id || Date.now().toString() }] }));
+        set((state) => ({ inspecoes: [...state.inspecoes, { ...inspecao, id: inspecao.id || crypto.randomUUID() }] }));
         processAutoActions();
       },
       updateInspecao: (id, inspecao) => {
         set((state) => ({ inspecoes: state.inspecoes.map((v) => v.id === id ? { ...v, ...inspecao } : v) }));
         processAutoActions();
+      },
+      deleteInspecao: (id) => {
+        set((state) => ({ inspecoes: state.inspecoes.filter((v) => v.id !== id) }));
       },
 
       checklists: [
@@ -359,11 +364,39 @@ export const useAppStore = create<AppStore>()(
             }
           ]
         },
-        { id: 'c2', name: 'Máquinas e Equip.', category: 'Equipamentos', status: 'Ativo', sections: [] },
-        { id: 'c3', name: 'Inspeção de EPI', category: 'EPI', status: 'Rascunho', sections: [] },
-        { id: 'c4', name: 'Trabalho em Altura', category: 'Segurança', status: 'Ativo', sections: [] },
+        { id: 'c2', name: 'Máquinas e Equip.', category: 'Equipamentos', status: 'Ativo', sections: [
+          {
+            id: 'sec1-c2',
+            title: '1. Proteções Físicas',
+            questions: [
+              { id: 'q1-c2', text: 'As partes móveis estão protegidas?', type: 'Sim / Não', riskMap: 'Crítico' },
+              { id: 'q2-c2', text: 'O botão de emergência está acessível e funcionando?', type: 'Sim / Não', riskMap: 'Crítico' },
+            ]
+          }
+        ] },
+        { id: 'c3', name: 'Inspeção de EPI', category: 'EPI', status: 'Rascunho', sections: [
+          {
+            id: 'sec1-c3',
+            title: '1. Conservação e Uso',
+            questions: [
+              { id: 'q1-c3', text: 'EPIs em bom estado de conservação?', type: 'Sim / Não', riskMap: 'Médio' },
+              { id: 'q2-c3', text: 'Os colaboradores estão utilizando corretamente?', type: 'Sim / Não', riskMap: 'Alta' },
+            ]
+          }
+        ] },
+        { id: 'c4', name: 'Trabalho em Altura', category: 'Segurança', status: 'Ativo', sections: [
+          {
+            id: 'sec1-c4',
+            title: '1. Documentação e Preparação',
+            questions: [
+              { id: 'q1-c4', text: 'Existe Permissão de Trabalho (PT) válida?', type: 'Sim / Não', riskMap: 'Crítico' },
+              { id: 'q2-c4', text: 'Os pontos de ancoragem foram validados?', type: 'Sim / Não', riskMap: 'Crítico' },
+              { id: 'q3-c4', text: 'EPIs específicos (cinto, talabarte) conferidos?', type: 'Sim / Não', riskMap: 'Alta' },
+            ]
+          }
+        ] },
       ],
-      addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, { ...checklist, id: Date.now().toString() }] })),
+      addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, { ...checklist, id: crypto.randomUUID() }] })),
       updateChecklist: (id, checklist) => set((state) => ({ checklists: state.checklists.map((c) => c.id === id ? { ...c, ...checklist } : c) })),
       deleteChecklist: (id) => set((state) => ({ checklists: state.checklists.filter((c) => c.id !== id) })),
       

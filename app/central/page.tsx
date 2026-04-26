@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine, PriorityEngine, ActionEngine } from '@/lib/engines';
 import { useAppStore } from '@/lib/store';
@@ -8,7 +8,7 @@ import {
   Bell, FileText, CheckCircle2, AlertTriangle, ArrowRight,
 
   Filter, Calendar, X, Activity, PlayCircle, MoreVertical,
-  Clock, CheckSquare, Shield, AlertCircle, ChevronRight, User
+  Clock, CheckSquare, Shield, AlertCircle, User
 } from 'lucide-react';
 
 type PriorityRowItem = {
@@ -203,7 +203,7 @@ export default function CentralPage() {
     // Em um app real, chamaria useAppStore updateAction/updateRisk
   };
 
-  const handleCobrar = (id: string, e?: React.MouseEvent) => {
+  const handleCobrar = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     alert('Notificação de cobrança enviada ao responsável!');
   };
@@ -413,7 +413,7 @@ export default function CentralPage() {
                         <div className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-center text-sm text-gray-400">
                            Nenhuma ação crítica no momento.
                         </div>
-                     ) : topActions.map((action: PriorityRowItem, i: number) => (
+                     ) : topActions.map((action: PriorityRowItem) => (
                         <div key={action.id} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group" onClick={() => handleOpenDetails(action)}>
                            <div className="flex-1 min-w-0">
                               <h4 className="text-[13px] font-bold text-white mb-1 truncate group-hover:text-purple-400 transition-colors" title={action.title}>{action.title}</h4>
@@ -518,7 +518,7 @@ export default function CentralPage() {
                                     <button onClick={() => handleOpenDetails(row)} className="px-3 py-1.5 text-[11px] font-bold text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors border border-purple-500/50 focus:outline-none">
                                        Abrir
                                     </button>
-                                    <button onClick={(e) => handleCobrar(row.id, e)} className="px-3 py-1.5 text-[11px] font-medium text-gray-300 bg-[#121826] hover:bg-white/10 hover:text-white rounded transition-colors border border-white/10 focus:outline-none">
+                                    <button onClick={(e) => handleCobrar(e)} className="px-3 py-1.5 text-[11px] font-medium text-gray-300 bg-[#121826] hover:bg-white/10 hover:text-white rounded transition-colors border border-white/10 focus:outline-none">
                                        Cobrar
                                     </button>
                                     <button onClick={(e) => handleConcluir(row.id, e)} className="px-3 py-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/30 focus:outline-none">

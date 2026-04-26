@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  Home, ShieldAlert, ClipboardCheck, Activity, AlertTriangle, 
-  BookOpen, FileText, BarChart2, Settings, MessageSquare, 
-  LogOut, Moon, Sun, Users, Wrench, Shield, CheckSquare
+  Home, ClipboardCheck, Activity, AlertTriangle, 
+  FileText, BarChart2, Settings, MessageSquare, 
+  LogOut, Moon, Sun
 } from 'lucide-react';
 import Image from 'next/image';
 

@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState } from 'react';
 import { 
   FileText, Shield, ClipboardCheck, CheckSquare, 
   AlertOctagon, DollarSign, Download, Plus, 
-  Calendar, ChevronDown, ListFilter, User, 
+  Calendar, ChevronDown, 
   Activity, ArrowRight
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
+
 
 // ============================================================================
 // DATA HELPERS & MOCKS (Para preencher onde o store não tem dados específicos)
@@ -37,7 +36,7 @@ const mockNaoConformidades = [
 // PREVIEW COMPONENTS
 // ============================================================================
 
-function RelatorioExecutivoPreview({ storeData }: { storeData: any }) {
+function RelatorioExecutivoPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-start border-b border-gray-200 pb-6">
@@ -405,7 +404,6 @@ function RelatorioEconomicoPreview() {
 // ============================================================================
 
 export default function RelatoriosPage() {
-  const { engineConfig } = useAppStore();
   const [activeModel, setActiveModel] = useState<'Executivo' | 'Riscos' | 'Inspeções' | 'Ações' | 'Não conformidades' | 'Impacto econômico'>('Executivo');
 
   const models = [
@@ -526,7 +524,7 @@ export default function RelatoriosPage() {
               <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/5 flex justify-center pb-20 print:p-0 print:overflow-visible">
                  {/* The White Paper */}
                  <div id="printable-report" className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-gray-200 print:shadow-none print:border-none print:max-w-none print:p-0 print:min-h-0">
-                    {activeModel === 'Executivo' && <RelatorioExecutivoPreview storeData={{}} />}
+                    {activeModel === 'Executivo' && <RelatorioExecutivoPreview />}
                     {activeModel === 'Riscos' && <RelatorioRiscosPreview />}
                     {activeModel === 'Inspeções' && <RelatorioInspecoesPreview />}
                     {activeModel === 'Ações' && <RelatorioAcoesPreview />}

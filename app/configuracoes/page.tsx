@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
+import AcaoRecomendadaCard from '@/components/AcaoRecomendadaCard';
 import { 
   Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
-  ChevronRight, Sparkles, ShieldCheck, FileText, AlertTriangle, PlayCircle, 
+  ChevronRight, ShieldCheck, FileText, AlertTriangle, 
   Plus, Search, Edit2, Trash2, GripVertical, CheckCircle2, Monitor, Phone, 
-  Mail, MapPin, Globe, Lock, Activity, Eye, FileOutput, Shield, RefreshCw, X
+  Mail, MapPin, Lock, Activity, Shield, X
 } from 'lucide-react';
 
 const TABS = [
@@ -107,20 +108,7 @@ function TabGeral() {
   return (
     <div className="space-y-6 flex-1">
       {/* Banner */}
-      <div className="bg-[#1e1b4b]/40 border border-purple-500/30 rounded-2xl p-5 flex items-center justify-between gap-4">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-               <Sparkles className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-               <h3 className="text-white font-bold mb-1">Ação recomendada</h3>
-               <p className="text-sm text-gray-400">Revise os prazos da prioridade <span className="text-purple-400 font-medium">Crítica</span>. Última alteração há 45 dias.</p>
-            </div>
-         </div>
-         <button className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
-            Revisar prazos
-         </button>
-      </div>
+      <AcaoRecomendadaCard />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -426,7 +414,7 @@ function TabUsuarios() {
                         <td className="px-5 py-4">
                            <div className="flex items-center gap-3">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full bg-gray-800" />
+                              <img src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=random`} alt={u.name} className="w-8 h-8 rounded-full bg-gray-800" />
                               <input 
                                  className="bg-transparent border-none text-[13px] font-bold text-gray-200 focus:outline-none focus:border-b-2 focus:border-purple-500"
                                  value={u.name}
@@ -1156,7 +1144,7 @@ function TabIndicadores() {
                <div className="p-8 flex flex-col items-center justify-center text-center h-[300px]">
                   <Activity className="w-12 h-12 text-gray-600 mb-4" />
                   <h3 className="text-lg font-bold text-gray-300">Nenhum registro de horas</h3>
-                  <p className="text-sm text-gray-500 mt-1 max-w-sm">Os cálculos de TFA e TG apresentarão aviso de "dados insuficientes" até que as horas sejam lançadas.</p>
+                  <p className="text-sm text-gray-500 mt-1 max-w-sm">Os cálculos de TFA e TG apresentarão aviso de &quot;dados insuficientes&quot; até que as horas sejam lançadas.</p>
                </div>
             ) : (
                <table className="w-full text-left border-collapse min-w-[800px]">

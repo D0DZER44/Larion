@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePathname } from 'next/navigation';
-import { MessageSquare, Sparkles, Send, X, AlertTriangle, Activity, ClipboardCheck, Briefcase, FileText, ChevronRight, Clock, ShieldCheck } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, X, AlertTriangle, Activity, FileText, Clock, ShieldCheck } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { LariContextEngine, NormativeEngine, RiskEngine, DecisionEngine } from '@/lib/engines';
 
@@ -35,12 +35,24 @@ export default function FloatingChat() {
       sender: 'lari',
       text: "Olá, sou a L.A.R.I — Copiloto SST, em que posso ajudar?",
       time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      quickActions: [
-        { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
-        { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
-      ]
     }
   ]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setMessages(prev => {
+        const msgs = [...prev];
+        if (msgs[0]) {
+          msgs[0].quickActions = [
+            { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
+            { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
+          ];
+        }
+        return msgs;
+      });
+    }, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isOpen) {

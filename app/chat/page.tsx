@@ -2,9 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Activity, AlertTriangle, ArrowUp, Calendar, ChevronRight, Clock, FileText, Filter, Lock, MessageSquare, Send, ShieldCheck, Zap } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
-import { LariContextEngine, NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine } from '@/lib/engines';
+import { Activity, AlertTriangle, ArrowUp, Calendar, ChevronRight, Clock, FileText, Lock, MessageSquare, Send, ShieldCheck, Zap } from 'lucide-react';
+import { LariContextEngine, NormativeEngine, RiskEngine, DecisionEngine } from '@/lib/engines';
 
 type ActionItem = {
   label: string;
@@ -110,7 +109,6 @@ export default function ChatPage() {
     setTimeout(() => {
       setIsTyping(false);
       isTypingRef.current = false;
-      const lowerText = text.toLowerCase();
       
       const intent = LariContextEngine.classifyIntent(text);
       const engineText = LariContextEngine.respond(text, {}); // Pass state if needed

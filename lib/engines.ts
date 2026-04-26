@@ -244,7 +244,7 @@ export const ActionEngine = {
 
   createFromRisk(risk: any) {
     return {
-      id: `act-${Date.now()}`,
+      id: `act-${crypto.randomUUID()}`,
       titulo: `Mitigar Risco: ${risk.titulo}`,
       riscoId: risk.id,
       prioridade: risk.nivel === 'Crítico' ? 'Urgente' : 'Alta',
@@ -255,7 +255,7 @@ export const ActionEngine = {
 
   createFromInspection(inspection: any) {
     return {
-      id: `act-insp-${Date.now()}`,
+      id: `act-insp-${crypto.randomUUID()}`,
       titulo: `Plano de Ação: ${inspection.titulo}`,
       inspecaoId: inspection.id,
       prioridade: 'Alta',

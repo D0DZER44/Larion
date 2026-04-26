@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { NormativeEngine, RiskEngine, EconomicImpactEngine } from '@/lib/engines';
 import { 
-  Plus, Search, AlertTriangle, X, ChevronRight,
+  Plus, AlertTriangle, X, ChevronRight,
   Shield, Activity, Settings, Settings2, Clock, CheckCircle2,
-  FileText, UserPlus, PlayCircle, ShieldAlert,
+  UserPlus, ShieldAlert,
   TrendingUp, Users, BarChart2, Trash2
 } from 'lucide-react';
 
@@ -34,7 +34,8 @@ type RiskInstance = {
   acaoRecomendada?: string;
   prazo?: string;
   responsavel?: string;
-  status?: 'Pendente' | 'Em análise' | 'A tratar' | 'Monitorando';
+  status?: 'Pendente' | 'Em análise' | 'A tratar' | 'Monitorando' | 'Resolvido' | 'Mitigado';
+  origem?: string;
 };
 
 const ATIVIDADES_OPCOES = [
@@ -156,8 +157,38 @@ export default function RiscosPage() {
   const { sectors } = useAppStore();
   const SETORES_OPCOES = sectors.map(s => s.name);
 
+  const storeRiscos = useAppStore(state => state.riscos);
+
   const [activeTab, setActiveTab] = useState<'Todos' | NivelRisco>('Todos');
   const [data, setData] = useState<RiskInstance[]>(dbMock);
+  
+  // Merge storeRiscos that are created Automatically by Inspections to data
+  const combinedData = useMemo(() => {
+    const storeMapped = storeRiscos.map(sr => ({
+      ...sr,
+      atividade: sr.atividade || sr.tipoDeRisco || sr.titulo || sr.title || 'Atividade não especificada',
+      status: sr.status || 'Pendente',
+      nivel: sr.nivel || 'Baixo',
+      prioridade: sr.prioridade || 'P4',
+      prazo: sr.prazo || 'Sem prazo',
+      gravidade: sr.gravidade || sr.severidade || 'Baixa',
+      probabilidade: sr.probabilidade || 'Média',
+      tipoDeRisco: sr.tipoDeRisco || sr.titulo || sr.title || 'Risco de segurança',
+      setor: sr.setor || 'Geral'
+    })) as RiskInstance[];
+
+    // We only want to prepend storeRiscos to dbMock instead of tracking dbMock in state if not needed, 
+    // but the user can edit risks so `data` must contain user edits to dbMock.
+    // We can merge them filtering by ID to avoid duplicates.
+    const all = [...storeMapped];
+    data.forEach(d => {
+       if (!all.find(a => a.id === d.id)) {
+          all.push(d);
+       }
+    });
+
+    return all;
+  }, [storeRiscos, data]);
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerActionOpen, setIsDrawerActionOpen] = useState(false);
@@ -232,14 +263,14 @@ export default function RiscosPage() {
 
   // Views Data Prep
   const filteredData = useMemo(() => {
-    let result = data;
+    let result = combinedData;
     if (activeTab !== 'Todos') {
-      result = data.filter(d => d.nivel === activeTab);
+      result = combinedData.filter(d => d.nivel === activeTab);
     }
     return result.sort((a,b) => a.prioridade > b.prioridade ? 1 : -1);
-  }, [data, activeTab]);
+  }, [combinedData, activeTab]);
   
-  const criticosCount = data.filter(d => d.nivel === 'Crítico').length;
+  const criticosCount = combinedData.filter(d => d.nivel === 'Crítico').length;
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -416,6 +447,12 @@ export default function RiscosPage() {
                               <span className="text-[11px] text-gray-500 uppercase font-medium">{item.setor}</span>
                               <span className="w-1 h-1 rounded-full bg-gray-700"></span>
                               <span className="text-[11px] text-purple-400/80 font-medium">{item.nr}</span>
+                              {item.origem && (
+                                <>
+                                 <span className="w-1 h-1 rounded-full bg-gray-700"></span>
+                                 <span className={`text-[10px] uppercase font-bold ${item.origem === 'inspecao' || item.origem === 'Inspeção' ? 'text-emerald-500 bg-emerald-500/10 px-1.5 rounded' : 'text-gray-400'}`}>{item.origem === 'inspecao' ? 'Inspeção' : item.origem}</span>
+                                </>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -466,16 +503,16 @@ export default function RiscosPage() {
                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                          disabled={currentPage === 1}
                          className="px-2 py-1 rounded bg-[#0b0f19] border border-white/5 hover:text-white transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4 rotate-180" /></button>
-                       {Array.from({ length: Math.min(5, totalPages || 1) }).map((_, i) => {
+                       {Array.from({ length: Math.min(3, totalPages || 1) }).map((_, i) => {
                          let pageNum;
-                         if (totalPages <= 5) {
+                         if (totalPages <= 3) {
                             pageNum = i + 1;
-                         } else if (currentPage <= 3) {
+                         } else if (currentPage <= 2) {
                             pageNum = i + 1; 
-                         } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
+                         } else if (currentPage >= totalPages - 1) {
+                            pageNum = totalPages - 2 + i;
                          } else {
-                            pageNum = currentPage - 2 + i;
+                            pageNum = currentPage - 1 + i;
                          }
                          return (
                             <button 
