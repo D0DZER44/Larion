@@ -225,6 +225,41 @@ export default function CentralPage() {
   const normativeDetection = selectedItem ? NormativeEngine.detect(`${selectedItem.title} ${selectedItem.reasons.join(' ')}`) : null;
   const riskDetection = normativeDetection ? RiskEngine.generateRiskFromActivity(`${selectedItem?.title} ${selectedItem?.reasons.join(' ')}`) : null;
 
+  const [urlView, setUrlView] = useState('');
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      setTimeout(() => setUrlView(p.get('view') || ''), 0);
+    }
+  }, []);
+
+  const conformityMetrics = useMemo(() => {
+    const inspecoes = storeState.inspecoes || [];
+    const acoes = storeState.acoes || [];
+    const riscos = storeState.riscos || [];
+
+    const completedInspections = inspecoes.filter(i => i.status === 'Concluído' || i.status === 'Concluída' || i.status === 'Finalizada');
+    const concluidasActionsRate = acoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
+    const resolvedRisks = riscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
+
+    let vI = inspecoes.length > 0 ? (completedInspections.length / inspecoes.length) * 100 : null;
+    let vA = acoes.length > 0 ? (concluidasActionsRate.length / acoes.length) * 100 : null;
+    let vR = riscos.length > 0 ? (resolvedRisks.length / riscos.length) * 100 : null;
+
+    let validWeights = 0;
+    let totalScore = 0;
+    if (vI !== null) { validWeights += 30; totalScore += vI * 30; }
+    if (vA !== null) { validWeights += 25; totalScore += vA * 25; }
+    if (vR !== null) { validWeights += 15; totalScore += vR * 15; }
+
+    return {
+      vI, vA, vR,
+      totalScore,
+      validWeights,
+      rate: validWeights > 0 ? Math.round(totalScore / validWeights) : 100
+    };
+  }, [storeState]);
+
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
       <main className="flex-1 flex flex-col h-full overflow-hidden">
@@ -539,6 +574,114 @@ export default function CentralPage() {
           </div>
         </div>
       </main>
+
+      {/* Conformity Detail Modal */}
+      <AnimatePresence>
+        {urlView === 'conformity' && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0b0f19] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative"
+            >
+               <div className="absolute top-0 right-0 p-4">
+                 <button onClick={() => setUrlView('')} className="p-2 bg-black/40 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
+                   <X className="w-5 h-5" />
+                 </button>
+               </div>
+               <div className="p-8">
+                 <div className="flex items-center gap-3 mb-6">
+                   <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+                     <Activity className="w-6 h-6 text-green-500" />
+                   </div>
+                   <div>
+                     <h2 className="text-xl font-bold text-white">Análise de Conformidade Geral</h2>
+                     <p className="text-sm text-gray-400">Detalhes do cálculo da média ponderada gerada pelo sistema</p>
+                   </div>
+                 </div>
+
+                 <div className="bg-[#121826] border border-white/5 rounded-xl p-6 mb-6">
+                   <div className="flex justify-between items-end mb-4">
+                     <div>
+                       <span className="text-sm font-medium text-gray-400 block mb-1">Índice Global</span>
+                       <span className="text-4xl font-bold text-green-400">{conformityMetrics.rate}%</span>
+                     </div>
+                     <div className="text-right">
+                       <span className="text-xs text-gray-500 block">Soma de Pesos Ativos</span>
+                       <span className="text-sm text-gray-300 font-medium">{conformityMetrics.validWeights}%</span>
+                     </div>
+                   </div>
+                   <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                     <div className="h-full bg-green-500 rounded-full" style={{ width: `${conformityMetrics.rate}%` }}></div>
+                   </div>
+                   <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+                     A conformidade é calculada por uma média ponderada. Se não houver dados em uma categoria (ex: Checklists), o peso dela não é diluído de forma fixa, mas sim a divisão final ocorre pelos pesos das categorias que <b>possuem dados</b>, redistribuindo o impacto de forma justa.
+                   </p>
+                 </div>
+
+                 <div className="space-y-3">
+                   <h3 className="text-sm font-bold text-white mb-2">Composição do Cálculo</h3>
+                   
+                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vI !== null ? 'bg-purple-500/5 border-purple-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                     <div>
+                       <span className="block text-sm font-bold text-gray-200">Inspeções Concluídas</span>
+                       <span className="text-xs text-gray-400">Peso Base: 30%</span>
+                     </div>
+                     <div className="text-right">
+                       {conformityMetrics.vI !== null ? (
+                         <span className="text-lg font-bold text-purple-400">{Math.round(conformityMetrics.vI)}%</span>
+                       ) : (
+                         <span className="text-sm text-gray-500">Sem dados</span>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className="p-4 rounded-xl border bg-white/5 border-white/5 opacity-50 flex items-center justify-between">
+                     <div>
+                       <span className="block text-sm font-bold text-gray-200">Checklists Concluídos</span>
+                       <span className="text-xs text-gray-400">Peso Base: 30%</span>
+                     </div>
+                     <div className="text-right">
+                       <span className="text-sm text-gray-500">Integrado nas Inspeções</span>
+                     </div>
+                   </div>
+
+                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vA !== null ? 'bg-orange-500/5 border-orange-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                     <div>
+                       <span className="block text-sm font-bold text-gray-200">Ações Concluídas</span>
+                       <span className="text-xs text-gray-400">Peso Base: 25%</span>
+                     </div>
+                     <div className="text-right">
+                       {conformityMetrics.vA !== null ? (
+                         <span className="text-lg font-bold text-orange-400">{Math.round(conformityMetrics.vA)}%</span>
+                       ) : (
+                         <span className="text-sm text-gray-500">Sem dados</span>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vR !== null ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                     <div>
+                       <span className="block text-sm font-bold text-gray-200">Riscos Resolvidos</span>
+                       <span className="text-xs text-gray-400">Peso Base: 15%</span>
+                     </div>
+                     <div className="text-right">
+                       {conformityMetrics.vR !== null ? (
+                         <span className="text-lg font-bold text-red-500">{Math.round(conformityMetrics.vR)}%</span>
+                       ) : (
+                         <span className="text-sm text-gray-500">Sem dados</span>
+                       )}
+                     </div>
+                   </div>
+
+                 </div>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Recommended Action Drawer */}
       {/* Action Plan Modal */}

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { NormativeEngine, RiskEngine, EconomicImpactEngine } from '@/lib/engines';
+import TimelineHistory from '@/components/TimelineHistory';
 import { 
   Plus, AlertTriangle, X, ChevronRight,
   Shield, Activity, Settings, Settings2, Clock, CheckCircle2,
@@ -36,6 +37,11 @@ type RiskInstance = {
   responsavel?: string;
   status?: 'Pendente' | 'Em análise' | 'A tratar' | 'Monitorando' | 'Resolvido' | 'Mitigado';
   origem?: string;
+  inspection_id?: string;
+  inspection_name?: string;
+  inspection_date?: string;
+  non_compliant_item?: string;
+  checklist_item_id?: string;
 };
 
 const ATIVIDADES_OPCOES = [
@@ -450,7 +456,11 @@ export default function RiscosPage() {
                               {item.origem && (
                                 <>
                                  <span className="w-1 h-1 rounded-full bg-gray-700"></span>
-                                 <span className={`text-[10px] uppercase font-bold ${item.origem === 'inspecao' || item.origem === 'Inspeção' ? 'text-emerald-500 bg-emerald-500/10 px-1.5 rounded' : 'text-gray-400'}`}>{item.origem === 'inspecao' ? 'Inspeção' : item.origem}</span>
+                                 <span className={`text-[10px] uppercase font-bold ${(item.origem === 'inspecao' || item.origem === 'Inspeção') ? 'text-emerald-500 bg-emerald-500/10 px-1.5 rounded' : 'text-gray-400'}`}>
+                                   {(item.origem === 'inspecao' || item.origem === 'Inspeção') && item.inspection_name
+                                    ? `Origem: Inspeção ${item.inspection_name} — Item ${item.non_compliant_item || item.atividade || 'N/A'} — Setor ${item.setor || 'N/A'} — Data ${item.inspection_date || 'N/A'}`
+                                     : item.origem === 'inspecao' ? 'Inspeção' : item.origem}
+                                 </span>
                                 </>
                               )}
                             </div>
@@ -682,6 +692,8 @@ export default function RiscosPage() {
                     );
                  })()}
                </div>
+               
+               <TimelineHistory itemId={selectedAction.id} relatedInspectionId={selectedAction.inspection_id} />
 
              </div>
 

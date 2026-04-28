@@ -1,6 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+export type SystemLog = {
+  id: string;
+  empresa_id: string;
+  user_id: string;
+  event_type: string;
+  description: string;
+  origin_type?: string;
+  origin_id?: string;
+  created_at: string;
+  metadata?: any;
+};
+
 export type User = {
   id: string;
   name: string;
@@ -120,6 +132,8 @@ type AppStore = {
   riscos: any[];
   inspecoes: any[];
   alertas: any[];
+  logs: SystemLog[];
+  addLog: (log: Omit<SystemLog, 'id' | 'created_at'>) => void;
   addAcao: (acao: any) => void;
   updateAcao: (id: string, acao: any) => void;
   deleteAcao: (id: string) => void;
@@ -322,12 +336,62 @@ export const useAppStore = create<AppStore>()(
       riscos: [],
       inspecoes: [],
       alertas: [],
-      addAcao: (acao) => set((state) => ({ acoes: [...state.acoes, { ...acao, id: acao.id || crypto.randomUUID() }] })),
-      updateAcao: (id, acao) => set((state) => ({ acoes: state.acoes.map((v) => v.id === id ? { ...v, ...acao } : v) })),
+      logs: [],
+      addLog: (log) => set((state) => ({ logs: [...state.logs, { ...log, id: crypto.randomUUID(), created_at: new Date().toISOString() }] })),
+      addAcao: (acao) => set((state) => {
+        const id = acao.id || crypto.randomUUID();
+        const newAcao = { ...acao, id };
+        const newLog = {
+          id: crypto.randomUUID(),
+          empresa_id: acao.empresa_id || '1',
+          user_id: acao.responsavel || 'Sistema',
+          event_type: 'acao_gerada',
+          description: `Ação gerada: ${acao.title || acao.titulo}`,
+          origin_type: 'acao',
+          origin_id: id,
+          created_at: new Date().toISOString()
+        };
+        return { acoes: [...state.acoes, newAcao], logs: [...state.logs, newLog] };
+      }),
+      updateAcao: (id, acao) => set((state) => {
+        const oldAcao = state.acoes.find(a => a.id === id);
+        let newLogs = [...state.logs];
+        if (oldAcao) {
+           if ((oldAcao.status !== 'Concluído' && oldAcao.status !== 'Fechada') && (acao.status === 'Concluído' || acao.status === 'Fechada')) {
+              newLogs.push({
+                id: crypto.randomUUID(),
+                empresa_id: acao.empresa_id || oldAcao.empresa_id || '1',
+                user_id: acao.responsavel || oldAcao.responsavel || 'Sistema',
+                event_type: 'acao_concluida',
+                description: `Ação concluída: ${acao.title || oldAcao.title || acao.titulo || oldAcao.titulo}`,
+                origin_type: 'acao',
+                origin_id: id,
+                created_at: new Date().toISOString()
+              });
+           }
+        }
+        return {
+          acoes: state.acoes.map((v) => v.id === id ? { ...v, ...acao } : v),
+          logs: newLogs
+        };
+      }),
       deleteAcao: (id) => set((state) => ({ acoes: state.acoes.filter((v) => v.id !== id) })),
       addRisco: (risco) => {
-        set((state) => ({ riscos: [...state.riscos, { ...risco, id: risco.id || crypto.randomUUID() }] }));
-        // Try to sync Central
+        set((state) => {
+          const id = risco.id || crypto.randomUUID();
+          const newRisco = { ...risco, id };
+          const newLog = {
+            id: crypto.randomUUID(),
+            empresa_id: risco.empresa_id || '1',
+            user_id: risco.user_id || 'Sistema',
+            event_type: 'risco_gerado',
+            description: `Risco gerado: ${risco.title || risco.titulo}`,
+            origin_type: 'risco',
+            origin_id: id,
+            created_at: new Date().toISOString()
+          };
+          return { riscos: [...state.riscos, newRisco], logs: [...state.logs, newLog] };
+        });
         useAppStore.getState().engineConfig && processAutoActions();
       },
       updateRisco: (id, risco) => {
@@ -335,11 +399,72 @@ export const useAppStore = create<AppStore>()(
         processAutoActions();
       },
       addInspecao: (inspecao) => {
-        set((state) => ({ inspecoes: [...state.inspecoes, { ...inspecao, id: inspecao.id || crypto.randomUUID() }] }));
+        set((state) => {
+          const id = inspecao.id || crypto.randomUUID();
+          const newInspecao = { ...inspecao, id };
+          const newLog = {
+            id: crypto.randomUUID(),
+            empresa_id: inspecao.empresa_id || '1',
+            user_id: inspecao.inspector || 'Sistema',
+            event_type: 'inspecao_criada',
+            description: `Inspeção criada: ${inspecao.title || inspecao.nome || inspecao.titulo}`,
+            origin_type: 'inspecao',
+            origin_id: id,
+            created_at: new Date().toISOString()
+          };
+          
+          let newLogs = [...state.logs, newLog];
+          if (inspecao.nonConformities > 0) {
+             newLogs.push({
+                id: crypto.randomUUID(),
+                empresa_id: inspecao.empresa_id || '1',
+                user_id: inspecao.inspector || 'Sistema',
+                event_type: 'item_nao_conforme_identificado',
+                description: `Foram identificados ${inspecao.nonConformities} itens não conformes na inspeção.`,
+                origin_type: 'inspecao',
+                origin_id: id,
+                created_at: new Date().toISOString()
+             });
+          }
+          
+          return { inspecoes: [...state.inspecoes, newInspecao], logs: newLogs };
+        });
         processAutoActions();
       },
       updateInspecao: (id, inspecao) => {
-        set((state) => ({ inspecoes: state.inspecoes.map((v) => v.id === id ? { ...v, ...inspecao } : v) }));
+        set((state) => {
+          const oldInspecao = state.inspecoes.find(i => i.id === id);
+          let newLogs = [...state.logs];
+          if (oldInspecao) {
+            newLogs.push({
+              id: crypto.randomUUID(),
+              empresa_id: inspecao.empresa_id || oldInspecao.empresa_id || '1',
+              user_id: inspecao.inspector || oldInspecao.inspector || 'Sistema',
+              event_type: 'inspecao_editada',
+              description: `Inspeção editada: ${inspecao.title || oldInspecao.title || inspecao.nome || oldInspecao.nome}`,
+              origin_type: 'inspecao',
+              origin_id: id,
+              created_at: new Date().toISOString()
+            });
+            
+            if (inspecao.status === 'Anulada' && oldInspecao.status !== 'Anulada') {
+               newLogs.push({
+                 id: crypto.randomUUID(),
+                 empresa_id: inspecao.empresa_id || oldInspecao.empresa_id || '1',
+                 user_id: inspecao.inspector || oldInspecao.inspector || 'Sistema',
+                 event_type: 'inspecao_anulada',
+                 description: `Inspeção anulada: ${inspecao.title || oldInspecao.title || inspecao.nome || oldInspecao.nome}`,
+                 origin_type: 'inspecao',
+                 origin_id: id,
+                 created_at: new Date().toISOString()
+               });
+            }
+          }
+          return {
+            inspecoes: state.inspecoes.map((v) => v.id === id ? { ...v, ...inspecao } : v),
+            logs: newLogs
+          };
+        });
         processAutoActions();
       },
       deleteInspecao: (id) => {

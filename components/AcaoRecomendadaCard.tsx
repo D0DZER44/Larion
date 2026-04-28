@@ -174,7 +174,7 @@ export default function AcaoRecomendadaCard({ context = 'global' }: AcaoRecomend
     }
 
     return "A operação está estável. Mantenha o monitoramento contínuo das áreas e acompanhe o cronograma de inspeções regulares.";
-  }, [store]);
+  }, [store, context]);
 
   return (
     <div className="bg-[#121826] border border-indigo-500/20 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-lg shrink-0">

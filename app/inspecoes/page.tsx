@@ -57,6 +57,14 @@ export default function InspecoesPage() {
     responsavel: ''
   });
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
+  const [urlFilter, setUrlFilter] = useState<string>('');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      setTimeout(() => setUrlFilter(p.get('filter') || ''), 0);
+    }
+  }, []);
 
   const normativeDetection = NormativeEngine.detect(formData.nome || '');
 
@@ -112,7 +120,15 @@ export default function InspecoesPage() {
     return mostCommonIssues.join(', ');
   }, [store.inspecoes]);
 
-  const allInspecoes = [...(store.inspecoes || [])].reverse();
+  let allInspecoes = [...(store.inspecoes || [])].reverse();
+  
+  if (urlFilter === 'pendentes') {
+     allInspecoes = allInspecoes.filter(i => {
+       const isCompleted = i.status === 'Concluída' || i.situacao === 'Concluída' || i.status === 'Finalizada' || i.situacao === 'Finalizada';
+       return !isCompleted;
+     });
+  }
+
   const listToPaginate = activeTab === 'Executar' ? allInspecoes : checklists;
   const totalPages = Math.ceil(listToPaginate.length / itemsPerPage) || 1;
   const currentItems = listToPaginate.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -273,13 +289,17 @@ export default function InspecoesPage() {
               id: riscoId,
               empresa_id: '1',
               inspection_id: inspecaoId,
+              inspection_name: store.checklists?.find((c: any) => c.id === inspectionData.checklistId)?.name || `Inspeção`,
+              checklist_item_id: item.id || `item_${Date.now()}`,
               setor: inspectionData.ondeUsar || 'Geral',
+              inspection_date: inspectionData.data || hojeDateStr,
+              non_compliant_item: item.text,
               titulo: `Não Conformidade: ${item.text}`,
               descricao: item.observacao || 'Risco gerado a partir de inspeção não conforme.',
               severidade: riscoNivel,
               nivel: riscoNivel,
               status: 'Aberto',
-              origem: 'inspecao',
+              origem: 'Inspeção',
               item_origem_tipo: 'inspecao',
               createdAutomatically: true,
               created_at: new Date().toISOString()
@@ -291,14 +311,17 @@ export default function InspecoesPage() {
               id: Date.now().toString() + '_acao_' + item.id,
               empresa_id: '1',
               inspection_id: inspecaoId,
+              inspection_name: store.checklists?.find((c: any) => c.id === inspectionData.checklistId)?.name || `Inspeção`,
               risk_id: riscoId,
+              checklist_item_id: item.id || `item_${Date.now()}`,
               setor: inspectionData.ondeUsar || 'Geral',
               titulo: item.acaoCorretiva || `Corrigir: ${item.text}`,
+              acao_corretiva_sugerida: item.acaoCorretiva || `Corrigir: ${item.text}`,
               descricao: item.observacao || 'Ação corretiva automática de inspeção.',
               responsavel: inspectionData.responsavel || 'Responsável não definido',
               prazo: prazoStr,
               status: 'Pendente',
-              origem: 'risco',
+              origem: 'Risco',
               item_origem_tipo: 'risco',
               item_origem_id: riscoId,
               createdAutomatically: true,
@@ -473,24 +496,36 @@ export default function InspecoesPage() {
 
             {/* Tabs */}
             <div className="flex items-center gap-6 border-b border-white/10 mb-4 shrink-0 px-2">
-               <button 
-                  onClick={() => { setActiveTab('Executar'); setCurrentPage(1); }}
-                  className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Executar' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
-               >
-                  Executar
-                  {activeTab === 'Executar' && (
-                     <motion.div layoutId="activeTabInspecoes" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
-                  )}
-               </button>
-               <button 
-                  onClick={() => { setActiveTab('Modelos'); setCurrentPage(1); }}
-                  className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Modelos' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
-               >
-                  Modelos
-                  {activeTab === 'Modelos' && (
-                     <motion.div layoutId="activeTabInspecoes" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
-                  )}
-               </button>
+               <div className="flex items-center gap-6">
+                 <button 
+                    onClick={() => { setActiveTab('Executar'); setCurrentPage(1); }}
+                    className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Executar' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                 >
+                    Executar
+                    {activeTab === 'Executar' && (
+                       <motion.div layoutId="activeTabInspecoes" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
+                    )}
+                 </button>
+                 <button 
+                    onClick={() => { setActiveTab('Modelos'); setCurrentPage(1); }}
+                    className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'Modelos' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                 >
+                    Modelos
+                    {activeTab === 'Modelos' && (
+                       <motion.div layoutId="activeTabInspecoes" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />
+                    )}
+                 </button>
+               </div>
+               
+               {urlFilter === 'pendentes' && activeTab === 'Executar' && (
+                 <div className="pb-3 flex items-center">
+                   <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 px-3 py-1 text-xs rounded-full flex items-center gap-2">
+                     <AlertTriangle className="w-3.5 h-3.5" />
+                     Mostrando apenas inspeções pendentes
+                     <button onClick={() => setUrlFilter('')} className="ml-2 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                   </div>
+                 </div>
+               )}
             </div>
 
             {/* Table */}
@@ -960,8 +995,11 @@ export default function InspecoesPage() {
                           id: riscoId,
                           empresa_id: '1',
                           inspection_id: updatedInspecao.id,
+                          inspection_name: updatedInspecao.checklist || `Inspeção`,
                           checklist_item_id: item.id,
                           setor: updatedInspecao.ondeUsar || 'Geral',
+                          inspection_date: updatedInspecao.data || updatedInspecao.proximaInspecao || hojeDateStr,
+                          non_compliant_item: item.text,
                           categoria: 'Inspeção',
                           titulo: `Não Conformidade: ${item.text}`,
                           title: `Não Conformidade: ${item.text}`,
@@ -984,6 +1022,7 @@ export default function InspecoesPage() {
                           id: acaoId,
                           empresa_id: '1',
                           inspection_id: updatedInspecao.id,
+                          inspection_name: updatedInspecao.checklist || `Inspeção`,
                           risk_id: riscoId,
                           checklist_item_id: item.id,
                           item_origem_id: riscoId,
@@ -992,6 +1031,7 @@ export default function InspecoesPage() {
                           setor: updatedInspecao.ondeUsar || 'Geral',
                           titulo: item.acaoCorretiva || `Corrigir: ${item.text}`,
                           title: item.acaoCorretiva || `Corrigir: ${item.text}`,
+                          acao_corretiva_sugerida: item.acaoCorretiva || `Corrigir: ${item.text}`,
                           descricao: item.observacao || 'Ação corretiva automática de inspeção.',
                           description: item.observacao || 'Ação corretiva automática de inspeção.',
                           responsavel: acaoResponsavel,

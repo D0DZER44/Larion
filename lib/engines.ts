@@ -583,6 +583,72 @@ export const PriorityEngine = {
 // ==================================================
 
 export const LariContextEngine = {
+  getRealtimeContext(state?: any) {
+    const currentState = state || AppState.get();
+    const today = new Date().toISOString().substring(0, 10);
+    const isConcluido = (s: string) => s && s.toLowerCase().includes('conclu');
+    
+    // Calculate metrics
+    const acoes = currentState.acoes || [];
+    const inspecoes = currentState.inspecoes || [];
+    const riscos = currentState.riscos || [];
+    const checklists = currentState.checklists || [];
+
+    const activeAcoes = acoes.filter((a: any) => !isConcluido(a.status));
+    const acoesAtrasadas = activeAcoes.filter((a: any) => a.prazo && a.prazo < today);
+    const acoesPrazoHoje = activeAcoes.filter((a: any) => a.prazo && a.prazo.substring(0,10) === today);
+    
+    const activeRiscos = riscos.filter((r: any) => !isConcluido(r.status));
+    const criticalRisks = activeRiscos.filter((r: any) => (r.nivel || r.level || '').toLowerCase() === 'crítico');
+
+    const activeInspecoes = inspecoes.filter((i: any) => !isConcluido(i.status) && !isConcluido(i.situacao));
+    const inspecoesVencidas = activeInspecoes.filter((i: any) => {
+        const d = i.data || i.date || i.dataPrevista;
+        return d && d < today;
+    });
+
+    const activeChecklists = checklists.filter((c: any) => !isConcluido(c.status) && !isConcluido(c.situacao));
+    const checklistsHoje = activeChecklists.filter((c: any) => {
+        const d = c.proximaRevisao || c.data || c.dataPrevista;
+        return d && d.substring(0,10) === today;
+    });
+
+    // Score Operational
+    let operationalScore = 100;
+    const penalty = criticalRisks.length * 3 + activeAcoes.length * 2 + acoesAtrasadas.length * 3 + activeInspecoes.length * 3;
+    operationalScore = Math.max(0, operationalScore - penalty);
+
+    // Setores mais expostos
+    const sectors: Record<string, number> = {};
+    activeRiscos.forEach((r: any) => {
+        const s = r.setor || 'Geral';
+        sectors[s] = (sectors[s] || 0) + ((r.nivel || r.level || '').toLowerCase() === 'crítico' ? 3 : 1);
+    });
+    const sortedSectors = Object.entries(sectors).sort((a,b) => b[1] - a[1]);
+    const topSector = sortedSectors.length > 0 ? sortedSectors[0][0] : 'Geral';
+
+    // Conformity
+    const epi_records = currentState.epi_records || [];
+    const validEpi = epi_records.filter((e: any) => e.status === 'conforme').length;
+    const totalEpi = epi_records.length;
+    const conformidade = totalEpi > 0 ? Math.round((validEpi / totalEpi) * 100) : 0;
+
+    return {
+      criticalRisks: criticalRisks.length,
+      acoesAtrasadas: acoesAtrasadas.length,
+      acoesPrazoHoje: acoesPrazoHoje.length,
+      inspecoesVencidas: inspecoesVencidas.length,
+      inspecoesPendentes: activeInspecoes.length,
+      checklistsHoje: checklistsHoje.length,
+      operationalScore,
+      conformidade,
+      topSector,
+      criticalRisksData: criticalRisks,
+      acoesAtrasadasData: acoesAtrasadas,
+      inspecoesVencidasData: inspecoesVencidas
+    };
+  },
+
   getContext() {
     return "Assistente L.A.R.I - Especialista em Saúde e Segunrança e Data Analysis.";
   },
@@ -591,6 +657,18 @@ export const LariContextEngine = {
     const text = message.toLowerCase();
     if (text.includes('altura') || text.includes('eletricidade') || text.includes('espaço confinado') || text.includes('nr')) {
       return 'Doubt_Normative';
+    }
+    if (text.includes('hoje') || text.includes('exige')) {
+      return 'Check_Today';
+    }
+    if (text.includes('setor') || text.includes('área')) {
+      return 'Check_Sectors';
+    }
+    if (text.includes('derrubou') || text.includes('score')) {
+      return 'Check_Score';
+    }
+    if (text.includes('prioriz') || text.includes('começar')) {
+      return 'Check_Priority_Actions';
     }
     if (text.includes('atrasado') || text.includes('atrasada') || text.includes('ação') || text.includes('acoes') || text.includes('vencid')) {
       return 'Check_Actions';
@@ -617,7 +695,8 @@ export const LariContextEngine = {
     const currentState = Object.keys(state).length ? state : AppState.get();
     const text = message.toLowerCase();
     const intent = this.classifyIntent(text);
-    
+    const ctx = this.getRealtimeContext(currentState);
+
     // Greeting
     if (text.includes('oi') || text.includes('olá') || text.includes('ola lari') || text === 'oi lari') {
        return "Oi, eu sou a L.A.R.I. Sua Assistente Operacional de Saúde e Segurança do Trabalho. Eu te ajudo a entender riscos, ações, inspeções e relatórios de forma prática. Em que posso te ajudar hoje?";
@@ -631,33 +710,57 @@ export const LariContextEngine = {
       return "Não consegui identificar a NR exata para essa atividade, mas posso te ajudar a registrar um risco ou procurar no banco de normas. Deseja qualificar o risco?";
     }
 
+    if (intent === 'Check_Today') {
+      return `Hoje temos ${ctx.acoesPrazoHoje} ações vencendo e ${ctx.checklistsHoje} checklists previstos para hoje. Além disso, atenção para ${ctx.criticalRisks} risco(s) crítico(s) ainda abertos, que exigem monitoramento contínuo.`;
+    }
+
+    if (intent === 'Check_Sectors') {
+      return `Atualmente, o setor mais crítico é **${ctx.topSector}**, que concentra a maior quantidade de riscos ou itens de alta severidade reportados no sistema. Recomendo focar as inspeções nesta área.`;
+    }
+
+    if (intent === 'Check_Score') {
+      return `Nosso Score Operacional atual é de ${ctx.operationalScore}. Os principais fatores que estão penalizando a nota são: ${ctx.criticalRisks} riscos críticos abertos, ${ctx.acoesAtrasadas} ações em atraso e ${ctx.inspecoesVencidas} inspeções vencidas. Resolver esses itens trará nossa nota de volta ao verde.`;
+    }
+
+    if (intent === 'Check_Priority_Actions') {
+      const prio = ctx.acoesAtrasadasData.length > 0 ? `Temos ${ctx.acoesAtrasadas} ações já atrasadas (esta deve ser a sua prioridade nº 1).` : `Não temos ações atrasadas no momento.`;
+      const crit = ctx.criticalRisks > 0 ? `Porém temos ${ctx.criticalRisks} risco(s) crítico(s) aguardando mitigação.` : `Também não temos riscos críticos não-tratados.`;
+      return `Para priorizar: ${prio} ${crit} Sugiro cobrar os responsáveis pelas ações atrasadas antes de iniciar novos checklists.`;
+    }
+
     if (intent === 'Check_Actions') {
-      return "Localizei 18 ações atrasadas na base. A mais crítica no momento é a troca do mangote de exaustão na Solda 02, que precisa ser tratada imediatamente para conter o risco associado.";
+      if (ctx.acoesAtrasadas === 0) return "Parabéns, não localizei ações atrasadas na base no momento!";
+      const firstAtrasada = ctx.acoesAtrasadasData[0];
+      const desc = firstAtrasada ? ` (Ex: ${firstAtrasada.title || firstAtrasada.titulo})` : '';
+      return `Localizei ${ctx.acoesAtrasadas} ações atrasadas na base${desc}. Além disso, temos ${ctx.acoesPrazoHoje} ações vencendo hoje. É importante tratar as vencidas imediatamente para conter o risco associado.`;
     }
 
     if (intent === 'Check_Inspections') {
-      return "Neste momento, temos 12 inspeções atrasadas e cerca de 53 programadas. O foco deve estar nas inspeções de Trabalho em Altura que estão vencidas desde a semana passada na área de Manutenção.";
+      return `Neste momento, temos ${ctx.inspecoesVencidas} inspeções atrasadas e um total de ${ctx.inspecoesPendentes} inspeções ainda pendentes de conclusão no sistema.`;
     }
 
     if (intent === 'Check_Risks') {
-      return "Temos 7 riscos críticos ativos e 24 riscos altos. A atenção imediata deve ir para a 'Prensa Hidráulica 03' (Esmagamento), onde a exposição afeta 2 funcionários e está sem PCMSO liberado.";
+      if (ctx.criticalRisks === 0) return "Ótima notícia! No momento, nossa base não possui riscos críticos em aberto.";
+      const firstRisco = ctx.criticalRisksData[0];
+      const descR = firstRisco ? ` - atenção para: ${firstRisco.title || firstRisco.titulo || firstRisco.atividade}` : '';
+      return `Temos ${ctx.criticalRisks} risco(s) crítico(s) ativos${descR}. A intervenção imediata nas atividades atreladas a estes riscos é mandatória para evitar paralisações.`;
     }
 
     if (intent === 'Calculate_Impact') {
       const estimate = EconomicImpactEngine.estimate({ severityLevel: 'crítico', exposedPeople: 3, recurrence: true });
-      return `Em termos financeiros, tratar nossos maiores riscos previne um custo possível de ${EconomicImpactEngine.formatCurrency(estimate.min)} a ${EconomicImpactEngine.formatCurrency(estimate.max)}.\n\nLembrando que é uma estimativa preventiva. O valor final pode depender de FAP, autuações e outros fatores contextuais. Vale a pena mitigar agora!`;
+      return `Em termos financeiros, tratar nossos maiores riscos e ações atrasadas previne um custo possível de ${EconomicImpactEngine.formatCurrency(estimate.min)} a ${EconomicImpactEngine.formatCurrency(estimate.max)}.\n\nLembrando que é uma estimativa preventiva. O valor final pode depender de FAP, autuações e outros fatores contextuais. Vale a pena mitigar agora!`;
     }
 
     if (intent === 'Get_Decision') {
       const decision = DecisionEngine.getMainDecision(currentState);
-      return `Baseada nos dados atuais: ${decision.title}.\n\nRecomendo: ${decision.decision}\n\nMotivo: ${decision.reason}`;
+      return `Baseada nos dados atuais (Score: ${ctx.operationalScore}, Resolutividade EPI: ${ctx.conformidade}%): ${decision.title}.\n\nRecomendo: ${decision.decision}\n\nMotivo: ${decision.reason}`;
     }
 
     if (intent === 'Get_Report') {
-      return "Vou compilar seu relatório mensal agora. Detectei que fechamos 89% das ações este mês, porém nosso volume de inspeções vencidas subiu 16%. Isso aumenta a nossa exposição ao risco crítico.";
+      return `Aqui está o resumo executivo:\n- Score atual: ${ctx.operationalScore}\n- Conformidade EPI: ${ctx.conformidade}%\n- Riscos Críticos: ${ctx.criticalRisks}\n- Ações em Atraso: ${ctx.acoesAtrasadas}\n- Inspeções Pendentes: ${ctx.inspecoesPendentes}\n- Setor de maior atenção: ${ctx.topSector}\n\nIsso tem um peso na nossa exposição a multas e passivos trabalhistas.`;
     }
 
-    return "Compreendo. Posso te ajudar com os dados locais ou a analisar o impacto atrelado a essa atividade. O que prefere?";
+    return "Compreendo. Posso te ajudar consultando os dados locais atualizados ou analisar o impacto de riscos. O que prefere?";
   }
 };
 

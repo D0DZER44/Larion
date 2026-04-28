@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity, AlertTriangle, ArrowUp, Calendar, ChevronRight, Clock, FileText, Lock, MessageSquare, Send, ShieldCheck, Zap } from 'lucide-react';
 import { LariContextEngine, NormativeEngine, RiskEngine, DecisionEngine } from '@/lib/engines';
+import { useAppStore } from '@/lib/store';
 
 type ActionItem = {
   label: string;
@@ -25,6 +26,7 @@ type Message = {
 };
 
 export default function ChatPage() {
+  const store = useAppStore();
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const isTypingRef = useRef(false);
@@ -55,8 +57,10 @@ export default function ChatPage() {
     getBotResponse(text.trim());
   }
 
+  const ctx = LariContextEngine.getRealtimeContext(store);
+
   const welcomeMessage = (
-    <div className="flex flex-col items-center w-full pb-8 pt-8">
+    <div className="flex flex-col items-center w-full pb-8 pt-8 px-4">
       <div className="flex flex-col items-center mb-8">
          <div className="relative mb-4">
             <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
@@ -69,33 +73,60 @@ export default function ChatPage() {
          <p className="text-sm text-gray-400">Copiloto SST</p>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mb-8 text-center text-gray-300 text-[15px] leading-relaxed mx-auto">
-         <p>Olá, sou a L.A.R.I — Copiloto SST, sua assistente inteligente de Saúde e Segurança.</p>
-         <p className="mt-1">Posso te ajudar rapidamente com riscos, inspeções, ações e relatórios.</p>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mb-8 text-gray-300 text-[15px] leading-relaxed mx-auto">
+         <p className="font-bold text-white mb-2">Olá, sou a L.A.R.I — sua Assistente Inteligente baseada no contexto real da operação.</p>
+         <p className="text-sm mb-4">Aqui está o seu panorama operacional neste momento:</p>
+         
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-red-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Riscos Críticos</p>
+               <p className={`text-xl font-bold ${ctx.criticalRisks > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{ctx.criticalRisks}</p>
+            </div>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-orange-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Ações Atrasadas</p>
+               <p className={`text-xl font-bold ${ctx.acoesAtrasadas > 0 ? 'text-orange-400' : 'text-emerald-400'}`}>{ctx.acoesAtrasadas}</p>
+            </div>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-yellow-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Insp. Pendentes</p>
+               <p className={`text-xl font-bold text-yellow-400`}>{ctx.inspecoesPendentes}</p>
+            </div>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-blue-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Score Operacional</p>
+               <p className={`text-xl font-bold ${ctx.operationalScore >= 80 ? 'text-emerald-400' : (ctx.operationalScore >= 60 ? 'text-yellow-400' : 'text-red-400')}`}>{ctx.operationalScore}</p>
+            </div>
+         </div>
+         
+         <div className="text-sm bg-purple-900/10 border border-purple-500/20 p-4 rounded-xl flex flex-col gap-2">
+            <p><span className="text-purple-400 font-bold mr-1">• Setor Crítico:</span> {ctx.topSector}</p>
+            <p><span className="text-purple-400 font-bold mr-1">• Conformidade:</span> {ctx.conformidade}%</p>
+            <p><span className="text-purple-400 font-bold mr-1">• Checklists do Dia:</span> {ctx.checklistsHoje}</p>
+         </div>
       </div>
 
-      <div className="w-full max-w-3xl pt-4 mx-auto">
+      <div className="w-full max-w-3xl pt-2 mx-auto">
          <div className="flex items-center gap-2 text-purple-400 mb-4 px-2">
             <Zap className="w-4 h-4" />
-            <span className="text-sm font-medium">O que você pode fazer aqui</span>
+            <span className="text-sm font-medium">Pergunte para mim:</span>
          </div>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-               { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, title: 'Consultar riscos críticos', desc: 'Veja os principais riscos e seu status atual.', msg: 'Consultar riscos críticos' },
-               { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, title: 'Abrir inspeções pendentes', desc: 'Acompanhe inspeções não realizadas ou em aberto.', msg: 'Abrir inspeções pendentes' },
-               { icon: <Clock className="w-4 h-4 text-orange-400" />, title: 'Cobrar ações atrasadas', desc: 'Identifique ações vencidas e ganhe agilidade.', msg: 'Cobrar ações atrasadas' },
+               { icon: <Clock className="w-4 h-4 text-orange-400" />, title: 'O que exige ação hoje?', desc: 'Veja ações e checklists do dia.', msg: 'O que exige ação hoje?' },
+               { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, title: 'Qual setor mais crítico?', desc: 'Setor com mais itens graves abertos.', msg: 'Qual setor está mais crítico?' },
+               { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, title: 'O que derrubou o score?', desc: 'Análise de impacto no seu Score.', msg: 'O que derrubou o score?' },
+               { icon: <FileText className="w-4 h-4 text-purple-400" />, title: 'Gere um resumo', desc: 'Resumo para enviar a gerência.', msg: 'Gere um resumo para relatório' },
+               { icon: <Zap className="w-4 h-4 text-yellow-400" />, title: 'O que devo priorizar?', desc: 'Dicas práticas de atuação.', msg: 'Quais ações devo priorizar?' }
             ].map((card, idx) => (
                <div 
                  key={idx} 
                  onClick={() => handleSend(card.msg)}
-                 className="bg-transparent border border-white/10 hover:bg-white/5 hover:border-white/20 p-5 rounded-2xl cursor-pointer transition-colors group flex flex-col justify-between h-[130px]"
+                 className="bg-transparent border border-white/10 hover:bg-white/5 hover:border-white/20 p-4 rounded-2xl cursor-pointer transition-colors group flex flex-col justify-between"
                >
                   <div className="flex items-center gap-2 mb-2">
                      {card.icon}
-                     <h4 className="text-[14px] font-bold text-gray-200">{card.title}</h4>
+                     <h4 className="text-[13px] font-bold text-gray-200 leading-tight">{card.title}</h4>
                   </div>
-                  <div className="flex items-end justify-between gap-4">
-                     <p className="text-[12px] text-gray-500 leading-relaxed flex-1">{card.desc}</p>
+                  <div className="flex items-end justify-between gap-4 mt-2">
+                     <p className="text-[11px] text-gray-500 leading-relaxed flex-1">{card.desc}</p>
                      <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   </div>
                </div>
@@ -107,81 +138,94 @@ export default function ChatPage() {
 
   const getBotResponse = (text: string) => {
     setTimeout(() => {
-      setIsTyping(false);
-      isTypingRef.current = false;
-      
-      const intent = LariContextEngine.classifyIntent(text);
-      const engineText = LariContextEngine.respond(text, {}); // Pass state if needed
-      
-      let component: React.ReactNode = undefined;
-      let actions: ActionItem[] = [];
+      try {
+        setIsTyping(false);
+        isTypingRef.current = false;
+        
+        const intent = LariContextEngine.classifyIntent(text);
+        const engineText = LariContextEngine.respond(text, {}); // Pass state if needed
+        
+        let component: React.ReactNode = undefined;
+        let actions: ActionItem[] = [];
 
-      if (intent === 'Check_Risks') {
-        component = (
-          <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between pointer-events-none">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
+        if (intent === 'Check_Risks') {
+          // ... Risk mapping ...
+          component = (
+            <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
+                </div>
+                <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
               </div>
-              <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
-            </div>
-            <div className="pointer-events-none">
-              <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
-              <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva</p>
-            </div>
-            <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
-              <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
-            </div>
-          </div>
-        );
-        actions = [
-          { label: 'Bloquear Máquina (LOTO)', primary: true, onClick: () => alert('Bloqueio solicitado!') },
-          { label: 'Notificar João', onClick: () => alert('Notificado!') },
-        ];
-      } else if (intent === 'Check_Actions') {
-        component = (
-          <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between pointer-events-none">
-              <div className="flex items-center gap-2">
-                 <Clock className="w-5 h-5 text-orange-400" />
-                <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
+              <div className="pointer-events-none">
+                <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
+                <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva</p>
+              </div>
+              <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
+                <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
               </div>
             </div>
-            <div className="pointer-events-none">
-              <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
-              <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
-            </div>
-          </div>
-        );
-        actions = [
-          { label: 'Cobrar Responsável', primary: true, onClick: () => alert('Cobrança enviada!') },
-          { label: 'Reagendar', onClick: () => alert('Reagendado!') }
-        ];
-      } else if (intent === 'Get_Report') {
-        component = (
-          <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
-            <div className="flex items-center gap-2 pointer-events-none">
-              <FileText className="w-5 h-5 text-purple-400" />
-              <span className="text-[15px] font-bold text-white">Resumo Executivo (Este Mês)</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pointer-events-none">
-              <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-xs text-gray-400 font-medium">Inspeções</span>
-                <span className="text-sm font-bold text-white">142</span>
+          );
+          actions = [
+            { label: 'Bloquear Máquina (LOTO)', primary: true, onClick: () => alert('Bloqueio solicitado!') },
+            { label: 'Notificar João', onClick: () => alert('Notificado!') },
+          ];
+        } else if (intent === 'Check_Actions') {
+// ...
+          component = (
+            <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-2">
+                   <Clock className="w-5 h-5 text-orange-400" />
+                   <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
+                </div>
               </div>
-              <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
-                <span className="text-sm font-bold text-emerald-400">89%</span>
+              <div className="pointer-events-none">
+                <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
+                <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
               </div>
             </div>
-          </div>
-        );
-        actions = [
-          { label: 'Baixar PDF', primary: true, onClick: () => alert('Baixando relatorio...') }
-        ];
-      } else if (intent === 'Get_Decision') {
-        const decision = DecisionEngine.getMainDecision({});
+          );
+          actions = [
+            { label: 'Cobrar Responsável', primary: true, onClick: () => alert('Cobrança enviada!') },
+            { label: 'Reagendar', onClick: () => alert('Reagendado!') }
+          ];
+        } else if (intent === 'Get_Report') {
+          component = (
+            <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+              <div className="flex items-center gap-2 pointer-events-none">
+                <FileText className="w-5 h-5 text-purple-400" />
+                <span className="text-[15px] font-bold text-white">Resumo Executivo (Este Mês)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pointer-events-none">
+                <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                  <span className="text-xs text-gray-400 font-medium">Inspeções</span>
+                  <span className="text-sm font-bold text-white">142</span>
+                </div>
+                <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                  <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
+                  <span className="text-sm font-bold text-emerald-400">89%</span>
+                </div>
+              </div>
+            </div>
+          );
+          actions = [
+            { label: 'Baixar PDF', primary: true, onClick: () => {
+              store.addLog({
+                empresa_id: '1',
+                user_id: 'Sistema',
+                event_type: 'relatorio_gerado',
+                description: `Relatório exportado/baixado pelo chat`,
+                origin_type: 'chat',
+                origin_id: 'chat-lari'
+              });
+              alert('Baixando relatorio...');
+            } }
+          ];
+        } else if (intent === 'Get_Decision') {
+          const decision = DecisionEngine.getMainDecision({});
         component = (
            <div className="mt-4 bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3">
              <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
@@ -235,6 +279,21 @@ export default function ChatPage() {
       };
 
       setMessages(prev => [...prev, responseMessage]);
+      } catch (error) {
+        store.addLog({
+          empresa_id: '1',
+          user_id: 'Sistema',
+          event_type: 'erro_motor',
+          description: `Erro ao processar mensagem no motor Lari.`,
+          origin_type: 'chat',
+          origin_id: 'chat-lari'
+        });
+        setMessages(prev => [...prev, {
+          id: crypto.randomUUID(),
+          sender: 'bot',
+          content: { text: 'Ocorreu um erro interno ao processar sua resposta.' }
+        }]);
+      }
     }, 1500);
   };
 
@@ -262,7 +321,14 @@ export default function ChatPage() {
               </button>
               <button 
                 onClick={() => {
-                  /* Lógica de gerar relatório atualizada */
+                  store.addLog({
+                    empresa_id: '1',
+                    user_id: 'Sistema',
+                    event_type: 'relatorio_gerado',
+                    description: `Relatório gerado a partir do chat (Lari)`,
+                    origin_type: 'chat',
+                    origin_id: 'chat-lari'
+                  });
                   alert("Gerando relatório com base no contexto atual...");
                 }}
                 className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"

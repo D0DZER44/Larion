@@ -7,6 +7,7 @@ import {
   Calendar, ChevronDown, 
   Activity, ArrowRight
 } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 
 // ============================================================================
@@ -404,7 +405,24 @@ function RelatorioEconomicoPreview() {
 // ============================================================================
 
 export default function RelatoriosPage() {
+  const store = useAppStore();
   const [activeModel, setActiveModel] = useState<'Executivo' | 'Riscos' | 'Inspeções' | 'Ações' | 'Não conformidades' | 'Impacto econômico'>('Executivo');
+
+  const handlePrint = (exportType: string = 'PDF') => {
+     store.addLog({
+        empresa_id: '1',
+        user_id: 'Sistema',
+        event_type: 'relatorio_gerado',
+        description: `Relatório ${activeModel} gerado (${exportType})`,
+        origin_type: 'relatorio',
+        origin_id: activeModel
+     });
+     if (exportType === 'PDF' || exportType === 'Impressão') {
+        window.print();
+     } else {
+        alert("Exportação iniciada.");
+     }
+  };
 
   const models = [
     { id: 'Executivo', title: 'Executivo', desc: 'Visão geral estratégica de SST', icon: <FileText className="w-5 h-5"/> },
@@ -575,13 +593,13 @@ export default function RelatoriosPage() {
                  </div>
 
                  <div className="pt-2 flex flex-col gap-2">
-                    <button onClick={() => window.print()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 flex justify-center items-center gap-2">
+                    <button onClick={() => handlePrint('Visualização/Impressão')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 flex justify-center items-center gap-2">
                        <FileText className="w-4 h-4" /> Gerar relatório
                     </button>
-                    <button onClick={() => window.print()} className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-white font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
+                    <button onClick={() => handlePrint('PDF')} className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-white font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                        <Download className="w-4 h-4" /> Exportar PDF
                     </button>
-                    <button className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-emerald-400 font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
+                    <button onClick={() => handlePrint('Excel')} className="w-full bg-[#0b0f19] hover:bg-white/5 border border-white/10 text-emerald-400 font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                        <Download className="w-4 h-4" /> Exportar Excel
                     </button>
                  </div>

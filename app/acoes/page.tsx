@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NormativeEngine, EconomicImpactEngine } from '@/lib/engines';
 import { useAppStore } from '@/lib/store';
+import TimelineHistory from '@/components/TimelineHistory';
 import { Plus, Search, CheckCircle2, Activity, Trash2, X, Clock, Play, Download, AlertTriangle, Shield, Settings, ChevronRight, ChevronLeft, BellRing, Sparkles, User, UserX, AlertCircle, PlayCircle, Flame } from 'lucide-react';
 
 
@@ -159,6 +160,7 @@ const initialActions: ActionItem[] = [
 
 export default function AcoesPage() {
   const storeAcoes = useAppStore(state => state.acoes);
+  const storeRiscos = useAppStore(state => state.riscos);
   
   // Mix static and dynamic actions
   const [items, setItems] = useState<ActionItem[]>(initialActions);
@@ -166,7 +168,16 @@ export default function AcoesPage() {
   useEffect(() => {
     // Map store actions to ActionItem format if needed
     const mappedStoreActions: ActionItem[] = storeAcoes.map(a => {
-      let originCombined = a.origem === 'Risco' && a.inspection_id ? 'Risco (da Inspeção)' : (a.origem || a.item_origem_tipo || 'Manual');
+      let originCombined = a.origem || a.item_origem_tipo || 'Manual';
+      
+      const relatedRisk = storeRiscos.find(r => r.id === a.risk_id);
+      const isInspeccao = originCombined.toLowerCase() === 'inspecao' || originCombined.toLowerCase() === 'inspeção' || originCombined.toLowerCase() === 'risco';
+      
+      const textItem = isInspeccao && relatedRisk?.non_compliant_item || a.titulo?.replace('Corrigir: ', '');
+      
+      if (isInspeccao && a.inspection_name) {
+          originCombined = `Origem: Inspeção ${a.inspection_name} — Item ${textItem || 'N/A'} — Setor ${a.setor || 'N/A'} — Data ${relatedRisk?.inspection_date || a.created_at?.substring(0,10) || 'N/A'}`;
+      }
       
       let basePriority = (a.priority === 'P1' || a.priority === 'P2' || a.priority === 'P3' || a.priority === 'P4' ||
                  a.prioridade === 'P1' || a.prioridade === 'P2' || a.prioridade === 'P3' || a.prioridade === 'P4') ? (a.priority || a.prioridade) : 'P2';
@@ -190,7 +201,7 @@ export default function AcoesPage() {
         deadlineTime: a.prazo || 'Sem prazo',
         deadlineRelative: '',
         deadlineColor: (basePriority === 'P1') ? 'red' : 'yellow' as 'red' | 'yellow' | 'blue' | 'gray',
-        originText: originCombined.length > 25 ? originCombined.substring(0, 22) + '...' : originCombined,
+        originText: originCombined,
         originIcon: 'shield-purple' as 'shield-blue' | 'shield-yellow' | 'shield-purple' | 'triangle-green' | 'fire-red',
         responsible: { name: a.responsavel || 'Desconhecido', role: '', avatar: '' },
         nextStep: 'Verificar ação',
@@ -213,9 +224,19 @@ export default function AcoesPage() {
         return Array.from(mapPrev.values());
       });
     }, 0);
-  }, [storeAcoes]);
+  }, [storeAcoes, storeRiscos]);
+
+  const [urlFilter, setUrlFilter] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      setTimeout(() => setUrlFilter(p.get('filter') || p.get('status') || ''), 0);
+    }
+  }, []);
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal for New Action
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer for Edit/View Details
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
@@ -261,7 +282,6 @@ export default function AcoesPage() {
 
   const updateAcao = useAppStore(state => state.updateAcao);
   const updateRisco = useAppStore(state => state.updateRisco);
-  const storeRiscos = useAppStore(state => state.riscos);
 
   const handleConcluir = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -310,7 +330,44 @@ export default function AcoesPage() {
     if (editingItem?.id === id) setIsDrawerOpen(false);
   };
 
-  const filtered = items.filter(r => r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase()));
+  const filtered = items.filter(r => {
+    let match = r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase());
+    if (!match) return false;
+
+    if (urlFilter === 'criticas') {
+       const p = (r.priority || '').toLowerCase();
+       const isCritical = p === 'crítico' || p === 'crítica' || p === 'alto' || p === 'alta' || p === 'urgente' || p === 'p1';
+       const s = r.status.toLowerCase();
+       const isAtrasada = s === 'atrasada' || s === 'vence hoje';
+       match = (isCritical || isAtrasada) && s !== 'concluído' && s !== 'concluída' && s !== 'fechada';
+    } else if (urlFilter === 'abertas') {
+       const s = r.status.toLowerCase();
+       match = s !== 'concluído' && s !== 'concluída' && s !== 'fechada' && s !== 'cancelada';
+    } else if (urlFilter === 'andamento') {
+       const s = r.status.toLowerCase();
+       match = s === 'em andamento' || s === 'progresso';
+    } else if (urlFilter === 'concluidas') {
+       const s = r.status.toLowerCase();
+       match = s === 'concluído' || s === 'concluída' || s === 'fechada';
+    } else if (urlFilter === 'atrasadas') {
+       const s = r.status.toLowerCase();
+       let isAtrasada = s === 'atrasada';
+       if (!isAtrasada && r.deadlineTime && r.deadlineTime !== 'Sem prazo') {
+          try {
+             if (new Date(r.deadlineTime).toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+                isAtrasada = true;
+             }
+          } catch {}
+       }
+       match = isAtrasada && s !== 'concluído' && s !== 'concluída' && s !== 'fechada';
+    }
+
+    if (match && statusFilter) {
+       match = r.status.toLowerCase() === statusFilter.toLowerCase();
+    }
+
+    return match;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -463,6 +520,18 @@ export default function AcoesPage() {
       {/* Fila de execução Header */}
       <h2 className="text-lg font-bold text-white mb-4 shrink-0">Fila de execução</h2>
 
+      {urlFilter === 'criticas' && (
+         <div className="flex mb-4 shrink-0">
+           <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 text-xs rounded-full flex items-center gap-2 font-medium">
+             <AlertTriangle className="w-3.5 h-3.5" />
+             Mostrando apenas ações críticas ou atrasadas
+             <button onClick={() => setUrlFilter('')} className="ml-2 hover:text-white transition-colors">
+               <X className="w-3.5 h-3.5" />
+             </button>
+           </div>
+         </div>
+      )}
+
       {/* Filters Bar */}
       <div className="flex gap-4 mb-4 shrink-0 bg-[#121826] p-2 rounded-xl border border-white/5">
         <div className="relative flex-1 max-w-sm">
@@ -476,8 +545,13 @@ export default function AcoesPage() {
           />
         </div>
         <div className="w-px bg-white/5 my-1"></div>
-        <select className="bg-transparent text-sm text-gray-300 focus:outline-none appearance-none px-3 cursor-pointer">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-transparent text-sm text-gray-300 focus:outline-none appearance-none px-3 cursor-pointer">
            <option value="">Status: Todos</option>
+           <option value="aberta">Aberta</option>
+           <option value="em andamento">Em andamento</option>
+           <option value="concluída">Concluída</option>
+           <option value="atrasada">Atrasada</option>
+           <option value="cancelada">Cancelada</option>
         </select>
         <select className="bg-transparent text-sm text-gray-300 focus:outline-none appearance-none px-3 cursor-pointer">
            <option value="">Prioridade: Todos</option>
@@ -529,8 +603,8 @@ export default function AcoesPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         {getOriginIconComponent(item.originIcon)}
-                        <div>
-                           <p className="text-xs text-gray-300">{item.originText}</p>
+                        <div className="min-w-0">
+                           <p className="text-xs text-gray-300 truncate max-w-[250px]" title={item.originText}>{item.originText}</p>
                            <p className="text-[10px] text-gray-500">{item.category}</p>
                         </div>
                       </div>
@@ -849,6 +923,8 @@ export default function AcoesPage() {
                       </div>
                     );
                   })()}
+                  
+                  <TimelineHistory itemId={editingItem.id} relatedRiskId={(editingItem as any).risk_id} relatedInspectionId={(editingItem as any).inspection_id} />
 
                </div>
 
