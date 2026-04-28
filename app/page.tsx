@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { 
   Bell, Download, Calendar, Activity, AlertTriangle, 
-  FileText, ShieldCheck, HardHat, TrendingUp,
+  FileText, ShieldCheck, HardHat, TrendingUp, CalendarCheck,
   Info, ArrowRight, ShieldAlert, BookOpen, Users,
   Bot, MessageSquare, CheckCircle2, Clock, Zap, ClipboardCheck,
   AlertCircle, UserX, RefreshCw, PlusCircle, Send, Sparkles, X, GraduationCap
@@ -56,6 +56,9 @@ export default function Dashboard() {
   const { riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [] } = useAppStore();
   const router = useRouter();
 
+  const [isMounted, setIsMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const [scoreTimeRange, setScoreTimeRange] = useState<'dia' | 'semana' | 'mes' | 'ano'>('semana');
   const [lariInput, setLariInput] = useState('');
   const [lariIsTyping, setLariIsTyping] = useState(false);
@@ -76,6 +79,10 @@ export default function Dashboard() {
   useEffect(() => {
     scrollToBottom();
   }, [lariMessages, lariIsTyping]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleLariSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,25 +239,11 @@ export default function Dashboard() {
        }
     });
 
-    let checklistsTodayCats = Object.keys(checkListCategoryCount).map(k => ({
+    const checklistsTodayCats = Object.keys(checkListCategoryCount).map(k => ({
        name: k,
        total: checkListCategoryCount[k].total,
        completed: checkListCategoryCount[k].completed
     })).sort((a,b) => b.total - a.total).slice(0, 5);
-
-    const dummyChecklists = [
-      { name: 'Inspeções de máquinas', total: 2, completed: 1 },
-      { name: 'Verificação de EPIs', total: 1, completed: 1 },
-      { name: 'Pontos de verificação', total: 1, completed: 1 },
-      { name: 'Condições críticas', total: 1, completed: 0 },
-      { name: 'Armazenamento seguro', total: 1, completed: 0 }
-    ];
-
-    if (checklistsTodayCats.length < 5) {
-       for (let i = checklistsTodayCats.length; i < 5; i++) {
-          checklistsTodayCats.push(dummyChecklists[i]);
-       }
-    }
 
     // KPI 4: Conformidade Geral
     let vI = inspecoes.length > 0 ? (completedInspections.length / inspecoes.length) * 100 : null;
@@ -336,23 +329,7 @@ export default function Dashboard() {
         color: COLORS[i % COLORS.length]
     }));
 
-    const dummySectors = [
-      { name: 'Produção', value: 40, percent: 35, avgPriorityValue: 3, avgPriorityLabel: 'Alta', color: '#8b5cf6' },
-      { name: 'Manutenção', value: 30, percent: 25, avgPriorityValue: 2, avgPriorityLabel: 'Média', color: '#3b82f6' },
-      { name: 'Logística', value: 20, percent: 20, avgPriorityValue: 2, avgPriorityLabel: 'Média', color: '#10b981' },
-      { name: 'Embalagem', value: 15, percent: 12, avgPriorityValue: 1, avgPriorityLabel: 'Baixa', color: '#f59e0b' },
-      { name: 'Admin', value: 10, percent: 8, avgPriorityValue: 1, avgPriorityLabel: 'Baixa', color: '#ef4444' }
-    ];
-
-    if (riskSectorData.length < 5) {
-       for (let i = riskSectorData.length; i < 5; i++) {
-           const d = dummySectors[i];
-           if (d) riskSectorData.push(d);
-       }
-    }
-
     if (riskSectorData.length === 0) {
-      // Because of padding, this usually won't execute if padding works, but keeping for safety.
       riskSectorData = [{ name: 'Sem dados', value: 1, percent: 100, avgPriorityLabel: 'N/A', color: '#374151', isEmpty: true }];
     }
 
@@ -394,21 +371,7 @@ export default function Dashboard() {
       };
     });
 
-    const dummyNRs = [
-       { nr: 'NR-12', val: 98, color: 'bg-emerald-500' },
-       { nr: 'NR-35', val: 94, color: 'bg-emerald-500' },
-       { nr: 'NR-10', val: 82, color: 'bg-emerald-500' },
-       { nr: 'NR-18', val: 76, color: 'bg-orange-500' }
-    ];
-
-    if (conformidadeNR.length < 4) {
-       for (let i = conformidadeNR.length; i < 4; i++) {
-          conformidadeNR.push(dummyNRs[i]);
-       }
-    }
-
     if (conformidadeNR.length === 0) {
-       // Should not happen now because of padding, but keeping just in case
        conformidadeNR = [{ nr: 'Sem NR definida', val: 0, color: 'bg-gray-600' }];
     }
 
@@ -741,7 +704,15 @@ export default function Dashboard() {
     }
 
     const lastHistoricalScore = scoreDataMap[scoreTimeRange][scoreDataMap[scoreTimeRange].length - 1].value;
-    const scoreDiff = operationalScore - lastHistoricalScore;
+    const scoreDiff = operationalScore - (lastHistoricalScore || operationalScore);
+
+    // Dynamic trends logic
+    const exposureDiffRaw = 0; // Removing mocked +12%
+    const conformityDiffRaw = 0; // Removing mocked +6pp
+
+    let exposicaoOperacionalClass = 'border-green-500 text-green-500 bg-green-500/10';
+    if (exposicaoOperacional === 'Alta') exposicaoOperacionalClass = 'border-red-500 text-red-500 bg-red-500/10';
+    else if (exposicaoOperacional === 'Média') exposicaoOperacionalClass = 'border-white/20 text-white bg-white/5';
 
     return {
       operationalScore,
@@ -751,8 +722,11 @@ export default function Dashboard() {
       scoreColorStroke,
       scoreDiff,
       openRisksCount,
-      exposicaoOperacional,
-      estimatedExposure: 278450,
+      exposicaoOperacional: exposicaoOperacional === 'Média' ? 'Normal' : exposicaoOperacional,
+      exposicaoOperacionalClass,
+      estimatedExposure: 0,
+      exposureDiffRaw,
+      conformityDiffRaw,
       criticalCount,
       criticalActionsCount: criticalActions.length,
       actionsExpiringTodayCount: actionsExpiringToday.length,
@@ -829,35 +803,43 @@ export default function Dashboard() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col xl:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row overflow-hidden relative">
         
         {/* Left/Main Column */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-none custom-scrollbar pb-20">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-none custom-scrollbar pb-20 transition-all duration-300">
+          
+          {/* Toggle Sidebar Button */}
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`hidden xl:flex absolute top-6 z-50 bg-[#121826] border border-white/10 p-1.5 rounded-l-lg hover:bg-white/10 transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
+          >
+            <ArrowRight className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : ''}`} />
+          </button>
           
           {/* KPIs SUPERIORES */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             {/* KPI 1 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 relative overflow-hidden flex flex-col justify-between group flex-1">
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                  Panorama Executivo do Risco <Info className="w-3.5 h-3.5 text-gray-500" />
+                  Panorama Executivo do Risco <Activity className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400 transition-colors" />
                 </span>
+                <Info className="w-4 h-4 text-gray-500 opacity-50" />
               </div>
               <div className="relative z-10 mt-auto flex flex-col pt-1">
                 <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Exposição Total</span>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className={`text-[2rem] font-bold tracking-tighter ${metrics.exposicaoOperacional === 'Alta' ? 'text-red-500' : metrics.exposicaoOperacional === 'Média' ? 'text-orange-500' : 'text-green-500'}`}>
+                  <span className={`text-[2rem] font-bold tracking-tighter ${metrics.exposicaoOperacional === 'Alta' ? 'text-red-500' : metrics.exposicaoOperacional === 'Normal' ? 'text-white' : 'text-green-500'}`}>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(metrics.estimatedExposure)}
                   </span>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase shrink-0
-                     ${metrics.exposicaoOperacional === 'Alta' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 
-                       metrics.exposicaoOperacional === 'Média' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 
-                       'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase shrink-0 ${metrics.exposicaoOperacionalClass}`}>
                      {metrics.exposicaoOperacional === 'Alta' ? 'Muito alto' : metrics.exposicaoOperacional}
                    </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-medium mt-1">
-                  <span className="text-green-500">+12%</span>
+                  <span className={metrics.exposureDiffRaw > 0 ? "text-green-500" : metrics.exposureDiffRaw < 0 ? "text-red-500" : "text-white"}>
+                    {metrics.exposureDiffRaw > 0 ? `+${metrics.exposureDiffRaw}%` : `${metrics.exposureDiffRaw}%`}
+                  </span>
                   <span className="text-gray-500">vs mês anterior</span>
                 </div>
               </div>
@@ -877,7 +859,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 2 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Ações Críticas</span>
                 <AlertTriangle className={`w-4 h-4 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-gray-500'}`} />
@@ -898,10 +880,10 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 3 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Inspeções Pendentes</span>
-                <Calendar className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
+                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
               </div>
               <div className="mt-auto pt-2">
                 <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-300'}`}>
@@ -922,16 +904,18 @@ export default function Dashboard() {
             <Link href="/central?view=conformity" className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#7c3aed]/50 transition-all cursor-pointer group flex-1">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Conformidade</span>
-                <ArrowRight className="w-4 h-4 text-purple-500 group-hover:translate-x-1 transition-transform" />
+                <ShieldCheck className="w-4 h-4 text-green-500 group-hover:scale-110 transition-transform" />
               </div>
               <div className="mt-auto pt-2">
                 <div className="text-[2.5rem] leading-none font-bold text-green-500 tracking-tighter mb-2">{metrics.conformityRate}%</div>
                 <div className="flex items-center gap-1.5 text-[12px] font-medium mt-1 mb-4">
-                  <span className="text-green-500">+6pp</span>
+                  <span className={metrics.conformityDiffRaw > 0 ? "text-green-500" : metrics.conformityDiffRaw < 0 ? "text-red-500" : "text-white"}>
+                    {metrics.conformityDiffRaw > 0 ? `+${metrics.conformityDiffRaw}pp` : `${metrics.conformityDiffRaw}pp`}
+                  </span>
                   <span className="text-gray-400">vs mês anterior</span>
                 </div>
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${metrics.conformityRate}%` }}></div>
+                  <div className="h-full bg-green-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted ? `${metrics.conformityRate}%` : '0%' }}></div>
                 </div>
               </div>
             </Link>
@@ -1060,7 +1044,7 @@ export default function Dashboard() {
           {/* LINHA ABAIXO DO CARD PRINCIPAL */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* 1. Riscos que exigem ação */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
               <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Riscos que exigem ação</h3>
                 <Link href="/riscos">
@@ -1078,41 +1062,37 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {(() => {
-                       let risksToRender = [...metrics.topRisks];
-                       const dummyRisks = [
-                         { id: 'mock-1', nr: 'NR-15', setor: 'Produção', tipoDeRisco: 'Exposição a ruído crônico', nivel: 'Crítico' },
-                         { id: 'mock-2', nr: 'NR-10', setor: 'Manutenção', tipoDeRisco: 'Risco de choque elétrico', nivel: 'Alto' },
-                         { id: 'mock-3', nr: 'NR-35', setor: 'Logística', tipoDeRisco: 'Queda de altura', nivel: 'Alto' },
-                         { id: 'mock-4', nr: 'NR-06', setor: 'Embalagem', tipoDeRisco: 'Falta de EPI adequado', nivel: 'Médio' }
-                       ];
-                       if (risksToRender.length < 4) {
-                          for (let i = risksToRender.length; i < 4; i++) {
-                             risksToRender.push(dummyRisks[i] as any);
-                          }
-                       }
-                       return risksToRender.slice(0, 4).map((r) => (
-                         <tr key={r.id} onClick={() => router.push(`/riscos?search=${r.id}`)} className="hover:bg-white/5 transition-colors cursor-pointer group">
-                           <td className="px-4 py-3 text-gray-300 truncate max-w-[50px]">{r.nr || '-'}</td>
-                           <td className="px-4 py-3 text-gray-400 truncate max-w-[80px]">{r.setor || r.sector_id || '-'}</td>
-                           <td className="px-4 py-3 text-gray-300 truncate max-w-[100px]">{r.tipoDeRisco || r.title || r.atividade || '-'}</td>
-                           <td className="px-4 py-3 text-right">
-                              <span className={`inline-block border text-[10px] font-bold px-2 py-0.5 rounded uppercase
-                                ${(r.nivel || r.level) === 'Crítico' || (r.nivel || r.level) === 'Alto' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-500'}
-                              `}>
-                                {r.nivel || r.level}
-                              </span>
-                           </td>
-                         </tr>
-                       ));
-                    })()}
+                    {metrics.topRisks.length > 0 ? metrics.topRisks.map((r) => (
+                      <tr key={r.id} onClick={() => router.push(`/riscos?search=${r.id}`)} className="hover:bg-white/5 transition-colors cursor-pointer group">
+                        <td className="px-4 py-3 text-gray-300 max-w-[60px]">
+                            <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.nr || '-'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 max-w-[80px]">
+                           <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.setor || r.sector_id || '-'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-300 max-w-[120px]">
+                           <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.tipoDeRisco || r.title || r.atividade || '-'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                           <span className={`inline-block border text-[10px] font-bold px-2 py-0.5 rounded uppercase
+                             ${(r.nivel || r.level) === 'Crítico' || (r.nivel || r.level) === 'Alto' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-500'}
+                           `}>
+                             {r.nivel || r.level}
+                           </span>
+                        </td>
+                      </tr>
+                    )) : (
+                       <tr>
+                          <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">Sem dados suficientes</td>
+                       </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* 2. Conformidade por NR */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
                <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Conformidade das Ações por NR</h3>
                 <Link href="/central">
@@ -1121,19 +1101,19 @@ export default function Dashboard() {
               </div>
               <div className="p-5 flex-1 flex flex-col justify-center space-y-4">
                 {metrics.conformidadeNR.map(item => (
-                  <div key={item.nr} className="flex items-center gap-4 group" title={item.nr}>
-                    <span className="text-xs font-semibold text-gray-400 w-24 truncate group-hover:text-gray-200 transition-colors">{item.nr}</span>
+                  <div key={item.nr} className="flex items-center gap-4 group">
+                    <span className="text-[10px] leading-tight break-words line-clamp-2 font-semibold text-gray-400 w-24 group-hover:text-gray-200 transition-colors" title={item.nr}>{item.nr}</span>
                     <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-in-out`} style={{ width: `${item.val}%` }}></div>
+                      <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-in-out`} style={{ width: isMounted ? `${item.val}%` : '0%' }}></div>
                     </div>
-                    <span className="text-xs font-bold text-gray-300 w-8 text-right">{item.val}%</span>
+                    <span className="text-[11px] font-bold text-gray-300 w-8 text-right">{item.val}%</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* 3. Checklists do Dia */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
               <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Checklists do Dia</h3>
                 <Link href="/inspecoes">
@@ -1145,15 +1125,16 @@ export default function Dashboard() {
                    <div className="text-gray-500 text-sm">Nenhum checklist previsto hoje</div>
                 ) : (
                    <div className="flex w-full items-center justify-between gap-6">
-                      <div className="relative w-24 h-24 shrink-0 mx-auto">
-                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                      <div className="relative w-24 h-24 shrink-0 mx-auto flex flex-col items-center justify-center">
+                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full transform -rotate-90">
                           <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                          <circle cx="50" cy="50" r="40" fill="none" stroke="#7c3aed" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (metrics.operationsToday > 0 ? metrics.operationsCompleted/metrics.operationsToday : 0.5))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                          <circle cx="50" cy="50" r="40" fill="none" stroke="#7c3aed" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (isMounted ? (metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length / Math.max(1, Math.min(5, metrics.checklistsTodayCats.length))) : 0))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
                         </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-1">
                           <span className="text-xl font-bold text-white leading-none tracking-tight">
-                            {metrics.operationsToday > 0 ? `${metrics.operationsCompleted}/${metrics.operationsToday}` : '3/6'}
+                            {metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length}/{Math.min(5, metrics.checklistsTodayCats.length)}
                           </span>
+                          <span className="text-[9px] text-gray-400 font-medium mt-1">Concluídos</span>
                         </div>
                       </div>
                       
@@ -1161,11 +1142,11 @@ export default function Dashboard() {
                          {metrics.checklistsTodayCats.map(cat => (
                            <div key={cat.name} className="flex flex-col">
                               <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-bold text-gray-200 truncate pr-2 max-w-[130px]" title={cat.name}>{cat.name}</span>
+                                <span className="text-[10px] leading-tight font-bold text-gray-200 break-words pr-2 max-w-[130px]" title={cat.name}>{cat.name}</span>
                                 <span className="text-[10px] text-gray-400 font-medium">{cat.completed}/{cat.total}</span>
                               </div>
                               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                 <div className="h-full bg-purple-500 rounded-full transition-all duration-500" style={{ width: `${(cat.completed / cat.total) * 100}%` }}></div>
+                                 <div className="h-full bg-purple-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted && cat.total > 0 ? `${(cat.completed / cat.total) * 100}%` : '0%' }}></div>
                               </div>
                            </div>
                          ))}
@@ -1179,7 +1160,7 @@ export default function Dashboard() {
           {/* LINHA INFERIOR */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-5">
             {/* 1. Risco por Setor */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
                <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Risco por Setor</h3>
                 <Link href="/riscos">
@@ -1236,7 +1217,7 @@ export default function Dashboard() {
             </div>
 
             {/* 2. Score Operacional */}
-            <div className="bg-[#0a0f1a] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
               <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Score Operacional</h3>
                 <Link href="/central">
@@ -1250,7 +1231,7 @@ export default function Dashboard() {
                   <div className="relative w-32 h-32 mb-3">
                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                       <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                      <circle cx="50" cy="50" r="40" fill="none" stroke={metrics.scoreColorStroke} strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - metrics.operationalScore/100)} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke={metrics.scoreColorStroke} strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (isMounted ? metrics.operationalScore/100 : 0))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-3xl font-bold text-white leading-none tracking-tight">{metrics.operationalScore}<span className="text-lg text-gray-400">%</span></span>
@@ -1261,10 +1242,12 @@ export default function Dashboard() {
                         {metrics.scoreClass}
                      </span>
                      <span className="text-[10px] font-medium text-gray-400 mt-1 flex items-center gap-1">
-                       {metrics.scoreDiff >= 0 ? (
+                       {metrics.scoreDiff > 0 ? (
                          <span className="text-green-500 font-bold">+{metrics.scoreDiff} pts</span>
-                       ) : (
+                       ) : metrics.scoreDiff < 0 ? (
                          <span className="text-red-500 font-bold">{metrics.scoreDiff} pts</span>
+                       ) : (
+                         <span className="text-white font-bold">0 pts</span>
                        )} vs período ant.
                      </span>
                   </div>
@@ -1314,10 +1297,10 @@ export default function Dashboard() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-full xl:w-[320px] bg-[#0a0f1a] border-t xl:border-t-0 xl:border-l border-white/5 p-5 space-y-5 overflow-y-auto custom-scrollbar shrink-0">
+        <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-[calc(100vh-73px)] sticky top-0 overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
           {/* Card 1: Alertas Críticos */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden">
+          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
               <Link href="/riscos">
@@ -1325,11 +1308,11 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="p-4 space-y-4">
-              {metrics.alertas.length > 0 ? metrics.alertas.map(a => (
+              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 2).map(a => (
                 <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
                   <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
-                  <div className="flex-1">
-                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors">{a.title}</p>
+                  <div className="flex-1 min-w-0">
+                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
                      <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
                   </div>
                 </Link>
@@ -1340,7 +1323,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 2: Atividades Recentes */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden">
+          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Atividades Recentes</h3>
               <Link href="/central">
@@ -1348,7 +1331,7 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="p-4 space-y-4">
-              {metrics.sortedLogs.length > 0 ? metrics.sortedLogs.map(log => {
+              {metrics.sortedLogs.length > 0 ? metrics.sortedLogs.slice(0, 3).map(log => {
                 const isCheck = log.event_type.includes('conclui') || log.event_type.includes('resolvido');
                 const isUpdate = log.event_type.includes('atualizado');
                 const isCreate = log.event_type.includes('criad') || log.event_type.includes('registrado');
@@ -1386,7 +1369,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 3: Próximas Ações */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden">
+          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Próximas Ações</h3>
               <Link href="/acoes">
@@ -1394,7 +1377,7 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="p-4 space-y-4">
-              {metrics.upcomingActions.length > 0 ? metrics.upcomingActions.map(a => {
+              {metrics.upcomingActions.length > 0 ? metrics.upcomingActions.slice(0, 2).map(a => {
                 let prioColor = 'text-green-500 bg-green-500/10 border-green-500/20';
                 let prioText = a.priority;
                 const pLower = (a.priority || '').toLowerCase();
@@ -1432,71 +1415,27 @@ export default function Dashboard() {
           </div>
 
           {/* Card 4: L.A.R.I */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden h-[400px] mt-auto sticky inset-x-0 bottom-0 z-30 shadow-[0_-15px_30px_-15px_rgba(0,0,0,0.8)]">
-             <div className="p-3 border-b flex items-center justify-between bg-[#0b0f19] border-white/5 shrink-0">
+          <div className="bg-[#0b0f19] border border-white/5 rounded-xl p-5 flex flex-col items-center text-center mt-auto shrink-0 relative">
+            <div className="flex items-center gap-3 w-full mb-3">
+              <div className="w-12 h-12 rounded-full bg-[#1e1145] flex items-center justify-center shrink-0">
+                <Bot className="w-6 h-6 text-[#a78bfa]" />
+              </div>
+              <div className="flex flex-col items-start px-2">
                 <div className="flex items-center gap-2">
-                   <div className="w-6 h-6 rounded-md bg-[#7c3aed]/20 border border-[#7c3aed]/30 flex items-center justify-center">
-                     <Bot className="w-3.5 h-3.5 text-[#a78bfa]" />
-                   </div>
-                   <h3 className="text-[11px] font-bold text-gray-200">L.A.R.I. Assistente</h3>
+                  <h3 className="text-xl font-bold text-white tracking-widest">L.A.R.I.</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">BETA</span>
                 </div>
-                <Link href="/chat">
-                   <span className="text-[10px] bg-white/5 hover:bg-white/10 border border-white/10 px-2 py-1 rounded text-gray-300 transition-colors cursor-pointer">
-                     Ver tela cheia
-                   </span>
-                </Link>
-             </div>
-             
-             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gradient-to-br from-[#0a0f1a] to-[#121826]">
-                {lariMessages.map((msg, i) => (
-                  <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                    {msg.sender === 'lari' && (
-                      <div className="w-6 h-6 rounded-full bg-[#7c3aed]/20 border border-[#7c3aed]/30 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-3 h-3 text-[#a78bfa]" />
-                      </div>
-                    )}
-                    <div className={`max-w-[85%] rounded-2xl p-3 text-[11px] leading-relaxed relative ${msg.sender === 'user' ? 'bg-[#7c3aed] text-white rounded-br-sm' : 'bg-white/5 border border-white/10 text-gray-300 rounded-bl-sm'}`}>
-                      {msg.text}
-                      <div className={`text-[8px] mt-1 opacity-50 block ${msg.sender === 'user' ? 'text-right text-gray-200' : 'text-gray-400'}`}>
-                        {msg.time}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {lariIsTyping && (
-                  <div className="flex items-end gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#7c3aed]/20 border border-[#7c3aed]/30 flex items-center justify-center shrink-0">
-                      <Bot className="w-3 h-3 text-[#a78bfa]" />
-                    </div>
-                    <div className="bg-white/5 border border-white/10 text-gray-300 rounded-2xl rounded-bl-sm p-3 flex items-center gap-1.5 h-10 w-16 justify-center">
-                       <span className="w-1.5 h-1.5 bg-[#7c3aed] rounded-full animate-bounce"></span>
-                       <span className="w-1.5 h-1.5 bg-[#7c3aed] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                       <span className="w-1.5 h-1.5 bg-[#7c3aed] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-             </div>
-             
-             <div className="p-3 border-t border-white/5 bg-[#0b0f19] shrink-0">
-               <form onSubmit={handleLariSubmit} className="relative flex items-center">
-                 <input 
-                   type="text" 
-                   className="w-full bg-[#121826] border border-white/10 rounded-lg pl-3 pr-10 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#7c3aed]/50 transition-colors"
-                   placeholder="Pergunte algo ao copiloto..."
-                   value={lariInput}
-                   onChange={e => setLariInput(e.target.value)}
-                 />
-                 <button 
-                   type="submit" 
-                   disabled={!lariInput.trim() || lariIsTyping}
-                   className="absolute right-2 p-1.5 bg-[#7c3aed]/20 text-[#a78bfa] rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#7c3aed]/40 transition-colors"
-                 >
-                   <Send className="w-3.5 h-3.5" />
-                 </button>
-               </form>
-             </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-400 font-medium mb-6 text-left w-full px-1">
+              Seu assistente IA para segurança do trabalho.
+            </p>
+            <Link href="/chat" className="w-full">
+              <button className="w-full bg-[#1e1145] hover:bg-[#2d1b6e] text-purple-100 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors border border-purple-500/20">
+                <MessageSquare className="w-5 h-5 opacity-70" />
+                Abrir chat
+              </button>
+            </Link>
           </div>
 
         </div>
