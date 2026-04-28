@@ -81,7 +81,8 @@ export default function Dashboard() {
   }, [lariMessages, lariIsTyping]);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLariSubmit = (e: React.FormEvent) => {
