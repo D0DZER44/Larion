@@ -14,12 +14,18 @@ import { ActionItem } from './types';
 import ModalNovaAcao from './components/ModalNovaAcao';
 
 export default function AcoesPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const { acoes, createAction, updateActionStatus, iniciarAcao, atualizarProgresso, concluirAcao, reatribuirAcao, cancelarAcao, reabrirAcao, executarFollowUps } = useAcoes();
   const [activeTab, setActiveTab] = useState<'VisaoGeral' | 'Pendentes' | 'EmAndamento' | 'Concluidas' | 'Historico'>('VisaoGeral');
   
   const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     executarFollowUps();
@@ -93,13 +99,15 @@ export default function AcoesPage() {
 
           {/* Content Area */}
           <div className="flex-1 overflow-auto rounded-xl">
-            <AnimatePresence mode="wait">
-              {activeTab === 'VisaoGeral' && <VisaoGeral key="visao" acoes={acoes} onOpen={handleOpenDrawer} />}
-              {activeTab === 'Pendentes' && <Pendentes key="pend" acoes={acoes} onOpen={handleOpenDrawer} />}
-              {activeTab === 'EmAndamento' && <EmAndamento key="anda" acoes={acoes} onOpen={handleOpenDrawer} />}
-              {activeTab === 'Concluidas' && <Concluidas key="conc" acoes={acoes} onOpen={handleOpenDrawer} />}
-              {activeTab === 'Historico' && <Historico key="hist" acoes={acoes} onOpen={handleOpenDrawer} />}
-            </AnimatePresence>
+            {isMounted && (
+              <AnimatePresence mode="wait">
+                {activeTab === 'VisaoGeral' && <VisaoGeral key="visao" acoes={acoes} onOpen={handleOpenDrawer} />}
+                {activeTab === 'Pendentes' && <Pendentes key="pend" acoes={acoes} onOpen={handleOpenDrawer} />}
+                {activeTab === 'EmAndamento' && <EmAndamento key="anda" acoes={acoes} onOpen={handleOpenDrawer} />}
+                {activeTab === 'Concluidas' && <Concluidas key="conc" acoes={acoes} onOpen={handleOpenDrawer} />}
+                {activeTab === 'Historico' && <Historico key="hist" acoes={acoes} onOpen={handleOpenDrawer} />}
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </motion.div>
