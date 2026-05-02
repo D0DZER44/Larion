@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User } from 'lucide-react';
+import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User, BarChart2, AlertCircle, History } from 'lucide-react';
 import { useAcoes } from './hooks';
 import VisaoGeral from './components/VisaoGeral';
 import Pendentes from './components/Pendentes';
@@ -68,23 +68,25 @@ export default function AcoesPage() {
           </header>
 
           {/* Subabas */}
-          <div className="flex items-center gap-6 border-b border-white/5 mb-6 shrink-0">
+          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
             {[
-              { id: 'VisaoGeral', label: 'Visão Geral' },
-              { id: 'Pendentes', label: 'Pendentes' },
-              { id: 'EmAndamento', label: 'Em andamento' },
-              { id: 'Concluidas', label: 'Concluídas' },
-              { id: 'Historico', label: 'Histórico' }
+              { id: 'VisaoGeral', label: 'Visão Geral', icon: <BarChart2 className="w-4 h-4" /> },
+              { id: 'Pendentes', label: 'Pendentes', icon: <AlertCircle className="w-4 h-4" /> },
+              { id: 'EmAndamento', label: 'Em andamento', icon: <Clock className="w-4 h-4" /> },
+              { id: 'Concluidas', label: 'Concluídas', icon: <CheckCircle2 className="w-4 h-4" /> },
+              { id: 'Historico', label: 'Histórico', icon: <History className="w-4 h-4" /> }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-3 text-sm font-medium transition-colors relative ${activeTab === tab.id ? 'text-purple-400' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
+                  activeTab === tab.id 
+                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                    : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
+                }`}
               >
+                {tab.icon}
                 {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div layoutId="acoes-tabs" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-t-full shadow-[0_0_10px_rgba(124,58,237,0.5)]" />
-                )}
               </button>
             ))}
           </div>

@@ -60,7 +60,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pt-16 lg:pt-0 print:pt-0">
-        <div className={`flex-1 w-full pt-6 lg:pt-0 print:pt-0 print:overflow-visible flex flex-col ${isDashboard ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}>
+        <div className="flex-1 w-full flex flex-col h-full overflow-hidden pt-6 lg:pt-0 print:pt-0 print:overflow-visible">
           {children}
         </div>
       </main>

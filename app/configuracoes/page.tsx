@@ -50,23 +50,19 @@ export default function ConfiguracoesPage() {
             </div>
           </header>
 
-          <div className="border-b border-white/10 mb-6 flex space-x-1 overflow-x-auto custom-scrollbar no-scrollbar-y shrink-0">
+          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full overflow-x-auto custom-scrollbar gap-1 mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-                  activeTab === tab.id ? 'text-purple-400' : 'text-gray-400 hover:text-gray-200'
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                  activeTab === tab.id 
+                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                    : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {tab.icon}
                 {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div 
-                    layoutId="config-active-tab"
-                    className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-500"
-                  />
-                )}
               </button>
             ))}
           </div>

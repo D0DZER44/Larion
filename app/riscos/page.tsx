@@ -474,7 +474,7 @@ export default function RiscosPage() {
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
           <header className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shrink-0">
-            <div className="bg-[#121826] p-1.5 rounded-xl border border-white/10 flex items-center gap-1 overflow-x-auto max-w-full no-scrollbar">
+            <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
               {SUB_TABS.map((tab) => (
                 <button
                   key={tab}
@@ -484,10 +484,10 @@ export default function RiscosPage() {
                     setSelectedSectorItem(null);
                     setTimeout(() => setSelectedAction(null), 300);
                   }}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab 
-                      ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                      : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {tab === 'Visão Geral' && <BarChart2 className="w-4 h-4" />}

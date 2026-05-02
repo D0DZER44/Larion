@@ -437,17 +437,23 @@ export default function InspecoesPage() {
             </div>
           </header>
 
-          <div className="flex items-center gap-8 border-b border-white/10 mb-6 shrink-0 pr-2 overflow-x-auto custom-scrollbar">
-             {['Agendadas', 'Realizadas', 'Checklists'].map((tab) => (
+          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
+             {[
+               { id: 'Agendadas', label: 'Agendadas', icon: <Calendar className="w-4 h-4" /> },
+               { id: 'Realizadas', label: 'Realizadas', icon: <CheckCircle2 className="w-4 h-4" /> },
+               { id: 'Checklists', label: 'Checklists', icon: <ListChecks className="w-4 h-4" /> }
+             ].map((tab) => (
                 <button 
-                  key={tab}
-                  onClick={() => { setActiveTab(tab as any); setCurrentPage(1); setIsDrawerOpen(false); setIsFormDrawerOpen(false); }}
-                  className={`pb-3 text-sm font-bold transition-colors relative whitespace-nowrap ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id as any); setCurrentPage(1); setIsDrawerOpen(false); setIsFormDrawerOpen(false); }}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
+                    activeTab === tab.id 
+                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                      : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
+                  }`}
                 >
-                  {tab}
-                  {activeTab === tab && (
-                      <motion.div layoutId="activeTabInspecoes" className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-500 rounded-t-full" />
-                  )}
+                  {tab.icon}
+                  {tab.label}
                 </button>
              ))}
           </div>
