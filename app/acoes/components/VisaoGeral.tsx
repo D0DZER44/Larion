@@ -29,7 +29,7 @@ const getInitials = (name: string) => {
 };
 
 function getPrazoDetails(prazoStr: string, status: string) {
-  if (!prazoStr) return { subtext: '', color: 'text-gray-500' };
+  if (!prazoStr || typeof prazoStr !== 'string') return { subtext: '', color: 'text-gray-500' };
   
   const parts = prazoStr.includes('/') ? prazoStr.split('/') : prazoStr.split('-');
   const dateStr = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : prazoStr;
@@ -79,7 +79,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         if (a.followUp?.escalado) escalonadas++;
         if (a.followUp?.precisaFollowUp && a.status === 'Em andamento') semAtualizacao++;
         
-        if (a.regraFixa || a.riscoVinculado && storeRiscos.find(r => r.id === a.riscoId)?.regraFixa) {
+        if (a.regraFixa || (a.riscoVinculado && (storeRiscos || []).find(r => r.id === a.riscoId)?.regraFixa)) {
            automaticas++;
         } else {
            manuais++;

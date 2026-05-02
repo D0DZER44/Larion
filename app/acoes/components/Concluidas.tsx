@@ -20,7 +20,7 @@ const getInitials = (name: string) => {
 };
 
 function parseDateStr(dateStr: string) {
-  if (!dateStr) return new Date(NaN);
+  if (!dateStr || typeof dateStr !== 'string') return new Date(NaN);
   const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
   const ds = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
   return new Date(ds);

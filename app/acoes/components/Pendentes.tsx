@@ -20,7 +20,7 @@ const getInitials = (name: string) => {
 };
 
 function getPrazoClass(prazoStr: string, status: string) {
-  if (!prazoStr) return 'text-gray-300';
+  if (!prazoStr || typeof prazoStr !== 'string') return 'text-gray-300';
   const parts = prazoStr.includes('/') ? prazoStr.split('/') : prazoStr.split('-');
   const dateStr = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : prazoStr;
   const d = new Date(dateStr);
@@ -39,7 +39,7 @@ function getPrazoClass(prazoStr: string, status: string) {
 }
 
 function getPrazoInfo(prazoStr: string) {
-  if (!prazoStr) return { diffDays: null };
+  if (!prazoStr || typeof prazoStr !== 'string') return { diffDays: null };
   const parts = prazoStr.includes('/') ? prazoStr.split('/') : prazoStr.split('-');
   const dateStr = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : prazoStr;
   const d = new Date(dateStr);

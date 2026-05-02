@@ -62,7 +62,7 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
   const historyList = useMemo(() => {
      let allEvents: ExHistoryEvent[] = [];
      
-     acoes.forEach(a => {
+     (acoes || []).forEach(a => {
         if (a.historico && Array.isArray(a.historico) && a.historico.length > 0) {
            a.historico.forEach((evt, idx) => {
               allEvents.push({

@@ -12,10 +12,10 @@ export function useAcoes() {
   const addLog = useAppStore(state => state.addLog);
 
   const acoes: ActionItem[] = useMemo(() => {
-    return storeAcoes.map((a: any) => {
+    return (storeAcoes || []).filter(a => !!a).map((a: any) => {
       // Logic to parse status
       let baseStatus: AcaoStatus = 'Pendente';
-      const rawStatus = a.status?.toLowerCase() || '';
+      const rawStatus = typeof a.status === 'string' ? a.status.toLowerCase() : '';
       
       if (rawStatus === 'concluída' || rawStatus === 'concluído' || rawStatus === 'fechada') {
         baseStatus = 'Concluída';
@@ -25,9 +25,10 @@ export function useAcoes() {
         baseStatus = 'Em andamento';
       }
       
+      const prazoStr = a.prazo || a.due_date || a.deadlineTime;
       // Calculate Vencida if pending/em andamento and deadline has passed
-      if ((baseStatus === 'Pendente' || baseStatus === 'Em andamento') && a.prazo) {
-        const prazoDate = new Date(a.prazo);
+      if ((baseStatus === 'Pendente' || baseStatus === 'Em andamento') && prazoStr) {
+        const prazoDate = new Date(prazoStr);
         prazoDate.setHours(23, 59, 59, 999);
         if (new Date() > prazoDate) {
            baseStatus = 'Vencida';
@@ -36,7 +37,8 @@ export function useAcoes() {
 
       // Logic to parse priority
       let basePrioridade: AcaoPrioridade = 'Média';
-      const rawPri = (a.priority || a.prioridade)?.toLowerCase() || '';
+      const pri = a.priority || a.prioridade;
+      const rawPri = typeof pri === 'string' ? pri.toLowerCase() : '';
       if (rawPri.includes('crític') || rawPri === 'p1') basePrioridade = 'Crítica';
       else if (rawPri.includes('alta') || rawPri === 'p2') basePrioridade = 'Alta';
       else if (rawPri.includes('média') || rawPri === 'p3') basePrioridade = 'Média';
@@ -53,7 +55,7 @@ export function useAcoes() {
         status: baseStatus,
         setor: a.category || a.setor || a.sector_id || 'Não definido',
         responsavel: a.responsavel || a.responsible?.name || 'Não atribuído',
-        prazo: a.prazo || a.due_date || a.deadlineTime || new Date().toISOString().split('T')[0],
+        prazo: (typeof a.prazo === 'string' ? a.prazo : null) || (typeof a.due_date === 'string' ? a.due_date : null) || (typeof a.deadlineTime === 'string' ? a.deadlineTime : null) || new Date().toISOString().split('T')[0],
         progresso: a.progresso || 0,
         origem: a.origem || a.originText || (a.item_origem_tipo === 'inspecao' ? 'Inspeção' : a.item_origem_tipo === 'risco' ? 'Risco' : 'Manual'),
         riscoId: a.riscoId || a.risk_id || (a.item_origem_tipo === 'risco' ? a.item_origem_id : undefined),
@@ -542,13 +544,16 @@ export function useAcoes() {
 }
 
 export function getPendentes(acoes: ActionItem[]) {
+  if (!Array.isArray(acoes)) return [];
   return acoes.filter(a => a.status === 'Pendente');
 }
 
 export function getEmAndamento(acoes: ActionItem[]) {
+  if (!Array.isArray(acoes)) return [];
   return acoes.filter(a => a.status === 'Em andamento');
 }
 
 export function getConcluidas(acoes: ActionItem[]) {
+  if (!Array.isArray(acoes)) return [];
   return acoes.filter(a => a.status === 'Concluída' || a.status === 'Cancelada');
 }

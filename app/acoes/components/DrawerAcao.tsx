@@ -25,7 +25,7 @@ const getInitials = (name: string) => {
 };
 
 function getPrazoInfo(prazoStr: string) {
-  if (!prazoStr) return { diffDays: null, label: '' };
+  if (!prazoStr || typeof prazoStr !== 'string') return { diffDays: null, label: '' };
   const parts = prazoStr.includes('/') ? prazoStr.split('/') : prazoStr.split('-');
   const dateStr = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : prazoStr;
   const d = new Date(dateStr);
@@ -43,8 +43,10 @@ function getPrazoInfo(prazoStr: string) {
 export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgresso, concluirAcao, reatribuirAcao, cancelarAcao, reabrirAcao, forcarFollowUp }: Props) {
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [progressoLocal, setProgressoLocal] = useState(acao.progresso || 0);
+  const [progressoLocal, setProgressoLocal] = useState(acao?.progresso || 0);
   const [comentarioLocal, setComentarioLocal] = useState('');
+
+  if (!acao) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {

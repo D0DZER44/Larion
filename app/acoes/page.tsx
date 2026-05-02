@@ -1,6 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User, BarChart2, AlertCircle, History } from 'lucide-react';
+import { useAcoes } from './hooks';
+import VisaoGeral from './components/VisaoGeral';
+import Pendentes from './components/Pendentes';
+import EmAndamento from './components/EmAndamento';
+import Concluidas from './components/Concluidas';
+import Historico from './components/Historico';
+import DrawerAcao from './components/DrawerAcao';
+import { ActionItem } from './types';
+import ModalNovaAcao from './components/ModalNovaAcao';
 
 class ErrorBoundary extends Component<{children: ReactNode, fallback: (error: Error) => ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: ReactNode, fallback: (error: Error) => ReactNode}) {
@@ -22,6 +33,18 @@ class ErrorBoundary extends Component<{children: ReactNode, fallback: (error: Er
 }
 
 export default function AcoesPage() {
+  return (
+    <ErrorBoundary fallback={(error) => (
+      <div className="p-8 text-red-400 bg-[#03060e] h-full">
+        Erro ao carregar Ações: {error.message}
+      </div>
+    )}>
+      <AcoesContent />
+    </ErrorBoundary>
+  );
+}
+
+function AcoesContent() {
   const [isMounted, setIsMounted] = useState(false);
   const { acoes, createAction, updateActionStatus, iniciarAcao, atualizarProgresso, concluirAcao, reatribuirAcao, cancelarAcao, reabrirAcao, executarFollowUps } = useAcoes();
   const [activeTab, setActiveTab] = useState<'VisaoGeral' | 'Pendentes' | 'EmAndamento' | 'Concluidas' | 'Historico'>('VisaoGeral');
