@@ -90,6 +90,15 @@ function AcoesContent() {
           {/* Header */}
           <header className="flex items-center justify-between gap-4 mb-6 shrink-0">
             <div>
+              <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                <span>Operação</span>
+                <span className="text-gray-600">›</span>
+                <span>Ações</span>
+                <span className="text-gray-600">›</span>
+                <span className="text-gray-400">
+                  {activeTab === 'VisaoGeral' ? 'Visão Geral' : activeTab === 'EmAndamento' ? 'Em andamento' : activeTab === 'Concluidas' ? 'Concluídas' : activeTab === 'Historico' ? 'Histórico' : 'Pendentes'}
+                </span>
+              </div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-2">
                 Ações
               </h1>

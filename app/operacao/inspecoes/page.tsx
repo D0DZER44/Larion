@@ -118,7 +118,16 @@ export default function InspecoesPage() {
   const normativeDetection = NormativeEngine.detect(formData.nome || '');
   const hojeDateStr = new Date().toISOString().split('T')[0];
 
-  let allInspecoes = [...(store.inspecoes || [])].reverse();
+  const filterJunk = (items: any[]) => {
+    return items.filter(i => {
+      const textFields = [i.title, i.titulo, i.descricao, i.name, i.nome, i.atividade, i.nr, i.responsavel, i.category].filter(Boolean).join(' ').toLowerCase();
+      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
+      if (!i.title && !i.titulo && !i.atividade && !i.nome && !i.name && !i.descricao && !i.category && !i.checklist) return false;
+      return true;
+    });
+  };
+
+  let allInspecoes = [...filterJunk(store.inspecoes || [])].reverse();
 
   const getResolvedStatus = (item: any) => {
     const s = item.status || item.situacao || 'Agendada';
@@ -406,6 +415,13 @@ export default function InspecoesPage() {
           
           <header className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shrink-0 mt-2">
             <div>
+              <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                <span>Operação</span>
+                <span className="text-gray-600">›</span>
+                <span>Inspeções</span>
+                <span className="text-gray-600">›</span>
+                <span className="text-gray-400">{activeTab}</span>
+              </div>
               <h1 className="text-3xl font-bold text-white tracking-tight">Inspeções</h1>
               <p className="text-[13px] text-gray-400 mt-1.5 font-medium tracking-wide">
                 Planeje, execute e acompanhe inspeções operacionais com geração automática de riscos, ações e conformidade.

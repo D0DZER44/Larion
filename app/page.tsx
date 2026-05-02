@@ -117,13 +117,28 @@ export default function Dashboard() {
     }, 1200);
   };
 
+  const filterJunk = (items: any[]) => {
+    return items.filter(i => {
+      const textFields = [i.title, i.titulo, i.descricao, i.name, i.nome, i.atividade, i.nr, i.responsavel].filter(Boolean).join(' ').toLowerCase();
+      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
+      if (!i.title && !i.titulo && !i.atividade && !i.nome && !i.name && !i.descricao) return false;
+      return true;
+    });
+  };
+
+  const cleanRiscos = useMemo(() => filterJunk(riscos || []), [riscos]);
+  const cleanAcoes = useMemo(() => filterJunk(acoes || []), [acoes]);
+  const cleanInspecoes = useMemo(() => filterJunk(inspecoes || []), [inspecoes]);
+  const cleanChecklists = useMemo(() => filterJunk(checklists || []), [checklists]);
+  const cleanLogs = useMemo(() => (logs || []), [logs]);
+
   const metrics = useMemo(() => {
     // KPI 1: Exposição
     let criticalCount = 0;
     let openRisksCount = 0;
     let riskScore = 0;
     
-    const activeRisks = riscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
+    const activeRisks = cleanRiscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
     activeRisks.forEach(r => {
       openRisksCount++;
       const level = (r.nivel || r.level || '').toLowerCase();
@@ -147,7 +162,7 @@ export default function Dashboard() {
        else if (level === 'médio') w += 100;
        else w += 10;
        
-       const hasAction = acoes.some(a => (a.riskId === r.id || a.origin_id === r.id));
+       const hasAction = cleanAcoes.some(a => (a.riskId === r.id || a.origin_id === r.id));
        if (!hasAction) {
           w += 500; 
        }
@@ -163,14 +178,14 @@ export default function Dashboard() {
     else if (riskScore >= 10 || openRisksCount >= 5) exposicaoOperacional = 'Média';
 
     // KPI 2: Ações
-    const pendingActions = acoes.filter(a => a.status !== 'Concluído' && a.status !== 'Concluída' && a.status !== 'Fechada' && a.status !== 'Cancelada');
-    const emAndamentoActions = acoes.filter(a => a.status === 'Em andamento' || a.status === 'Progresso');
-    const concluidasActions = acoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
+    const pendingActions = cleanAcoes.filter(a => a.status !== 'Concluído' && a.status !== 'Concluída' && a.status !== 'Fechada' && a.status !== 'Cancelada');
+    const emAndamentoActions = cleanAcoes.filter(a => a.status === 'Em andamento' || a.status === 'Progresso');
+    const concluidasActions = cleanAcoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
     
     const todayStr = new Date().toISOString().split('T')[0];
     
     const atrasadasActions = pendingActions.filter(a => {
-      if (a.status === 'Atrasada') return true;
+      if (a.status === 'Atrasada' || a.status === 'Vencida') return true;
       if (a.prazo) {
         try {
           const prazoStr = new Date(a.prazo).toISOString().split('T')[0];
@@ -199,9 +214,9 @@ export default function Dashboard() {
     });
 
     // KPI 3: Inspeções
-    const pendingInspections = inspecoes.filter(i => i.status !== 'Concluído' && i.status !== 'Concluída' && i.status !== 'Finalizada');
-    const completedInspections = inspecoes.filter(i => i.status === 'Concluído' || i.status === 'Concluída' || i.status === 'Finalizada');
-    const previstasInspections = inspecoes; 
+    const pendingInspections = cleanInspecoes.filter(i => i.status !== 'Concluído' && i.status !== 'Concluída' && i.status !== 'Finalizada');
+    const completedInspections = cleanInspecoes.filter(i => i.status === 'Concluído' || i.status === 'Concluída' || i.status === 'Finalizada');
+    const previstasInspections = cleanInspecoes; 
 
     const vencidasInspections = pendingInspections.filter(i => {
        if (i.status === 'Atrasada' || i.status === 'Vencida') return true;
@@ -225,7 +240,7 @@ export default function Dashboard() {
        return s === 'concluído' || s === 'concluída' || s === 'fechada' || s === 'resolvido' || s === 'mitigado' || s === 'finalizada';
     };
 
-    const inspTodayTotal = inspecoes.filter(i => {
+    const inspTodayTotal = cleanInspecoes.filter(i => {
        const dtStr = i.data || i.date || i.dataPrevista || i.proximaInspecao || '';
        return dtStr.split('T')[0] === todayStr || dtStr.toLowerCase().includes('hoje') || i.status === 'Vence hoje';
     });
@@ -247,11 +262,11 @@ export default function Dashboard() {
     })).sort((a,b) => b.total - a.total).slice(0, 5);
 
     // KPI 4: Conformidade Geral
-    let vI = inspecoes.length > 0 ? (completedInspections.length / inspecoes.length) * 100 : null;
-    const concluidasActionsRate = acoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
-    let vA = acoes.length > 0 ? (concluidasActionsRate.length / acoes.length) * 100 : null;
-    const resolvedRisks = riscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
-    let vR = riscos.length > 0 ? (resolvedRisks.length / riscos.length) * 100 : null;
+    let vI = cleanInspecoes.length > 0 ? (completedInspections.length / cleanInspecoes.length) * 100 : null;
+    const concluidasActionsRate = cleanAcoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
+    let vA = cleanAcoes.length > 0 ? (concluidasActionsRate.length / cleanAcoes.length) * 100 : null;
+    const resolvedRisks = cleanRiscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
+    let vR = cleanRiscos.length > 0 ? (resolvedRisks.length / cleanRiscos.length) * 100 : null;
     
     let validWeights = 0;
     let totalScore = 0;
@@ -268,7 +283,7 @@ export default function Dashboard() {
     const sectorsMap: Record<string, { count: number; prioritySum: number }> = {};
     let totalRiskCount = 0;
 
-    riscos.forEach(r => {
+    cleanRiscos.forEach(r => {
       if (r.status !== 'Resolvido' && r.status !== 'Mitigado') {
         const s = r.sector_id || r.setor || 'Outros';
         const level = (r.nivel || r.level || '').toLowerCase();
@@ -355,10 +370,10 @@ export default function Dashboard() {
         if (resolved) nrMap[nrStr].resolved++;
     };
 
-    riscos.forEach(r => addToNrMap(r.nr || r.title || r.titulo || '', checkIsConcluido(r.status)));
-    acoes.forEach(a => addToNrMap(a.nr || a.title || a.titulo || a.category || '', checkIsConcluido(a.status)));
-    inspecoes.forEach(i => addToNrMap(i.nr || i.norma || i.title || i.nome || i.titulo || i.checklist || '', checkIsConcluido(i.status)));
-    checklists.forEach((c: any) => addToNrMap(c.nr || c.norma || c.name || c.category || '', c.status === 'Ativo'));
+    cleanRiscos.forEach(r => addToNrMap(r.nr || r.title || r.titulo || '', checkIsConcluido(r.status)));
+    cleanAcoes.forEach(a => addToNrMap(a.nr || a.title || a.titulo || a.category || '', checkIsConcluido(a.status)));
+    cleanInspecoes.forEach(i => addToNrMap(i.nr || i.norma || i.title || i.nome || i.titulo || i.checklist || '', checkIsConcluido(i.status)));
+    cleanChecklists.forEach((c: any) => addToNrMap(c.nr || c.norma || c.name || c.category || '', c.status === 'Ativo'));
 
     let conformidadeNR = Object.keys(nrMap)
       .sort((a, b) => nrMap[b].total - nrMap[a].total) // Sort by volume of items, descending
@@ -379,7 +394,7 @@ export default function Dashboard() {
     // Atividades recentes (logs + gerados)
     const generatedActivities: any[] = [];
     
-    riscos.forEach(r => {
+    cleanRiscos.forEach(r => {
         if (r.created_at) {
             generatedActivities.push({
                 id: `log_r_c_${r.id}`,
@@ -402,7 +417,7 @@ export default function Dashboard() {
         }
     });
 
-    acoes.forEach(a => {
+    cleanAcoes.forEach(a => {
         if (a.created_at) {
             generatedActivities.push({
                 id: `log_a_c_${a.id}`,
@@ -425,7 +440,7 @@ export default function Dashboard() {
         }
     });
 
-    inspecoes.forEach(i => {
+    cleanInspecoes.forEach(i => {
         if (isConcluidoStatus(i.status) || isConcluidoStatus(i.situacao)) {
             generatedActivities.push({
                 id: `log_i_c_${i.id}`,
@@ -438,7 +453,7 @@ export default function Dashboard() {
         }
     });
     
-    checklists.forEach((c: any) => {
+    cleanChecklists.forEach((c: any) => {
         if (isConcluidoStatus(c.status) && c.updated_at) {
             generatedActivities.push({
                 id: `log_c_c_${c.id}`,
@@ -451,7 +466,7 @@ export default function Dashboard() {
         }
     });
 
-    const allActivities = [...logs, ...generatedActivities].sort((a,b) => {
+    const allActivities = [...cleanLogs, ...generatedActivities].sort((a,b) => {
         const dateA = new Date(a.created_at || 0).getTime();
         const dateB = new Date(b.created_at || 0).getTime();
         if (isNaN(dateA) && isNaN(dateB)) return 0;
@@ -498,7 +513,7 @@ export default function Dashboard() {
            sector: a.setor || a.sector_id || 'Geral',
            date: a.prazo,
            priority: a.nivel || a.level || a.prioridade || 'Normal',
-           link: '/acoes'
+           link: '/operacao/acoes'
        })
     });
 
@@ -513,7 +528,7 @@ export default function Dashboard() {
                sector: i.setor || i.sector_id || 'Geral',
                date: d,
                priority: i.prioridade || i.nivel || 'Normal',
-               link: '/inspecoes'
+               link: '/operacao/inspecoes'
            });
        }
     });
@@ -529,7 +544,7 @@ export default function Dashboard() {
                sector: c.setor || c.sector_id || 'Geral',
                date: d,
                priority: c.prioridade || c.nivel || 'Normal',
-               link: '/inspecoes' // Assuming checklists go to inspecoes based on what we had before, or specific link
+               link: '/operacao/inspecoes' // Assuming checklists go to inspecoes based on what we had before, or specific link
            });
        }
     });
@@ -601,9 +616,9 @@ export default function Dashboard() {
     // Diagnostico Executivo
     let diagTopSector = 'Nenhum';
     let diagTopSectorPercentage = 0;
-    if (riskSectorData.length > 0 && openRisksCount > 0 && riskSectorData[0].name !== 'Sem dados') {
+    if (riskSectorData.length > 0 && totalRiskCount > 0 && riskSectorData[0].name !== 'Sem dados' && riskSectorData[0].name !== 'Outros') {
        diagTopSector = riskSectorData[0].name;
-       diagTopSectorPercentage = Math.round((riskSectorData[0].value / openRisksCount) * 100);
+       diagTopSectorPercentage = Math.round((riskSectorData[0].value / totalRiskCount) * 100);
     }
     const prioridadeOperacional = criticalCount > 0 ? 'Focos Críticos' : (atrasadasActions.length > 0 ? 'Ações Atrasadas' : 'Prevenção e Monitoramento');
     const updatePlano = atrasadasActions.length > 0 || vencidasInspections.length > 0 || criticalCount > 0 ? 'Requer atualização imediata' : 'Plano em dia';
@@ -613,40 +628,40 @@ export default function Dashboard() {
 
     // - risco crítico aberto (Prio: 1)
     activeRisks.filter(r => (r.nivel || r.level || '').toLowerCase() === 'crítico').forEach(r => {
-        allAlertas.push({ id: `risk_${r.id}`, type: 'risco_critico', icon: AlertTriangle, color: 'text-red-500', title: 'Risco Crítico', desc: r.title || r.titulo || r.descricao || 'Sem título', link: '/riscos', priority: 1, dateStr: r.data_identificacao || r.created_at || '' });
+        allAlertas.push({ id: `risk_${r.id}`, type: 'risco_critico', icon: AlertTriangle, color: 'text-red-500', title: 'Risco Crítico', desc: r.title || r.titulo || r.descricao || 'Sem título', link: '/operacao/riscos', priority: 1, dateStr: r.data_identificacao || r.created_at || '' });
     });
 
     // - ação vencendo hoje (Prio: 2)
     pendingActions.filter(a => a.prazo && isToday(a.prazo)).forEach(a => {
-        allAlertas.push({ id: `acao_vence_hoje_${a.id}`, type: 'acao_vence_hoje', icon: Clock, color: 'text-orange-500', title: 'Ação Vence Hoje', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 2, dateStr: a.prazo });
+        allAlertas.push({ id: `acao_vence_hoje_${a.id}`, type: 'acao_vence_hoje', icon: Clock, color: 'text-orange-500', title: 'Ação Vence Hoje', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 2, dateStr: a.prazo });
     });
 
     // - ação atrasada (Prio: 3)
     atrasadasActions.forEach(a => {
-        allAlertas.push({ id: `acao_atrasada_${a.id}`, type: 'acao_atrasada', icon: AlertCircle, color: 'text-red-400', title: 'Ação Atrasada', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 3, dateStr: a.prazo });
+        allAlertas.push({ id: `acao_atrasada_${a.id}`, type: 'acao_atrasada', icon: AlertCircle, color: 'text-red-400', title: 'Ação Atrasada', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 3, dateStr: a.prazo });
     });
 
     // - inspeção vencida (Prio: 3)
     vencidasInspections.forEach(i => {
-        allAlertas.push({ id: `insp_vencida_${i.id}`, type: 'insp_vencida', icon: ShieldAlert, color: 'text-orange-400', title: 'Inspeção Vencida', desc: i.title || i.nome || i.titulo || 'Sem título', link: '/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || '' });
+        allAlertas.push({ id: `insp_vencida_${i.id}`, type: 'insp_vencida', icon: ShieldAlert, color: 'text-orange-400', title: 'Inspeção Vencida', desc: i.title || i.nome || i.titulo || 'Sem título', link: '/operacao/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || '' });
     });
 
     // - checklist pendente crítico (Prio: 3)
     inspTodayPending.forEach(i => {
-        allAlertas.push({ id: `checklist_pendente_${i.id}`, type: 'checklist_pendente', icon: ClipboardCheck, color: 'text-yellow-500', title: 'Checklist Pendente', desc: i.checklist || i.categoria || i.title || i.nome || 'Sem título', link: '/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || todayStr });
+        allAlertas.push({ id: `checklist_pendente_${i.id}`, type: 'checklist_pendente', icon: ClipboardCheck, color: 'text-yellow-500', title: 'Checklist Pendente', desc: i.checklist || i.categoria || i.title || i.nome || 'Sem título', link: '/operacao/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || todayStr });
     });
 
     // - item sem responsável (Prio: 4)
     activeRisks.filter(r => !r.responsavel || r.responsavel.trim() === '').forEach(r => {
-        allAlertas.push({ id: `risk_sem_resp_${r.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Risco s/ Resp', desc: r.title || r.titulo || 'Sem título', link: '/riscos', priority: 4, dateStr: r.created_at || '' });
+        allAlertas.push({ id: `risk_sem_resp_${r.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Risco s/ Resp', desc: r.title || r.titulo || 'Sem título', link: '/operacao/riscos', priority: 4, dateStr: r.created_at || '' });
     });
     pendingActions.filter(a => !a.responsavel || a.responsavel.trim() === '').forEach(a => {
-        allAlertas.push({ id: `acao_sem_resp_${a.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Ação s/ Resp', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 4, dateStr: a.created_at || '' });
+        allAlertas.push({ id: `acao_sem_resp_${a.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Ação s/ Resp', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 4, dateStr: a.created_at || '' });
     });
 
     // - item sem prazo (Prio: 4)
     pendingActions.filter(a => !a.prazo || a.prazo.trim() === '').forEach(a => {
-        allAlertas.push({ id: `acao_sem_prazo_${a.id}`, type: 'sem_prazo', icon: Calendar, color: 'text-gray-400', title: 'Ação s/ Prazo', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 4, dateStr: a.created_at || '' });
+        allAlertas.push({ id: `acao_sem_prazo_${a.id}`, type: 'sem_prazo', icon: Calendar, color: 'text-gray-400', title: 'Ação s/ Prazo', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 4, dateStr: a.created_at || '' });
     });
 
     // Ordenar e pegar os top 5
@@ -708,8 +723,8 @@ export default function Dashboard() {
     const scoreDiff = operationalScore - (lastHistoricalScore || operationalScore);
 
     // Dynamic trends logic
-    const exposureDiffRaw = 0; // Removing mocked +12%
-    const conformityDiffRaw = 0; // Removing mocked +6pp
+    const exposureDiffRaw = 0; // Removed mock data logic
+    const conformityDiffRaw = 0; // Removed mock data logic
 
     let exposicaoOperacionalClass = 'border-green-500 text-green-500 bg-green-500/10';
     if (exposicaoOperacional === 'Alta') exposicaoOperacionalClass = 'border-red-500 text-red-500 bg-red-500/10';
@@ -769,7 +784,7 @@ export default function Dashboard() {
       updatePlano
     };
 
-  }, [riscos, acoes, inspecoes, checklists, logs, scoreTimeRange]);
+  }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange]);
 
   return (
     <div className="flex flex-col h-full w-full bg-[#03060e] text-gray-300 font-sans selection:bg-purple-500/30 overflow-hidden">
@@ -838,10 +853,16 @@ export default function Dashboard() {
                    </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-medium mt-1">
-                  <span className={metrics.exposureDiffRaw > 0 ? "text-green-500" : metrics.exposureDiffRaw < 0 ? "text-red-500" : "text-white"}>
-                    {metrics.exposureDiffRaw > 0 ? `+${metrics.exposureDiffRaw}%` : `${metrics.exposureDiffRaw}%`}
-                  </span>
-                  <span className="text-gray-500">vs mês anterior</span>
+                  {metrics.exposureDiffRaw !== 0 ? (
+                    <>
+                      <span className={metrics.exposureDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
+                        {metrics.exposureDiffRaw > 0 ? `+${metrics.exposureDiffRaw}%` : `${metrics.exposureDiffRaw}%`}
+                      </span>
+                      <span className="text-gray-500">vs mês anterior</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-500">Histórico insuficiente</span>
+                  )}
                 </div>
               </div>
               <div className="absolute -bottom-2 -left-2 right-0 h-20 opacity-20 pointer-events-none">
@@ -910,10 +931,16 @@ export default function Dashboard() {
               <div className="mt-auto pt-2">
                 <div className="text-[2.5rem] leading-none font-bold text-green-500 tracking-tighter mb-2">{metrics.conformityRate}%</div>
                 <div className="flex items-center gap-1.5 text-[12px] font-medium mt-1 mb-4">
-                  <span className={metrics.conformityDiffRaw > 0 ? "text-green-500" : metrics.conformityDiffRaw < 0 ? "text-red-500" : "text-white"}>
-                    {metrics.conformityDiffRaw > 0 ? `+${metrics.conformityDiffRaw}pp` : `${metrics.conformityDiffRaw}pp`}
-                  </span>
-                  <span className="text-gray-400">vs mês anterior</span>
+                  {metrics.conformityDiffRaw !== 0 ? (
+                    <>
+                      <span className={metrics.conformityDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
+                        {metrics.conformityDiffRaw > 0 ? `+${metrics.conformityDiffRaw}pp` : `${metrics.conformityDiffRaw}pp`}
+                      </span>
+                      <span className="text-gray-400">vs mês anterior</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-500">Histórico insuficiente</span>
+                  )}
                 </div>
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted ? `${metrics.conformityRate}%` : '0%' }}></div>
@@ -958,16 +985,22 @@ export default function Dashboard() {
                   <span className="text-sm text-gray-200 leading-tight"><strong className="text-lg">{metrics.focosCriticos} focos críticos</strong><br/>exigem ação</span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
-                  <ShieldAlert className="w-8 h-8 text-orange-500 shrink-0" />
-                  <span className="text-sm text-gray-200 leading-tight"><strong className="text-lg">{metrics.diagTopSectorPercentage}% da exposição</strong><br/>concentrada</span>
+                  <ShieldAlert className={`w-8 h-8 shrink-0 ${metrics.diagTopSectorPercentage > 0 ? 'text-orange-500' : 'text-gray-600'}`} />
+                  <span className="text-sm text-gray-200 leading-tight">
+                    {metrics.diagTopSectorPercentage > 0 ? (
+                      <><strong className="text-lg">{metrics.diagTopSectorPercentage}% da exposição</strong><br/>em {metrics.diagTopSector}</>
+                    ) : (
+                      <><strong className="text-lg text-gray-400">Risco mitigado</strong><br/>Exposição controlada</>
+                    )}
+                  </span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
-                  <ShieldCheck className="w-8 h-8 text-blue-400 shrink-0" />
+                  <ShieldCheck className={`w-8 h-8 shrink-0 ${metrics.prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-400'}`} />
                   <span className="text-sm text-gray-200 leading-tight">Prioridade:<br/><span className="text-lg text-gray-300">{metrics.prioridadeOperacional}</span></span>
                 </div>
                 <div className="flex items-center gap-4 sm:pl-6 py-4 sm:py-0 w-full">
-                  <TrendingUp className="w-8 h-8 text-purple-400 shrink-0" />
-                  <span className="text-sm text-gray-200 leading-tight">Plano requer<br/><span className="text-lg text-gray-300">atualização</span></span>
+                  <TrendingUp className={`w-8 h-8 shrink-0 ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`} />
+                  <span className="text-sm text-gray-200 leading-tight"><strong className={`text-lg ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`}>{metrics.updatePlano}</strong><br/>ações direcionadas</span>
                 </div>
               </div>
             </div>
@@ -975,7 +1008,7 @@ export default function Dashboard() {
             {/* CAMADA 2 — Operação resumida */}
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-white/10">
               {/* Coluna 1 */}
-              <Link href="/inspecoes" className="block hover:bg-white/[0.02] p-2 -m-2 rounded-xl transition-colors cursor-pointer group">
+              <Link href="/operacao/inspecoes" className="block hover:bg-white/[0.02] p-2 -m-2 rounded-xl transition-colors cursor-pointer group">
                 <h3 className="text-[12px] font-bold text-gray-400 group-hover:text-[#7c3aed] transition-colors uppercase tracking-widest mb-6">Operação SST Hoje</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -1000,22 +1033,22 @@ export default function Dashboard() {
               <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
                 <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Plano de Ação</h3>
                 <div className="space-y-4">
-                  <Link href="/acoes?filter=abertas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
+                  <Link href="/operacao/acoes?filter=abertas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <ClipboardCheck className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-blue-400 w-8 group-hover:text-blue-300 transition-colors">{metrics.actionsTotal}</span>
                      <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Abertas</span>
                   </Link>
-                  <Link href="/acoes?filter=andamento" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
+                  <Link href="/operacao/acoes?filter=andamento" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <Activity className="w-5 h-5 text-orange-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-orange-500 w-8 group-hover:text-orange-400 transition-colors">{metrics.actionsInProgress}</span>
                      <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Em andamento</span>
                   </Link>
-                  <Link href="/acoes?filter=concluidas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
+                  <Link href="/operacao/acoes?filter=concluidas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <CheckCircle2 className="w-5 h-5 text-green-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-green-500 w-8 group-hover:text-green-400 transition-colors">{metrics.actionsCompleted}</span>
                      <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Concluídas</span>
                   </Link>
-                  <Link href="/acoes?filter=atrasadas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
+                  <Link href="/operacao/acoes?filter=atrasadas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <AlertTriangle className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-red-500 w-8 group-hover:text-red-400 transition-colors">{metrics.actionsDelayed}</span>
                      <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Atrasadas</span>
@@ -1074,7 +1107,7 @@ export default function Dashboard() {
                    Abrir Central de Inteligência <ArrowRight className="w-4 h-4 ml-2" />
                 </button>
               </Link>
-              <Link href="/riscos" className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
+              <Link href="/operacao/riscos" className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
                 Ver riscos <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
               <div className="hidden sm:block w-px h-6 bg-white/10 ml-auto mx-4 flex-shrink-0"></div>
@@ -1090,7 +1123,7 @@ export default function Dashboard() {
             <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
               <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
                 <h3 className="text-[11px] font-bold text-[#b48bf8] uppercase tracking-wider">Riscos que exigem ação</h3>
-                <Link href="/riscos">
+                <Link href="/operacao/riscos">
                   <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
                 </Link>
               </div>
@@ -1275,11 +1308,17 @@ export default function Dashboard() {
                     <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
                     
                     <div className="flex flex-col items-start gap-1">
-                       <span className="text-[12px] font-bold flex items-center gap-1 text-green-400">
-                         {metrics.scoreDiff >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5 text-red-400" />} 
-                         {metrics.scoreDiff >= 0 ? `${metrics.scoreDiff}%` : <span className="text-red-400">{Math.abs(metrics.scoreDiff)}%</span>}
-                       </span>
-                       <span className="text-[9px] text-gray-500">vs. período anterior</span>
+                       {metrics.scoreDiff !== 0 ? (
+                         <>
+                           <span className={`text-[12px] font-bold flex items-center gap-1 ${metrics.scoreDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                             {metrics.scoreDiff > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />} 
+                             {metrics.scoreDiff > 0 ? `+${metrics.scoreDiff}%` : `${metrics.scoreDiff}%`}
+                           </span>
+                           <span className="text-[9px] text-gray-500">vs. período anterior</span>
+                         </>
+                       ) : (
+                         <span className="text-[10px] text-gray-500 mt-2">Sem variação no período</span>
+                       )}
                     </div>
                   </div>
                 </div>
@@ -1295,7 +1334,7 @@ export default function Dashboard() {
           <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
-              <Link href="/riscos">
+              <Link href="/operacao/riscos">
                 <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
               </Link>
             </div>
@@ -1364,7 +1403,7 @@ export default function Dashboard() {
           <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Próximas Ações</h3>
-              <Link href="/acoes">
+              <Link href="/operacao/acoes">
                 <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todas</span>
               </Link>
             </div>

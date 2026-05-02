@@ -12,7 +12,13 @@ export function useAcoes() {
   const addLog = useAppStore(state => state.addLog);
 
   const acoes: ActionItem[] = useMemo(() => {
-    return (storeAcoes || []).filter(a => !!a).map((a: any) => {
+    return (storeAcoes || []).filter(a => {
+      if (!a) return false;
+      const textFields = [a.title, a.titulo, a.description, a.descricao, a.category].filter(Boolean).join(' ').toLowerCase();
+      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
+      if (!a.title && !a.titulo && !a.description && !a.descricao && !a.category) return false;
+      return true;
+    }).map((a: any) => {
       // Logic to parse status
       let baseStatus: AcaoStatus = 'Pendente';
       const rawStatus = typeof a.status === 'string' ? a.status.toLowerCase() : '';

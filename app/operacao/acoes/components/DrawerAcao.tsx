@@ -87,12 +87,12 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
     return (
       <div className="flex flex-col gap-2 mt-1">
         {acao.riscoId && (
-          <button onClick={() => window.location.href='/riscos'} className="w-full bg-transparent border border-orange-500/20 hover:bg-orange-500/10 text-orange-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
+          <button onClick={() => window.location.href='/operacao/riscos'} className="w-full bg-transparent border border-orange-500/20 hover:bg-orange-500/10 text-orange-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
             <AlertTriangle className="w-4 h-4" /> Abrir risco vinculado
           </button>
         )}
         {acao.inspecaoId && (
-          <button onClick={() => window.location.href='/inspecoes'} className="w-full bg-transparent border border-blue-500/20 hover:bg-blue-500/10 text-blue-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
+          <button onClick={() => window.location.href='/operacao/inspecoes'} className="w-full bg-transparent border border-blue-500/20 hover:bg-blue-500/10 text-blue-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
             <ClipboardCheck className="w-4 h-4" /> Abrir inspeção vinculada
           </button>
         )}
@@ -750,8 +750,8 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                 <div className="flex flex-col gap-2.5">
                    {(acao.riscoId || acao.inspecaoId) && (
                       <div className="flex items-center gap-2.5 w-full">
-                         {acao.riscoId && <button onClick={() => window.location.href='/riscos'} className="flex-1 bg-white/5 hover:bg-white/10 text-orange-400 hover:text-orange-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Ver risco</button>}
-                         {acao.inspecaoId && <button onClick={() => window.location.href='/inspecoes'} className="flex-1 bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><ClipboardCheck className="w-4 h-4" /> Ver inspeção</button>}
+                         {acao.riscoId && <button onClick={() => window.location.href='/operacao/riscos'} className="flex-1 bg-white/5 hover:bg-white/10 text-orange-400 hover:text-orange-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Ver risco</button>}
+                         {acao.inspecaoId && <button onClick={() => window.location.href='/operacao/inspecoes'} className="flex-1 bg-white/5 hover:bg-white/10 text-blue-400 hover:text-blue-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><ClipboardCheck className="w-4 h-4" /> Ver inspeção</button>}
                       </div>
                    )}
                    <button className="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><FileText className="w-4 h-4" /> Ver evidências</button>

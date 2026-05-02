@@ -157,19 +157,19 @@ export default function CentralPage() {
     const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
 
     return [
-      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
-      { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/inspecoes', navLabel: 'Continuar inspeções →' },
-      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
-      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
+      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/operacao/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
+      { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/inspecoes', navLabel: 'Continuar inspeções →' },
+      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
+      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
       
-      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
-      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
-      { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/inspecoes', navLabel: 'Ver origem →' },
+      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/operacao/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
+      { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/inspecoes', navLabel: 'Ver origem →' },
       { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
       
-      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
-      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →' },
+      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
+      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
+      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/riscos', navLabel: 'Matriz de riscos →' },
       { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-gray-400', bg: 'bg-white/5', border: 'border-white/10', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
     ];
   }, [riscos, inspecoes, acoes, rules, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen]);
@@ -510,7 +510,7 @@ export default function CentralPage() {
                      ))}
                   </div>
                   <div className="mt-4 pt-4 border-t border-white/5">
-                    <button className="w-full text-center text-[13px] font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/riscos'}>
+                    <button className="w-full text-center text-[13px] font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/operacao/riscos'}>
                       Ver todos os riscos críticos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -525,7 +525,7 @@ export default function CentralPage() {
                   <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
                      {renderTopRisksChance.map((r, i) => (
                         <div key={i} className="cursor-pointer group" onClick={() => {
-                          window.location.href = '/riscos'; 
+                          window.location.href = '/operacao/riscos'; 
                         }}>
                            <div className="flex items-center justify-between mb-2">
                               <h4 className="text-[13px] font-medium text-gray-300 truncate pr-4 group-hover:text-white transition-colors">{r.name}</h4>
@@ -538,7 +538,7 @@ export default function CentralPage() {
                      ))}
                   </div>
                   <div className="mt-4 pt-5 border-t border-white/5">
-                    <button className="w-full text-center text-[13px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/riscos'}>
+                    <button className="w-full text-center text-[13px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/operacao/riscos'}>
                       Ver matriz de riscos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -582,7 +582,7 @@ export default function CentralPage() {
                    <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
                      Últimas Inspeções
                    </h3>
-                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/inspecoes'}>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/operacao/inspecoes'}>
                      Ver todas
                    </button>
                  </div>
@@ -636,7 +636,7 @@ export default function CentralPage() {
                    <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
                      Ações Pendentes Prioritárias
                    </h3>
-                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/acoes'}>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/operacao/acoes'}>
                      Ir para Ações
                    </button>
                  </div>
@@ -810,9 +810,9 @@ export default function CentralPage() {
                 <div className="p-6 border-t border-white/5 bg-[#121826] shrink-0">
                    <button 
                       onClick={() => {
-                         if (selectedDrawerItem.type === 'risco') window.location.href = '/riscos';
-                         if (selectedDrawerItem.type === 'acao') window.location.href = '/acoes';
-                         if (selectedDrawerItem.type === 'inspecao') window.location.href = '/inspecoes';
+                         if (selectedDrawerItem.type === 'risco') window.location.href = '/operacao/riscos';
+                         if (selectedDrawerItem.type === 'acao') window.location.href = '/operacao/acoes';
+                         if (selectedDrawerItem.type === 'inspecao') window.location.href = '/operacao/inspecoes';
                       }}
                       className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-[13px] rounded-xl transition-colors flex items-center justify-center gap-2 border border-purple-500/50 shadow-[0_0_15px_rgba(124,58,237,0.2)]"
                    >

@@ -2,25 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Home, ClipboardCheck, Activity, AlertTriangle, 
   FileText, BarChart2, Settings, MessageSquare, 
-  LogOut, Moon, Sun
+  LogOut, Moon, Sun, Layers, ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
 
-const navGroups = [
+type NavItem = {
+  name: string;
+  href?: string;
+  icon: any;
+  badge?: string | number;
+  color?: string;
+  isGroup?: boolean;
+  children?: NavItem[];
+};
+
+const navGroups: { items: NavItem[] }[] = [
   {
     items: [
       { name: 'Visão Geral', href: '/', icon: Home },
-      { name: 'Inspeções', href: '/inspecoes', icon: ClipboardCheck },
-      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
-    ]
-  },
-  {
-    items: [
-      { name: 'Ações', href: '/acoes', icon: Activity, badge: 12 },
+      { 
+        name: 'Operação',
+        href: '/operacao/inspecoes', 
+        icon: Layers,
+        isGroup: true,
+        children: [
+          { name: 'Inspeções', href: '/operacao/inspecoes', icon: ClipboardCheck },
+          { name: 'Riscos', href: '/operacao/riscos', icon: AlertTriangle },
+          { name: 'Ações', href: '/operacao/acoes', icon: Activity, badge: 12 },
+        ]
+      }
     ]
   },
   {
@@ -35,7 +49,9 @@ const navGroups = [
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isDark, setIsDark] = useState(true);
+  const [operacaoOpen, setOperacaoOpen] = useState(pathname.startsWith('/operacao'));
 
   useEffect(() => {
     if (isDark) {
@@ -44,6 +60,22 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       document.documentElement.classList.add('theme-light');
     }
   }, [isDark]);
+
+  useEffect(() => {
+    if (pathname.startsWith('/operacao')) {
+      const timer = setTimeout(() => setOperacaoOpen(true), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname]);
+
+  const toggleOperacao = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setOperacaoOpen(!operacaoOpen);
+    if (!pathname.startsWith('/operacao')) {
+      router.push('/operacao/inspecoes');
+      if (onClose) onClose();
+    }
+  };
 
   return (
     <aside className="w-[260px] flex-shrink-0 flex flex-col h-screen bg-[#0b0f19] border-r border-white/5 top-0 sticky print:hidden">
@@ -78,13 +110,64 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-none">
-        {navGroups.flatMap(g => g.items as any[]).map((item) => {
-          const itemAny = item as any;
-          const isActive = pathname === item.href || itemAny.isActive;
+        {navGroups.flatMap(g => g.items as NavItem[]).map((item) => {
+          if (item.isGroup && item.children) {
+            const isGroupActive = pathname.startsWith('/operacao');
+            return (
+              <div key={item.name} className="space-y-1">
+                <button
+                  onClick={toggleOperacao}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+                    isGroupActive 
+                      ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/10' 
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="w-[18px] h-[18px] shrink-0" style={{ color: isGroupActive ? '#c084fc' : 'currentColor' }} />
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${operacaoOpen ? 'rotate-90' : ''}`} />
+                </button>
+                {operacaoOpen && (
+                  <div className="pl-5 space-y-1 pt-1">
+                    {item.children.map(child => {
+                      const isChildActive = pathname.startsWith(child.href!);
+                      return (
+                        <Link
+                          key={child.name}
+                          href={child.href!}
+                          prefetch={true}
+                          onClick={onClose}
+                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-200 ${
+                            isChildActive 
+                              ? 'bg-white/10 text-white font-bold' 
+                              : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <child.icon className={`w-4 h-4 shrink-0 ${isChildActive ? 'text-purple-400' : ''}`} />
+                            <span className="truncate">{child.name}</span>
+                          </div>
+                          {child.badge && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-gray-300 font-bold uppercase tracking-wider">
+                              {child.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
-              href={item.href}
+              href={item.href!}
               prefetch={true}
               onClick={onClose}
               className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
@@ -94,23 +177,18 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               }`}
             >
               <div className="flex items-center gap-3 w-full">
-                <item.icon className="w-[18px] h-[18px] shrink-0" style={{ color: isActive ? '#c084fc' : (itemAny.color ? 'var(--tw-colors-purple-400)' : 'currentColor') }} />
+                <item.icon className="w-[18px] h-[18px] shrink-0" style={{ color: isActive ? '#c084fc' : (item.color ? 'var(--tw-colors-purple-400)' : 'currentColor') }} />
                 <span className="truncate">{item.name}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {itemAny.badge && (
+                {item.badge && (
                   <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${
-                    typeof itemAny.badge === 'string' 
+                    typeof item.badge === 'string' 
                       ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
                       : 'bg-white/5 text-gray-300 border-white/10'
                   }`}>
-                    {itemAny.badge}
+                    {item.badge}
                   </span>
-                )}
-                {itemAny.hasSubmenu && (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-3 h-3 ${isActive ? 'rotate-90 text-purple-400' : 'text-gray-600'}`}>
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
                 )}
               </div>
             </Link>

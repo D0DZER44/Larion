@@ -118,8 +118,20 @@ export default function RiscosPage() {
   const { sectors } = useAppStore();
   const SETORES_OPCOES = sectors.map(s => s.name);
 
-  const storeRiscos = useAppStore(state => state.riscos);
-  const storeAcoes = useAppStore(state => state.acoes);
+  const filterJunk = (items: any[]) => {
+    return items.filter(i => {
+      const textFields = [i.title, i.titulo, i.descricao, i.name, i.nome, i.atividade, i.nr, i.responsavel, i.category].filter(Boolean).join(' ').toLowerCase();
+      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
+      if (!i.title && !i.titulo && !i.atividade && !i.nome && !i.name && !i.descricao && !i.category) return false;
+      return true;
+    });
+  };
+
+  const storeRiscosRaw = useAppStore(state => state.riscos);
+  const storeAcoesRaw = useAppStore(state => state.acoes);
+  
+  const storeRiscos = useMemo(() => filterJunk(storeRiscosRaw || []), [storeRiscosRaw]);
+  const storeAcoes = useMemo(() => filterJunk(storeAcoesRaw || []), [storeAcoesRaw]);
 
   const [activeTab, setActiveTab] = useState<TabType>('Visão Geral');
   const [tipoFilter, setTipoFilter] = useState<'Todos' | NivelRisco>('Todos');
@@ -528,6 +540,13 @@ export default function RiscosPage() {
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 mt-2 shrink-0">
                <div>
+                 <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                   <span>Operação</span>
+                   <span className="text-gray-600">›</span>
+                   <span>Riscos</span>
+                   <span className="text-gray-600">›</span>
+                   <span className="text-gray-400">{activeTab}</span>
+                 </div>
                  <h2 className="text-lg font-bold text-white tracking-wide uppercase">
                     {activeTab === 'Visão Geral' && 'Visão Geral de Riscos'}
                     {activeTab === 'Atividade' && 'Riscos por Atividade'}
@@ -1202,8 +1221,8 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automática</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => d.origem === 'inspecao' || d.origem === 'Inspeção' || d.origem === 'Automática').length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => d.origem === 'inspecao' || d.origem === 'Inspeção' || d.origem === 'Automática').length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length}</p>
+                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
                   <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
@@ -1212,8 +1231,8 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Origem manual</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => d.origem !== 'inspecao' && d.origem !== 'Inspeção' && d.origem !== 'Automática').length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => d.origem !== 'inspecao' && d.origem !== 'Inspeção' && d.origem !== 'Automática').length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length}</p>
+                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
                   <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
@@ -1247,7 +1266,7 @@ export default function RiscosPage() {
                       <tbody className="divide-y divide-white/5 bg-[#121826]">
                         {combinedData.map((item) => {
                           const isSelected = selectedAction?.id === item.id;
-                          const isAuto = item.origem === 'inspecao' || item.origem === 'Inspeção' || item.origem === 'Automática';
+                          const isAuto = (item.origem || '').toLowerCase().includes('auto') || (item.origem || '').toLowerCase().includes('inspe');
                           return (
                           <tr key={item.id} className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
                              if (isSelected && isDrawerActionOpen) {
@@ -1601,9 +1620,9 @@ export default function RiscosPage() {
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Origem</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
-                           {selectedAction.origem === 'Inspeção' ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                           {(selectedAction.origem || '').toLowerCase().includes('inspe') ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                            {selectedAction.origem || 'Automática'} 
-                            <span className="text-gray-500 text-xs">({selectedAction.origem === 'Inspeção' ? 'Inspeção de campo' : 'Motor de Riscos'})</span>
+                            <span className="text-gray-500 text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
