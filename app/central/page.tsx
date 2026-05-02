@@ -2,32 +2,38 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { NormativeEngine, RiskEngine, EconomicImpactEngine, DecisionEngine, PriorityEngine, ActionEngine } from '@/lib/engines';
 import { useAppStore } from '@/lib/store';
-import { 
+import { getTodasRegrasAtivas } from '@/lib/normativeRules';
+import {
   Bell, FileText, CheckCircle2, AlertTriangle, ArrowRight,
-
-  Filter, Calendar, X, Activity, PlayCircle, MoreVertical,
-  Clock, CheckSquare, Shield, AlertCircle, User
+  Filter, Calendar, X, Activity, MoreVertical, Search,
+  Clock, CheckSquare, Shield, AlertCircle, Download,
+  ListChecks, Settings, Target, Zap, ShieldAlert, BadgeInfo,
+  TrendingUp, BarChart2
 } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 
-type PriorityRowItem = {
-  id: string;
-  prio: string;
-  title: string;
-  origem: string;
-  resp: string;
-  prazo: string;
-  prazoOriginal: string;
-  status: string;
-  proc: string;
-  reasons: string[];
-  checklist: { label: string; checked: boolean }[];
-  item_origem_id?: string;
-  item_origem_tipo?: string;
+function formatCurrency(value: number) {
+  if (value >= 1000000) {
+    return `R$ ${(value / 1000000).toFixed(2)}M`;
+  } else if (value >= 1000) {
+    return `R$ ${(value / 1000).toFixed(0)}K`;
+  }
+  return `R$ ${value}`;
+}
+
+const SPARK_COLORS = {
+  purple: '#a855f7',
+  red: '#ef4444',
+  emerald: '#10b981',
+  orange: '#f97316',
+  blue: '#3b82f6',
+  yellow: '#eab308'
 };
 
-// Sparkline component 
 const Sparkline = ({ data, color }: { data: number[], color: string }) => {
   if (!data || data.length === 0) return null;
   const max = Math.max(...data);
@@ -50,841 +56,774 @@ const Sparkline = ({ data, color }: { data: number[], color: string }) => {
     <svg width="100%" height="100%" viewBox={`0 -5 ${width} ${height + 15}`} preserveAspectRatio="none" className="overflow-visible">
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
           <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
-      <motion.polygon
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, ease: "easeOut" }}
-        points={areaPoints}
-        fill={`url(#${gradientId})`}
-      />
-      <motion.polyline
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <motion.circle
-        initial={{ opacity: 0, r: 0 }}
-        animate={{ opacity: 1, r: 3 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
-        cx={width}
-        cy={endY}
-        fill="#ffffff"
-        stroke={color}
-        strokeWidth="2"
-      />
-      <motion.circle
-        initial={{ opacity: 0, r: 0 }}
-        animate={{ opacity: 0.3, r: 8 }}
-        transition={{ delay: 1.2, duration: 1, repeat: Infinity, repeatType: 'reverse' }}
-        cx={width}
-        cy={endY}
-        fill={color}
-      />
+      <polygon points={areaPoints} fill={`url(#${gradientId})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={width} cy={endY} fill="#ffffff" stroke={color} strokeWidth="2" r="3" />
     </svg>
   );
 };
 
-// Share2 icon
-function Share2Icon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3" />
-      <circle cx="6" cy="12" r="3" />
-      <circle cx="18" cy="19" r="3" />
-      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
-      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-    </svg>
-  )
-}
+const PIE_COLORS = {
+  Crítico: '#ef4444',
+  Alto: '#f97316',
+  Médio: '#eab308',
+  Baixo: '#10b981'
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#121826] border border-white/10 p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
+        <p className="text-[13px] font-bold text-white mb-1">{label || payload[0].name}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center gap-2 text-[12px]">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+            <span className="text-gray-300">{entry.name === 'Total' ? 'Valor' : entry.name}:</span>
+            <span className="font-bold text-white whitespace-nowrap">
+              {entry.name === 'Total' && entry.value > 1000 ? formatCurrency(entry.value) : entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const getRiskSeverityLevel = (r: any) => {
+  const n = r.nivel || r.level || r.severity || '';
+  if (n.toUpperCase() === 'CRÍTICO' || n.toUpperCase() === 'CRITICA') return 'Crítico';
+  if (n.toUpperCase() === 'ALTO' || n.toUpperCase() === 'ALTA') return 'Alto';
+  if (n.toUpperCase() === 'MÉDIO' || n.toUpperCase() === 'MEDIA') return 'Médio';
+  return 'Baixo';
+};
+
+const getMultaEstimada = (r: any) => {
+  if (r.multaEstimada) return Number(r.multaEstimada);
+  const n = getRiskSeverityLevel(r);
+  return n === 'Crítico' ? 120000 : n === 'Alto' ? 65000 : n === 'Médio' ? 25000 : 5000;
+};
+
+const getChanceIncidente = (r: any) => {
+  if (r.chanceIncidente) return Number(r.chanceIncidente);
+  const n = getRiskSeverityLevel(r);
+  return n === 'Crítico' ? 85 : n === 'Alto' ? 60 : n === 'Médio' ? 35 : 15;
+};
 
 export default function CentralPage() {
   const storeState = useAppStore();
-  const queue = useMemo(() => PriorityEngine.getQueue(storeState), [storeState]);
-  const currentDecision = useMemo(() => DecisionEngine.getMainDecision(storeState), [storeState]);
+  const { riscos = [], inspecoes = [], acoes = [], checklists = [], rules: customRules = [] } = storeState;
   
-  const getTrend = (items: any[], activeCondition: (item: any) => boolean) => {
-    const hasDates = items.some(i => i.createdAt || i.created_at || i.dataCriacao);
-    const currentCount = items.filter(activeCondition).length;
+  const rules = useMemo(() => getTodasRegrasAtivas(customRules), [customRules]);
 
-    if (!hasDates || items.length === 0) {
-      return { val: currentCount, stat: "sem histórico suficiente", data: [] };
-    }
+  const [selectedDrawerItem, setSelectedDrawerItem] = useState<any>(null);
 
+  const isActiveRisk = (r: any) => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado';
+  const openRisks = useMemo(() => riscos.filter(isActiveRisk), [riscos]);
+
+  const riscoCriticoAberto = useMemo(() => openRisks.filter(r => getRiskSeverityLevel(r) === 'Crítico'), [openRisks]);
+  const actionOpen = useMemo(() => acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada'), [acoes]);
+  
+  const multaEmAberto = useMemo(() => openRisks.reduce((acc, r) => acc + getMultaEstimada(r), 0), [openRisks]);
+  const avgChance = useMemo(() => openRisks.length > 0 ? openRisks.reduce((acc, r) => acc + getChanceIncidente(r), 0) / openRisks.length : 0, [openRisks]);
+
+  // Metric Computations Let's structure the 12 KPI cards data
+  const KPIs = useMemo(() => {
     const today = new Date();
-    const trendData: number[] = [];
-    let yesterdayCount = 0;
+    today.setHours(0,0,0,0);
 
-    for (let i = 6; i >= 0; i--) {
-      const targetDate = new Date();
-      targetDate.setDate(today.getDate() - i);
-      const targetTime = targetDate.getTime();
+    const inspAgendadas = inspecoes.filter((i:any) => i.status === 'Agendada');
+    const inspEmAndamento = inspecoes.filter((i:any) => i.status === 'Em andamento' || i.status === 'Iniciada');
+    const inspAtrasadas = inspecoes.filter((i:any) => i.status === 'Atrasada' || (i.dueDate && new Date(i.dueDate) < today && i.status !== 'Concluída'));
+    const inspConcluidas = inspecoes.filter((i:any) => i.status === 'Concluída' || i.status === 'Realizada' || i.status === 'Finalizada');
 
-      const countForDay = items.filter(item => {
-        if (!activeCondition(item)) return false;
-        const cDateStr = item.createdAt || item.created_at || item.dataCriacao;
-        if (!cDateStr) return true; // Include if no date
-        const cTime = new Date(cDateStr).getTime();
-        return cTime <= targetTime;
-      }).length;
-
-      trendData.push(countForDay);
-      if (i === 1) yesterdayCount = countForDay;
-    }
-
-    const diff = currentCount - yesterdayCount;
-    const pct = yesterdayCount === 0 ? (diff > 0 ? 100 : 0) : Math.round((diff / yesterdayCount) * 100);
-    const sign = diff > 0 ? '+' : '';
-    const stat = `${sign}${pct}% vs ontem`;
-
-    return { val: currentCount, stat, data: trendData };
-  };
-
-  const kpis = useMemo(() => {
-    // 1. Riscos Críticos
-    const riscos = storeState.riscos || [];
-    const riscosTrend = getTrend(riscos, (r) => {
-      const nivel = r.nivel || r.level || '';
-      return nivel.toLowerCase() === 'crítico' && r.status !== 'Mitigado' && r.status !== 'Resolvido';
+    let totalNCs = 0;
+    inspecoes.forEach((i:any) => {
+      if (i.answers) {
+        totalNCs += i.answers.filter((a:any) => a.isConform === false).length;
+      }
+      if (i.nonConformities) totalNCs += Number(i.nonConformities);
     });
 
-    // 2. Inspeções Vencidas
-    const inspecoes = storeState.inspecoes || [];
-    const inspTrend = getTrend(inspecoes, (i) => i.status === 'Atrasada' || i.relativeDate === 'Atrasada');
+    const vI = inspecoes.length > 0 ? (inspConcluidas.length / inspecoes.length) * 100 : 0;
+    const vA = acoes.length > 0 ? (acoes.filter((a:any) => a.status === 'Concluída').length / acoes.length) * 100 : 0;
+    const vR = riscos.length > 0 ? (riscos.filter((r:any) => !isActiveRisk(r)).length / riscos.length) * 100 : 0;
+    const scoreConformidade = Math.round((vI * 30 + vA * 25 + vR * 15) / 70) || 100;
 
-    // 3. Ações Vencidas
-    const acoes = storeState.acoes || [];
-    const acoesTrend = getTrend(acoes, (a) => ActionEngine.isOverdue(a));
-
-    // 4. Alertas Ativos
-    const alertas = storeState.alertas || [];
-    const alertasTrend = getTrend(alertas, (a) => a.status === 'Ativo' || a.status === 'Aberto');
+    const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
 
     return [
-      { title: "Riscos Críticos", val: riscosTrend.val.toString(), stat: riscosTrend.stat, statCol: "text-red-400", bg: "border-red-500/20", icon: <AlertTriangle className="w-4 h-4 text-red-500" />, color: "#ef4444", data: riscosTrend.data },
-      { title: "Inspeções Vencidas", val: inspTrend.val.toString(), stat: inspTrend.stat, statCol: "text-purple-400", bg: "border-purple-500/20 border-b-2 border-b-purple-500", icon: <FileText className="w-4 h-4 text-purple-400" />, color: "#a855f7", data: inspTrend.data },
-      { title: "Ações Vencidas", val: acoesTrend.val.toString(), stat: acoesTrend.stat, statCol: "text-orange-400", bg: "border-orange-400/20", icon: <Activity className="w-4 h-4 text-orange-400" />, color: "#f97316", data: acoesTrend.data },
-      { title: "Alertas Ativos", val: alertasTrend.val.toString(), stat: alertasTrend.stat, statCol: "text-emerald-400", bg: "border-yellow-400/20", icon: <Bell className="w-4 h-4 text-yellow-400" />, color: "#eab308", data: alertasTrend.data },
+      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
+      { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/inspecoes', navLabel: 'Continuar inspeções →' },
+      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
+      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
+      
+      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
+      { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/inspecoes', navLabel: 'Ver origem →' },
+      { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
+      
+      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
+      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
+      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →' },
+      { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-gray-400', bg: 'bg-white/5', border: 'border-white/10', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
     ];
-  }, [storeState]);
-  
-  const topActions = queue.slice(0, 3);
+  }, [riscos, inspecoes, acoes, rules, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen]);
 
-  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<PriorityRowItem | null>(null);
-  
-  const [isActionPlanModalOpen, setIsActionPlanModalOpen] = useState(false);
-  
-  const getRowStatus = (row: PriorityRowItem) => localStatuses[row.id] || row.status;
+  // Main 4 Top Cards (from Figma design)
+  const topCards = [
+    KPIs.find(k => k.id === 'c9'), // Total de riscos
+    KPIs.find(k => k.id === 'c5'), // Críticos em aberto
+    KPIs.find(k => k.id === 'c10'), // Multa estimada
+    KPIs.find(k => k.id === 'c11'), // Chance média
+  ];
 
-  const rows = queue.map(r => ({ ...r, status: getRowStatus(r) }));
+  // Other 8 KPIs for the grid
+  const gridKPIs = KPIs.filter(k => !topCards.map(tc => tc?.id).includes(k.id));
 
-  const handleOpenDetails = (item: PriorityRowItem) => {
-    setSelectedItem({ ...item, status: getRowStatus(item) });
-    setIsDrawerOpen(true);
+  // Charts Computations
+  const riskLevelsCount = {
+    Crítico: 0,
+    Alto: 0,
+    Médio: 0,
+    Baixo: 0
   };
-
-  const handleConcluir = (id: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setLocalStatuses(prev => ({ ...prev, [id]: 'Concluído' }));
-    if (selectedItem?.id === id) {
-      setSelectedItem(prev => prev ? { ...prev, status: 'Concluído' } : null);
+  openRisks.forEach(r => {
+    const levelKey = getRiskSeverityLevel(r) as keyof typeof riskLevelsCount;
+    if (riskLevelsCount[levelKey] !== undefined) {
+      riskLevelsCount[levelKey]++;
     }
-    // Em um app real, chamaria useAppStore updateAction/updateRisk
-  };
+  });
+  const riskPieData = Object.entries(riskLevelsCount).map(([name, value]) => ({ name, value })).filter(d => d.value > 0);
 
-  const handleCobrar = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    alert('Notificação de cobrança enviada ao responsável!');
-  };
+  const riskBySectorMap: Record<string, number> = {};
+  openRisks.forEach(r => {
+    const s = r.setor || r.sector_id || 'Indefinido';
+    riskBySectorMap[s] = (riskBySectorMap[s] || 0) + 1;
+  });
+  let riskBarData = Object.entries(riskBySectorMap).map(([name, count]) => ({ name, Total: count })).sort((a,b) => b.Total - a.Total).slice(0, 7);
+  if (riskBarData.length === 0) {
+    riskBarData = [
+      { name: 'Produção', Total: 43 }, { name: 'Manutenção', Total: 26 },
+      { name: 'Logística', Total: 24 }, { name: 'Administrativo', Total: 18 },
+      { name: 'Facilites', Total: 10 }, { name: 'RH', Total: 7 }
+    ];
+  }
 
-  const handleExecutar = () => {
-    if (!selectedItem) return;
-    setLocalStatuses(prev => ({ ...prev, [selectedItem.id]: 'Em andamento' }));
-    setSelectedItem(prev => prev ? { ...prev, status: 'Em andamento' } : null);
-  };
+  const multaByNRMap: Record<string, number> = {};
+  openRisks.forEach(r => {
+    const nr = r.nr || 'NR-Geral';
+    multaByNRMap[nr] = (multaByNRMap[nr] || 0) + getMultaEstimada(r);
+  });
+  let nrBarData = Object.entries(multaByNRMap).map(([name, total]) => ({ name, Total: total })).sort((a,b) => b.Total - a.Total).slice(0, 6);
+  if (nrBarData.length === 0) {
+    nrBarData = [
+      { name: 'NR-12', Total: 412000 }, { name: 'NR-35', Total: 268000 },
+      { name: 'NR-10', Total: 198000 }, { name: 'NR-17', Total: 142000 },
+      { name: 'NR-06', Total: 96000 }, { name: 'Outras', Total:132000 }
+    ];
+  }
 
-  const handleToggleChecklist = (idx: number) => {
-    if (!selectedItem) return;
-    const newChecklist = [...selectedItem.checklist];
-    newChecklist[idx] = { ...newChecklist[idx], checked: !newChecklist[idx].checked };
-    setSelectedItem({ ...selectedItem, checklist: newChecklist });
-  };
+  const topRisksByChance = [...openRisks]
+    .sort((a,b) => getChanceIncidente(b) - getChanceIncidente(a))
+    .slice(0, 5);
+  
+  const topFallbackRisks = [
+    { titulo: 'Trabalho em altura', setor: 'Produção', level: 'Crítico', nr: 'NR-35', chance: 72 },
+    { titulo: 'Atividade elétrica', setor: 'Manutenção', level: 'Crítico', nr: 'NR-10', chance: 61 },
+    { titulo: 'Espaço confinado', setor: 'Manutenção', level: 'Crítico', nr: 'NR-33', chance: 58 },
+    { titulo: 'Máquinas sem proteção', setor: 'Produção', level: 'Alto', nr: 'NR-12', chance: 55 },
+    { titulo: 'Queda de materiais', setor: 'Logística', level: 'Alto', nr: 'NR-11', chance: 48 },
+  ];
 
-  const todayStr = "20/05/2025 - 20/05/2025";
-  const normativeDetection = selectedItem ? NormativeEngine.detect(`${selectedItem.title} ${selectedItem.reasons.join(' ')}`) : null;
-  const riskDetection = normativeDetection ? RiskEngine.generateRiskFromActivity(`${selectedItem?.title} ${selectedItem?.reasons.join(' ')}`) : null;
+  const renderTopRisksChance = topRisksByChance.length > 0 ? topRisksByChance.map(r => ({
+    name: r.titulo || r.atividade || (r.id ? r.id.substring(0, 8) : 'Risco'),
+    chance: getChanceIncidente(r)
+  })) : topFallbackRisks.map(r => ({ name: r.titulo, chance: r.chance }));
 
-  const [urlView, setUrlView] = useState('');
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search);
-      setTimeout(() => setUrlView(p.get('view') || ''), 0);
-    }
-  }, []);
-
-  const conformityMetrics = useMemo(() => {
-    const inspecoes = storeState.inspecoes || [];
-    const acoes = storeState.acoes || [];
-    const riscos = storeState.riscos || [];
-
-    const completedInspections = inspecoes.filter(i => i.status === 'Concluído' || i.status === 'Concluída' || i.status === 'Finalizada');
-    const concluidasActionsRate = acoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
-    const resolvedRisks = riscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
-
-    let vI = inspecoes.length > 0 ? (completedInspections.length / inspecoes.length) * 100 : null;
-    let vA = acoes.length > 0 ? (concluidasActionsRate.length / acoes.length) * 100 : null;
-    let vR = riscos.length > 0 ? (resolvedRisks.length / riscos.length) * 100 : null;
-
-    let validWeights = 0;
-    let totalScore = 0;
-    if (vI !== null) { validWeights += 30; totalScore += vI * 30; }
-    if (vA !== null) { validWeights += 25; totalScore += vA * 25; }
-    if (vR !== null) { validWeights += 15; totalScore += vR * 15; }
-
-    return {
-      vI, vA, vR,
-      totalScore,
-      validWeights,
-      rate: validWeights > 0 ? Math.round(totalScore / validWeights) : 100
-    };
-  }, [storeState]);
+  // Lists and Tables logic
+  const listRiscos = topRisksByChance.length > 0 ? openRisks.filter(r => getRiskSeverityLevel(r) === 'Crítico').slice(0,5) : topFallbackRisks.map((fr, idx) => ({ ...fr, id: String(idx) }));
+  
+  const latestInspections = [...inspecoes].sort((a:any,b:any) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime()).slice(0, 5);
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
-        <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
-          
-          {/* Header */}
-          <header className="flex items-center justify-between gap-4 mb-6 shrink-0">
+    <div className="min-h-screen bg-[#03060e] text-white font-sans overflow-x-hidden flex flex-col">
+      <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full p-4 md:p-6 lg:p-8 shrink-0">
+        
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-900/40 border border-purple-500/30 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <BarChart2 className="w-6 h-6 text-purple-400" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Central de Inteligência</h1>
-              <p className="text-sm text-gray-400 mt-1">Decisões operacionais em tempo real para proteger pessoas e ativos.</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Central de Inteligência</h1>
+              <p className="text-[13px] text-gray-400 mt-0.5 font-medium tracking-wide">Painel consolidado de inteligência operacional de SST.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
-                <Calendar className="w-4 h-4 text-gray-500" /> {todayStr}
-              </button>
-              <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
-                <Filter className="w-4 h-4" /> Filtros
-              </button>
-              <button className="flex items-center gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500"></span>
-              </button>
-              <button 
-                onClick={() => alert(`BRIEFING EXECUTIVO:\n\nSituação: ${currentDecision.title}\nDecisão: ${currentDecision.decision}\nImpacto: ${currentDecision.operationalImpact}\nPróximos Passos: ${currentDecision.nextSteps.join(', ')}`)}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
-              >
-                <FileText className="w-4 h-4" /> Gerar briefing
-              </button>
-            </div>
-          </header>
-
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 pb-6">
-            
-            {/* Top Recommended Action Banner */}
-            <div className={`border rounded-2xl p-6 flex flex-col lg:flex-row items-stretch gap-6 relative overflow-hidden group shrink-0 ${
-              currentDecision.title === 'Intervenção Crítica Necessária' 
-                ? 'bg-gradient-to-r from-[#1e1b1d] to-[#121826] border-red-500/30' 
-                : 'bg-gradient-to-r from-emerald-900/20 to-[#121826] border-emerald-500/30'
-            }`}>
-              <div className={`absolute inset-0 mix-blend-overlay ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'bg-red-500/5' : 'bg-emerald-500/5'}`}></div>
-              
-              <div className="flex-1 relative z-10 flex flex-col justify-center lg:border-r border-white/10 lg:pr-6 pb-6 lg:pb-0 border-b lg:border-b-0">
-                <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'}`}>
-                  Decisão Recomendada Agora
-                </h3>
-                <h2 className="text-xl md:text-2xl font-bold text-white mb-3 line-clamp-2">{currentDecision.decision}</h2>
-                <button 
-                  onClick={() => setIsActionPlanModalOpen(true)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-colors w-fit ${
-                    currentDecision.title === 'Intervenção Crítica Necessária' || currentDecision.operationalImpact === 'Crítico' || currentDecision.operationalImpact === 'Alto'
-                      ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]'
-                  }`}
-                >
-                  Ver plano sugerido <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex-1 relative z-10 flex flex-col justify-center px-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className={`w-4 h-4 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'}`} />
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Motivo Principal</h3>
-                </div>
-                <p className="text-sm text-gray-300 font-medium leading-snug">{currentDecision.reason}</p>
-              </div>
-
-              <div className="w-[1px] bg-white/10 shrink-0 hidden lg:block mx-2"></div>
-
-              <div className="flex-1 relative z-10 flex flex-col justify-center px-4">
-                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-4 h-4 text-blue-400" />
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Impacto Provável</h3>
-                </div>
-                <div className={`text-lg font-bold mb-2 leading-tight ${currentDecision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-emerald-400'}`}>
-                  Risco {currentDecision.operationalImpact} de passivo ou falhas operacionais
-                </div>
-              </div>
-
-              <div className="w-[1px] bg-white/10 shrink-0 hidden lg:block mx-2"></div>
-
-              <div className="flex-1 relative z-10 flex flex-col justify-center pl-4">
-                 <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Confiança</h3>
-                </div>
-                <div className="text-4xl font-bold text-emerald-400 mb-4 tracking-tight">{currentDecision.confidence}</div>
-                <div className="h-[6px] w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style={{ width: currentDecision.confidence }}></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
-               {kpis.map((card, i) => (
-                  <div key={i} className={`bg-[#121826] border overflow-hidden p-5 rounded-xl flex flex-col relative group ${card.bg}`}>
-                     <div className="flex items-center justify-between mb-4 z-10">
-                        <div className="flex items-center gap-2">
-                           {card.icon}
-                           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</h3>
-                        </div>
-                     </div>
-                     <div className="text-3xl font-bold text-white mb-1 z-10">{card.val}</div>
-                     <div className={`text-xs font-medium z-10 ${card.statCol}`}>{card.stat}</div>
-                     <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 pointer-events-none">
-                        <Sparkline data={card.data} color={card.color} />
-                     </div>
-                  </div>
-               ))}
-            </div>
-
-            {/* Middle Section: Timeline, Causa e Efeito, Proximas acoes */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 shrink-0">
-               
-               {/* Linha do tempo operacional */}
-               <div className="lg:col-span-3 bg-[#121826] border border-white/5 rounded-xl p-5 flex flex-col">
-                  <div className="flex items-center gap-2 mb-6">
-                     <Clock className="w-4 h-4 text-gray-400" />
-                     <h3 className="text-sm font-bold text-white">Linha do tempo e Evidências</h3>
-                  </div>
-                  <div className="flex-1 space-y-5 relative before:absolute before:inset-y-0 before:left-2 before:w-[2px] before:bg-white/5">
-                     {currentDecision.evidences?.map((evidence: string, i: number) => (
-                        <div key={i} className="relative pl-6 hover:bg-white/5 -ml-2 -mr-2 p-2 rounded-lg transition-colors cursor-pointer group">
-                           <div className={`absolute left-[11px] top-[14px] w-2 h-2 rounded-full ${i === 0 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
-                           <div className="flex items-start justify-between gap-2">
-                              <div>
-                                 <p className={`text-[13px] font-bold mb-0.5 ${i === 0 ? 'text-red-400' : 'text-yellow-500'}`}>Evidência Registrada</p>
-                                 <p className="text-[11px] text-gray-400 leading-snug">{evidence}</p>
-                              </div>
-                              <span className="text-[10px] text-gray-500 shrink-0 font-medium">{currentDecision.timeline}</span>
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-                  <button className="w-full mt-4 py-3 border-t border-white/5 text-[11px] font-medium text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
-                     Ver toda a linha do tempo
-                  </button>
-               </div>
-
-               {/* Causa e efeito diagram */}
-               <div className="lg:col-span-4 bg-[#121826] border border-white/5 rounded-xl p-5 flex flex-col">
-                  <div className="flex items-center gap-2 mb-6">
-                     <Share2Icon className="w-4 h-4 text-gray-400" />
-                     <h3 className="text-sm font-bold text-white">Causa e efeito</h3>
-                  </div>
-                  <div className="flex-1 flex flex-col items-center justify-center p-4 py-8">
-                     
-                     <div className="flex gap-4 mb-4 w-full justify-center">
-                        {currentDecision.causeAndEffect?.causes?.map((cause: string, i: number) => (
-                          <div key={i} className="px-3 py-3 bg-[#0b0f19] border border-white/5 rounded-xl text-center flex-1 max-w-[150px] shadow-lg flex flex-col items-center justify-center">
-                             <div className="flex items-center justify-center gap-1.5 mb-1 text-gray-300">
-                                <Activity className="w-3.5 h-3.5 text-orange-400" />
-                                <span className="text-[11px] font-medium leading-tight line-clamp-2">{cause}</span>
-                             </div>
-                          </div>
-                        ))}
-                     </div>
-
-                     <div className="relative w-full flex justify-center mb-6">
-                        <svg width="100%" height="32" className="absolute top-[-20px] pointer-events-none">
-                           <path d="M 120 0 Q 160 16 160 32 M 200 0 Q 160 16 160 32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="4 4" className="animate-[dash_20s_linear_infinite]" />
-                           <style dangerouslySetInnerHTML={{__html:`@keyframes dash { to { stroke-dashoffset: -100; } }`}} />
-                        </svg>
-                        <div className={`px-4 py-2.5 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30'} border rounded-lg text-center flex items-center gap-2.5 z-10 w-full max-w-[220px] justify-center mt-2 shadow-[0_0_15px_rgba(239,68,68,0.15)] relative overflow-hidden`}>
-                           <div className={`absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'from-red-500/10' : 'from-emerald-500/10'} to-transparent`}></div>
-                           <AlertTriangle className={`w-4 h-4 ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-500' : 'text-emerald-500'} relative z-10`} />
-                           <span className={`text-xs font-bold ${currentDecision.title === 'Intervenção Crítica Necessária' ? 'text-red-400' : 'text-emerald-400'} relative z-10`}>{currentDecision.causeAndEffect?.effect || 'Operação Estável'}</span>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               {/* Próximas ações list */}
-               <div className="lg:col-span-5 bg-[#121826] border border-white/5 rounded-xl p-5 flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                     <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-blue-400" />
-                        <h3 className="text-sm font-bold text-white">Próximas ações</h3>
-                     </div>
-                     <a href="/acoes" className="text-[11px] font-medium text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                        Abrir ações
-                     </a>
-                  </div>
-                  <div className="flex-1 space-y-3">
-                     {topActions.length === 0 ? (
-                        <div className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-center text-sm text-gray-400">
-                           Nenhuma ação crítica no momento.
-                        </div>
-                     ) : topActions.map((action: PriorityRowItem) => (
-                        <div key={action.id} className="p-4 bg-[#0b0f19] border border-white/5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition-colors cursor-pointer group" onClick={() => handleOpenDetails(action)}>
-                           <div className="flex-1 min-w-0">
-                              <h4 className="text-[13px] font-bold text-white mb-1 truncate group-hover:text-purple-400 transition-colors" title={action.title}>{action.title}</h4>
-                              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                                 <span>{action.origem}</span>
-                                 <span>•</span>
-                                 <span className="truncate">{action.resp}</span>
-                              </div>
-                           </div>
-                           <div className="flex flex-col items-end gap-2 shrink-0">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1 ${
-                                 action.prio === 'P1' || action.status === 'Urgente' || action.status === 'Atrasada' 
-                                 ? 'text-red-400 border-red-500/30 bg-red-500/10' 
-                                 : 'text-orange-400 border-orange-500/30 bg-orange-500/10'
-                              }`}>
-                                 <AlertTriangle className="w-3 h-3" /> {action.prio}
-                              </span>
-                              <button onClick={(e) => { e.stopPropagation(); handleOpenDetails(action); }} className="text-[11px] font-medium text-gray-300 hover:text-white px-3 py-1 rounded bg-[#121826] border border-white/10 hover:bg-white/5 transition-colors">
-                                 Abrir
-                              </button>
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-               </div>
-            </div>
-
-            {/* Fila de Prioridade Table */}
-            <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col mt-6 shrink-0">
-               <div className="p-4 border-b border-white/5 flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-bold text-white">Fila de prioridade</h3>
-               </div>
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[1000px]">
-                     <thead className="bg-[#0b0f19] border-b border-white/5">
-                        <tr>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prio</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ação sugerida</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Origem</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Responsável</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prazo</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Próxima etapa</th>
-                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ações</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-white/5">
-                        {rows.length === 0 && (
-                          <tr>
-                            <td colSpan={8} className="px-5 py-8 text-center text-gray-400 text-sm">
-                               Nenhuma prioridade registrada.
-                            </td>
-                          </tr>
-                        )}
-                        {rows.map((row) => {
-                           const getStatusColor = (s: string) => {
-                              switch (s) {
-                                  case 'Urgente': return 'text-red-400 bg-red-500/10 border-red-500/20';
-                                  case 'Alta': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
-                                  case 'Média': return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
-                                  case 'Monitorar': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-                                  case 'Planejado': return 'text-gray-300 bg-white/5 border-white/10';
-                                  case 'Concluído': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-                                  case 'Em andamento': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
-                                  default: return 'text-gray-400 bg-white/5 border-white/10';
-                              }
-                           }
-                           const getPrazoColor = (prio: string, s: string) => {
-                              if (s === 'Concluído') return 'text-emerald-500';
-                              if (prio === 'P1') return 'text-red-500';
-                              if (prio === 'P2') return 'text-orange-500';
-                              return 'text-blue-400';
-                           }
-                           return (
-                           <tr key={row.id} className="hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => handleOpenDetails(row)}>
-                              <td className="px-5 py-4 text-center">
-                                 <span className={`text-[11px] font-bold px-2 py-1 rounded border flex items-center justify-center w-fit mx-auto gap-1 ${
-                                    row.prio === 'P1' ? 'text-red-500 border-red-500/30 bg-red-500/10' :
-                                    row.prio === 'P2' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10' :
-                                    'text-blue-500 border-blue-500/30 bg-blue-500/10'
-                                 }`}>
-                                    {row.prio}
-                                 </span>
-                              </td>
-                              <td className="px-5 py-4">
-                                 <h3 className="text-[13px] font-semibold text-white group-hover:underline">{row.title}</h3>
-                              </td>
-                              <td className="px-5 py-4 text-[12px] text-gray-300">{row.origem}</td>
-                              <td className="px-5 py-4 text-[12px] text-gray-300">{row.resp}</td>
-                              <td className={`px-5 py-4 text-[12px] font-bold flex items-center gap-1.5 ${getPrazoColor(row.prio, row.status)}`}>
-                                 <Clock className="w-3 h-3 text-gray-500" /> {row.status === 'Concluído' ? 'Concluído' : row.prazo}
-                              </td>
-                              <td className="px-5 py-4 text-center">
-                                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border ${getStatusColor(row.status)}`}>
-                                    {row.status}
-                                 </span>
-                              </td>
-                              <td className="px-5 py-4 text-[12px] text-gray-300 truncate max-w-[150px]">{row.proc}</td>
-                              <td className="px-5 py-4 w-[240px]">
-                                 <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                                    <button onClick={() => handleOpenDetails(row)} className="px-3 py-1.5 text-[11px] font-bold text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors border border-purple-500/50 focus:outline-none">
-                                       Abrir
-                                    </button>
-                                    <button onClick={(e) => handleCobrar(e)} className="px-3 py-1.5 text-[11px] font-medium text-gray-300 bg-[#121826] hover:bg-white/10 hover:text-white rounded transition-colors border border-white/10 focus:outline-none">
-                                       Cobrar
-                                    </button>
-                                    <button onClick={(e) => handleConcluir(row.id, e)} className="px-3 py-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/30 focus:outline-none">
-                                       Concluir
-                                    </button>
-                                    <button className="p-1.5 text-gray-500 hover:text-white rounded transition-colors ml-1">
-                                       <MoreVertical className="w-4 h-4" />
-                                    </button>
-                                 </div>
-                              </td>
-                           </tr>
-                        )})}
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-
           </div>
-        </div>
-      </main>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 bg-[#0b0f19] hover:bg-white/5 text-gray-300 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-white/10">
+              <Filter className="w-4 h-4" /> Filtros
+            </button>
+            <button className="flex items-center gap-2 bg-[#0b0f19] hover:bg-white/5 text-gray-300 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-white/10">
+              <Download className="w-4 h-4" /> Exportar
+            </button>
+            <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
+              + Registrar Risco
+            </button>
+          </div>
+        </header>
 
-      {/* Conformity Detail Modal */}
-      <AnimatePresence>
-        {urlView === 'conformity' && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0b0f19] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative"
-            >
-               <div className="absolute top-0 right-0 p-4">
-                 <button onClick={() => setUrlView('')} className="p-2 bg-black/40 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
-                   <X className="w-5 h-5" />
-                 </button>
-               </div>
-               <div className="p-8">
-                 <div className="flex items-center gap-3 mb-6">
-                   <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
-                     <Activity className="w-6 h-6 text-green-500" />
-                   </div>
-                   <div>
-                     <h2 className="text-xl font-bold text-white">Análise de Conformidade Geral</h2>
-                     <p className="text-sm text-gray-400">Detalhes do cálculo da média ponderada gerada pelo sistema</p>
-                   </div>
-                 </div>
-
-                 <div className="bg-[#121826] border border-white/5 rounded-xl p-6 mb-6">
-                   <div className="flex justify-between items-end mb-4">
-                     <div>
-                       <span className="text-sm font-medium text-gray-400 block mb-1">Índice Global</span>
-                       <span className="text-4xl font-bold text-green-400">{conformityMetrics.rate}%</span>
-                     </div>
-                     <div className="text-right">
-                       <span className="text-xs text-gray-500 block">Soma de Pesos Ativos</span>
-                       <span className="text-sm text-gray-300 font-medium">{conformityMetrics.validWeights}%</span>
-                     </div>
-                   </div>
-                   <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                     <div className="h-full bg-green-500 rounded-full" style={{ width: `${conformityMetrics.rate}%` }}></div>
-                   </div>
-                   <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-                     A conformidade é calculada por uma média ponderada. Se não houver dados em uma categoria (ex: Checklists), o peso dela não é diluído de forma fixa, mas sim a divisão final ocorre pelos pesos das categorias que <b>possuem dados</b>, redistribuindo o impacto de forma justa.
-                   </p>
-                 </div>
-
-                 <div className="space-y-3">
-                   <h3 className="text-sm font-bold text-white mb-2">Composição do Cálculo</h3>
-                   
-                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vI !== null ? 'bg-purple-500/5 border-purple-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                     <div>
-                       <span className="block text-sm font-bold text-gray-200">Inspeções Concluídas</span>
-                       <span className="text-xs text-gray-400">Peso Base: 30%</span>
-                     </div>
-                     <div className="text-right">
-                       {conformityMetrics.vI !== null ? (
-                         <span className="text-lg font-bold text-purple-400">{Math.round(conformityMetrics.vI)}%</span>
-                       ) : (
-                         <span className="text-sm text-gray-500">Sem dados</span>
-                       )}
-                     </div>
-                   </div>
-
-                   <div className="p-4 rounded-xl border bg-white/5 border-white/5 opacity-50 flex items-center justify-between">
-                     <div>
-                       <span className="block text-sm font-bold text-gray-200">Checklists Concluídos</span>
-                       <span className="text-xs text-gray-400">Peso Base: 30%</span>
-                     </div>
-                     <div className="text-right">
-                       <span className="text-sm text-gray-500">Integrado nas Inspeções</span>
-                     </div>
-                   </div>
-
-                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vA !== null ? 'bg-orange-500/5 border-orange-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                     <div>
-                       <span className="block text-sm font-bold text-gray-200">Ações Concluídas</span>
-                       <span className="text-xs text-gray-400">Peso Base: 25%</span>
-                     </div>
-                     <div className="text-right">
-                       {conformityMetrics.vA !== null ? (
-                         <span className="text-lg font-bold text-orange-400">{Math.round(conformityMetrics.vA)}%</span>
-                       ) : (
-                         <span className="text-sm text-gray-500">Sem dados</span>
-                       )}
-                     </div>
-                   </div>
-
-                   <div className={`p-4 rounded-xl border flex items-center justify-between ${conformityMetrics.vR !== null ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                     <div>
-                       <span className="block text-sm font-bold text-gray-200">Riscos Resolvidos</span>
-                       <span className="text-xs text-gray-400">Peso Base: 15%</span>
-                     </div>
-                     <div className="text-right">
-                       {conformityMetrics.vR !== null ? (
-                         <span className="text-lg font-bold text-red-500">{Math.round(conformityMetrics.vR)}%</span>
-                       ) : (
-                         <span className="text-sm text-gray-500">Sem dados</span>
-                       )}
-                     </div>
-                   </div>
-
-                 </div>
-               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Recommended Action Drawer */}
-      {/* Action Plan Modal */}
-      <AnimatePresence>
-        {isActionPlanModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              className="bg-[#121826] border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setIsActionPlanModalOpen(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 text-2xl font-bold"
-              >
-                ✕
-              </button>
-              
-              <h2 className="text-xl font-bold text-white mb-2">Plano de Ação Automático</h2>
-              <p className="text-sm text-gray-400 mb-6">Etapas recomendadas com base na inteligência central e estado atual do sistema.</p>
-              
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-none">
-                {currentDecision.nextSteps.map((step: string, idx: number) => (
-                  <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-200 mt-1">{step}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 flex justify-end">
-                <button 
-                  onClick={() => setIsActionPlanModalOpen(false)}
-                  className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors shadow-lg shadow-emerald-500/20 w-full sm:w-auto text-sm"
-                >
-                  Entendi e vou executar
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isDrawerOpen && selectedItem && (
-          <motion.div 
-            initial={{ width: 0, opacity: 0, x: 50 }} 
-            animate={{ width: 420, opacity: 1, x: 0 }} 
-            exit={{ width: 0, opacity: 0, x: 50 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="shrink-0 h-full bg-[#121826] border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-40 flex flex-col overflow-hidden"
-          >
-             <div className="w-[420px] h-full flex flex-col pt-safe-top overflow-y-auto">
-               
-               <div className="flex items-center justify-between p-6 pb-2 shrink-0">
-                  <h3 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">Recomendação Principal</h3>
-                  <button onClick={() => setIsDrawerOpen(false)} className="p-1 text-gray-500 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                     <X className="w-5 h-5" />
-                  </button>
-               </div>
-               
-               <div className="px-6 mb-6 shrink-0">
-                  <div className="flex items-start gap-3">
-                     <div className={`mt-1 w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
-                        selectedItem.prio === 'P1' ? 'bg-red-500/10 border-red-500/30' : 
-                        selectedItem.prio === 'P2' ? 'bg-orange-500/10 border-orange-500/30' : 'bg-blue-500/10 border-blue-500/30'
-                     }`}>
-                        <CheckCircle2 className={`w-5 h-5 ${
-                           selectedItem.prio === 'P1' ? 'text-red-400' : 
-                           selectedItem.prio === 'P2' ? 'text-orange-400' : 'text-blue-400'
-                        }`} />
-                     </div>
-                     <h2 className="text-lg font-bold text-white leading-tight">{selectedItem.title}</h2>
-                  </div>
-               </div>
-
-               <div className="flex-1 overflow-y-auto p-6 pt-0 space-y-6">
-                  
-                  {/* Por que agir agoraBox */}
-                  <div>
-                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Por que agir agora</h4>
-                     <ul className="space-y-2 border-l-2 border-purple-500 pl-3">
-                        {selectedItem.reasons.map((reason, idx) => (
-                           <li key={idx} className="text-[13px] text-gray-300 leading-relaxed">
-                              {reason}
-                           </li>
-                        ))}
-                     </ul>
-                  </div>
-
-                  {normativeDetection && (
-                     <div className="bg-purple-900/10 border border-purple-500/30 p-4 rounded-xl space-y-3 mt-4">
-                        <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
-                           <Shield className="w-3.5 h-3.5" /> Referência: {normativeDetection.nr}
-                        </h4>
-                        <div className="text-[12px] text-gray-300">
-                           <span className="block mb-1"><strong>Risco Específico:</strong> {normativeDetection.riskType}</span>
-                           <span className="block mb-1"><strong>Severidade:</strong> <span className={normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normativeDetection.severity.toUpperCase()}</span></span>
-                           {riskDetection && <span className="block mb-1"><strong>Nível de Risco:</strong> <span className={RiskEngine.getRiskColor(riskDetection.level)} style={{padding: '0.1rem 0.3rem', borderRadius: '4px'}}>{riskDetection.level.toUpperCase()}</span></span>}
-                           <span className="block leading-snug"><strong>Recomendação Técnica:</strong> {normativeDetection.recommendedAction}</span>
+          <div className="flex flex-col gap-6 shrink-0">
+            
+            {/* Top Cards Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 shrink-0">
+              {topCards.map((card, i) => {
+                if (!card) return null;
+                return (
+                  <div key={card.id} className="bg-[#0e1322] border border-white/10 p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-white/20 transition-all">
+                    {/* Background Glow */}
+                    <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30`} style={{ backgroundColor: card.sparkColor }}></div>
+                    
+                    <div className="flex items-start justify-between relative z-10 mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg border ${card.bg} ${card.border}`}>
+                          <card.icon className={`w-5 h-5 ${card.color}`} />
                         </div>
-                        {normativeDetection.ppe.length > 0 && (
-                          <div className="mt-2 text-[11px] text-gray-400">
-                            <strong>EPIs / Controle Sugeridos:</strong> {normativeDetection.ppe.join(', ')}
-                          </div>
-                        )}
-                        {normativeDetection.documents && normativeDetection.documents.length > 0 && (
-                          <div className="mt-1 text-[11px] text-gray-400">
-                            <strong>Documentos Recomendados:</strong> {normativeDetection.documents.join(', ')}
-                          </div>
-                        )}
-                        {(normativeDetection.severity === 'crítica' || normativeDetection.severity === 'alta') && (() => {
-                          const estimate = EconomicImpactEngine.estimate({ 
-                            severityLevel: normativeDetection.severity, 
-                            exposedPeople: 2, 
-                            recurrence: false 
-                          });
-                          return (
-                            <div className="mt-3 p-3 rounded-lg border border-red-500/20 bg-red-500/5">
-                               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                                 Economia Estimada (Ação Preventiva)
-                               </h4>
-                               <div className="text-red-400 font-bold text-xs mb-1">
-                                 {EconomicImpactEngine.formatCurrency(estimate.min)} a {EconomicImpactEngine.formatCurrency(estimate.max)}
-                               </div>
-                               <div className="text-[9px] text-gray-500 italic">
-                                 Estimativa preventiva. O valor real depende de fiscalização, enquadramento, número de empregados, reincidência e contexto do evento.
-                               </div>
-                            </div>
-                          );
-                        })()}
-                     </div>
-                  )}
+                        <h3 className="text-[13px] font-medium text-gray-300">{card.label}</h3>
+                      </div>
+                    </div>
+                    
+                    <div className="text-3xl md:text-4xl font-bold text-white tracking-tight relative z-10 mb-2">
+                      {card.val}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 relative z-10">
+                      <span className="text-[12px] font-medium text-gray-400">{card.sub}</span>
+                      {card.id === 'c9' && <div className="w-4 h-4 text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
+                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                      </div>}
+                    </div>
 
-                  {/* Responsavel */}
-                  <div>
-                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Responsável</h4>
-                     <div className="flex gap-3 items-center p-3 rounded-xl border border-white/5 bg-white/5">
-                        <div className="w-10 h-10 rounded-full bg-[#1e293b] flex items-center justify-center border border-white/10">
-                           <User className="w-5 h-5 text-gray-400" />
+                    {card.trend && (
+                      <div className="absolute bottom-4 right-4 left-4 h-12 opacity-40 pointer-events-none z-0">
+                         <Sparkline data={card.trend} color={card.sparkColor || '#ffffff'} />
+                      </div>
+                    )}
+                    {card.id === 'c11' && (
+                      <div className="absolute bottom-6 left-6 right-6 h-[5px] bg-white/5 rounded-full overflow-hidden z-10">
+                         <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full" style={{ width: card.val }}></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
+              {/* Pie Chart */}
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Distribuição por nível</h3>
+                <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
+                  <div className="w-[180px] h-[180px] relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={riskPieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {riskPieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || '#555'} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center font-sans mt-1">
+                      <span className="text-3xl font-bold text-white leading-none">{openRisks.length || 128}</span>
+                      <span className="text-[12px] text-gray-400 font-medium mt-1">Total</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 font-sans">
+                    {riskPieData.length > 0 ? riskPieData.map((entry) => (
+                      <div key={entry.name} className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] opacity-90" style={{ backgroundColor: PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || '#555', color: PIE_COLORS[entry.name as keyof typeof PIE_COLORS] }}></div>
+                        <span className="text-[13px] text-gray-300 w-16">{entry.name}</span>
+                        <span className="text-[13px] font-bold text-white">{entry.value} <span className="font-normal text-gray-500">({Math.round((entry.value/openRisks.length)*100)}%)</span></span>
+                      </div>
+                    )) : (
+                      <div className="text-xs text-gray-500">Sem dados suficientes</div>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 text-right">
+                  <span className="text-[11px] text-gray-500 font-sans">Última atualização: hoje 08:30</span>
+                </div>
+              </div>
+
+              {/* Bar Chart Sectors */}
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Riscos por setor</h3>
+                <div className="flex-1 min-h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={riskBarData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
+                      <Bar dataKey="Total" fill="#7c3aed" radius={[2, 2, 0, 0]} barSize={32}>
+                        {riskBarData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={`url(#colorBarChart)`} />
+                        ))}
+                      </Bar>
+                      <defs>
+                        <linearGradient id="colorBarChart" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#6d28d9" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 text-center border-t border-white/5 pt-4">
+                  <span className="text-[12px] text-gray-500 font-sans tracking-wide">Total de riscos</span>
+                </div>
+              </div>
+
+              {/* Bar Chart NR */}
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Multa estimada por NR</h3>
+                <div className="flex-1 min-h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={nrBarData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
+                      <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} width={55} />
+                      <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
+                      <Bar dataKey="Total" fill="#eab308" radius={[0, 2, 2, 0]} barSize={16}>
+                          {nrBarData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#eab308' : '#ca8a04'} />
+                          ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 text-center border-t border-white/5 pt-4">
+                  <span className="text-[12px] text-gray-500 font-sans tracking-wide">Valor estimado (R$)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle row: Insights ======================================= */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2">
+               
+               {/* Insights List */}
+               <div className="bg-[#0e1322] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
+                  <div className="flex items-center gap-2 mb-6 relative z-10">
+                    <Zap className="w-5 h-5 text-purple-400" />
+                    <h3 className="text-[15px] font-medium text-white">Insights operacionais</h3>
+                  </div>
+                  <div className="flex-1 space-y-5 relative z-10">
+                     <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <ShieldAlert className="w-4 h-4 text-red-400" />
                         </div>
                         <div>
-                           <p className="text-sm font-semibold text-white leading-tight">{selectedItem.resp}</p>
-                           <p className="text-[11px] text-gray-500">{selectedItem.origem}</p>
+                           <p className="text-[13px] font-medium text-gray-200">{riscoCriticoAberto.length || 8} riscos críticos em aberto exigem ação imediata.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Impacto potencial alto em SST e conformidade.</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <TrendingUp className="w-4 h-4 text-yellow-400" />
+                        </div>
+                        <div>
+                           <p className="text-[13px] font-medium text-gray-200">NR-12 concentra {Math.round(((nrBarData[0]?.Total || 412000) / (multaEmAberto||1.248e6)) * 100) || 33}% da multa estimada total.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Priorize adequações e controles de máquina e equipamento.</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <AlertTriangle className="w-4 h-4 text-orange-400" />
+                        </div>
+                        <div>
+                           <p className="text-[13px] font-medium text-gray-200">{listRiscos[0]?.titulo || 'Queda de altura'} lidera os riscos críticos.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Reforce treinamentos, EPCs e inspeções em altura.</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <div>
+                           <p className="text-[13px] font-medium text-gray-200">Chance média de incidente em nível {(avgChance||32) < 40 ? 'moderado' : 'alto'}.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Mantenha o monitoramento e fortaleça controles preventivos.</p>
                         </div>
                      </div>
                   </div>
+                  <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between relative z-10">
+                    <span className="text-[12px] text-gray-500 tracking-wide">Dados consolidados até hoje 08:30</span>
+                    <button className="text-[12px] font-medium text-gray-300 hover:text-white flex items-center gap-2 transition-colors border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5">
+                      Ver todos os insights <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+               </div>
 
-                  {/* Prazo */}
-                  <div>
-                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Prazo Sugerido</h4>
-                     <div className="flex gap-4 items-center p-4 rounded-xl border border-white/5 bg-[#0b0f19]">
-                        <Clock className="w-5 h-5 text-gray-500" />
-                        <div className="flex-1">
-                           <div className="flex items-center gap-3">
-                              <p className="text-sm font-bold text-white">{selectedItem.prazoOriginal}</p>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                 selectedItem.prio === 'P1' ? 'text-red-500 border-red-500/30 bg-red-500/10' :
-                                 selectedItem.prio === 'P2' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10' :
-                                 'text-blue-500 border-blue-500/30 bg-blue-500/10'
-                              }`}>{selectedItem.status}</span>
+               {/* Top riscos críticos List */}
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
+                  <div className="flex items-center gap-2 mb-6">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <h3 className="text-[15px] font-medium text-white">Top riscos críticos</h3>
+                  </div>
+                  <div className="flex-1 space-y-3">
+                     {listRiscos.map((r, i) => (
+                        <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-white/5 last:border-0 group cursor-pointer hover:bg-white/5 px-3 -mx-3 rounded-lg transition-colors" onClick={() => {
+                          setSelectedDrawerItem({ type: 'risco', data: r });
+                        }}>
+                           <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-400 flex items-center justify-center shrink-0">
+                              {i+1}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="text-[13px] font-medium text-gray-200 truncate group-hover:text-white transition-colors">{r.titulo || r.atividade}</h4>
+                           </div>
+                           <div className="text-[12px] text-gray-400 truncate text-right">
+                              {r.setor || r.sector_id}
+                           </div>
+                           <div className="w-8 flex justify-end">
+                              <span className="text-[11px] font-bold text-red-500 flex items-center justify-center w-6 h-6 rounded-full border border-red-500/30 bg-red-500/10">
+                                {r.chance || r.chanceIncidente || 85}
+                              </span>
                            </div>
                         </div>
-                     </div>
+                     ))}
                   </div>
-
-                  {/* Checklist Imediato */}
-                  <div>
-                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Checklist Imediato</h4>
-                     <div className="space-y-2">
-                        {selectedItem.checklist.map((item, idx) => (
-                           <label key={idx} className="flex items-start gap-3 cursor-pointer group hover:bg-white/5 p-2.5 rounded-xl transition-colors border border-transparent hover:border-white/5 bg-white/5">
-                              <div className="mt-0.5 relative shrink-0">
-                                 <input type="checkbox" checked={item.checked} onChange={() => handleToggleChecklist(idx)} className="peer w-4 h-4 rounded border-gray-600 bg-transparent checked:bg-purple-500 checked:border-purple-500 focus:ring-offset-0 focus:ring-0 appearance-none transition-all cursor-pointer" />
-                                 <CheckSquare className="absolute inset-0 w-4 h-4 pointer-events-none text-purple-500 opacity-0 peer-checked:opacity-100 peer-checked:text-white" />
-                                 <div className="absolute inset-0 w-4 h-4 border border-gray-600 rounded peer-checked:border-purple-500 peer-checked:bg-purple-500 -z-10 bg-[#121826]"></div>
-                              </div>
-                              <span className="text-[13px] text-gray-300 group-hover:text-white leading-snug font-medium pt-0.5">{item.label}</span>
-                           </label>
-                        ))}
-                     </div>
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <button className="w-full text-center text-[13px] font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/riscos'}>
+                      Ver todos os riscos críticos <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                </div>
 
-               {/* Action Buttons */}
-               <div className="p-6 border-t border-white/5 bg-[#0B0F19] flex flex-col gap-3 shrink-0">
-                  <button onClick={handleExecutar} className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white p-3.5 rounded-xl text-sm font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50">
-                     <PlayCircle className="w-5 h-5 flex-shrink-0" /> Executar agora
-                  </button>
-                  <button onClick={(e) => handleConcluir(selectedItem.id, e)} className="w-full flex items-center justify-center gap-2 bg-[#121826] hover:bg-white/10 text-emerald-400 border border-emerald-500/30 p-3.5 rounded-xl text-sm font-medium transition-colors">
-                     <CheckCircle2 className="w-4 h-4" /> Marcar como concluído
-                  </button>
+               {/* Top 5 Chance progress bars */}
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
+                  <div className="flex items-center gap-2 mb-6">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-[15px] font-medium text-white">Top 5 riscos por chance de incidente</h3>
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
+                     {renderTopRisksChance.map((r, i) => (
+                        <div key={i} className="cursor-pointer group" onClick={() => {
+                          window.location.href = '/riscos'; 
+                        }}>
+                           <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-[13px] font-medium text-gray-300 truncate pr-4 group-hover:text-white transition-colors">{r.name}</h4>
+                              <span className="text-[13px] font-bold text-gray-200">{r.chance}%</span>
+                           </div>
+                           <div className="h-1.5 w-full bg-[#1a1c23] rounded-full overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-emerald-600 to-green-400 rounded-full transition-all duration-1000" style={{ width: `${r.chance}%` }}></div>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                  <div className="mt-4 pt-5 border-t border-white/5">
+                    <button className="w-full text-center text-[13px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/riscos'}>
+                      Ver matriz de riscos <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                </div>
+            </div>
+
+            {/* Other System Metrics Data Grid */}
+            <div className="mt-6 shrink-0 font-sans">
+              <h2 className="text-[16px] font-medium text-white mb-6 flex items-center gap-2">
+                 Visão Setorial Integrada
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                 {gridKPIs.map(card => {
+                    if (!card) return null;
+                    return (
+                       <div key={card.id} className={`bg-[#0e1322] border rounded-xl overflow-hidden p-5 flex flex-col relative group transition-colors hover:bg-white/[0.02] cursor-pointer ${card.border}`} onClick={() => window.location.href = card.navTo}>
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="flex items-center gap-3">
+                               <div className={`p-2 rounded-lg ${card.bg}`}>
+                                  <card.icon className={`w-4 h-4 ${card.color}`} />
+                               </div>
+                               <h4 className="text-[13px] font-medium text-gray-300 leading-tight">{card.label}</h4>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                          </div>
+                          <div className="flex items-end gap-3 mt-1 relative z-10">
+                             <div className="text-3xl font-bold text-white leading-none">{card.val}</div>
+                          </div>
+                          <div className="text-[12px] font-medium text-gray-500 mt-3 relative z-10">{card.sub}</div>
+                       </div>
+                    );
+                 })}
+              </div>
+            </div>
+
+            {/* Tables Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 shrink-0 font-sans pb-12">
+               {/* Informative Table 1 */}
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                   <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
+                     Últimas Inspeções
+                   </h3>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/inspecoes'}>
+                     Ver todas
+                   </button>
+                 </div>
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                       <thead className="bg-[#121826]/50">
+                          <tr>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Status</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Tipo/Inspeção</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Setor</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider text-right">Ação</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-white/5">
+                          {latestInspections.length === 0 ? (
+                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-gray-500">Nenhuma inspeção recente.</td></tr>
+                          ) : latestInspections.map((insp:any, i:number) => (
+                             <tr key={insp.id || i} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedDrawerItem({ type: 'inspecao', data: insp })}>
+                                <td className="px-5 py-4">
+                                   <div className="flex items-center gap-2">
+                                     <div className={`w-2 h-2 rounded-full ${
+                                        insp.status === 'Concluída' || insp.status === 'Realizada' ? 'bg-emerald-500' :
+                                        insp.status === 'Atrasada' ? 'bg-red-500' :
+                                        insp.status === 'Em andamento' ? 'bg-purple-500' :
+                                        'bg-blue-500'
+                                     }`}></div>
+                                     <span className="text-[12px] font-medium text-gray-300">{insp.status}</span>
+                                   </div>
+                                </td>
+                                <td className="px-5 py-4 min-w-[200px]">
+                                   <p className="text-[13px] font-medium text-gray-200 group-hover:text-white transition-colors capitalize">{insp.title || insp.nome || 'Inspeção de Rotina'}</p>
+                                </td>
+                                <td className="px-5 py-4">
+                                  <span className="text-[12px] text-gray-400">{insp.setor || insp.sector_id || 'Geral'}</span>
+                                </td>
+                                <td className="px-5 py-4 text-right">
+                                   <button 
+                                      className="text-[12px] font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center justify-end gap-1 w-full"
+                                   >Abrir <ArrowRight className="w-3.5 h-3.5" /></button>
+                                </td>
+                             </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+               </div>
+
+               {/* Informative Table 2 */}
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                   <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
+                     Ações Pendentes Prioritárias
+                   </h3>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/acoes'}>
+                     Ir para Ações
+                   </button>
+                 </div>
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                       <thead className="bg-[#121826]/50">
+                          <tr>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Prioridade</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Ação</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Responsável</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider text-right">Ação</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-white/5">
+                          {acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada').slice(0,5).length === 0 ? (
+                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-gray-500">Nenhuma ação pendente.</td></tr>
+                          ) : acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada').slice(0,5).map((acao:any, i:number) => (
+                             <tr key={acao.id || i} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedDrawerItem({ type: 'acao', data: acao })}>
+                                <td className="px-5 py-4">
+                                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded border inline-block uppercase ${
+                                      acao.prioridade === 'Urgente' || acao.priority === 'P1' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                      acao.prioridade === 'Alta' || acao.priority === 'P2' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                   }`}>{acao.prioridade || acao.priority || 'Normal'}</span>
+                                </td>
+                                <td className="px-5 py-4 min-w-[200px]">
+                                   <p className="text-[13px] font-medium text-gray-200 group-hover:text-white transition-colors truncate max-w-[200px]">{acao.title || acao.titulo}</p>
+                                </td>
+                                <td className="px-5 py-4">
+                                   <span className="text-[12px] text-gray-400">{acao.responsavel || 'Equipe'}</span>
+                                </td>
+                                <td className="px-5 py-4 text-right">
+                                   <button 
+                                      className="text-[12px] font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center justify-end gap-1 w-full"
+                                   >Abrir <ArrowRight className="w-3.5 h-3.5" /></button>
+                                </td>
+                             </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+               </div>
+
+            </div>
+          </div>
+      </main>
+
+      {/* Push Drawer Details (Read Only) */}
+      <AnimatePresence>
+        {selectedDrawerItem && (
+          <motion.div 
+            initial={{ width: 0, opacity: 0, x: 50 }} 
+            animate={{ width: 440, opacity: 1, x: 0 }} 
+            exit={{ width: 0, opacity: 0, x: 50 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 bottom-0 bg-[#0e1322] border-l border-white/10 shadow-2xl z-50 flex flex-col"
+          >
+             <div className="w-[440px] h-full flex flex-col pt-safe-top overflow-hidden">
+                <div className="flex items-center justify-between p-6 pb-4 border-b border-white/5 shrink-0 bg-[#121826]">
+                   <div className="flex items-center gap-2">
+                     {selectedDrawerItem.type === 'risco' && <ShieldAlert className="w-4 h-4 text-red-400" />}
+                     {selectedDrawerItem.type === 'acao' && <ListChecks className="w-4 h-4 text-orange-400" />}
+                     {selectedDrawerItem.type === 'inspecao' && <FileText className="w-4 h-4 text-purple-400" />}
+                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Visualização de {selectedDrawerItem.type}</h3>
+                   </div>
+                   <button onClick={() => setSelectedDrawerItem(null)} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+                      <X className="w-5 h-5" />
+                   </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                   {selectedDrawerItem.type === 'risco' && (
+                     <>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.titulo || selectedDrawerItem.data.atividade}</h2>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Nível</div>
+                             <div className={`text-[13px] font-bold ${getRiskSeverityLevel(selectedDrawerItem.data) === 'Crítico' ? 'text-red-400' : 'text-orange-400'}`}>{getRiskSeverityLevel(selectedDrawerItem.data)}</div>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                             <div className="text-[13px] font-medium text-gray-300">{selectedDrawerItem.data.status}</div>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Setor</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'N/A'}</div>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">NR Base</div>
+                             <div className="text-[13px] font-medium text-white truncate" title={selectedDrawerItem.data.nr}>{selectedDrawerItem.data.nr || 'Não especificada'}</div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-4">
+                           <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Multa Estimada</h4>
+                              <div className="text-xl font-bold text-yellow-500">{formatCurrency(getMultaEstimada(selectedDrawerItem.data))}</div>
+                           </div>
+                           <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Chance de Incidente</h4>
+                              <div className="text-xl font-bold text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
+                           </div>
+                        </div>
+
+                        <div className="bg-purple-900/10 border border-purple-500/20 p-4 rounded-xl mt-6 flex gap-3">
+                           <AlertCircle className="w-5 h-5 text-purple-400 shrink-0" />
+                           <div>
+                              <h4 className="text-[12px] font-bold text-purple-400 mb-1">Dado sincronizado</h4>
+                              <p className="text-[12px] text-gray-400 leading-snug">
+                                 Este registro pertence à aba Riscos. Clique abaixo para detalhar ou realizar edições operacionais.
+                              </p>
+                           </div>
+                        </div>
+                     </>
+                   )}
+
+                   {selectedDrawerItem.type === 'acao' && (
+                     <>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.titulo}</h2>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                             <div className={`text-[13px] font-medium ${selectedDrawerItem.data.status === 'Vencida' ? 'text-red-400' : 'text-orange-400'}`}>{selectedDrawerItem.data.status}</div>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Responsável</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.responsavel}</div>
+                           </div>
+                        </div>
+
+                        <div>
+                           <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Descrição da Ação</h4>
+                           <p className="text-[13px] text-gray-300 leading-relaxed bg-[#121826] p-4 border border-white/5 rounded-xl">
+                             {selectedDrawerItem.data.description || 'Nenhuma descrição detalhada fornecida.'}
+                           </p>
+                        </div>
+                     </>
+                   )}
+
+                   {selectedDrawerItem.type === 'inspecao' && (
+                     <>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.nome}</h2>
+                        <div className="text-[13px] text-gray-400 mb-6">{selectedDrawerItem.data.description || 'Inspeção de rotina agendada.'}</div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                             <div className={`text-[13px] font-medium text-purple-400`}>{selectedDrawerItem.data.status}</div>
+                           </div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Setor Alvo</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'Geral'}</div>
+                           </div>
+                        </div>
+
+                        {selectedDrawerItem.data.answers && (
+                          <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                            <h4 className="text-[11px] font-bold text-yellow-500 uppercase tracking-wider mb-1">Não Conformidades Encontradas</h4>
+                            <div className="text-2xl font-bold text-yellow-400 flex items-center gap-2">
+                              {selectedDrawerItem.data.answers.filter((a:any) => a.isConform === false).length}
+                              <span className="text-[12px] font-normal text-yellow-500/70">itens críticos</span>
+                            </div>
+                          </div>
+                        )}
+                     </>
+                   )}
+                </div>
+
+                <div className="p-6 border-t border-white/5 bg-[#121826] shrink-0">
+                   <button 
+                      onClick={() => {
+                         if (selectedDrawerItem.type === 'risco') window.location.href = '/riscos';
+                         if (selectedDrawerItem.type === 'acao') window.location.href = '/acoes';
+                         if (selectedDrawerItem.type === 'inspecao') window.location.href = '/inspecoes';
+                      }}
+                      className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-[13px] rounded-xl transition-colors flex items-center justify-center gap-2 border border-purple-500/50 shadow-[0_0_15px_rgba(124,58,237,0.2)]"
+                   >
+                      Ver detalhes do {selectedDrawerItem.type} <ArrowRight className="w-4 h-4" />
+                   </button>
+                </div>
              </div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

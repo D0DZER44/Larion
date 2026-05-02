@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { applyManualRules, RiskInstance } from './risk-calculations';
 
 export type SystemLog = {
   id: string;
@@ -139,6 +140,7 @@ type AppStore = {
   deleteAcao: (id: string) => void;
   addRisco: (risco: any) => void;
   updateRisco: (id: string, risco: any) => void;
+  deleteRisco: (id: string) => void;
   addInspecao: (inspecao: any) => void;
   updateInspecao: (id: string, inspecao: any) => void;
   deleteInspecao: (id: string) => void;
@@ -163,14 +165,53 @@ const processAutoActions = () => {
 
   try {
     const state = useAppStore.getState();
-    const { riscos, inspecoes, acoes, addAcao } = state;
+    const { riscos, inspecoes, acoes, addAcao, addRisco } = state;
     if (!riscos || !inspecoes || !acoes) return;
 
     let changes = 0;
 
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+
     // Processar Riscos
     riscos.forEach(r => {
-      const isCritical = r.nivel === 'Crítico' || r.level === 'Crítico' || r.nivel === 'Crítico' || r.nivel === 'Alto' || r.level === 'Alto';
+      // 1. Atualizar para Vencido se o prazo expirou
+      if (r.prazo && r.status !== 'Resolvido' && r.status !== 'Mitigado' && r.status !== 'Vencido') {
+         // O prazo vem no formato "Até X dias" ou é uma data.
+         // Mas `r.prazo` nas automações eu setei YYYY-MM-DD. Ou se vier do drawer ele é "Até 3 dias" textualmente.
+         // Tem um computed dueDate? 
+         // Let's assume if it matches a date pattern YYYY-MM-DD
+         if (/^\d{4}-\d{2}-\d{2}/.test(r.prazo)) {
+           const prazoDate = new Date(r.prazo);
+           prazoDate.setHours(0,0,0,0);
+           if (hoje > prazoDate) {
+              state.updateRisco(r.id, { ...r, status: 'Vencido', atualizadoEm: new Date().toISOString() });
+              changes++;
+              r.status = 'Vencido'; // update local reference
+           }
+         } else if (r.dataLancamento) {
+            // "Imediato (até 24h)" -> 1 day
+            // "Até 3 dias" -> 3 days
+            // "Até 7 dias" -> 7 days
+            // "Até 30 dias" -> 30 days
+            let days = 30;
+            if (r.prazo.includes('24h') || r.prazo.includes('Imediato')) days = 1;
+            else if (r.prazo.includes('3 dias')) days = 3;
+            else if (r.prazo.includes('7 dias')) days = 7;
+            
+            const prazoLcto = new Date(r.dataLancamento);
+            prazoLcto.setDate(prazoLcto.getDate() + days);
+            prazoLcto.setHours(0,0,0,0);
+            
+            if (hoje > prazoLcto) {
+              state.updateRisco(r.id, { ...r, status: 'Vencido', atualizadoEm: new Date().toISOString() });
+              changes++;
+              r.status = 'Vencido';
+            }
+         }
+      }
+
+      const isCritical = r.nivel === 'Crítico' || r.level === 'Crítico' || r.nivel === 'Alto' || r.level === 'Alto';
       if (isCritical && r.status !== 'Resolvido' && r.status !== 'Mitigado') {
         const existingAcao = acoes.find(a => a.item_origem_id === r.id && a.item_origem_tipo === 'risco');
         if (!existingAcao && !r.autoActionCreated) {
@@ -180,7 +221,7 @@ const processAutoActions = () => {
 
           addAcao({
             id: `auto-acao-risco-${r.id || crypto.randomUUID()}`,
-            title: `Mitigar Risco Automático: ${r.title || r.atividade || r.setor || 'Não especificado'}`,
+            title: `Mitigar Risco Automático: ${r.titulo || r.title || r.atividade || r.setor || 'Não especificado'}`,
             description: `Ação gerada automaticamente a partir do risco classificado como ${r.nivel || r.level}.`,
             priority: isP1 ? 'P1' : 'P2',
             prioridade: isP1 ? 'Crítica' : 'Alta',
@@ -199,12 +240,48 @@ const processAutoActions = () => {
             createdAt: new Date().toISOString()
           });
           changes++;
+          r.autoActionCreated = true;
         }
       }
     });
 
     // Processar Inspeções
     inspecoes.forEach(i => {
+      // 1. Gerar Risco Automático baseado em respostas não conformes
+      if (Array.isArray(i.answers)) {
+        i.answers.forEach((ans: any) => {
+          if (ans.isConform === false && ans.question) {
+            const existingRisk = riscos.find(r => r.inspection_id === i.id && r.checklist_item_id === (ans.questionId || ans.question));
+            if (!existingRisk) {
+               const draftRisk: Partial<RiskInstance> = {
+                  titulo: `Desvio: ${ans.question.substring(0, 40)}...`,
+                  atividade: i.atividade || i.title || i.nome || 'Inspeção',
+                  setor: i.sector_id || i.setor || 'Geral',
+                  nr: ans.nr || i.nr || 'NR-01',
+                  severidade: ans.severity || 'Média',
+                  status: 'Aberto',
+                  origem: 'Automático',
+                  justificativa: `Gerado automaticamente da Inspeção "${i.title || i.nome}". Resposta Não Conforme: "${ans.question}".`,
+                  dataLancamento: new Date().toISOString().split('T')[0],
+                  checklistOrigem: i.id,
+                  perguntaOrigem: ans.question,
+                  respostaOrigem: String(ans.value),
+                  criadoEm: new Date().toISOString(),
+                  inspection_id: i.id,
+                  checklist_item_id: ans.questionId || ans.question,
+                  hasEpiEpc: true, // Defaulting for auto-risk
+                  hasTreinamento: true,
+                  hasProcedimento: true
+               };
+
+               const calibratedRisk = applyManualRules(draftRisk);
+               addRisco(calibratedRisk);
+               changes++;
+            }
+          }
+        });
+      }
+
       // Condition: failed inspection or inspection with critical non-conformity
       const isCritical = i.status === 'Reprovada' || i.resultado === 'Reprovada' || i.nonConformities > 0 || i.status === 'Atrasada';
       if (isCritical) {
@@ -328,13 +405,81 @@ export const useAppStore = create<AppStore>()(
           isActive: true,
         }
       ],
-      addRule: (rule) => set((state) => ({ rules: [...state.rules, { ...rule, id: crypto.randomUUID() }] })),
-      updateRule: (id, rule) => set((state) => ({ rules: state.rules.map((r) => r.id === id ? { ...r, ...rule } : r) })),
-      deleteRule: (id) => set((state) => ({ rules: state.rules.filter((r) => r.id !== id) })),
+      addRule: (rule) => set((state) => ({ rules: [...state.rules, { ...rule, id: crypto.randomUUID(), editavel: true, removivel: true, regraFixa: false } as any] })),
+      updateRule: (id, rule) => {
+         if (id.startsWith('nr-')) {
+            alert('Esta é uma regra fixa do motor e não pode ser editada.');
+            return;
+         }
+         if (rule.isActive !== undefined && id.startsWith('nr-')) {
+            alert('Regras fixas NR permanecem sempre ativas.');
+            return;
+         }
+         set((state) => ({ rules: state.rules.map((r) => r.id === id ? { ...r, ...rule } : r) }))
+      },
+      deleteRule: (id) => {
+         if (id.startsWith('nr-')) {
+            alert('Esta regra é obrigatória para o funcionamento do motor normativo.');
+            return;
+         }
+         set((state) => ({ rules: state.rules.filter((r) => r.id !== id) }))
+      },
 
       acoes: [],
-      riscos: [],
-      inspecoes: [],
+      riscos: [
+        applyManualRules({ id: 'r1', atividade: 'Trabalho em altura', setor: 'Operacional', nr: 'NR-35', hasEpiEpc: false, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
+        applyManualRules({ id: 'r2', atividade: 'Manutenção elétrica', setor: 'Manutenção', nr: 'NR-10', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em análise' }),
+        applyManualRules({ id: 'r3', atividade: 'Operação de máquinas', setor: 'Produção', nr: 'NR-12', hasEpiEpc: false, hasProcedimento: true, hasTreinamento: true, status: 'Aberto' }),
+        applyManualRules({ id: 'r4', atividade: 'Trabalho em altura', setor: 'Logística', nr: 'NR-35', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
+        applyManualRules({ id: 'r5', atividade: 'Espaço confinado', setor: 'Manutenção', nr: 'NR-33', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: false, status: 'Aberto' }),
+        applyManualRules({ id: 'r6', atividade: 'Movimentação de cargas', setor: 'Logística', nr: 'NR-11', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
+        applyManualRules({ id: 'r7', atividade: 'Trabalho a quente', setor: 'Manutenção', nr: 'NR-34', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em análise' }),
+        applyManualRules({ id: 'r8', atividade: 'Trabalho em altura', setor: 'Administrativo', nr: 'NR-35', hasEpiEpc: true, hasProcedimento: true, hasTreinamento: true, status: 'Em análise' }),
+      ],
+      inspecoes: [
+        {
+          id: 'ins-1',
+          tipoInspecao: 'Trabalho em Altura (NR-35)',
+          checklist: 'Trabalho em Altura',
+          ondeUsar: 'Área de Estoque Externo',
+          data: new Date().toISOString().split('T')[0],
+          proximaInspecao: new Date().toISOString().split('T')[0],
+          responsavel: 'Rafael Oliveira',
+          prioridade: 'Alta',
+          situacao: 'Agendada',
+          status: 'Agendada',
+          items: []
+        },
+        {
+          id: 'ins-2',
+          tipoInspecao: 'Segurança Área Fabril',
+          checklist: 'Segurança Área Fabril',
+          ondeUsar: 'Produção (Linha 1)',
+          data: new Date().toISOString().split('T')[0],
+          proximaInspecao: new Date().toISOString().split('T')[0],
+          responsavel: 'João Silva',
+          prioridade: 'Média',
+          situacao: 'Em andamento',
+          status: 'Em andamento',
+          items: [
+            { id: 'q1', status: 'Sim', text: 'O ambiente está limpo e organizado?', riskMap: 'Baixo' },
+            { id: 'q2', status: 'Não', text: 'Rotas de fuga desobstruídas?', riskMap: 'Crítico' },
+          ]
+        },
+        {
+          id: 'ins-3',
+          tipoInspecao: 'Elétrica (NR-10)',
+          checklist: 'Máquinas e Equip.',
+          ondeUsar: 'Manutenção',
+          data: '2024-04-20',
+          proximaInspecao: '2024-04-20',
+          responsavel: 'Marcos Antônio',
+          prioridade: 'Alta',
+          situacao: 'Atrasada',
+          status: 'Atrasada',
+          items: []
+        }
+      ],
       alertas: [],
       logs: [],
       addLog: (log) => set((state) => ({ logs: [...state.logs, { ...log, id: crypto.randomUUID(), created_at: new Date().toISOString() }] })),
@@ -357,7 +502,7 @@ export const useAppStore = create<AppStore>()(
         const oldAcao = state.acoes.find(a => a.id === id);
         let newLogs = [...state.logs];
         if (oldAcao) {
-           if ((oldAcao.status !== 'Concluído' && oldAcao.status !== 'Fechada') && (acao.status === 'Concluído' || acao.status === 'Fechada')) {
+           if ((oldAcao.status !== 'Concluída') && (acao.status === 'Concluída')) {
               newLogs.push({
                 id: crypto.randomUUID(),
                 empresa_id: acao.empresa_id || oldAcao.empresa_id || '1',
@@ -397,6 +542,9 @@ export const useAppStore = create<AppStore>()(
       updateRisco: (id, risco) => {
         set((state) => ({ riscos: state.riscos.map((v) => v.id === id ? { ...v, ...risco } : v) }));
         processAutoActions();
+      },
+      deleteRisco: (id) => {
+        set((state) => ({ riscos: state.riscos.filter((v) => v.id !== id) }));
       },
       addInspecao: (inspecao) => {
         set((state) => {
@@ -512,11 +660,22 @@ export const useAppStore = create<AppStore>()(
         { id: 'c4', name: 'Trabalho em Altura', category: 'Segurança', status: 'Ativo', sections: [
           {
             id: 'sec1-c4',
-            title: '1. Documentação e Preparação',
+            title: '1. Equipamentos e Proteções',
             questions: [
-              { id: 'q1-c4', text: 'Existe Permissão de Trabalho (PT) válida?', type: 'Sim / Não', riskMap: 'Crítico' },
-              { id: 'q2-c4', text: 'Os pontos de ancoragem foram validados?', type: 'Sim / Não', riskMap: 'Crítico' },
-              { id: 'q3-c4', text: 'EPIs específicos (cinto, talabarte) conferidos?', type: 'Sim / Não', riskMap: 'Alta' },
+              { id: 'q1-c4', text: 'O cinturão de segurança tipo paraquedista está em bom estado de conservação, sem rasgos ou costuras rompidas?', type: 'Sim / Não', riskMap: 'Crítica' },
+              { id: 'q2-c4', text: 'O talabarte duplo com absorvedor de energia está conectado corretamente ao ponto de ancoragem acima da cabeça?', type: 'Sim / Não', riskMap: 'Crítica' },
+              { id: 'q3-c4', text: 'A linha de vida está devidamente instalada, tensionada e certificada por profissional habilitado?', type: 'Sim / Não', riskMap: 'Crítica' },
+              { id: 'q4-c4', text: 'A área abaixo do trabalho em altura está devidamente isolada e sinalizada contra queda de objetos?', type: 'Sim / Não', riskMap: 'Alta' },
+            ]
+          },
+          {
+            id: 'sec2-c4',
+            title: '2. Procedimentos e Documentação',
+            questions: [
+              { id: 'q5-c4', text: 'Existe Permissão de Trabalho (PT) emitida e assinada por todos os envolvidos na atividade?', type: 'Sim / Não', riskMap: 'Crítica' },
+              { id: 'q6-c4', text: 'Os pontos de ancoragem possuem resistência mínima compatível com a carga de impacto prevista?', type: 'Sim / Não', riskMap: 'Crítica' },
+              { id: 'q7-c4', text: 'As ferramentas manuais estão amarradas (leashes) para evitar queda acidental?', type: 'Sim / Não', riskMap: 'Alta' },
+              { id: 'q8-c4', text: 'As condições climáticas (vento, chuva) são favoráveis para a execução segura do trabalho em altura?', type: 'Sim / Não', riskMap: 'Média' },
             ]
           }
         ] },

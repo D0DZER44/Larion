@@ -9,7 +9,7 @@ import '@/lib/engines'; // Initializes window.Engines on client side
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ApexShield SST Inteligência',
+  title: 'Apex Ops SST Inteligência',
   description: 'Plataforma de gestão de Saúde e Segurança do Trabalho',
 };
 

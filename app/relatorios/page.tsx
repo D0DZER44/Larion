@@ -44,7 +44,7 @@ function RelatorioExecutivoPreview() {
         <div>
            <div className="flex items-center gap-2 mb-2 text-indigo-700">
              <Shield className="w-8 h-8" />
-             <h1 className="text-2xl font-black tracking-tight">ApexShield</h1>
+             <h1 className="text-2xl font-black tracking-tight">Apex Ops</h1>
            </div>
            <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Relatório Executivo de SST</h2>
         </div>
@@ -147,7 +147,7 @@ function RelatorioExecutivoPreview() {
          </div>
          <div>
            <p className="font-bold text-gray-800 uppercase">Empresa</p>
-           <p>ApexShield Indústria Ltda.</p>
+           <p>Apex Ops Indústria Ltda.</p>
            <p>CNPJ 12.345.678/0001-90</p>
          </div>
       </div>

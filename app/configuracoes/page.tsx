@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
+import { getTodasRegrasAtivas, fixedNrRules } from '@/lib/normativeRules';
+import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
 import AcaoRecomendadaCard from '@/components/AcaoRecomendadaCard';
 import { 
   Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
@@ -460,10 +462,12 @@ function TabUsuarios() {
 function TabChecklists() {
    const { checklists, addChecklist, updateChecklist, deleteChecklist } = useAppStore();
    const [search, setSearch] = useState('');
-   const [selectedId, setSelectedId] = useState(checklists[0]?.id);
 
-   const filteredChecklists = checklists.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
-   const activeChecklist = checklists.find(c => c.id === selectedId) || checklists[0];
+   const allChecklists = getTodosChecklistsAtivos(checklists);
+   const [selectedId, setSelectedId] = useState(allChecklists[0]?.id);
+
+   const filteredChecklists = allChecklists.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+   const activeChecklist = allChecklists.find(c => c.id === selectedId) || allChecklists[0];
 
    const handleAdd = () => {
       addChecklist({ name: 'Novo Modelo', category: 'Segurança Geral', status: 'Rascunho', sections: [] });
@@ -517,7 +521,9 @@ function TabChecklists() {
                      <p className="text-xs text-gray-500">Edite perguntas e regras (Modelo: {activeChecklist.name})</p>
                   </div>
                   <div className="flex items-center gap-2">
-                     <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                     {!activeChecklist.regraFixa && (
+                        <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                     )}
                   </div>
                </div>
 
@@ -533,7 +539,8 @@ function TabChecklists() {
                                  type="text" 
                                  value={activeChecklist.name} 
                                  onChange={(e) => updateChecklist(activeChecklist.id, { name: e.target.value })}
-                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" 
+                                 disabled={activeChecklist.regraFixa}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" 
                               />
                            </div>
                            <div className="space-y-1.5">
@@ -541,7 +548,8 @@ function TabChecklists() {
                               <select 
                                  value={activeChecklist.status}
                                  onChange={(e) => updateChecklist(activeChecklist.id, { status: e.target.value as any })}
-                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                                 disabled={activeChecklist.regraFixa}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none disabled:opacity-50"
                               >
                                  <option value="Ativo">Ativo</option>
                                  <option value="Rascunho">Rascunho</option>
@@ -562,22 +570,25 @@ function TabChecklists() {
                                        <input 
                                           type="text" 
                                           value={section.title} 
+                                          disabled={activeChecklist.regraFixa}
                                           onChange={(e) => {
                                              const newSections = [...activeChecklist.sections];
                                              newSections[sIndex].title = e.target.value;
                                              updateChecklist(activeChecklist.id, { sections: newSections });
                                           }}
-                                          className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-sm font-bold text-white focus:outline-none w-full max-w-[250px] transition-colors" 
+                                          className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-sm font-bold text-white focus:outline-none w-full max-w-[250px] transition-colors disabled:opacity-50" 
                                        />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                       <button 
-                                          onClick={() => {
-                                             const newSections = activeChecklist.sections.filter((_, idx) => idx !== sIndex);
-                                             updateChecklist(activeChecklist.id, { sections: newSections });
-                                          }}
-                                          className="text-[11px] px-2 py-1 text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/section:opacity-100"
-                                       >Excluir</button>
+                                       {!activeChecklist.regraFixa && (
+                                          <button 
+                                             onClick={() => {
+                                                const newSections = activeChecklist.sections.filter((_, idx) => idx !== sIndex);
+                                                updateChecklist(activeChecklist.id, { sections: newSections });
+                                             }}
+                                             className="text-[11px] px-2 py-1 text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/section:opacity-100"
+                                          >Excluir</button>
+                                       )}
                                        <span className="text-[11px] text-gray-500 font-medium">{section.questions.length} perguntas</span>
                                     </div>
                                  </div>
@@ -588,53 +599,66 @@ function TabChecklists() {
                                           <input 
                                              type="text"
                                              value={item.text}
+                                             disabled={activeChecklist.regraFixa || item.regraFixa}
                                              onChange={(e) => {
                                                 const newSections = [...activeChecklist.sections];
                                                 newSections[sIndex].questions[qIndex].text = e.target.value;
                                                 updateChecklist(activeChecklist.id, { sections: newSections });
                                              }}
-                                             className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-[13px] text-gray-300 focus:outline-none flex-1 transition-colors"
+                                             className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-[13px] text-gray-300 focus:outline-none flex-1 transition-colors disabled:opacity-50"
                                           />
                                           <div className="flex items-center gap-3 shrink-0">
                                              <select 
                                                 value={item.type}
+                                                disabled={activeChecklist.regraFixa || item.regraFixa}
                                                 onChange={(e) => {
                                                    const newSections = [...activeChecklist.sections];
                                                    newSections[sIndex].questions[qIndex].type = e.target.value;
                                                    updateChecklist(activeChecklist.id, { sections: newSections });
                                                 }}
-                                                className="bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded px-2 py-1 text-[10px] font-medium outline-none appearance-none cursor-pointer"
+                                                className="bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded px-2 py-1 text-[10px] font-medium outline-none appearance-none cursor-pointer disabled:opacity-50"
                                              >
                                                 <option value="Aprovação (Sim/Não)">Aprovação (Sim/Não)</option>
+                                                <option value="Sim / Não / Parcialmente">Sim / Não / Parcialmente</option>
                                                 <option value="Múltipla Escolha">Múltipla Escolha</option>
                                                 <option value="Texto Longo">Texto Longo</option>
                                                 <option value="Data/Hora">Data/Hora</option>
                                                 <option value="Anexo/Foto">Anexo/Foto</option>
                                              </select>
+                                             {item.nrRelacionada && (
+                                                <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2 py-1 rounded">
+                                                   {item.nrRelacionada}
+                                                </span>
+                                             )}
                                              <select
                                                 value={item.riskMap}
+                                                disabled={activeChecklist.regraFixa || item.regraFixa}
                                                 onChange={(e) => {
                                                    const newSections = [...activeChecklist.sections];
                                                    newSections[sIndex].questions[qIndex].riskMap = e.target.value;
                                                    updateChecklist(activeChecklist.id, { sections: newSections });
                                                 }}
-                                                className={`w-24 px-1 py-1 text-[10px] font-medium rounded border bg-[#0b0f19] outline-none cursor-pointer ${item.riskMap === 'Crítico' ? 'text-red-500 border-red-500/30' : item.riskMap === 'Médio' ? 'text-orange-500 border-orange-500/30' : item.riskMap === 'Leve' ? 'text-emerald-500 border-emerald-500/30' : 'text-gray-500 border-gray-500/30'}`}
+                                                className={`w-24 px-1 py-1 text-[10px] font-medium rounded border bg-[#0b0f19] outline-none cursor-pointer disabled:opacity-50 ${item.riskMap === 'Crítico' || item.riskMap === 'Crítica' ? 'text-red-500 border-red-500/30' : item.riskMap === 'Alta' || item.riskMap === 'Médio' ? 'text-orange-500 border-orange-500/30' : item.riskMap === 'Leve' ? 'text-emerald-500 border-emerald-500/30' : 'text-gray-500 border-gray-500/30'}`}
                                              >
                                                 <option value="Nenhum">Sem risco</option>
                                                 <option value="Leve">Risco Leve</option>
                                                 <option value="Médio">Risco Médio</option>
+                                                <option value="Alta">Risco Alto</option>
                                                 <option value="Crítico">Risco Crítico</option>
+                                                <option value="Crítica">Risco Crític.</option>
                                              </select>
-                                             <button 
-                                                onClick={() => {
-                                                   const newSections = [...activeChecklist.sections];
-                                                   newSections[sIndex].questions = newSections[sIndex].questions.filter((_, idx) => idx !== qIndex);
-                                                   updateChecklist(activeChecklist.id, { sections: newSections });
-                                                }}
-                                                className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                             >
-                                                <X className="w-3.5 h-3.5" />
-                                             </button>
+                                             {!activeChecklist.regraFixa && !item.regraFixa && (
+                                                <button 
+                                                   onClick={() => {
+                                                      const newSections = [...activeChecklist.sections];
+                                                      newSections[sIndex].questions = newSections[sIndex].questions.filter((_, idx) => idx !== qIndex);
+                                                      updateChecklist(activeChecklist.id, { sections: newSections });
+                                                   }}
+                                                   className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                   <X className="w-3.5 h-3.5" />
+                                                </button>
+                                             )}
                                           </div>
                                        </div>
                                     ))}
@@ -674,10 +698,204 @@ function TabChecklists() {
 }
 
 function TabRegras() {
+   const [subTab, setSubTab] = useState<'fixas' | 'personalizadas'>('fixas');
+
+   return (
+      <div className="flex flex-col h-[700px]">
+         <div className="flex items-center gap-4 border-b border-white/5 mb-4 shrink-0">
+            <button onClick={() => setSubTab('fixas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors ${subTab === 'fixas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras fixas NR</button>
+            <button onClick={() => setSubTab('personalizadas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors ${subTab === 'personalizadas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras personalizadas</button>
+         </div>
+
+         {subTab === 'fixas' ? <SubTabRegrasFixas /> : <SubTabRegrasPersonalizadas />}
+      </div>
+   );
+}
+
+function SubTabRegrasFixas() {
+   const rules = fixedNrRules;
+   const [selectedRule, setSelectedRule] = useState<any>(null);
+
+   return (
+      <div className="flex-1 flex flex-col h-full bg-[#121826] border border-white/5 rounded-2xl overflow-hidden relative">
+         <div className="p-5 border-b border-white/5 shrink-0 flex items-center justify-between bg-[#0b0f19]">
+            <div>
+               <h3 className="text-[15px] font-bold text-white">Regras fixas NR</h3>
+               <p className="text-xs text-gray-400 mt-1.5">Base normativa imutável que compõe o motor inteligente ApexShield.</p>
+            </div>
+            <div className="bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full text-[11px] font-bold border border-purple-500/20">
+               Regras do Gerenciamento de Risco
+            </div>
+         </div>
+         <div className="flex-1 overflow-auto custom-scrollbar p-0">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+               <thead className="bg-[#0b0f19] border-b border-white/5 text-xs text-gray-400 uppercase">
+                  <tr>
+                     <th className="px-5 py-3 font-medium">NR</th>
+                     <th className="px-5 py-3 font-medium w-64 max-w-xs">Regra</th>
+                     <th className="px-5 py-3 font-medium">Severidade</th>
+                     <th className="px-5 py-3 font-medium text-center">Gera Risco / Ação</th>
+                     <th className="px-5 py-3 font-medium">Status / Ações</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-white/5 text-gray-300">
+                  {rules.map((rule) => (
+                     <tr key={rule.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-5 py-3 font-bold text-indigo-400">{rule.nr}</td>
+                        <td className="px-5 py-3 w-64 max-w-xs truncate" title={rule.titulo}>{rule.titulo}</td>
+                        <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rule.severidadeBase === 'Crítica' || rule.severidadeBase === 'Crítico' ? 'bg-red-500/10 text-red-500 border-red-500/20' : rule.severidadeBase === 'Alta' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>{rule.severidadeBase}</span></td>
+                        <td className="px-5 py-3 text-center">
+                           <div className="flex items-center justify-center gap-2 text-xs">
+                              <span className={rule.geraRisco ? 'text-emerald-400' : 'text-gray-500'}>Risco</span>
+                              <span className="text-gray-600">•</span>
+                              <span className={rule.geraAcao ? 'text-emerald-400' : 'text-gray-500'}>Ação</span>
+                           </div>
+                        </td>
+                        <td className="px-5 py-3 flex items-center gap-3">
+                           <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded">Ativa</span>
+                           <button onClick={() => setSelectedRule(rule)} className="text-purple-400 hover:text-purple-300 text-xs font-bold underline transition-colors">Visualizar</button>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+
+         {/* Drawer for specific rule */}
+         <AnimatePresence>
+            {selectedRule && (
+               <>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 z-10" onClick={() => setSelectedRule(null)} />
+                  <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="absolute top-0 right-0 bottom-0 w-[500px] max-w-[90%] bg-[#121826] border-l border-white/10 z-20 shadow-2xl flex flex-col">
+                     <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
+                        <div>
+                           <div className="flex items-center gap-2 mb-1.5">
+                              <h2 className="text-lg font-black text-white">{selectedRule.nr}</h2>
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-purple-500/10 text-purple-400 border-purple-500/20">Regra Fixa</span>
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-gray-500/10 text-gray-400 border-white/10">Não Editável</span>
+                           </div>
+                           <p className="text-sm text-gray-300">{selectedRule.titulo}</p>
+                        </div>
+                        <button onClick={() => setSelectedRule(null)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"><X className="w-5 h-5"/></button>
+                     </div>
+                     <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+                        
+                        {/* Base normativa */}
+                        <div className="space-y-4">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-indigo-400 pb-2 border-b border-white/5">
+                              <ShieldCheck className="w-4 h-4" /> Base Normativa
+                           </h4>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-[#0b0f19] p-3 rounded-xl border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Perigo</span>
+                                 <p className="text-xs text-gray-300">{selectedRule.perigo || 'N/A'}</p>
+                              </div>
+                              <div className="bg-[#0b0f19] p-3 rounded-xl border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Tipo de Risco</span>
+                                 <p className="text-xs text-gray-300">{selectedRule.tipoRisco || 'N/A'}</p>
+                              </div>
+                           </div>
+                           <div className="bg-[#0b0f19] p-3 rounded-xl border border-white/5">
+                              <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Impacto legal</span>
+                              <p className="text-xs text-gray-400 leading-relaxed">{selectedRule.descricao}</p>
+                           </div>
+                        </div>
+
+                        {/* Gatilho */}
+                        <div className="space-y-4">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-orange-400 pb-2 border-b border-white/5">
+                              <AlertTriangle className="w-4 h-4" /> Gatilho
+                           </h4>
+                           <div className="bg-[#0b0f19] p-3 rounded-xl border border-white/5 space-y-2">
+                              {selectedRule.perguntasChecklist?.map((pq: string, i: number) => (
+                                 <div key={i} className="flex gap-2">
+                                    <Clock className="w-3.5 h-3.5 text-gray-500 mt-0.5 shrink-0" />
+                                    <p className="text-xs text-gray-300 leading-relaxed font-medium">Ao responder &apos;Não&apos; ou &apos;Parcialmente&apos; para: &quot;{pq}&quot;</p>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+
+                        {/* Efeitos Automáticos */}
+                        <div className="space-y-4">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-blue-400 pb-2 border-b border-white/5">
+                              <Activity className="w-4 h-4" /> Efeitos Automáticos
+                           </h4>
+                           <div className="grid grid-cols-2 gap-3">
+                              <div className="flex items-center justify-between bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-xs text-gray-400">Gera Risco</span>
+                                 <span className={selectedRule.geraRisco ? 'text-emerald-400 text-xs font-bold' : 'text-gray-500 text-xs font-medium'}>{selectedRule.geraRisco ? 'Sim' : 'Não'}</span>
+                              </div>
+                              <div className="flex items-center justify-between bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-xs text-gray-400">Gera Ação</span>
+                                 <span className={selectedRule.geraAcao ? 'text-emerald-400 text-xs font-bold' : 'text-gray-500 text-xs font-medium'}>{selectedRule.geraAcao ? 'Sim' : 'Não'}</span>
+                              </div>
+                              <div className="flex items-center justify-between bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-xs text-gray-400">Impacta Score</span>
+                                 <span className={selectedRule.impactaScore ? 'text-emerald-400 text-xs font-bold' : 'text-gray-500 text-xs font-medium'}>{selectedRule.impactaScore ? 'Sim' : 'Não'}</span>
+                              </div>
+                              <div className="flex items-center justify-between bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-xs text-gray-400">Bloqueante</span>
+                                 <span className={selectedRule.bloqueante ? 'text-red-400 text-xs font-bold' : 'text-gray-500 text-xs font-medium'}>{selectedRule.bloqueante ? 'Sim' : 'Não'}</span>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Cálculos */}
+                        <div className="space-y-4">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 pb-2 border-b border-white/5">
+                              <CheckCircle2 className="w-4 h-4" /> Cálculos Predefinidos
+                           </h4>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Severidade</span>
+                                 <p className="text-xs text-white font-medium">{selectedRule.severidadeBase}</p>
+                              </div>
+                              <div className="bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Prazo SLA</span>
+                                 <p className="text-xs text-white font-medium">{selectedRule.prazoBase} dias</p>
+                              </div>
+                              <div className="bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Multa estimada</span>
+                                 <p className="text-xs text-white font-medium">R$ {selectedRule.multaBaseEstimativa?.toLocaleString('pt-BR') || '0'}</p>
+                              </div>
+                              <div className="bg-[#0b0f19] p-3 rounded border border-white/5">
+                                 <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Chance Inicial</span>
+                                 <p className="text-xs text-white font-medium">{selectedRule.chanceIncidenteBase}%</p>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Proteção */}
+                        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl mt-6 font-mono text-xs">
+                           <div className="flex items-start gap-2 mb-2">
+                              <Lock className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                              <span className="text-red-400 font-bold">Proteção do Sistema Aplicada</span>
+                           </div>
+                           <div className="ml-6 space-y-1 text-gray-400">
+                              <p>&gt; editavel: <span className="text-orange-300">false</span></p>
+                              <p>&gt; removivel: <span className="text-orange-300">false</span></p>
+                              <p>&gt; fonte: <span className="text-white">{selectedRule.fonte}</span></p>
+                           </div>
+                        </div>
+
+                     </div>
+                     <div className="p-4 border-t border-white/5 shrink-0 bg-[#0b0f19] flex justify-end">
+                        <button onClick={() => setSelectedRule(null)} className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-colors">Fechar Painel</button>
+                     </div>
+                  </motion.div>
+               </>
+            )}
+         </AnimatePresence>
+      </div>
+   );
+}
+
+function SubTabRegrasPersonalizadas() {
    const { rules, addRule, updateRule, deleteRule } = useAppStore();
    const [selectedId, setSelectedId] = useState(rules[0]?.id);
 
-   const activeRule = rules.find(r => r.id === selectedId) || rules[0];
+   const activeRule = rules.find((r: any) => r.id === selectedId) || rules[0];
 
    const handleAdd = () => {
       addRule({
@@ -691,22 +909,24 @@ function TabRegras() {
          deadline: '3 dias úteis',
          justification: '...',
          isActive: true
-      });
+      } as any);
    };
 
    return (
       <div className="flex flex-col w-full h-[600px] gap-6 xl:flex-row">
          {/* Left Side: Rule List */}
          <div className="w-full xl:w-[280px] bg-[#121826] border border-white/5 rounded-2xl p-5 flex flex-col h-full shrink-0">
-            <h3 className="text-sm font-bold text-white mb-4">Regras Cadastradas</h3>
+            <h3 className="text-sm font-bold text-white mb-4">Regras Personalizadas</h3>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-               {rules.map((r) => {
+               {rules.map((r: any) => {
                   const isActive = r.id === selectedId;
+                  const severity = r.severity || r.severidadeBase;
+                  const isActiveRule = r.isActive !== undefined ? r.isActive : true;
                   return (
                      <div key={r.id} onClick={() => setSelectedId(r.id)} className={`p-3 rounded-xl border transition-colors cursor-pointer ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
                         <div className="flex justify-between items-start mb-2">
-                           <span className={`w-2 h-2 rounded-full mt-1 ${r.isActive ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
-                           <span className="text-[10px] text-gray-500 uppercase font-bold">{r.severity}</span>
+                           <span className={`w-2 h-2 rounded-full mt-1 ${isActiveRule ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
+                           <span className="text-[10px] text-gray-500 uppercase font-bold">{severity}</span>
                         </div>
                         <p className={`text-[13px] font-bold ${isActive ? 'text-white' : 'text-gray-300'}`}>{r.name}</p>
                      </div>
@@ -714,7 +934,7 @@ function TabRegras() {
                })}
             </div>
             <button onClick={handleAdd} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 border border-white/10">
-               <Plus className="w-3.5 h-3.5" /> Nova regra
+               <Plus className="w-3.5 h-3.5" /> Nova regra personal.
             </button>
          </div>
 
@@ -723,25 +943,35 @@ function TabRegras() {
          <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full shadow-lg">
             <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
                <div>
-                  <h2 className="text-lg font-bold text-white mb-0.5">Construtor de Regra (Risco Automático)</h2>
-                  <p className="text-xs text-gray-500">Transforme respostas em ações proativas no sistema.</p>
+                  <h2 className="text-lg font-bold text-white mb-0.5">{activeRule.regraFixa ? 'Visualizador de Regra Fixa' : 'Construtor de Regra (Risco Automático)'}</h2>
+                  <p className="text-xs text-gray-500">{activeRule.regraFixa ? 'Esta regra é normativa e não pode ser alterada.' : 'Transforme respostas em ações proativas no sistema.'}</p>
                </div>
                <div className="flex items-center gap-2">
-                  <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-[13px] font-bold transition-colors" onClick={() => updateRule(activeRule.id, { isActive: !activeRule.isActive })}>
-                     {activeRule.isActive ? 'Desativar Regra' : 'Ativar Regra'}
-                  </button>
+                  {!activeRule.regraFixa && <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>}
+                  {!activeRule.regraFixa && (
+                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-[13px] font-bold transition-colors" onClick={() => updateRule(activeRule.id, { isActive: !activeRule.isActive })}>
+                       {activeRule.isActive ? 'Desativar Regra' : 'Ativar Regra'}
+                    </button>
+                  )}
                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Nome da Regra</label>
-                  <input type="text" value={activeRule.name} onChange={e => updateRule(activeRule.id, { name: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{activeRule.regraFixa ? 'Título da Regra' : 'Nome da Regra'}</label>
+                  <input type="text" value={activeRule.name || activeRule.titulo} onChange={e => !activeRule.regraFixa && updateRule(activeRule.id, { name: e.target.value })} disabled={activeRule.regraFixa} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" />
                </div>
 
+               {activeRule.regraFixa && (
+                 <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Descrição</label>
+                    <textarea value={activeRule.descricao} disabled className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none disabled:opacity-50" rows={2}></textarea>
+                 </div>
+               )}
+
                {/* Fluxo */}
-               <div className="relative pt-4 pb-8 pl-6 border-l-2 border-white/10 ml-4 space-y-8">
+               {!activeRule.regraFixa ? (
+                 <div className="relative pt-4 pb-8 pl-6 border-l-2 border-white/10 ml-4 space-y-8">
                   
                   {/* Step 1 */}
                   <div className="relative">
@@ -802,6 +1032,14 @@ function TabRegras() {
                   </div>
 
                </div>
+               ) : (
+                 <div className="flex flex-col gap-4 text-sm text-gray-400">
+                    <p><strong>Ação Recomendada:</strong> {activeRule.acaoRecomendada}</p>
+                    <p><strong>Severidade Padrão:</strong> {activeRule.severidadeBase}</p>
+                    <p><strong>Prazo Base:</strong> {activeRule.prazoBase} dias</p>
+                    <p><strong>Impacta Indicadores:</strong> {activeRule.impactaScore ? 'Sim' : 'Não'}</p>
+                 </div>
+               )}
             </div>
          </div>
          ) : null}
@@ -813,20 +1051,20 @@ function TabRegras() {
             
             <Monitor className="w-10 h-10 text-white/20 mb-4" />
             <h3 className="text-center font-bold text-white text-[15px] mb-2 leading-tight">Como isso<br/>funciona na prática?</h3>
-            <p className="text-center text-xs text-gray-400 mb-6 px-4">Se um inspetor responder &quot;{activeRule?.condition}&quot; para a proteção, o sistema instantaneamente criará:</p>
+            <p className="text-center text-xs text-gray-400 mb-6 px-4">Se um inspetor acionar esta regra no sistema, o motor instantaneamente criará:</p>
             
             <div className="w-full bg-[#0b0f19] border border-white/5 rounded-xl p-4 space-y-3 relative z-10">
                <div className="flex items-center gap-2">
-                  <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase">{activeRule?.severity}</span>
+                  <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase">{activeRule?.severity || activeRule?.severidadeBase || 'Médio'}</span>
                   <p className="text-xs font-bold text-white">Risco Registrado</p>
                </div>
                <div className="flex items-center gap-2 ml-1">
                   <Clock className="w-3.5 h-3.5 text-gray-600" />
-                  <p className="text-[11px] text-gray-400">Prazo Acionado: <strong className="text-white">{activeRule?.deadline}</strong></p>
+                  <p className="text-[11px] text-gray-400">Prazo Acionado: <strong className="text-white">{activeRule?.deadline || `${activeRule?.prazoBase || 0} dias`}</strong></p>
                </div>
                <div className="flex items-center gap-2 ml-1">
                   <User className="w-3.5 h-3.5 text-gray-600" />
-                  <p className="text-[11px] text-gray-400">{activeRule?.assignTo} é notificado.</p>
+                  <p className="text-[11px] text-gray-400">{activeRule?.assignTo || 'Colaborador responsável'} é notificado.</p>
                </div>
             </div>
 

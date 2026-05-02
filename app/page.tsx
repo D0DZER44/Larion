@@ -3,12 +3,12 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { 
   Bell, Download, Calendar, Activity, AlertTriangle, 
-  FileText, ShieldCheck, HardHat, TrendingUp, CalendarCheck,
+  FileText, ShieldCheck, HardHat, TrendingUp, TrendingDown, CalendarCheck,
   Info, ArrowRight, ShieldAlert, BookOpen, Users,
   Bot, MessageSquare, CheckCircle2, Clock, Zap, ClipboardCheck,
-  AlertCircle, UserX, RefreshCw, PlusCircle, Send, Sparkles, X, GraduationCap
+  AlertCircle, UserX, RefreshCw, PlusCircle, Send, Sparkles, X, GraduationCap, ChevronLeft, ChevronRight, CheckSquare
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useAppStore } from '@/lib/store';
 import { EconomicImpactEngine, LariContextEngine } from '@/lib/engines';
 import Link from 'next/link';
@@ -769,10 +769,10 @@ export default function Dashboard() {
       updatePlano
     };
 
-  }, [riscos, acoes, inspecoes, checklists, logs]);
+  }, [riscos, acoes, inspecoes, checklists, logs, scoreTimeRange]);
 
   return (
-    <div className="flex flex-col min-h-full w-full bg-[#03060e] text-gray-300 font-sans selection:bg-purple-500/30">
+    <div className="flex flex-col h-full w-full bg-[#03060e] text-gray-300 font-sans selection:bg-purple-500/30 overflow-hidden">
       
       {/* HEADER */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-white/5 shrink-0 gap-4 bg-[#03060e]/80 backdrop-blur-md sticky top-0 z-30">
@@ -812,13 +812,13 @@ export default function Dashboard() {
           {/* Toggle Sidebar Button */}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`hidden xl:flex absolute top-6 z-50 bg-[#121826] border border-white/10 p-1.5 rounded-l-lg hover:bg-white/10 transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
+            className={`hidden xl:flex absolute top-1/2 -translate-y-1/2 z-50 bg-[#121826] border border-white/10 p-1.5 rounded-l-lg hover:bg-white/10 transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
           >
-            <ArrowRight className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : ''}`} />
+            {isSidebarOpen ? <ChevronRight className="w-5 h-5 text-gray-400" /> : <ChevronLeft className="w-5 h-5 text-gray-400" />}
           </button>
           
           {/* KPIs SUPERIORES */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
             {/* KPI 1 */}
             <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
@@ -920,6 +920,27 @@ export default function Dashboard() {
                 </div>
               </div>
             </Link>
+
+            {/* KPI 5 */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Checklists do Dia</span>
+                <CheckSquare className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="mt-auto pt-2">
+                 <div className="text-[2.5rem] leading-none font-bold text-purple-400 tracking-tighter mb-2">
+                    {metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length}/{Math.min(5, metrics.checklistsTodayCats.length)}
+                 </div>
+                 <div className="text-[12px] text-purple-400 font-bold mb-2">Concluídos hoje</div>
+                 <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
+                     {metrics.checklistsTodayCats.length === 0 ? (
+                        <span>Nenhum programado</span>
+                     ) : (
+                        <span>{metrics.checklistsTodayCats.length} tipos programados hoje</span>
+                     )}
+                 </div>
+              </div>
+            </div>
           </div>
 
           {/* INTELIGÊNCIA OPERACIONAL (CARD PRINCIPAL) */}
@@ -952,7 +973,7 @@ export default function Dashboard() {
             </div>
 
             {/* CAMADA 2 — Operação resumida */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 pb-8 border-b border-white/10">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-white/10">
               {/* Coluna 1 */}
               <Link href="/inspecoes" className="block hover:bg-white/[0.02] p-2 -m-2 rounded-xl transition-colors cursor-pointer group">
                 <h3 className="text-[12px] font-bold text-gray-400 group-hover:text-[#7c3aed] transition-colors uppercase tracking-widest mb-6">Operação SST Hoje</h3>
@@ -1023,6 +1044,27 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* Coluna 4 - Conformidade NR */}
+              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Conformidade NR</h3>
+                  <div className="space-y-4">
+                    {metrics.conformidadeNR.slice(0, 4).map(item => (
+                      <div key={item.nr} className="flex items-center gap-3 group">
+                        <span className="text-[11px] leading-tight font-semibold text-gray-400 w-12 truncate" title={item.nr}>{item.nr}</span>
+                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-in-out`} style={{ width: isMounted ? `${item.val}%` : '0%' }}></div>
+                        </div>
+                        <span className="text-[12px] font-bold text-gray-200 w-8 text-right">{item.val}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <Link href="/central" className="mt-4 inline-block">
+                  <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver análises completas</span>
+                </Link>
+              </div>
             </div>
 
             {/* Botoes Rodape do Card */}
@@ -1043,39 +1085,52 @@ export default function Dashboard() {
           </div>
 
           {/* LINHA ABAIXO DO CARD PRINCIPAL */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1.7fr] gap-5">
             {/* 1. Riscos que exigem ação */}
             <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Riscos que exigem ação</h3>
+              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+                <h3 className="text-[11px] font-bold text-[#b48bf8] uppercase tracking-wider">Riscos que exigem ação</h3>
                 <Link href="/riscos">
                   <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
                 </Link>
               </div>
               <div className="p-0 overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="text-[10px] text-gray-500 uppercase tracking-widest bg-[#03060e]">
+                  <thead className="text-[9px] text-gray-500 uppercase tracking-widest bg-[#03060e]">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">NR</th>
-                      <th className="px-4 py-3 font-semibold">Setor</th>
-                      <th className="px-4 py-3 font-semibold">Tipo</th>
-                      <th className="px-4 py-3 font-semibold text-right">Prioridade</th>
+                      <th className="px-4 py-2 font-semibold">NR</th>
+                      <th className="px-4 py-2 font-semibold">Setor</th>
+                      <th className="px-4 py-2 font-semibold">Tipo</th>
+                      <th className="px-4 py-2 font-semibold text-right">Prioridade</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {metrics.topRisks.length > 0 ? metrics.topRisks.map((r) => (
                       <tr key={r.id} onClick={() => router.push(`/riscos?search=${r.id}`)} className="hover:bg-white/5 transition-colors cursor-pointer group">
-                        <td className="px-4 py-3 text-gray-300 max-w-[60px]">
+                        <td className="px-4 py-2.5 text-gray-300 max-w-[60px]">
                             <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.nr || '-'}</div>
                         </td>
-                        <td className="px-4 py-3 text-gray-400 max-w-[80px]">
-                           <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.setor || r.sector_id || '-'}</div>
+                        <td className="px-4 py-2.5 text-gray-400 max-w-[70px]">
+                           <div className="line-clamp-2 text-[11px] leading-tight break-words">
+                              {(() => {
+                                 const s = r.setor || r.sector_id || '';
+                                 if (!s) return '-';
+                                 const lower = s.toLowerCase();
+                                 if (lower.includes('manuten')) return 'Manut.';
+                                 if (lower.includes('operacion') || lower.includes('operação')) return 'Operac.';
+                                 if (lower.includes('produç') || lower.includes('produc')) return 'Prod.';
+                                 if (lower.includes('logístic') || lower.includes('logistic')) return 'Logíst.';
+                                 if (lower.includes('administra') || lower.includes('admin')) return 'Admin.';
+                                 if (lower.includes('seguran')) return 'Seg.';
+                                 return s.length > 8 ? s.substring(0, 8) + '.' : s;
+                              })()}
+                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-300 max-w-[120px]">
-                           <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.tipoDeRisco || r.title || r.atividade || '-'}</div>
+                        <td className="px-4 py-2.5 text-gray-300 max-w-[100px]">
+                           <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.tipoDeRisco || r.title || r.atividade || 'Não especificado'}</div>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                           <span className={`inline-block border text-[10px] font-bold px-2 py-0.5 rounded uppercase
+                        <td className="px-4 py-2.5 text-right">
+                           <span className={`inline-block border text-[9px] font-bold px-2 py-0.5 rounded uppercase
                              ${(r.nivel || r.level) === 'Crítico' || (r.nivel || r.level) === 'Alto' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-500'}
                            `}>
                              {r.nivel || r.level}
@@ -1092,204 +1147,140 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 2. Conformidade por NR */}
+            {/* 2. Risco por Setor */}
             <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-               <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Conformidade das Ações por NR</h3>
-                <Link href="/central">
-                  <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver análises completas</span>
-                </Link>
+               <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex flex-col justify-center bg-[#0b0f19] h-[55px]">
+                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Risco por Setor</h3>
               </div>
-              <div className="p-5 flex-1 flex flex-col justify-center space-y-4">
-                {metrics.conformidadeNR.map(item => (
-                  <div key={item.nr} className="flex items-center gap-4 group">
-                    <span className="text-[10px] leading-tight break-words line-clamp-2 font-semibold text-gray-400 w-24 group-hover:text-gray-200 transition-colors" title={item.nr}>{item.nr}</span>
-                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-in-out`} style={{ width: isMounted ? `${item.val}%` : '0%' }}></div>
+              <div className="p-4 sm:px-5 sm:py-3 flex-1 flex flex-col items-center justify-center gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="h-[110px] w-[110px] relative shrink-0">
+                    <ResponsiveContainer width={110} height={110}>
+                      <PieChart>
+                        <Pie
+                          data={metrics.riskSectorData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={36}
+                          outerRadius={50}
+                          paddingAngle={2}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {metrics.riskSectorData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                           contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                           itemStyle={{ color: '#fff' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                       <span className="text-[9px] text-gray-400 font-bold uppercase">Riscos</span>
                     </div>
-                    <span className="text-[11px] font-bold text-gray-300 w-8 text-right">{item.val}%</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Checklists do Dia */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Checklists do Dia</h3>
-                <Link href="/inspecoes">
-                  <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
-                </Link>
-              </div>
-              <div className="p-5 flex-1 flex flex-col items-center justify-center gap-4">
-                {metrics.checklistsTodayCats.length === 0 ? (
-                   <div className="text-gray-500 text-sm">Nenhum checklist previsto hoje</div>
-                ) : (
-                   <div className="flex w-full items-center justify-between gap-6">
-                      <div className="relative w-24 h-24 shrink-0 mx-auto flex flex-col items-center justify-center">
-                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full transform -rotate-90">
-                          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                          <circle cx="50" cy="50" r="40" fill="none" stroke="#7c3aed" strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (isMounted ? (metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length / Math.max(1, Math.min(5, metrics.checklistsTodayCats.length))) : 0))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-1">
-                          <span className="text-xl font-bold text-white leading-none tracking-tight">
-                            {metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length}/{Math.min(5, metrics.checklistsTodayCats.length)}
-                          </span>
-                          <span className="text-[9px] text-gray-400 font-medium mt-1">Concluídos</span>
+                  <div className="flex flex-col space-y-2 shrink-0">
+                    {metrics.riskSectorData.map((item, index) => (
+                      <div key={item.name} className="flex justify-between items-start group gap-4">
+                        <div className="flex items-center gap-1.5 overflow-hidden w-[65px] pt-[3px]">
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }}></div>
+                          <span className="text-[11px] font-medium text-gray-300 truncate group-hover:text-white transition-colors" title={item.name}>{item.name}</span>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                           {item.isEmpty ? (
+                               <span className="text-gray-600 text-[10px]">Sem dados</span>
+                           ) : (
+                              <div className="flex flex-col items-end leading-tight">
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-[12px] font-bold text-white">{item.value}</span>
+                                  <span className="text-[10px] text-gray-400 font-medium">({item.percent}%)</span>
+                                </div>
+                                {item.avgPriorityLabel && (
+                                   <span className="text-[9px] text-gray-500 font-medium mt-0.5">Prio. <span className={item.avgPriorityLabel === 'Crítico' || item.avgPriorityLabel === 'Alto' ? 'text-red-400/80' : 'text-orange-400/80'}>{item.avgPriorityLabel}</span></span>
+                                )}
+                              </div>
+                           )}
                         </div>
                       </div>
-                      
-                      <div className="flex-1 flex flex-col space-y-3">
-                         {metrics.checklistsTodayCats.map(cat => (
-                           <div key={cat.name} className="flex flex-col">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[10px] leading-tight font-bold text-gray-200 break-words pr-2 max-w-[130px]" title={cat.name}>{cat.name}</span>
-                                <span className="text-[10px] text-gray-400 font-medium">{cat.completed}/{cat.total}</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                 <div className="h-full bg-purple-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted && cat.total > 0 ? `${(cat.completed / cat.total) * 100}%` : '0%' }}></div>
-                              </div>
-                           </div>
-                         ))}
-                      </div>
-                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* LINHA INFERIOR */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-5">
-            {/* 1. Risco por Setor */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-               <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Risco por Setor</h3>
-                <Link href="/riscos">
-                  <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver detalhes por setor</span>
-                </Link>
-              </div>
-              <div className="p-5 flex-1 flex flex-col sm:flex-row items-center gap-6">
-                <div className="h-32 w-32 relative shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={metrics.riskSectorData}
-                        innerRadius={35}
-                        outerRadius={55}
-                        paddingAngle={2}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {metrics.riskSectorData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                         contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
-                         itemStyle={{ color: '#fff' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                     <span className="text-[10px] text-gray-400 font-bold uppercase">Riscos</span>
+                    ))}
                   </div>
                 </div>
-                <div className="flex-1 w-full space-y-3">
-                  {metrics.riskSectorData.map(item => (
-                    <div key={item.name} className="flex justify-between items-center group">
-                      <div className="flex items-center gap-2 overflow-hidden mr-2">
-                        <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-xs text-gray-400 truncate group-hover:text-gray-200 transition-colors" title={item.name}>{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                         {item.isEmpty ? null : (
-                            <>
-                               <div className="flex flex-col items-end">
-                                 <span className="text-xs font-bold text-gray-200">{item.value} <span className="text-gray-500 font-normal">({item.percent}%)</span></span>
-                                 <span className="text-[9px] text-gray-500">Prio. {item.avgPriorityLabel}</span>
-                               </div>
-                            </>
-                         )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 
-            {/* 2. Score Operacional */}
+            {/* 3. Evolução da Segurança */}
             <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Score Operacional</h3>
-                <Link href="/central">
-                  <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver histórico completo</span>
-                </Link>
+              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#7c3aed]/20 p-1.5 rounded-lg border border-[#7c3aed]/30">
+                    <ShieldCheck className="w-4 h-4 text-[#7c3aed]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[12px] font-bold text-white">Evolução da segurança</h3>
+                    <p className="text-[10px] text-gray-500">Tendência de risco operacional ao longo do tempo.</p>
+                  </div>
+                </div>
+                <div className="flex items-center bg-[#121826] border border-white/5 rounded-lg overflow-hidden pr-2">
+                   <select 
+                     value={scoreTimeRange} 
+                     onChange={(e) => setScoreTimeRange(e.target.value as any)}
+                     className="bg-transparent text-gray-300 text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
+                   >
+                     <option className="bg-[#121826]" value="semana">Últimos 7 dias</option>
+                     <option className="bg-[#121826]" value="mes">Últimos 30 dias</option>
+                     <option className="bg-[#121826]" value="ano">Este ano</option>
+                   </select>
+                </div>
               </div>
               
-              <div className="p-5 flex-1 flex flex-col sm:flex-row items-center gap-8">
-                {/* Left Side (Gauge + text) */}
-                <div className="flex flex-col items-center shrink-0 w-full sm:w-1/3 border-r border-white/5 pr-4">
-                  <div className="relative w-32 h-32 mb-3">
-                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                      <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-                      <circle cx="50" cy="50" r="40" fill="none" stroke={metrics.scoreColorStroke} strokeWidth="12" strokeDasharray="251.2" strokeDashoffset={251.2 * (1 - (isMounted ? metrics.operationalScore/100 : 0))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-bold text-white leading-none tracking-tight">{metrics.operationalScore}<span className="text-lg text-gray-400">%</span></span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${metrics.scoreColorBg}`}>
-                        {metrics.scoreClass}
-                     </span>
-                     <span className="text-[10px] font-medium text-gray-400 mt-1 flex items-center gap-1">
-                       {metrics.scoreDiff > 0 ? (
-                         <span className="text-green-500 font-bold">+{metrics.scoreDiff} pts</span>
-                       ) : metrics.scoreDiff < 0 ? (
-                         <span className="text-red-500 font-bold">{metrics.scoreDiff} pts</span>
-                       ) : (
-                         <span className="text-white font-bold">0 pts</span>
-                       )} vs período ant.
-                     </span>
-                  </div>
+              <div className="p-4 sm:px-5 sm:py-3 flex-1 flex flex-col sm:flex-row gap-6">
+                {/* Left Side (Line Chart) */}
+                <div className="flex-1 min-h-[140px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={scoreDataMap[scoreTimeRange].concat([{ name: 'Atual', value: metrics.operationalScore }])} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorScoreUpdate" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
+                        formatter={(value: any) => [`${value}`, 'Score']}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="#7c3aed" 
+                        strokeWidth={2.5}
+                        fillOpacity={1} 
+                        fill="url(#colorScoreUpdate)" 
+                        activeDot={{ r: 5, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
 
-                {/* Right Side (Line Chart) */}
-                <div className="flex flex-col flex-1 w-full relative">
-                  <div className="flex justify-end mb-2">
-                     <div className="flex bg-[#121826] rounded-md p-1 border border-white/5">
-                       <button onClick={() => setScoreTimeRange('dia')} className={`text-[10px] uppercase font-bold px-3 py-1 rounded ${scoreTimeRange === 'dia' ? 'bg-[#7c3aed] text-white' : 'text-gray-500 hover:text-gray-300'}`}>Dia</button>
-                       <button onClick={() => setScoreTimeRange('semana')} className={`text-[10px] uppercase font-bold px-3 py-1 rounded ${scoreTimeRange === 'semana' ? 'bg-[#7c3aed] text-white' : 'text-gray-500 hover:text-gray-300'}`}>Sem</button>
-                       <button onClick={() => setScoreTimeRange('mes')} className={`text-[10px] uppercase font-bold px-3 py-1 rounded ${scoreTimeRange === 'mes' ? 'bg-[#7c3aed] text-white' : 'text-gray-500 hover:text-gray-300'}`}>Mês</button>
-                       <button onClick={() => setScoreTimeRange('ano')} className={`text-[10px] uppercase font-bold px-3 py-1 rounded ${scoreTimeRange === 'ano' ? 'bg-[#7c3aed] text-white' : 'text-gray-500 hover:text-gray-300'}`}>Ano</button>
-                     </div>
-                  </div>
-                  <div className="flex-1 min-h-[140px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={scoreDataMap[scoreTimeRange].concat([{ name: 'Atual', value: metrics.operationalScore }])} margin={{ top: 15, right: 0, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={metrics.scoreColorStroke} stopOpacity={0.5}/>
-                            <stop offset="95%" stopColor={metrics.scoreColorStroke} stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
-                          itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                          formatter={(value: any) => [`${value}%`, 'Score']}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke={metrics.scoreColorStroke} 
-                          strokeWidth={3}
-                          fillOpacity={1} 
-                          fill="url(#colorScore)" 
-                          activeDot={{ r: 6, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                {/* Right Side (Card) */}
+                <div className="shrink-0 w-full sm:w-[130px] flex flex-col justify-center">
+                  <div className="bg-[#121826] border border-white/5 rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
+                    <span className="text-[10px] text-gray-400 font-medium mb-1">Risco atual</span>
+                    <div className="text-3xl font-bold text-[#b48bf8] leading-none mb-1">{metrics.operationalScore}</div>
+                    <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
+                    
+                    <div className="flex flex-col items-start gap-1">
+                       <span className="text-[12px] font-bold flex items-center gap-1 text-green-400">
+                         {metrics.scoreDiff >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5 text-red-400" />} 
+                         {metrics.scoreDiff >= 0 ? `${metrics.scoreDiff}%` : <span className="text-red-400">{Math.abs(metrics.scoreDiff)}%</span>}
+                       </span>
+                       <span className="text-[9px] text-gray-500">vs. período anterior</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1298,7 +1289,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Sidebar */}
-        <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-[calc(100vh-73px)] sticky top-0 overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
+        <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
           {/* Card 1: Alertas Críticos */}
           <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">

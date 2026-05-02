@@ -32,7 +32,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div>
-            <h1 className="font-bold text-white text-base tracking-tight leading-tight">ApexShield</h1>
+            <h1 className="font-bold text-white text-base tracking-tight leading-tight">Apex Ops</h1>
           </div>
         </div>
         <button 

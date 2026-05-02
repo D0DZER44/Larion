@@ -14,8 +14,8 @@ const navGroups = [
   {
     items: [
       { name: 'Visão Geral', href: '/', icon: Home },
-      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
       { name: 'Inspeções', href: '/inspecoes', icon: ClipboardCheck },
+      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
     ]
   },
   {
@@ -70,7 +70,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity z-20"></div>
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">ApexShield</h1>
+            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">Apex Ops</h1>
             <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">SST Inteligência</p>
           </div>
         </Link>
