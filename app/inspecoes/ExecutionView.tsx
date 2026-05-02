@@ -34,7 +34,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
   const [items, setItems] = useState<any[]>(() => {
      if (inspection?.items && inspection.items.length > 0) return JSON.parse(JSON.stringify(inspection.items));
      if (template) {
-        return template.sections.flatMap(s => s.questions.map(q => ({
+        return template.sections.flatMap((s: any) => s.questions.map((q: any) => ({
              ...q,
              status: 'Pendente',
              observacao: '',

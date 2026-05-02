@@ -4,9 +4,12 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const isDashboard = pathname === '/';
 
   return (
     <div className="flex h-screen bg-[#0b0f19] overflow-hidden">
@@ -57,7 +60,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pt-16 lg:pt-0 print:pt-0">
-        <div className="flex-1 overflow-y-auto w-full custom-scrollbar pt-6 lg:pt-0 print:pt-0 print:overflow-visible">
+        <div className={`flex-1 w-full pt-6 lg:pt-0 print:pt-0 print:overflow-visible flex flex-col ${isDashboard ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}>
           {children}
         </div>
       </main>

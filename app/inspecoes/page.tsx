@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
+import { NormativeEngine } from '@/lib/engines';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, 
   Download, Plus, Settings as SettingsIcon, 
@@ -259,8 +260,8 @@ export default function InspecoesPage() {
         const tempChecklistItems: any[] = [];
         const foundC = checklists.find(c => c.name === item.checklist);
         if (foundC) {
-          foundC.sections.forEach(sec => {
-            sec.questions.forEach(q => {
+          foundC.sections.forEach((sec: any) => {
+            sec.questions.forEach((q: any) => {
               tempChecklistItems.push({
                 id: q.id,
                 sectionId: sec.id,
@@ -286,8 +287,8 @@ export default function InspecoesPage() {
       const selectedModel = checklists.find(c => c.id === (inspectionData.checklistId || checklists[0]?.id));
       if (!selectedModel) return;
       const newItems: any[] = [];
-      selectedModel.sections.forEach(sec => {
-        sec.questions.forEach(q => {
+      selectedModel.sections.forEach((sec: any) => {
+        sec.questions.forEach((q: any) => {
           newItems.push({ id: q.id, sectionId: sec.id, sectionTitle: sec.title, text: q.text, status: 'Conforme', gravidade: 'Baixo', observacao: '', acaoCorretiva: getAcaoSugerida(q.text), evidencia: '' });
         });
       });

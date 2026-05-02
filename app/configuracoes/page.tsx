@@ -561,7 +561,7 @@ function TabChecklists() {
 
                      {/* Sections */}
                      <div className="space-y-4">
-                        {activeChecklist.sections.map((section, sIndex) => (
+                        {activeChecklist.sections.map((section: any, sIndex: number) => (
                            <div key={section.id} className="bg-[#1e1b4b]/20 border border-purple-500/20 p-1 rounded-2xl relative group/section">
                               <div className="bg-[#121826] rounded-xl overflow-hidden border border-white/5">
                                  <div className="p-3 bg-[#0b0f19] border-b border-white/5 flex items-center justify-between">
@@ -583,7 +583,7 @@ function TabChecklists() {
                                        {!activeChecklist.regraFixa && (
                                           <button 
                                              onClick={() => {
-                                                const newSections = activeChecklist.sections.filter((_, idx) => idx !== sIndex);
+                                                const newSections = activeChecklist.sections.filter((_: any, idx: number) => idx !== sIndex);
                                                 updateChecklist(activeChecklist.id, { sections: newSections });
                                              }}
                                              className="text-[11px] px-2 py-1 text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/section:opacity-100"
@@ -593,7 +593,7 @@ function TabChecklists() {
                                     </div>
                                  </div>
                                  <div className="px-4 py-2 space-y-1">
-                                    {section.questions.map((item, qIndex) => (
+                                    {section.questions.map((item: any, qIndex: number) => (
                                        <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0 group">
                                           <GripVertical className="w-3.5 h-3.5 text-gray-600 cursor-move opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                                           <input 
@@ -651,7 +651,7 @@ function TabChecklists() {
                                                 <button 
                                                    onClick={() => {
                                                       const newSections = [...activeChecklist.sections];
-                                                      newSections[sIndex].questions = newSections[sIndex].questions.filter((_, idx) => idx !== qIndex);
+                                                      newSections[sIndex].questions = newSections[sIndex].questions.filter((_: any, idx: number) => idx !== qIndex);
                                                       updateChecklist(activeChecklist.id, { sections: newSections });
                                                    }}
                                                    className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -943,12 +943,12 @@ function SubTabRegrasPersonalizadas() {
          <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full shadow-lg">
             <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
                <div>
-                  <h2 className="text-lg font-bold text-white mb-0.5">{activeRule.regraFixa ? 'Visualizador de Regra Fixa' : 'Construtor de Regra (Risco Automático)'}</h2>
-                  <p className="text-xs text-gray-500">{activeRule.regraFixa ? 'Esta regra é normativa e não pode ser alterada.' : 'Transforme respostas em ações proativas no sistema.'}</p>
+                  <h2 className="text-lg font-bold text-white mb-0.5">{(activeRule as any).regraFixa ? 'Visualizador de Regra Fixa' : 'Construtor de Regra (Risco Automático)'}</h2>
+                  <p className="text-xs text-gray-500">{(activeRule as any).regraFixa ? 'Esta regra é normativa e não pode ser alterada.' : 'Transforme respostas em ações proativas no sistema.'}</p>
                </div>
                <div className="flex items-center gap-2">
-                  {!activeRule.regraFixa && <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>}
-                  {!activeRule.regraFixa && (
+                  {!(activeRule as any).regraFixa && <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>}
+                  {!(activeRule as any).regraFixa && (
                     <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-[13px] font-bold transition-colors" onClick={() => updateRule(activeRule.id, { isActive: !activeRule.isActive })}>
                        {activeRule.isActive ? 'Desativar Regra' : 'Ativar Regra'}
                     </button>
@@ -958,19 +958,19 @@ function SubTabRegrasPersonalizadas() {
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{activeRule.regraFixa ? 'Título da Regra' : 'Nome da Regra'}</label>
-                  <input type="text" value={activeRule.name || activeRule.titulo} onChange={e => !activeRule.regraFixa && updateRule(activeRule.id, { name: e.target.value })} disabled={activeRule.regraFixa} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" />
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{(activeRule as any).regraFixa ? 'Título da Regra' : 'Nome da Regra'}</label>
+                  <input type="text" value={activeRule.name || (activeRule as any).titulo} onChange={e => !(activeRule as any).regraFixa && updateRule(activeRule.id, { name: e.target.value })} disabled={(activeRule as any).regraFixa} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" />
                </div>
 
-               {activeRule.regraFixa && (
+               {(activeRule as any).regraFixa && (
                  <div className="space-y-2">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Descrição</label>
-                    <textarea value={activeRule.descricao} disabled className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none disabled:opacity-50" rows={2}></textarea>
+                    <textarea value={(activeRule as any).descricao} disabled className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none disabled:opacity-50" rows={2}></textarea>
                  </div>
                )}
 
                {/* Fluxo */}
-               {!activeRule.regraFixa ? (
+               {!(activeRule as any).regraFixa ? (
                  <div className="relative pt-4 pb-8 pl-6 border-l-2 border-white/10 ml-4 space-y-8">
                   
                   {/* Step 1 */}
@@ -1034,10 +1034,10 @@ function SubTabRegrasPersonalizadas() {
                </div>
                ) : (
                  <div className="flex flex-col gap-4 text-sm text-gray-400">
-                    <p><strong>Ação Recomendada:</strong> {activeRule.acaoRecomendada}</p>
-                    <p><strong>Severidade Padrão:</strong> {activeRule.severidadeBase}</p>
-                    <p><strong>Prazo Base:</strong> {activeRule.prazoBase} dias</p>
-                    <p><strong>Impacta Indicadores:</strong> {activeRule.impactaScore ? 'Sim' : 'Não'}</p>
+                    <p><strong>Ação Recomendada:</strong> {(activeRule as any).acaoRecomendada}</p>
+                    <p><strong>Severidade Padrão:</strong> {(activeRule as any).severidadeBase}</p>
+                    <p><strong>Prazo Base:</strong> {(activeRule as any).prazoBase} dias</p>
+                    <p><strong>Impacta Indicadores:</strong> {(activeRule as any).impactaScore ? 'Sim' : 'Não'}</p>
                  </div>
                )}
             </div>
@@ -1055,12 +1055,12 @@ function SubTabRegrasPersonalizadas() {
             
             <div className="w-full bg-[#0b0f19] border border-white/5 rounded-xl p-4 space-y-3 relative z-10">
                <div className="flex items-center gap-2">
-                  <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase">{activeRule?.severity || activeRule?.severidadeBase || 'Médio'}</span>
+                  <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase">{activeRule?.severity || (activeRule as any)?.severidadeBase || 'Médio'}</span>
                   <p className="text-xs font-bold text-white">Risco Registrado</p>
                </div>
                <div className="flex items-center gap-2 ml-1">
                   <Clock className="w-3.5 h-3.5 text-gray-600" />
-                  <p className="text-[11px] text-gray-400">Prazo Acionado: <strong className="text-white">{activeRule?.deadline || `${activeRule?.prazoBase || 0} dias`}</strong></p>
+                  <p className="text-[11px] text-gray-400">Prazo Acionado: <strong className="text-white">{activeRule?.deadline || `${(activeRule as any)?.prazoBase || 0} dias`}</strong></p>
                </div>
                <div className="flex items-center gap-2 ml-1">
                   <User className="w-3.5 h-3.5 text-gray-600" />

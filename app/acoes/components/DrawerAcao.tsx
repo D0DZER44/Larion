@@ -175,7 +175,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
             </div>
 
             {/* Origem normativa e vínculo */}
-            {(acao.regraFixa !== undefined || acao.nrRelacionada || acao.nr) && (
+            {(acao.regraFixa !== undefined || acao.nrRelacionada || (acao as any).nr) && (
                <div className="space-y-2 pb-2">
                   <div className="bg-[#1e1a30]/50 p-4 rounded-xl border border-blue-500/20 space-y-3">
                      <div className="flex items-center gap-2 mb-2">
@@ -183,7 +183,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                         <h4 className="text-xs font-bold text-blue-200 uppercase tracking-wider">Origem Normativa e Vínculo</h4>
                      </div>
                      <div className="space-y-1.5 text-[12px] text-gray-300">
-                        {(acao.nrRelacionada || acao.nr) && <p><span className="font-bold text-gray-500">NR Relacionada:</span> {acao.nrRelacionada || acao.nr}</p>}
+                        {(acao.nrRelacionada || (acao as any).nr) && <p><span className="font-bold text-gray-500">NR Relacionada:</span> {acao.nrRelacionada || (acao as any).nr}</p>}
                         {acao.regraTitulo && <p><span className="font-bold text-gray-500">Regra:</span> {acao.regraTitulo}</p>}
                         {acao.regraId && <p><span className="font-bold text-gray-500">Regra ID:</span> {acao.regraId}</p>}
                         
