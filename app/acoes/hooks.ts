@@ -287,6 +287,16 @@ export function useAcoes() {
         fUp.nivel = nivel;
         if (!eventoDesc) eventoDesc = 'Follow-up gerado';
         needsUpdate = true;
+      } else if (ativo && !precisaFollowUp && fUp.precisaFollowUp) {
+        fUp.precisaFollowUp = false;
+        fUp.ultimaMensagem = '';
+        fUp.nivel = 'normal';
+        needsUpdate = true;
+      }
+
+      if (ativo && proximoFollowUpEm !== fUp.proximoFollowUpEm) {
+        fUp.proximoFollowUpEm = proximoFollowUpEm;
+        needsUpdate = true;
       }
 
       if (!ativo && fUp.ativo) {
@@ -298,6 +308,7 @@ export function useAcoes() {
       }
 
       if (needsUpdate) {
+        console.log('Update loop triggered for:', acao.id, { isNowVencida, precisaEscalonamento, fUpEscalado: fUp.escalado, ativo, fUpAtivo: fUp.ativo, precisaFollowUp, fUpPrecisa: fUp.precisaFollowUp, fUpUltMsg: fUp.ultimaMensagem, calcMsg: mensagem, fUpNivel: fUp.nivel, calcNivel: nivel, eventoDesc });
         // Prepare new followUp state to merge
         updates.followUp = { ...fUp };
         

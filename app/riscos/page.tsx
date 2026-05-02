@@ -379,8 +379,8 @@ export default function RiscosPage() {
     { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
-  const inspecoes = useAppStore(state => state.inspecoes) || [];
-  const nrMetrics = useMemo(() => getNrMetrics({ inspections: inspecoes, risks: combinedData, actions: storeAcoes }), [inspecoes, combinedData, storeAcoes]);
+  const storeInspecoes = useAppStore(state => state.inspecoes);
+  const nrMetrics = useMemo(() => getNrMetrics({ inspections: storeInspecoes || [], risks: combinedData, actions: storeAcoes }), [storeInspecoes, combinedData, storeAcoes]);
 
   let nrBarData = nrMetrics.map(m => ({ name: m.nr, Total: m.multaEstimada })).sort((a,b) => b.Total - a.Total).slice(0, 6);
   let nrRiscosData = nrMetrics.map(m => ({ name: m.nr, Total: m.totalRiscos, Críticos: m.riscosCriticos })).sort((a,b) => b.Total - a.Total).slice(0, 6);

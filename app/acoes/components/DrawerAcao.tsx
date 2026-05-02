@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Play, AlertTriangle, CheckCircle2, Factory, User, ShieldAlert, ClipboardCheck, ListChecks, CalendarClock, DollarSign, ExternalLink, UserPlus, RefreshCw, Circle, BookOpen, FileText, ArrowRight, Eye, Clock, Info } from 'lucide-react';
+import Image from 'next/image';
 import { ActionItem } from '../types';
 
 interface Props {
@@ -272,7 +273,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                     <h3 className="text-[13px] font-medium text-white border-b border-white/5 pb-2">Evidências e anexos</h3>
                     <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
                        <div className="w-24 shrink-0 rounded-lg border border-white/10 overflow-hidden group cursor-pointer relative">
-                          <img src="https://images.unsplash.com/photo-1542124578-8ba9fb1720ce?q=80&w=200&auto=format&fit=crop" alt="Foto 1" className="w-full h-16 object-cover" />
+                          <Image src="https://images.unsplash.com/photo-1542124578-8ba9fb1720ce?q=80&w=200&auto=format&fit=crop" width={200} height={64} alt="Foto 1" unoptimized className="w-full h-16 object-cover" referrerPolicy="no-referrer" />
                           <div className="px-2 py-1.5 text-[10px] bg-[#121826] text-gray-300 flex justify-between items-center group-hover:bg-[#1a2333] transition-colors">
                              Foto 1 <Eye className="w-3 h-3 text-gray-500" />
                           </div>
@@ -281,7 +282,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                           </div>
                        </div>
                        <div className="w-24 shrink-0 rounded-lg border border-white/10 overflow-hidden group cursor-pointer relative">
-                          <img src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=200&auto=format&fit=crop" alt="Foto 2" className="w-full h-16 object-cover" />
+                          <Image src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=200&auto=format&fit=crop" width={200} height={64} alt="Foto 2" unoptimized className="w-full h-16 object-cover" referrerPolicy="no-referrer" />
                           <div className="px-2 py-1.5 text-[10px] bg-[#121826] text-gray-300 flex justify-between items-center group-hover:bg-[#1a2333] transition-colors">
                              Foto 2 <Eye className="w-3 h-3 text-gray-500" />
                           </div>

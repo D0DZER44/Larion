@@ -58,9 +58,20 @@ function AcoesContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  const executarFollowUpsRef = React.useRef(executarFollowUps);
+
   useEffect(() => {
-    executarFollowUps();
+    executarFollowUpsRef.current = executarFollowUps;
   }, [executarFollowUps]);
+
+  useEffect(() => {
+    // Roda followUps a cada minuto
+    executarFollowUpsRef.current();
+    const ticker = setInterval(() => {
+      executarFollowUpsRef.current();
+    }, 60 * 1000);
+    return () => clearInterval(ticker);
+  }, []);
 
   const handleOpenDrawer = (item: ActionItem) => {
     setSelectedAction(item);
