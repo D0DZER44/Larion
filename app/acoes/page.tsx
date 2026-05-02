@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User, BarChart2, AlertCircle, History } from 'lucide-react';
-import { useAcoes } from './hooks';
-import VisaoGeral from './components/VisaoGeral';
-import Pendentes from './components/Pendentes';
-import EmAndamento from './components/EmAndamento';
-import Concluidas from './components/Concluidas';
-import Historico from './components/Historico';
-import DrawerAcao from './components/DrawerAcao';
-import { ActionItem } from './types';
-import ModalNovaAcao from './components/ModalNovaAcao';
+import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+
+class ErrorBoundary extends Component<{children: ReactNode, fallback: (error: Error) => ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: ReactNode, fallback: (error: Error) => ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Ações Error Boundary:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError && this.state.error) {
+      return this.props.fallback(this.state.error);
+    }
+    return this.props.children;
+  }
+}
 
 export default function AcoesPage() {
   const [isMounted, setIsMounted] = useState(false);
