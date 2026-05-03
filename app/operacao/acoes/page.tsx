@@ -35,7 +35,7 @@ class ErrorBoundary extends Component<{children: ReactNode, fallback: (error: Er
 export default function AcoesPage() {
   return (
     <ErrorBoundary fallback={(error) => (
-      <div className="p-8 text-red-400 bg-[#03060e] h-full">
+      <div className="p-8 text-red-400 bg-[var(--bg-primary)] h-full">
         Erro ao carregar Ações: {error.message}
       </div>
     )}>
@@ -84,39 +84,39 @@ function AcoesContent() {
   };
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[#03060e] text-white">
+    <div className="flex w-full h-full overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)]">
       <motion.div layout className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="p-8 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           {/* Header */}
           <header className="flex items-center justify-between gap-4 mb-6 shrink-0">
             <div>
-              <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+              <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--text-muted)] mb-2">
                 <span>Operação</span>
-                <span className="text-gray-600">›</span>
+                <span className="text-[var(--text-secondary)]">›</span>
                 <span>Ações</span>
-                <span className="text-gray-600">›</span>
-                <span className="text-gray-400">
+                <span className="text-[var(--text-secondary)]">›</span>
+                <span className="text-[var(--text-muted)]">
                   {activeTab === 'VisaoGeral' ? 'Visão Geral' : activeTab === 'EmAndamento' ? 'Em andamento' : activeTab === 'Concluidas' ? 'Concluídas' : activeTab === 'Historico' ? 'Histórico' : 'Pendentes'}
                 </span>
               </div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-2">
                 Ações
               </h1>
-              <p className="text-sm text-gray-400 mt-1">Central de execução e acompanhamento das ações corretivas.</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Central de execução e acompanhamento das ações corretivas.</p>
             </div>
             
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/10">
+              <button className="flex items-center gap-2 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-4 py-2 rounded-xl text-sm font-medium transition-all border border-[var(--border)]">
                 <Filter className="w-4 h-4" />
                 Filtros
               </button>
-              <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/10">
+              <button className="flex items-center gap-2 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-4 py-2 rounded-xl text-sm font-medium transition-all border border-[var(--border)]">
                 <Download className="w-4 h-4" />
                 Exportar
               </button>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 bg-purple-600/90 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50"
+                className="flex items-center gap-2 bg-purple-600/90 hover:bg-purple-600 text-[var(--text-primary)] px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50"
               >
                 <Plus className="w-4 h-4" />
                 Nova Ação
@@ -138,8 +138,8 @@ function AcoesContent() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
                   activeTab === tab.id 
-                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
-                    : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
+                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                    : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {tab.icon}

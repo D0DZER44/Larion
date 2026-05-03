@@ -177,13 +177,13 @@ export default function AcaoRecomendadaCard({ context = 'global' }: AcaoRecomend
   }, [store, context]);
 
   return (
-    <div className="bg-[#121826] border border-indigo-500/20 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-lg shrink-0">
+    <div className="bg-[var(--bg-secondary)] border border-indigo-500/20 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-lg shrink-0">
       <div className="p-2 bg-indigo-500/10 rounded-full border border-indigo-500/30">
         <Star className="w-5 h-5 text-indigo-400" />
       </div>
       <div>
-        <h4 className="text-white font-bold text-sm mb-1">Ação recomendada</h4>
-        <p className="text-sm text-gray-400">{recomendacao}</p>
+        <h4 className="text-[var(--text-primary)] font-bold text-sm mb-1">Ação recomendada</h4>
+        <p className="text-sm text-[var(--text-muted)]">{recomendacao}</p>
       </div>
     </div>
   );

@@ -102,40 +102,40 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
       
       {/* Cards Superiores */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
                  <CheckCircle2 className="w-5 h-5" />
               </div>
-              <h3 className="text-[14px] font-medium text-gray-300">Concluídas</h3>
+              <h3 className="text-[14px] font-medium text-[var(--text-secondary)]">Concluídas</h3>
            </div>
-           <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+           <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               {stats.totais}
-              <div className="text-[12px] text-gray-500 font-normal">Total de ações</div>
+              <div className="text-[12px] text-[var(--text-muted)] font-normal">Total de ações</div>
            </div>
         </div>
 
-        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center">
                  <CalendarCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-[14px] font-medium text-gray-300">No prazo</h3>
+              <h3 className="text-[14px] font-medium text-[var(--text-secondary)]">No prazo</h3>
            </div>
-           <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+           <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               {stats.noPrazoCount}
               <div className="text-[12px] text-blue-400 font-normal">{stats.noPrazoPerc}% das concluídas</div>
            </div>
         </div>
 
-        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
                  <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-[14px] font-medium text-gray-300">Mitigaram risco crítico</h3>
+              <h3 className="text-[14px] font-medium text-[var(--text-secondary)]">Mitigaram risco crítico</h3>
            </div>
-           <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+           <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               {stats.criticasMitigadas}
               <div className="text-[12px] text-purple-400 font-normal">{stats.criticasPerc}% das concluídas</div>
            </div>
@@ -146,9 +146,9 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center justify-center">
                  <DollarSign className="w-5 h-5" />
               </div>
-              <h3 className="text-[14px] font-medium text-gray-300">Multa evitada</h3>
+              <h3 className="text-[14px] font-medium text-[var(--text-secondary)]">Multa evitada</h3>
            </div>
-           <div className="mt-2 text-white font-bold text-[28px] leading-tight flex items-baseline justify-between w-full">
+           <div className="mt-2 text-[var(--text-primary)] font-bold text-[28px] leading-tight flex items-baseline justify-between w-full">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.multaEvitada)}
               <div className="text-[12px] text-yellow-500/70 font-normal shrink-0 ml-2">Estimativa</div>
            </div>
@@ -156,58 +156,58 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
       </div>
 
       {/* Gráfico Resultados */}
-      <div className="bg-[#121826] rounded-[12px] border border-white/5 p-5">
-         <h3 className="text-[15px] font-medium text-gray-200 mb-6">Resultados</h3>
+      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] p-5">
+         <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Resultados</h3>
          <div className="space-y-4">
             <div className="flex items-center gap-4">
-               <div className="w-32 text-[13px] text-gray-400 shrink-0">No prazo</div>
+               <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">No prazo</div>
                <div className="flex-1 -mr-2">
                   <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.max(1, (stats.noPrazoCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
-               <div className="w-12 text-right text-[13px] font-medium text-white shrink-0">{stats.noPrazoCount}</div>
+               <div className="w-12 text-right text-[13px] font-medium text-[var(--text-primary)] shrink-0">{stats.noPrazoCount}</div>
             </div>
             <div className="flex items-center gap-4">
-               <div className="w-32 text-[13px] text-gray-400 shrink-0">Com atraso</div>
+               <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Com atraso</div>
                <div className="flex-1 -mr-2">
                   <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
                      <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.max(1, (stats.comAtrasoCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
-               <div className="w-12 text-right text-[13px] font-medium text-white shrink-0">{stats.comAtrasoCount}</div>
+               <div className="w-12 text-right text-[13px] font-medium text-[var(--text-primary)] shrink-0">{stats.comAtrasoCount}</div>
             </div>
             <div className="flex items-center gap-4">
-               <div className="w-32 text-[13px] text-gray-400 shrink-0">Críticas mitigadas</div>
+               <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Críticas mitigadas</div>
                <div className="flex-1 -mr-2">
                   <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
                      <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.max(1, (stats.criticasMitigadas / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
-               <div className="w-12 text-right text-[13px] font-medium text-white shrink-0">{stats.criticasMitigadas}</div>
+               <div className="w-12 text-right text-[13px] font-medium text-[var(--text-primary)] shrink-0">{stats.criticasMitigadas}</div>
             </div>
             <div className="flex items-center gap-4">
-               <div className="w-32 text-[13px] text-gray-400 shrink-0">Evidência anexada</div>
+               <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Evidência anexada</div>
                <div className="flex-1 -mr-2">
                   <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.max(1, (stats.evidenciaAnexadaCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
-               <div className="w-12 text-right text-[13px] font-medium text-white shrink-0">{stats.evidenciaAnexadaCount}</div>
+               <div className="w-12 text-right text-[13px] font-medium text-[var(--text-primary)] shrink-0">{stats.evidenciaAnexadaCount}</div>
             </div>
          </div>
       </div>
 
       {/* Tabela */}
-      <div className="bg-[#121826] rounded-[12px] border border-white/5 overflow-hidden">
-         <div className="p-5 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-[15px] font-medium text-gray-200">Ações concluídas</h2>
+      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] overflow-hidden">
+         <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
+            <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Ações concluídas</h2>
             <div className="flex items-center gap-2">
                {['Hoje', '7 dias', '30 dias', 'Todos'].map(p => (
                   <button 
                      key={p} 
                      onClick={() => setFilterPeriod(p)}
-                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterPeriod === p ? 'bg-white/10 text-white border-white/10' : 'bg-transparent text-gray-400 border-transparent hover:bg-white/5 hover:text-gray-300'}`}
+                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterPeriod === p ? 'bg-[var(--bg-active-group)] text-[var(--text-primary)] border-[var(--border)]' : 'bg-transparent text-[var(--text-muted)] border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-secondary)]'}`}
                   >
                      {p}
                   </button>
@@ -218,27 +218,27 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
             <table className="w-full text-left border-collapse min-w-[1000px]">
                <thead className="bg-[#0c1018]">
                   <tr>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prioridade</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prioridade</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Ação</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Responsável</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">
                         <div className="flex items-center gap-1">Concluída em <span className="text-[10px]">↓</span></div>
                      </th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prazo original</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Resultado</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Evidência</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Origem</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400 text-center">Ações</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prazo original</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Resultado</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Evidência</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Origem</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] text-center">Ações</th>
                   </tr>
                </thead>
-               <tbody className="divide-y divide-white/5 text-[13px]">
+               <tbody className="divide-y divide-[var(--border)] text-[13px]">
                   {list.map(acao => {
                      const pColors = PRIORITY_COLORS[acao.prioridade] || PRIORITY_COLORS['Baixa'];
                      const prioCircle = pColors.split(' ')[0].replace('text-', 'bg-');
                      const rInitials = getInitials(acao.responsavel);
                      const avatarColors = [
-                        'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
-                        'bg-emerald-500/20 text-emerald-400', 'bg-orange-500/20 text-orange-400',
+                        'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 
+                        'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-400',
                         'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                      ];
                      const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
@@ -264,7 +264,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                      }
 
                      return (
-                        <tr key={acao.id} onClick={() => onOpen(acao)} className="hover:bg-white/5 transition-colors cursor-pointer group">
+                        <tr key={acao.id} onClick={() => onOpen(acao)} className="hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer group">
                            <td className="px-5 py-4 w-32">
                               <div className={`flex items-center gap-2 w-fit px-2 py-0.5 rounded border text-[11px] font-medium ${pColors}`}>
                                  <div className={`w-1.5 h-1.5 rounded-full ${prioCircle}`}></div>
@@ -273,7 +273,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                            </td>
                            <td className="px-5 py-4 w-64">
                               <div className="flex flex-col gap-1.5">
-                                 <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
+                                 <h3 className="font-medium text-[var(--text-primary)] group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
                                  <div className="flex items-center gap-2 flex-wrap">
                                    {onTime && !isCritico && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">No prazo</span>}
                                    {!onTime && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com atraso</span>}
@@ -287,28 +287,28 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                     {rInitials}
                                  </div>
-                                 <span className="text-gray-300">{acao.responsavel}</span>
+                                 <span className="text-[var(--text-secondary)]">{acao.responsavel}</span>
                               </div>
                            </td>
-                           <td className="px-5 py-4 w-32 text-gray-300">
+                           <td className="px-5 py-4 w-32 text-[var(--text-secondary)]">
                               {formattedConclusao}
                            </td>
-                           <td className="px-5 py-4 w-32 text-gray-400">
+                           <td className="px-5 py-4 w-32 text-[var(--text-muted)]">
                               {acao.prazo}
                            </td>
                            <td className="px-5 py-4 w-44">
                               <span className={`text-[12px] font-medium ${resultClass}`}>{resultText}</span>
                            </td>
                            <td className="px-5 py-4 w-24">
-                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 border border-white/5 group-hover:bg-white/10 transition-colors">
+                              <div className="w-8 h-8 rounded-lg bg-[var(--bg-active-group)] flex items-center justify-center text-[var(--text-muted)] border border-[var(--border)] group-hover:bg-[var(--bg-active-group)] transition-colors">
                                  <FileText className="w-4 h-4" />
                               </div>
                            </td>
-                           <td className="px-5 py-4 w-32 text-gray-300">
+                           <td className="px-5 py-4 w-32 text-[var(--text-secondary)]">
                               {acao.origem || 'Inspeção'}
                            </td>
                            <td className="px-5 py-4 w-24 text-center">
-                              <button className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-[12px] font-medium flex items-center gap-2 mx-auto hover:bg-white/10 hover:text-white transition-colors">
+                              <button className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] text-[12px] font-medium flex items-center gap-2 mx-auto hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)] transition-colors">
                                  <Eye className="w-3.5 h-3.5" />
                                  Ver
                               </button>
@@ -318,7 +318,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                   })}
                   {list.length === 0 && (
                      <tr>
-                        <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-500">Nenhuma ação encontrada com os filtros selecionados.</td>
+                        <td colSpan={9} className="px-5 py-12 text-center text-sm text-[var(--text-muted)]">Nenhuma ação encontrada com os filtros selecionados.</td>
                      </tr>
                   )}
                </tbody>
@@ -326,16 +326,16 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
          </div>
          
          {/* Footer Pagination */}
-         <div className="px-5 py-4 border-t border-white/5 flex items-center justify-between text-sm w-full bg-[#121826]">
-            <span className="text-gray-500">Mostrando 1 a {list.length > 10 ? 10 : list.length} de {list.length} ações</span>
+         <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-secondary)]">
+            <span className="text-[var(--text-muted)]">Mostrando 1 a {list.length > 10 ? 10 : list.length} de {list.length} ações</span>
             <div className="flex items-center gap-2">
-               <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-white/10 text-gray-500 hover:bg-white/5 transition-colors" disabled>
+               <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>
                   <ChevronLeft className="w-4 h-4" />
                </button>
                <button className="w-8 h-8 flex items-center justify-center rounded-[8px] bg-indigo-600/20 text-indigo-400 font-medium">
                   1
                </button>
-               <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-white/10 text-gray-500 hover:bg-white/5 transition-colors" disabled>
+               <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>
                   <ChevronRight className="w-4 h-4" />
                </button>
             </div>

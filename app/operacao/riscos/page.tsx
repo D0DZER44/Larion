@@ -65,7 +65,7 @@ const Sparkline = ({ data, color }: { data: number[], color: string }) => {
       </defs>
       <polygon points={areaPoints} fill={`url(#${gradientId})`} />
       <polyline points={points} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={width} cy={endY} fill="#ffffff" stroke={color} strokeWidth="2" r="3" />
+      <circle cx={width} cy={endY} fill="var(--text-primary)" stroke={color} strokeWidth="2" r="3" />
     </svg>
   );
 };
@@ -80,13 +80,13 @@ const PIE_COLORS = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#121826] border border-white/10 p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
-        <p className="text-[13px] font-bold text-white mb-1">{label || payload[0].name}</p>
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
+        <p className="text-[13px] font-bold text-[var(--text-primary)] mb-1">{label || payload[0].name}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-[12px]">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || '#555' }}></div>
-            <span className="text-gray-300">{entry.name === 'Total' || entry.name === 'value' ? 'Valor' : entry.name}:</span>
-            <span className="font-bold text-white whitespace-nowrap">
+            <span className="text-[var(--text-secondary)]">{entry.name === 'Total' || entry.name === 'value' ? 'Valor' : entry.name}:</span>
+            <span className="font-bold text-[var(--text-primary)] whitespace-nowrap">
               {entry.value > 1000 ? formatCurrency(entry.value) : entry.value}
             </span>
           </div>
@@ -183,7 +183,7 @@ export default function RiscosPage() {
       case 'Alto': return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
       case 'Médio': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/30';
       case 'Baixo': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
-      default: return 'text-gray-500 bg-gray-500/10 border-gray-500/30';
+      default: return 'text-[var(--text-muted)] bg-gray-500/10 border-gray-500/30';
     }
   };
 
@@ -196,7 +196,7 @@ export default function RiscosPage() {
     if (term.includes('máquina') || term.includes('prensamento') || term.includes('corte')) return <Settings className="w-5 h-5 text-orange-400" />;
     if (term.includes('ergonômico') || term.includes('físico') || term.includes('esforço')) return <Activity className="w-5 h-5 text-indigo-400" />;
     if (term.includes('incêndio') || term.includes('explosão')) return <AlertTriangle className="w-5 h-5 text-red-400" />;
-    return <AlertTriangle className="w-5 h-5 text-gray-400" />;
+    return <AlertTriangle className="w-5 h-5 text-[var(--text-muted)]" />;
   };
 
   const getRiskOrigem = (tipo: string) => {
@@ -214,25 +214,25 @@ export default function RiscosPage() {
       case 'Em análise': return 'text-orange-400 border-orange-500/20';
       case 'Mitigado': return 'text-yellow-400 border-yellow-500/20';
       case 'Resolvido': return 'text-emerald-400 border-emerald-500/20';
-      default: return 'text-gray-400 border-gray-500/20';
+      default: return 'text-[var(--text-muted)] border-gray-500/20';
     }
   };
 
   const getActivityIcon = (atividade: string) => {
     const term = atividade.toLowerCase();
     switch(term) {
-      case 'produção': return <Factory className="w-5 h-5 text-gray-400" />;
-      case 'manutenção': return <Wrench className="w-5 h-5 text-gray-400" />;
-      case 'operacional': return <Shield className="w-5 h-5 text-gray-400" />;
-      case 'logística': return <Truck className="w-5 h-5 text-gray-400" />;
-      case 'almoxarifado': return <Package className="w-5 h-5 text-gray-400" />;
-      case 'administrativo': return <User className="w-5 h-5 text-gray-400" />;
+      case 'produção': return <Factory className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'manutenção': return <Wrench className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'operacional': return <Shield className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'logística': return <Truck className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'almoxarifado': return <Package className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'administrativo': return <User className="w-5 h-5 text-[var(--text-muted)]" />;
       case 'trabalho em altura': return <Activity className="w-5 h-5 text-purple-400" />;
       case 'manutenção elétrica': return <Settings2 className="w-5 h-5 text-blue-400" />;
       case 'operação de máquinas': return <Settings className="w-5 h-5 text-orange-400" />;
       case 'espaço confinado': return <ShieldAlert className="w-5 h-5 text-red-400" />;
       case 'movimentação de cargas': return <Truck className="w-5 h-5 text-yellow-400" />;
-      default: return <Activity className="w-5 h-5 text-gray-400" />;
+      default: return <Activity className="w-5 h-5 text-[var(--text-muted)]" />;
     }
   };
 
@@ -481,7 +481,7 @@ export default function RiscosPage() {
   const getPercentage = (val: number, total: number) => total > 0 ? Math.round((val / total) * 100) : 0;
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[#0b0f19]">
+    <div className="flex w-full h-full overflow-hidden bg-[var(--bg-primary)]">
       <motion.div layout className={`flex-1 flex flex-col h-full overflow-hidden min-w-0 transition-all duration-300 ${isDrawerActionOpen || isDrawerOpen || selectedSectorItem ? 'lg:pr-[400px]' : ''}`}>
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
@@ -498,8 +498,8 @@ export default function RiscosPage() {
                   }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab 
-                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
-                      : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
+                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                      : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {tab === 'Visão Geral' && <BarChart2 className="w-4 h-4" />}
@@ -530,7 +530,7 @@ export default function RiscosPage() {
                  });
                  setEditingItem(null);
                  setIsDrawerOpen(true);
-               }} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
+               }} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-[var(--shadow-glow)] border border-purple-500/50">
                 <Plus className="w-4 h-4" />
                 Registrar Risco
               </button>
@@ -540,21 +540,21 @@ export default function RiscosPage() {
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 mt-2 shrink-0">
                <div>
-                 <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                 <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--text-muted)] mb-2">
                    <span>Operação</span>
-                   <span className="text-gray-600">›</span>
+                   <span className="text-[var(--text-secondary)]">›</span>
                    <span>Riscos</span>
-                   <span className="text-gray-600">›</span>
-                   <span className="text-gray-400">{activeTab}</span>
+                   <span className="text-[var(--text-secondary)]">›</span>
+                   <span className="text-[var(--text-muted)]">{activeTab}</span>
                  </div>
-                 <h2 className="text-lg font-bold text-white tracking-wide uppercase">
+                 <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-wide uppercase">
                     {activeTab === 'Visão Geral' && 'Visão Geral de Riscos'}
                     {activeTab === 'Atividade' && 'Riscos por Atividade'}
                     {activeTab === 'Setor' && 'Riscos por Setor'}
                     {activeTab === 'Tipo' && 'Filtro por Tipo/Nível'}
                     {activeTab === 'Histórico' && 'Histórico de Riscos'}
                  </h2>
-                 <p className="text-xs text-gray-400 mt-1">
+                 <p className="text-xs text-[var(--text-muted)] mt-1">
                     {activeTab === 'Visão Geral' && "Mapeamento analítico e distribuição da criticidade de toda a operação."}
                     {activeTab === 'Atividade' && "Rastreabilidade de risco diretamente ligada às tarefas executadas em campo."}
                     {activeTab === 'Setor' && "Panorama de segurança verticalizado por departamentos e áreas físicas das unidades."}
@@ -563,12 +563,12 @@ export default function RiscosPage() {
                  </p>
                </div>
                {activeTab === 'Tipo' && (
-                 <div className="flex items-center gap-2 bg-[#121826] p-1.5 rounded-lg border border-white/5">
-                   <Filter className="w-4 h-4 text-gray-400 ml-2" />
+                 <div className="flex items-center gap-2 bg-[var(--bg-secondary)] p-1.5 rounded-lg border border-[var(--border)]">
+                   <Filter className="w-4 h-4 text-[var(--text-muted)] ml-2" />
                    <select 
                      value={tipoFilter} 
                      onChange={(e) => { setTipoFilter(e.target.value as any); setCurrentPage(1); }}
-                     className="bg-transparent text-sm text-white focus:outline-none px-2"
+                     className="bg-transparent text-sm text-[var(--text-primary)] focus:outline-none px-2"
                    >
                      <option value="Todos">Todos os níveis</option>
                      <option value="Crítico">Crítico</option>
@@ -592,21 +592,21 @@ export default function RiscosPage() {
                   {topCards.map((card, i) => {
                     if (!card) return null;
                     return (
-                      <div key={card.id} className="bg-[#0e1322] border border-white/10 p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-white/20 transition-all">
+                      <div key={card.id} className="bg-[#0e1322] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
                         <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30`} style={{ backgroundColor: card.sparkColor }}></div>
                         <div className="flex items-start justify-between relative z-10 mb-4">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg border ${card.bg} ${card.border}`}>
                               <card.icon className={`w-5 h-5 ${card.color}`} />
                             </div>
-                            <h3 className="text-[13px] font-medium text-gray-300">{card.label}</h3>
+                            <h3 className="text-[13px] font-medium text-[var(--text-secondary)]">{card.label}</h3>
                           </div>
                         </div>
-                        <div className="text-3xl md:text-4xl font-bold text-white tracking-tight relative z-10 mb-2">
+                        <div className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] tracking-tight relative z-10 mb-2">
                           {card.val}
                         </div>
                         <div className="flex items-center gap-2 relative z-10">
-                          <span className="text-[12px] font-medium text-gray-400">{card.sub}</span>
+                          <span className="text-[12px] font-medium text-[var(--text-muted)]">{card.sub}</span>
                           {card.id === 'c9' && <div className="w-4 h-4 text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                           </div>}
@@ -617,7 +617,7 @@ export default function RiscosPage() {
                           </div>
                         )}
                         {card.id === 'c11' && (
-                          <div className="absolute bottom-6 left-6 right-6 h-[5px] bg-white/5 rounded-full overflow-hidden z-10">
+                          <div className="absolute bottom-6 left-6 right-6 h-[5px] bg-[var(--bg-active-group)] rounded-full overflow-hidden z-10">
                              <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full" style={{ width: card.val }}></div>
                           </div>
                         )}
@@ -627,8 +627,8 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Distribuição por nível</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Distribuição por nível</h3>
                     <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
                       <div className="w-[180px] h-[180px] relative">
                         <ResponsiveContainer width="100%" height="100%">
@@ -651,32 +651,32 @@ export default function RiscosPage() {
                           </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center font-sans mt-1">
-                          <span className="text-3xl font-bold text-white leading-none">{abertosCountStats}</span>
-                          <span className="text-[12px] text-gray-400 font-medium mt-1">Total abertos</span>
+                          <span className="text-3xl font-bold text-[var(--text-primary)] leading-none">{abertosCountStats}</span>
+                          <span className="text-[12px] text-[var(--text-muted)] font-medium mt-1">Total abertos</span>
                         </div>
                       </div>
                       <div className="flex flex-col gap-3 font-sans">
                         {pieDataNivel.length > 0 ? pieDataNivel.map((entry) => (
                           <div key={entry.name} className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] opacity-90" style={{ backgroundColor: PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || '#555' }}></div>
-                            <span className="text-[13px] text-gray-300 w-16">{entry.name}</span>
-                            <span className="text-[13px] font-bold text-white">{entry.value} <span className="font-normal text-gray-500">({Math.round((entry.value/abertosCountStats)*100)}%)</span></span>
+                            <span className="text-[13px] text-[var(--text-secondary)] w-16">{entry.name}</span>
+                            <span className="text-[13px] font-bold text-[var(--text-primary)]">{entry.value} <span className="font-normal text-[var(--text-muted)]">({Math.round((entry.value/abertosCountStats)*100)}%)</span></span>
                           </div>
                         )) : (
-                          <div className="text-xs text-gray-500">Sem dados suficientes</div>
+                          <div className="text-xs text-[var(--text-muted)]">Sem dados suficientes</div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Riscos por setor</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por setor</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={barDataMultaSetor} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} dy={10} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
                           <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                           <Bar dataKey="value" fill="#7c3aed" radius={[2, 2, 0, 0]} barSize={32}>
                             {barDataMultaSetor.map((entry, index) => (
@@ -694,14 +694,14 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Multa estimada por NR</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Multa estimada por NR</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart layout="vertical" data={nrBarData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
-                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
-                          <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} width={55} />
+                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
+                          <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={55} />
                           <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                           <Bar dataKey="Total" fill="#eab308" radius={[0, 2, 2, 0]} barSize={16}>
                               {nrBarData.map((entry, index) => (
@@ -715,14 +715,14 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2">
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Riscos por NR</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por NR</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={nrRiscosData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} dy={10} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
                           <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                           <Bar dataKey="Total" fill="#3b82f6" radius={[2, 2, 0, 0]} barSize={24} />
                           <Bar dataKey="Críticos" fill="#ef4444" radius={[2, 2, 0, 0]} barSize={24} />
@@ -731,8 +731,8 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Riscos por Origem</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por Origem</h3>
                     <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8 min-h-[220px]">
                       <div className="w-[180px] h-[180px] relative">
                         <ResponsiveContainer width="100%" height="100%">
@@ -750,22 +750,22 @@ export default function RiscosPage() {
                         {pieDataOrigem.map((entry, index) => (
                           <div key={entry.name} className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full opacity-90" style={{ backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][index % 5] }}></div>
-                            <span className="text-[13px] text-gray-300 w-16 truncate">{entry.name}</span>
-                            <span className="text-[13px] font-bold text-white">{entry.value}</span>
+                            <span className="text-[13px] text-[var(--text-secondary)] w-16 truncate">{entry.name}</span>
+                            <span className="text-[13px] font-bold text-[var(--text-primary)]">{entry.value}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Chance Média de Incidente por NR (%)</h3>
+                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Chance Média de Incidente por NR (%)</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={avgChanceData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} dy={10} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
                           <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                           <Line type="monotone" dataKey="Chance" stroke="#10b981" strokeWidth={3} dot={{r: 4, fill: '#10b981', strokeWidth: 0}} activeDot={{r: 6}} />
                         </LineChart>
@@ -779,7 +779,7 @@ export default function RiscosPage() {
                       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
                       <div className="flex items-center gap-2 mb-6 relative z-10">
                         <Zap className="w-5 h-5 text-purple-400" />
-                        <h3 className="text-[15px] font-medium text-white">Insights operacionais</h3>
+                        <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Insights operacionais</h3>
                       </div>
                       <div className="flex-1 space-y-5 relative z-10">
                          <div className="flex gap-4">
@@ -787,8 +787,8 @@ export default function RiscosPage() {
                               <ShieldAlert className="w-4 h-4 text-red-400" />
                             </div>
                             <div>
-                               <p className="text-[13px] font-medium text-gray-200">{criticosCount} riscos críticos em aberto exigem ação imediata.</p>
-                               <p className="text-[12px] text-gray-500 mt-1">Impacto potencial alto em SST e conformidade.</p>
+                               <p className="text-[13px] font-medium text-[var(--text-primary)]">{criticosCount} riscos críticos em aberto exigem ação imediata.</p>
+                               <p className="text-[12px] text-[var(--text-muted)] mt-1">Impacto potencial alto em SST e conformidade.</p>
                             </div>
                          </div>
                          <div className="flex gap-4">
@@ -796,8 +796,8 @@ export default function RiscosPage() {
                               <TrendingUp className="w-4 h-4 text-yellow-400" />
                             </div>
                             <div>
-                               <p className="text-[13px] font-medium text-gray-200">{nrBarData[0]?.name || 'NR'} concentra {Math.round(((nrBarData[0]?.Total || 0) / (totalMultaAberto||1)) * 100) || 0}% da multa.</p>
-                               <p className="text-[12px] text-gray-500 mt-1">Priorize adequações e controles para evitar infrações pesadas.</p>
+                               <p className="text-[13px] font-medium text-[var(--text-primary)]">{nrBarData[0]?.name || 'NR'} concentra {Math.round(((nrBarData[0]?.Total || 0) / (totalMultaAberto||1)) * 100) || 0}% da multa.</p>
+                               <p className="text-[12px] text-[var(--text-muted)] mt-1">Priorize adequações e controles para evitar infrações pesadas.</p>
                             </div>
                          </div>
                          <div className="flex gap-4">
@@ -805,21 +805,21 @@ export default function RiscosPage() {
                               <AlertTriangle className="w-4 h-4 text-orange-400" />
                             </div>
                             <div>
-                               <p className="text-[13px] font-medium text-gray-200">{listRiscos[0]?.titulo || 'Sem riscos'} lidera as chances de incidente.</p>
-                               <p className="text-[12px] text-gray-500 mt-1">Reforce treinamentos e inspeções nas áreas operacionais.</p>
+                               <p className="text-[13px] font-medium text-[var(--text-primary)]">{listRiscos[0]?.titulo || 'Sem riscos'} lidera as chances de incidente.</p>
+                               <p className="text-[12px] text-[var(--text-muted)] mt-1">Reforce treinamentos e inspeções nas áreas operacionais.</p>
                             </div>
                          </div>
                       </div>
                    </div>
 
-                   <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
+                   <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                       <div className="flex items-center gap-2 mb-6">
                         <AlertTriangle className="w-5 h-5 text-red-500" />
-                        <h3 className="text-[15px] font-medium text-white">Top riscos críticos</h3>
+                        <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top riscos críticos</h3>
                       </div>
                       <div className="flex-1 space-y-3">
                          {listRiscos.map((r, i) => (
-                            <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-white/5 last:border-0 group cursor-pointer hover:bg-white/5 px-3 -mx-3 rounded-lg transition-colors" onClick={(e) => {
+                            <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-[var(--border)] last:border-0 group cursor-pointer hover:bg-[var(--bg-active-group)] px-3 -mx-3 rounded-lg transition-colors" onClick={(e) => {
                                 e.stopPropagation(); 
                                 setEditingItem(r); 
                                 setIsDrawerOpen(true);
@@ -828,30 +828,30 @@ export default function RiscosPage() {
                                   {i+1}
                                </div>
                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-[13px] font-medium text-gray-200 truncate group-hover:text-white transition-colors">{r.titulo || r.atividade}</h4>
+                                  <h4 className="text-[13px] font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--text-primary)] transition-colors">{r.titulo || r.atividade}</h4>
                                </div>
-                               <div className="text-[12px] text-gray-400 truncate text-right">
+                               <div className="text-[12px] text-[var(--text-muted)] truncate text-right">
                                   {r.setor}
                                </div>
                             </div>
                          ))}
                          {listRiscos.length === 0 && (
-                            <div className="text-sm text-gray-500 italic mt-4 text-center">Nenhum risco crítico encontrado.</div>
+                            <div className="text-sm text-[var(--text-muted)] italic mt-4 text-center">Nenhum risco crítico encontrado.</div>
                          )}
                       </div>
                    </div>
 
-                   <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
+                   <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                       <div className="flex items-center gap-2 mb-6">
                         <TrendingUp className="w-5 h-5 text-emerald-400" />
-                        <h3 className="text-[15px] font-medium text-white">Top 5 riscos por chance (%)</h3>
+                        <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top 5 riscos por chance (%)</h3>
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
                          {renderTopRisksChance.map((r, i) => (
                             <div key={i} className="cursor-pointer group" onClick={() => { setActiveTab('Visão Geral'); setIsDrawerActionOpen(false); setSelectedSectorItem(null); setTimeout(() => setSelectedAction(null), 300); }}>
                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="text-[13px] font-medium text-gray-300 truncate pr-4 group-hover:text-white transition-colors">{r.name}</h4>
-                                  <span className="text-[13px] font-bold text-gray-200">{r.chance}%</span>
+                                  <h4 className="text-[13px] font-medium text-[var(--text-secondary)] truncate pr-4 group-hover:text-[var(--text-primary)] transition-colors">{r.name}</h4>
+                                  <span className="text-[13px] font-bold text-[var(--text-primary)]">{r.chance}%</span>
                                </div>
                                <div className="h-1.5 w-full bg-[#1a1c23] rounded-full overflow-hidden">
                                   <div className="h-full bg-gradient-to-r from-emerald-600 to-green-400 rounded-full transition-all duration-1000" style={{ width: `${Math.min(r.chance, 100)}%` }}></div>
@@ -859,7 +859,7 @@ export default function RiscosPage() {
                             </div>
                          ))}
                          {renderTopRisksChance.length === 0 && (
-                            <div className="text-sm text-gray-500 italic mt-4 text-center">Sem dados suficientes.</div>
+                            <div className="text-sm text-[var(--text-muted)] italic mt-4 text-center">Sem dados suficientes.</div>
                          )}
                       </div>
                    </div>
@@ -871,25 +871,25 @@ export default function RiscosPage() {
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-2 pb-6">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
                            <Users className="w-5 h-5" />
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-gray-400 mb-1">Setores monitorados</h3>
-                        <p className="text-3xl font-bold text-white tracking-tight mb-2">{totalSetoresAtivos}</p>
+                        <h3 className="text-xs font-bold text-[var(--text-muted)] mb-1">Setores monitorados</h3>
+                        <p className="text-3xl font-bold text-[var(--text-primary)] tracking-tight mb-2">{totalSetoresAtivos}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-500">100% dos setores ativos</span>
+                           <span className="text-xs text-[var(--text-muted)]">100% dos setores ativos</span>
                         </div>
-                        <div className="mt-3 text-xs font-medium text-gray-500 flex items-center gap-1.5 pt-3 border-t border-white/5">
+                        <div className="mt-3 text-xs font-medium text-[var(--text-muted)] flex items-center gap-1.5 pt-3 border-t border-[var(--border)]">
                            <span className="w-1.5 h-0.5 bg-gray-500 rounded"></span> Sem variação
                         </div>
                      </div>
                   </div>
 
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      {maxCritSector && <div className="absolute -top-12 -right-12 w-32 h-32 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>}
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500">
@@ -898,17 +898,17 @@ export default function RiscosPage() {
                      </div>
                      <div className="relative z-10">
                         <h3 className="text-xs font-bold text-red-400 mb-1">Setor mais crítico</h3>
-                        <p className="text-2xl font-bold text-white tracking-tight leading-snug mb-2 truncate">{maxCritSector?.setor || 'N/A'}</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] tracking-tight leading-snug mb-2 truncate">{maxCritSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-400">{maxCritSector?.crits || 0} riscos críticos</span>
+                           <span className="text-xs text-[var(--text-muted)]">{maxCritSector?.crits || 0} riscos críticos</span>
                         </div>
-                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-white/5 w-full text-left">
+                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
                            Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                      </div>
                   </div>
 
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      {maxConcSector && <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-colors"></div>}
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400">
@@ -917,17 +917,17 @@ export default function RiscosPage() {
                      </div>
                      <div className="relative z-10">
                         <h3 className="text-xs font-bold text-orange-400 mb-1">Maior concentração de risco</h3>
-                        <p className="text-2xl font-bold text-white tracking-tight leading-snug mb-2 truncate">{maxConcSector?.setor || 'N/A'}</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] tracking-tight leading-snug mb-2 truncate">{maxConcSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-400">{totalRiscosSetores > 0 ? Math.round((maxConcSector?.count || 0) / totalRiscosSetores * 100) : 0}% do total de riscos</span>
+                           <span className="text-xs text-[var(--text-muted)]">{totalRiscosSetores > 0 ? Math.round((maxConcSector?.count || 0) / totalRiscosSetores * 100) : 0}% do total de riscos</span>
                         </div>
-                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-white/5 w-full text-left">
+                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
                            Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                      </div>
                   </div>
 
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
@@ -936,14 +936,14 @@ export default function RiscosPage() {
                      </div>
                      <div className="relative z-10">
                         <h3 className="text-xs font-bold text-emerald-400 mb-1">Exposição financeira por setor</h3>
-                        <p className="text-2xl font-bold text-white font-mono tracking-tight mb-2">
+                        <p className="text-2xl font-bold text-[var(--text-primary)] font-mono tracking-tight mb-2">
                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalMultaSetores)}
                         </p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-400">Estimativa total de multas</span>
+                           <span className="text-xs text-[var(--text-muted)]">Estimativa total de multas</span>
                         </div>
-                        <div className="mt-3 text-xs font-medium text-emerald-400 flex items-center gap-1pt-3 pt-3 border-t border-white/5">
-                           <ArrowDownRight className="w-3 h-3" /> -8,4% <span className="text-gray-500 font-normal">vs mês anterior</span>
+                        <div className="mt-3 text-xs font-medium text-emerald-400 flex items-center gap-1pt-3 pt-3 border-t border-[var(--border)]">
+                           <ArrowDownRight className="w-3 h-3" /> -8,4% <span className="text-[var(--text-muted)] font-normal">vs mês anterior</span>
                         </div>
                      </div>
                   </div>
@@ -967,8 +967,8 @@ export default function RiscosPage() {
                                     setSelectedSectorItem(group);
                                 }
                             }}
-                            className={`bg-[#121826] border rounded-xl p-4 flex flex-col items-start cursor-pointer hover:bg-white/5 transition-colors relative overflow-hidden
-                            ${isSelected ? 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/50' : 'border-white/5'}`}>
+                            className={`bg-[var(--bg-secondary)] border rounded-xl p-4 flex flex-col items-start cursor-pointer hover:bg-[var(--bg-active-group)] transition-colors relative overflow-hidden
+                            ${isSelected ? 'border-purple-500 shadow-[var(--shadow-glow)] ring-1 ring-purple-500/50' : 'border-[var(--border)]'}`}>
                           
                           <div className="flex w-full items-center gap-3 mb-3">
                              <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
@@ -976,43 +976,43 @@ export default function RiscosPage() {
                                    <path className="text-gray-800" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                    <path className={bgCircle} strokeDasharray={`${pct}, 100`} strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                 </svg>
-                                <div className="absolute text-[10px] text-gray-400 flex items-center justify-center">
+                                <div className="absolute text-[10px] text-[var(--text-muted)] flex items-center justify-center">
                                    {getActivityIcon(group.setor)}
                                 </div>
                              </div>
                              <div className="flex-1 min-w-0">
-                                <h4 className="text-[13px] font-bold text-white truncate w-full">{group.setor}</h4>
+                                <h4 className="text-[13px] font-bold text-[var(--text-primary)] truncate w-full">{group.setor}</h4>
                                 <div className={`text-lg font-bold leading-none ${bgCircle}`}>{pct}%</div>
                              </div>
                           </div>
                           
                           <div className="mt-auto">
                              <span className={`text-[10px] font-medium block truncate ${bgCircle}`}>Nível de risco: {sectorLevel}</span>
-                             <span className="text-[11px] text-gray-400">{group.count} riscos</span>
+                             <span className="text-[11px] text-[var(--text-muted)]">{group.count} riscos</span>
                           </div>
                        </div>
                      )
                   })}
                 </div>
 
-                <div className="bg-[#121826] border border-white/5 rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                    <div className="overflow-x-auto">
                      <table className="w-full text-left">
-                        <thead className="bg-[#0b0f19] border-b border-white/5">
+                        <thead className="bg-[var(--bg-primary)] border-b border-[var(--border)]">
                           <tr>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Setor</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Total de Riscos</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Setor</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider text-center">Total de Riscos</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-red-500/80 uppercase tracking-wider text-center">Críticos</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-orange-500/80 uppercase tracking-wider text-center">Altos</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-yellow-500/80 uppercase tracking-wider text-center">Médios</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider text-center">Baixos</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Multa Estimada</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Chance Média de Incidente</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Último Registro</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider text-right">Multa Estimada</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider text-center">Chance Média de Incidente</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider text-right">Último Registro</th>
                              <th className="px-5 py-4 w-10"></th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-[var(--border)]">
                            {sectorGroups.map((group, idx) => {
                              const isSelected = selectedSectorItem?.setor === group.setor;
                              const avgChance = group.count > 0 ? Math.round(group.chanceSum / group.count) : 0;
@@ -1021,7 +1021,7 @@ export default function RiscosPage() {
 
                              return (
                                <tr key={idx} 
-                                   className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} 
+                                   className={`hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} 
                                    onClick={() => {
                                        if (isSelected) {
                                            setSelectedSectorItem(null);
@@ -1034,38 +1034,38 @@ export default function RiscosPage() {
                                        <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center ${isSelected ? 'text-purple-400' : 'text-purple-500/50'}`}>
                                           {getActivityIcon(group.setor)}
                                        </div>
-                                       <span className="text-[13px] font-bold text-gray-200 truncate pr-4">{group.setor}</span>
+                                       <span className="text-[13px] font-bold text-[var(--text-primary)] truncate pr-4">{group.setor}</span>
                                     </div>
                                  </td>
-                                 <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-gray-300">{group.count}</td>
+                                 <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-[var(--text-secondary)]">{group.count}</td>
                                  <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-red-500 font-bold">{group.crits}</td>
                                  <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-orange-500 font-bold">{group.altos}</td>
                                  <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-yellow-500 font-bold">{group.medios}</td>
                                  <td className="px-5 py-4 align-middle text-center font-mono text-[13px] text-emerald-500 font-bold">{group.baixos}</td>
-                                 <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-gray-300 whitespace-nowrap">
+                                 <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-[var(--text-secondary)] whitespace-nowrap">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(group.multaTotal)}
                                  </td>
                                  <td className="px-5 py-4 align-middle text-center">
                                     <div className="flex items-center justify-center gap-2">
-                                       <span className="text-[13px] text-gray-400 w-8 text-right font-mono">{avgChance}%</span>
+                                       <span className="text-[13px] text-[var(--text-muted)] w-8 text-right font-mono">{avgChance}%</span>
                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${chanceColor}`}>{chanceLabel}</span>
                                     </div>
                                  </td>
-                                 <td className="px-5 py-4 align-middle text-right font-mono text-[12px] text-gray-400 whitespace-nowrap">
+                                 <td className="px-5 py-4 align-middle text-right font-mono text-[12px] text-[var(--text-muted)] whitespace-nowrap">
                                     {group.lastRecord.toLocaleString('pt-BR', {
                                         day: '2-digit', month: '2-digit', year: 'numeric',
                                         hour: '2-digit', minute: '2-digit'
                                     })}
                                  </td>
                                  <td className="px-5 py-4 align-middle text-right">
-                                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                                    <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
                                  </td>
                                </tr>
                              )
                            })}
                         </tbody>
                      </table>
-                     <div className="p-4 border-t border-white/5 text-[11px] text-gray-500">
+                     <div className="p-4 border-t border-[var(--border)] text-[11px] text-[var(--text-muted)]">
                         Exibindo 1 a {sectorGroups.length} de {sectorGroups.length} setores
                      </div>
                    </div>
@@ -1078,68 +1078,68 @@ export default function RiscosPage() {
             {activeTab === 'Tipo' && (
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                         <Settings2 className="w-6 h-6 text-purple-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-purple-400 mb-0.5">Tipos monitorados</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{Object.keys(countByType).length}</p>
-                        <p className="text-[11px] text-gray-500">Cobrem 100% dos riscos ativos</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{Object.keys(countByType).length}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">Cobrem 100% dos riscos ativos</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                         <PieChartIcon className="w-6 h-6 text-blue-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-blue-400 mb-0.5">Tipo mais recorrente</h3>
-                        <p className="text-lg font-bold text-white mb-0.5 leading-tight truncate">{topType}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round(((countByType[topType] || 0) / Math.max(1, combinedData.length))*100)}% dos riscos registrados</p>
+                        <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight truncate">{topType}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">{Math.round(((countByType[topType] || 0) / Math.max(1, combinedData.length))*100)}% dos riscos registrados</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 z-10">
                         <ShieldAlert className="w-6 h-6 text-orange-400" />
                      </div>
                      <div className="z-10 relative">
                         <h3 className="text-xs font-bold text-orange-400 mb-0.5">Maior criticidade</h3>
-                        <p className="text-lg font-bold text-white mb-0.5 leading-tight">Crítico</p>
-                        <p className="text-[11px] text-gray-400">{combinedData.filter((c: any) => c.nivel === 'Crítico').length} tipos classificados como críticos</p>
+                        <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight">Crítico</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">{combinedData.filter((c: any) => c.nivel === 'Crítico').length} tipos classificados como críticos</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-4 border border-emerald-500/30 rounded-xl relative overflow-hidden flex items-center gap-4 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                  <div className="bg-[var(--bg-secondary)] p-4 border border-emerald-500/30 rounded-xl relative overflow-hidden flex items-center gap-4 bg-gradient-to-br from-emerald-500/5 to-transparent">
                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 z-10">
                         <DollarSign className="w-6 h-6 text-emerald-400" />
                      </div>
                      <div className="z-10 relative">
                         <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Risco financeiro por tipo</h3>
-                        <p className="text-lg font-bold text-white mb-0.5 leading-tight">{formatCurrency(totalMultaAberto)}</p>
-                        <p className="text-[11px] text-gray-400">Exposição total estimada</p>
+                        <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight">{formatCurrency(totalMultaAberto)}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">Exposição total estimada</p>
                      </div>
                   </div>
                 </div>
 
-                <div className="bg-[#121826] border border-white/5 rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                    <div className="overflow-x-auto">
                      <table className="w-full text-left">
-                        <thead className="bg-[#0b0f19]">
+                        <thead className="bg-[var(--bg-primary)]">
                           <tr>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Tipo de Risco</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Nível</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Setor Princip.</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Atividade Princip.</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Origem</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Chance Inc.</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 text-right">Multa Estimada</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 text-center">Status</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Tipo de Risco</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Nível</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Setor Princip.</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Atividade Princip.</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Origem</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] whitespace-nowrap">Chance Inc.</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] text-right">Multa Estimada</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-[var(--border)]">
                            {currentItems.map((item) => {
                                const isSelected = selectedAction?.id === item.id;
                                return (
-                               <tr key={item.id} className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
+                               <tr key={item.id} className={`hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
                                    if (isSelected && isDrawerActionOpen) {
                                        setIsDrawerActionOpen(false);
                                        setTimeout(() => setSelectedAction(null), 300);
@@ -1153,20 +1153,20 @@ export default function RiscosPage() {
                                       <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center ${isSelected ? 'text-purple-400' : 'text-purple-500/50'}`}>
                                          {getRiskTypeIcon(item.tipoDeRisco || 'Outro')}
                                       </div>
-                                      <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco}</span>
+                                      <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.tipoDeRisco}</span>
                                     </div>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
                                     <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase border tracking-wider ${getNivelColor(item.nivel)}`}>{item.nivel}</span>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
-                                    <span className="text-[13px] text-gray-300">{item.setor}</span>
+                                    <span className="text-[13px] text-[var(--text-secondary)]">{item.setor}</span>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
-                                    <span className="text-[13px] text-gray-300">{item.atividade}</span>
+                                    <span className="text-[13px] text-[var(--text-secondary)]">{item.atividade}</span>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
-                                    <span className="text-[13px] text-gray-400">{getRiskOrigem(item.tipoDeRisco || '')}</span>
+                                    <span className="text-[13px] text-[var(--text-muted)]">{getRiskOrigem(item.tipoDeRisco || '')}</span>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
                                     <div className="flex items-center gap-1.5">
@@ -1176,9 +1176,9 @@ export default function RiscosPage() {
                                        <span className={`text-xs ${((item.chanceIncidente || 0) >= 60) ? 'text-red-500' : ((item.chanceIncidente || 0) >= 35) ? 'text-orange-500' : 'text-emerald-500'}`}>{item.chanceIncidente || 0}%</span>
                                     </div>
                                  </td>
-                                 <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-gray-300">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(item.multaEstimada || 0)}</td>
+                                 <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-[var(--text-secondary)]">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(item.multaEstimada || 0)}</td>
                                  <td className="px-5 py-4 align-middle text-center">
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' ? 'text-red-400' : 'text-gray-400'}`}>
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' ? 'text-red-400' : 'text-[var(--text-muted)]'}`}>
                                        {item.status === 'Monitorado' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-0.5"></span>}
                                        {item.status}
                                     </span>
@@ -1194,81 +1194,81 @@ export default function RiscosPage() {
 
             {activeTab === 'Histórico' && (
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
-                <div className="bg-[#121826] border border-blue-500/20 rounded-xl p-4 flex items-center gap-4 bg-gradient-to-r from-blue-500/5 to-transparent">
+                <div className="bg-[var(--bg-secondary)] border border-blue-500/20 rounded-xl p-4 flex items-center gap-4 bg-gradient-to-r from-blue-500/5 to-transparent">
                   <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20">
                      <Info className="w-4 h-4 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-200">Este histórico é imutável e somente leitura.</p>
-                    <p className="text-[13px] text-gray-400">Os registros não podem ser editados ou excluídos.</p>
+                    <p className="text-sm font-bold text-[var(--text-primary)]">Este histórico é imutável e somente leitura.</p>
+                    <p className="text-[13px] text-[var(--text-muted)]">Os registros não podem ser editados ou excluídos.</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                         <FileText className="w-6 h-6 text-purple-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-purple-400 mb-0.5">Registros históricos</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.length}</p>
-                        <p className="text-[11px] text-gray-500">Total de registros</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{combinedData.length}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">Total de registros</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                         <Bot className="w-6 h-6 text-blue-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automática</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">{Math.round((combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                         <User className="w-6 h-6 text-emerald-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Origem manual</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">{Math.round((combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
-                  <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
                         <CalendarDays className="w-6 h-6 text-orange-400" />
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-orange-400 mb-0.5">Última atualização</h3>
-                        <p className="text-lg font-bold text-white mb-0.5">Hoje, 08:42</p>
-                        <p className="text-[11px] text-gray-500">21/05/2025</p>
+                        <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5">Hoje, 08:42</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">21/05/2025</p>
                      </div>
                   </div>
                 </div>
 
-                <div className="bg-[#121826] border border-white/5 rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                   <div className="flex-1 overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-[#0b0f19]">
+                      <thead className="bg-[var(--bg-primary)]">
                         <tr>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">ID</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Título do risco</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Origem</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Setor</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Atividade</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">NR</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Data e hora v</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 text-center">Status atual</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 text-center">Detalhes</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">ID</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Título do risco</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Origem</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Setor</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Atividade</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">NR</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">Data e hora v</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] text-center">Status atual</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] text-center">Detalhes</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 bg-[#121826]">
+                      <tbody className="divide-y divide-[var(--border)] bg-[var(--bg-secondary)]">
                         {combinedData.map((item) => {
                           const isSelected = selectedAction?.id === item.id;
                           const isAuto = (item.origem || '').toLowerCase().includes('auto') || (item.origem || '').toLowerCase().includes('inspe');
                           return (
-                          <tr key={item.id} className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
+                          <tr key={item.id} className={`hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
                              if (isSelected && isDrawerActionOpen) {
                                 setIsDrawerActionOpen(false);
                                 setTimeout(() => setSelectedAction(null), 300);
@@ -1278,28 +1278,28 @@ export default function RiscosPage() {
                              }
                           }}>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] text-gray-300">{item.id}</span>
+                              <span className="text-[13px] text-[var(--text-secondary)]">{item.id}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco || item.atividade}</span>
+                              <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.tipoDeRisco || item.atividade}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[#0b0f19] ${isAuto ? 'text-blue-400 border-blue-500/20' : 'text-emerald-400 border-emerald-500/20'}`}>
+                              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[var(--bg-primary)] ${isAuto ? 'text-blue-400 border-blue-500/20' : 'text-emerald-400 border-emerald-500/20'}`}>
                                  {isAuto ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                                  {isAuto ? 'Automática' : 'Manual'}
                               </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] text-gray-300">{item.setor}</span>
+                              <span className="text-[13px] text-[var(--text-secondary)]">{item.setor}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] text-gray-300">{item.atividade}</span>
+                              <span className="text-[13px] text-[var(--text-secondary)]">{item.atividade}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
                               <span className="text-[13px] text-purple-400">{Array.isArray(item.nr) ? item.nr[0] : item.nr}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] text-gray-300">21/05/2025 08:42</span>
+                              <span className="text-[13px] text-[var(--text-secondary)]">21/05/2025 08:42</span>
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
                               <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' || item.status === 'Aberto' ? 'text-red-400' : 'text-blue-400'}`}>
@@ -1308,7 +1308,7 @@ export default function RiscosPage() {
                               </span>
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
-                               <button className="p-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors text-gray-400 hover:text-white">
+                               <button className="p-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-active-group)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                                   <Eye className="w-4 h-4" />
                                </button>
                             </td>
@@ -1324,58 +1324,58 @@ export default function RiscosPage() {
             {activeTab === 'Atividade' && (
             <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#121826] p-4 border border-purple-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-secondary)] p-4 border border-purple-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <Activity className="w-16 h-16" />
                   </div>
                   <h3 className="text-[12px] text-purple-400 mb-1 z-10 relative">Atividades monitoradas</h3>
-                  <p className="text-3xl font-bold text-white mb-2 z-10 relative">{totalAtividades}</p>
-                  <p className="text-xs text-gray-500 z-10 relative">+3 desde a semana passada</p>
+                  <p className="text-3xl font-bold text-[var(--text-primary)] mb-2 z-10 relative">{totalAtividades}</p>
+                  <p className="text-xs text-[var(--text-muted)] z-10 relative">+3 desde a semana passada</p>
                 </div>
-                <div className="bg-[#121826] p-4 border border-red-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-secondary)] p-4 border border-red-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <ShieldAlert className="w-16 h-16 text-red-500" />
                   </div>
                   <h3 className="text-[12px] text-red-400 mb-1 z-10 relative">Atividades com risco crítico</h3>
-                  <p className="text-3xl font-bold text-white mb-2 z-10 relative">{atividadesCriticas}</p>
-                  <p className="text-xs text-gray-500 z-10 relative">{getPercentage(atividadesCriticas, totalAtividades)}% do total</p>
+                  <p className="text-3xl font-bold text-[var(--text-primary)] mb-2 z-10 relative">{atividadesCriticas}</p>
+                  <p className="text-xs text-[var(--text-muted)] z-10 relative">{getPercentage(atividadesCriticas, totalAtividades)}% do total</p>
                 </div>
-                <div className="bg-[#121826] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-secondary)] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <TrendingUp className="w-16 h-16 text-orange-500" />
                   </div>
                   <h3 className="text-[12px] text-orange-400 mb-1 z-10 relative">Maior atividade de risco</h3>
-                  <p className="text-2xl font-bold text-white mb-2 z-10 relative truncate">{maiorAtividade}</p>
+                  <p className="text-2xl font-bold text-[var(--text-primary)] mb-2 z-10 relative truncate">{maiorAtividade}</p>
                   <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-red-500/20 bg-red-500/10 text-red-400 z-10 relative">Crítico</span>
                 </div>
-                <div className="bg-[#121826] p-4 border border-yellow-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-secondary)] p-4 border border-yellow-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <BadgeInfo className="w-16 h-16 text-yellow-500" />
                   </div>
                   <h3 className="text-[12px] text-yellow-400 mb-1 z-10 relative">Multa estimada por atividade</h3>
-                  <p className="text-2xl font-bold text-white mb-2 z-10 relative">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalMultaAbertoActivity)}</p>
-                  <p className="text-xs text-gray-500 z-10 relative">Total potencial</p>
+                  <p className="text-2xl font-bold text-[var(--text-primary)] mb-2 z-10 relative">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalMultaAbertoActivity)}</p>
+                  <p className="text-xs text-[var(--text-muted)] z-10 relative">Total potencial</p>
                 </div>
               </div>
 
-              <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden">
+              <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
                 <div className="overflow-x-auto min-h-[300px]">
                   <table className="w-full text-left">
-                    <thead className="bg-[#0b0f19] border-b border-white/5">
+                    <thead className="bg-[var(--bg-primary)] border-b border-[var(--border)]">
                       <tr>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Atividade</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Setor Vinculado</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Riscos e Perigos</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Exigência EPI/EPC</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Chance de Incidente</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Multa Estimada</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Atividade</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Setor Vinculado</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Riscos e Perigos</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Exigência EPI/EPC</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Chance de Incidente</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">Multa Estimada</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-[var(--border)]">
                       {sortedActivities.length === 0 ? (
                          <tr>
-                           <td colSpan={8} className="px-6 py-12 text-center text-sm text-gray-500">
+                           <td colSpan={8} className="px-6 py-12 text-center text-sm text-[var(--text-muted)]">
                               Nenhuma atividade encontrada neste filtro.
                            </td>
                          </tr>
@@ -1386,7 +1386,7 @@ export default function RiscosPage() {
                          const chanceColor = avgChance >= 60 ? 'text-red-500' : avgChance >= 35 ? 'text-yellow-500' : 'text-emerald-500';
 
                          return (
-                          <tr key={idx} className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => { 
+                          <tr key={idx} className={`hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => { 
                              if (isSelected && isDrawerActionOpen) {
                                  setIsDrawerActionOpen(false);
                                  setTimeout(() => setSelectedAction(null), 300);
@@ -1419,40 +1419,40 @@ export default function RiscosPage() {
                                    {getActivityIcon(item.atividade)}
                                 </div>
                                 <div className="flex flex-col gap-0.5">
-                                   <span className="text-[13px] font-bold text-gray-200">{item.atividade}</span>
-                                   <span className="text-[11px] text-gray-500">{Array.from(new Set(item.nrs))[0] || item.nrString}</span>
+                                   <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.atividade}</span>
+                                   <span className="text-[11px] text-[var(--text-muted)]">{Array.from(new Set(item.nrs))[0] || item.nrString}</span>
                                 </div>
                               </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                               <span className="text-[13px] text-gray-400">{item.setores[0] || 'Vários'}</span>
+                               <span className="text-[13px] text-[var(--text-muted)]">{item.setores[0] || 'Vários'}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
                                <div className="flex flex-col gap-0.5">
-                                 <span className="text-[13px] text-gray-200 truncate max-w-[180px]">{item.riscosNames[0] || 'Nenhum Risco'}</span>
-                                 <span className="text-[11px] text-gray-500">{item.count} risco{item.count !== 1 ? 's' : ''} associado{item.count !== 1 ? 's' : ''}</span>
+                                 <span className="text-[13px] text-[var(--text-primary)] truncate max-w-[180px]">{item.riscosNames[0] || 'Nenhum Risco'}</span>
+                                 <span className="text-[11px] text-[var(--text-muted)]">{item.count} risco{item.count !== 1 ? 's' : ''} associado{item.count !== 1 ? 's' : ''}</span>
                                </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
                                <div className="flex flex-col gap-1">
                                  {item.episAusentes > 0 ? (
                                     <>
-                                      <span className="text-[13px] text-gray-200 truncate max-w-[150px]">Cinto paraquedista...</span>
+                                      <span className="text-[13px] text-[var(--text-primary)] truncate max-w-[150px]">Cinto paraquedista...</span>
                                       <span className="text-[10px] font-bold text-red-400 bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded w-max">{item.episAusentes} de {item.episTotal} ausentes</span>
                                     </>
                                  ) : (
-                                    <span className="text-[11px] text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded w-max font-medium">Sem equipamento</span>
+                                    <span className="text-[11px] text-[var(--text-muted)] bg-[var(--bg-active-group)] border border-[var(--border)] px-2 py-1 rounded w-max font-medium">Sem equipamento</span>
                                  )}
                                </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
                                <div className="flex flex-col gap-0.5">
                                   <span className={`text-[13px] font-bold ${chanceColor}`}>{chanceLabel}</span>
-                                  {avgChance > 0 && <span className="text-[11px] text-gray-500">{avgChance}%</span>}
+                                  {avgChance > 0 && <span className="text-[11px] text-[var(--text-muted)]">{avgChance}%</span>}
                                </div>
                             </td>
                             <td className="px-5 py-4 align-middle whitespace-nowrap">
-                               <span className="text-[13px] text-gray-300 font-mono">
+                               <span className="text-[13px] text-[var(--text-secondary)] font-mono">
                                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(item.multaTotal)}
                                </span>
                             </td>
@@ -1471,16 +1471,16 @@ export default function RiscosPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#0b0f19]">
+                <div className="p-4 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)] bg-[var(--bg-primary)]">
                    <span>Mostrando 1 a {sortedActivities.length} de {sortedActivities.length} atividades</span>
                    <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
-                         <button className="px-2 py-1 rounded hover:text-white transition-colors disabled:opacity-50" disabled><ChevronRight className="w-4 h-4 rotate-180" /></button>
+                         <button className="px-2 py-1 rounded hover:text-[var(--text-primary)] transition-colors disabled:opacity-50" disabled><ChevronRight className="w-4 h-4 rotate-180" /></button>
                          <button className="px-2.5 py-1 rounded text-sm bg-purple-600/20 text-purple-400 border border-purple-500/30">1</button>
-                         <button className="px-2 py-1 rounded hover:text-white transition-colors disabled:opacity-50" disabled><ChevronRight className="w-4 h-4" /></button>
+                         <button className="px-2 py-1 rounded hover:text-[var(--text-primary)] transition-colors disabled:opacity-50" disabled><ChevronRight className="w-4 h-4" /></button>
                       </div>
                       <div className="flex items-center gap-2">
-                         <select className="bg-[#121826] border border-white/10 rounded px-2 py-1 text-gray-400 focus:outline-none">
+                         <select className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-muted)] focus:outline-none">
                             <option>10 por página</option>
                          </select>
                       </div>
@@ -1501,7 +1501,7 @@ export default function RiscosPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              className="fixed inset-0 bg-[var(--bg-primary)] z-40 lg:hidden"
               onClick={() => setIsDrawerActionOpen(false)}
             />
            <motion.div 
@@ -1509,14 +1509,14 @@ export default function RiscosPage() {
            animate={{ opacity: 1, x: 0 }} 
            exit={{ opacity: 0, x: '100%' }}
            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[#121826] border-l border-white/10 shadow-3xl z-50 flex flex-col overflow-hidden"
+           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
          >
            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
-             <div className="p-6 flex justify-between items-start border-b border-white/5">
-                <h3 className="text-sm font-bold text-white leading-snug">
+             <div className="p-6 flex justify-between items-start border-b border-[var(--border)]">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] leading-snug">
                    {activeTab === 'Tipo' ? 'Detalhes do risco' : 'Detalhes da atividade'}
                 </h3>
-                <button onClick={() => setIsDrawerActionOpen(false)} className="text-gray-500 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors">
+                <button onClick={() => setIsDrawerActionOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md hover:bg-[var(--bg-active-group)] transition-colors">
                   <X className="w-5 h-5" />
                 </button>
              </div>
@@ -1525,7 +1525,7 @@ export default function RiscosPage() {
                
                {activeTab === 'Histórico' ? (
                  <>
-                   <div className="flex items-start justify-between border-b border-white/5 pb-4 mb-4">
+                   <div className="flex items-start justify-between border-b border-[var(--border)] pb-4 mb-4">
                      <span className="text-sm font-bold text-purple-400">{selectedAction.id}</span>
                      <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
                           ${selectedAction.status === 'Crítico' || selectedAction.status === 'Pendente' ? 'text-red-400 border-red-500/20 bg-red-400' : 
@@ -1537,114 +1537,114 @@ export default function RiscosPage() {
                    </div>
 
                    <div className="flex items-start gap-4 mb-8">
-                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-white/10 bg-[#121826] text-blue-400">
+                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-blue-400">
                        <ShieldAlert className="w-5 h-5" />
                      </div>
                      <div className="flex flex-col gap-1">
-                       <h2 className="text-lg font-bold text-white leading-none">{selectedAction.tipoDeRisco || selectedAction.atividade}</h2>
+                       <h2 className="text-lg font-bold text-[var(--text-primary)] leading-none">{selectedAction.tipoDeRisco || selectedAction.atividade}</h2>
                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-400 font-medium">{Array.isArray(selectedAction.nr) ? selectedAction.nr.join(', ') : selectedAction.nr}</span>
+                          <span className="text-xs text-[var(--text-muted)] font-medium">{Array.isArray(selectedAction.nr) ? selectedAction.nr.join(', ') : selectedAction.nr}</span>
                           <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                          <span className="text-xs text-gray-400">{selectedAction.setor}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{selectedAction.setor}</span>
                           <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                          <span className="text-xs text-gray-400">{selectedAction.atividade}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{selectedAction.atividade}</span>
                        </div>
                      </div>
                    </div>
 
                    <div className="space-y-4">
                      {selectedAction.inspection_name && (
-                       <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                          <span className="text-[13px] text-gray-500 shrink-0">Inspeção de origem</span>
+                       <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                          <span className="text-[13px] text-[var(--text-muted)] shrink-0">Inspeção de origem</span>
                           <span className="text-[13px] text-purple-400 font-bold text-right">
                              {selectedAction.inspection_name}
                           </span>
                        </div>
                      )}
                      {(selectedAction as any).checklistId && (
-                       <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                          <span className="text-[13px] text-gray-500 shrink-0">Checklist vinculado</span>
-                          <span className="text-[13px] text-gray-200 text-right">
+                       <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                          <span className="text-[13px] text-[var(--text-muted)] shrink-0">Checklist vinculado</span>
+                          <span className="text-[13px] text-[var(--text-primary)] text-right">
                              {selectedAction.atividade || 'Checklist de Inspeção'}
                           </span>
                        </div>
                      )}
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Justificativa</span>
-                        <span className="text-[13px] text-gray-200 text-right">
+                     <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Justificativa</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right">
                            {(selectedAction as any).justificativa || (selectedAction as any).justificativaMulta || 'Risco identificado durante auditoria.'}
                         </span>
                      </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Pergunta origem</span>
-                        <span className="text-[13px] text-gray-200 text-right">
+                     <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Pergunta origem</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right">
                            {(selectedAction as any).perguntaOrigem || 'A atividade envolve entrada em espaços confinados ou locais com ventilação limitada?'}
                         </span>
                      </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Resposta origem</span>
-                        <span className="text-[13px] text-gray-200 text-right">{(selectedAction as any).respostaOrigem || 'Sim'}</span>
+                     <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Resposta origem</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right">{(selectedAction as any).respostaOrigem || 'Sim'}</span>
                      </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Multa estimada</span>
-                        <span className="text-[13px] font-mono text-gray-200 text-right">
+                     <div className="flex justify-between items-start gap-6 border-b border-[var(--border)] pb-4">
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Multa estimada</span>
+                        <span className="text-[13px] font-mono text-[var(--text-primary)] text-right">
                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(selectedAction.multaEstimada || 40000)}
                         </span>
                      </div>
-                     <div className="flex justify-between items-center gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Chance de incidente</span>
+                     <div className="flex justify-between items-center gap-6 border-b border-[var(--border)] pb-4">
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Chance de incidente</span>
                         <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border flex items-center gap-1 min-w-0 ${((selectedAction.chanceIncidente || 0) >= 60) ? 'text-red-400 border-red-500/20 bg-red-500/10' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'text-orange-400 border-orange-500/20 bg-orange-500/10' : 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'}`}>
                            <span className={`w-1.5 h-1.5 rounded-full ${((selectedAction.chanceIncidente || 0) >= 60) ? 'bg-red-500' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
                            {((selectedAction.chanceIncidente || 0) >= 60) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'Média' : 'Baixa'}
                         </span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pt-2">
-                        <span className="text-[13px] text-gray-500 shrink-0">Responsável atual</span>
-                        <div className="flex items-center gap-2 text-[13px] text-gray-200">
-                           <div className="w-5 h-5 rounded-full bg-gray-500/20 flex items-center justify-center border border-white/10 overflow-hidden">
-                              <User className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Responsável atual</span>
+                        <div className="flex items-center gap-2 text-[13px] text-[var(--text-primary)]">
+                           <div className="w-5 h-5 rounded-full bg-gray-500/20 flex items-center justify-center border border-[var(--border)] overflow-hidden">
+                              <User className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                            </div>
-                           <span className="font-medium">SST <span className="text-gray-500 font-normal">• Supervisor da área</span></span>
+                           <span className="font-medium">SST <span className="text-[var(--text-muted)] font-normal">• Supervisor da área</span></span>
                         </div>
                      </div>
                    </div>
 
-                   <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+                   <div className="mt-8 pt-6 border-t border-[var(--border)] space-y-4">
                      <h3 className="text-sm font-bold text-purple-400 mb-4 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4" /> Informações de auditoria
                      </h3>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Criado em</span>
-                        <span className="text-[13px] text-gray-200 text-right">21/05/2025 08:31</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Criado em</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right">21/05/2025 08:31</span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Origem</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Origem</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            {(selectedAction.origem || '').toLowerCase().includes('inspe') ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                            {selectedAction.origem || 'Automática'} 
-                            <span className="text-gray-500 text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
+                            <span className="text-[var(--text-muted)] text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Última atualização</span>
-                        <span className="text-[13px] text-gray-200 text-right">21/05/2025 08:31</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Última atualização</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right">21/05/2025 08:31</span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Atualizado por</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Atualizado por</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            <Settings2 className="w-3.5 h-3.5" />
                            Sistema
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Versão do registro</span>
-                        <span className="text-[13px] text-gray-200 text-right font-mono">1</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Versão do registro</span>
+                        <span className="text-[13px] text-[var(--text-primary)] text-right font-mono">1</span>
                      </div>
                      <div className="flex justify-between items-center gap-6">
-                        <span className="text-[13px] text-gray-500 shrink-0">Hash do registro</span>
+                        <span className="text-[13px] text-[var(--text-muted)] shrink-0">Hash do registro</span>
                         <div className="flex items-center gap-2 group cursor-pointer">
-                           <span className="text-[12px] font-mono text-gray-400 group-hover:text-gray-300">a7f2c9e1d4b7...</span>
-                           <File className="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-400" />
+                           <span className="text-[12px] font-mono text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]">a7f2c9e1d4b7...</span>
+                           <File className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--text-muted)]" />
                         </div>
                      </div>
                    </div>
@@ -1653,15 +1653,15 @@ export default function RiscosPage() {
                  <>
                    <div className="flex items-start justify-between">
                      <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-white/10 bg-[#121826] text-purple-400">
+                       <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-purple-400">
                          {activeTab === 'Tipo' ? getRiskTypeIcon(selectedAction.tipoDeRisco || '') : getActivityIcon(selectedAction.atividade)}
                        </div>
                        <div className="flex flex-col gap-1">
-                         <h2 className="text-lg font-bold text-white leading-none">{selectedAction.atividade || selectedAction.tipoDeRisco}</h2>
+                         <h2 className="text-lg font-bold text-[var(--text-primary)] leading-none">{selectedAction.atividade || selectedAction.tipoDeRisco}</h2>
                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">{Array.isArray(selectedAction.nr) ? selectedAction.nr.join(', ') : selectedAction.nr}</span>
+                            <span className="text-xs text-[var(--text-muted)]">{Array.isArray(selectedAction.nr) ? selectedAction.nr.join(', ') : selectedAction.nr}</span>
                             <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                            <span className="text-xs text-gray-400">{selectedAction.setor}</span>
+                            <span className="text-xs text-[var(--text-muted)]">{selectedAction.setor}</span>
                          </div>
                        </div>
                      </div>
@@ -1675,35 +1675,35 @@ export default function RiscosPage() {
                    </div>
 
                    <div>
-                      <h4 className="text-xs font-bold text-gray-200 mb-2">Resumo</h4>
-                      <p className="text-[13px] text-gray-400 leading-relaxed">
+                      <h4 className="text-xs font-bold text-[var(--text-primary)] mb-2">Resumo</h4>
+                      <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
                          Atividade com alto potencial de incidentes em {selectedAction.setor?.toLowerCase()} relacionados aos riscos: {(selectedAction as any).riscosNomes?.join(', ') || selectedAction.tipoDeRisco || 'N/A'}. Requer acompanhamento de fatores agravantes para manter compliance. 
                       </p>
                    </div>
 
                    {(selectedAction.regraFixa !== undefined || selectedAction.nrRelacionada || selectedAction.nr) && (
-                     <div className="bg-[#1e1a30]/50 p-4 rounded-xl border border-purple-500/20 space-y-3">
+                     <div className="bg-[var(--bg-secondary)]/50 p-4 rounded-xl border border-purple-500/20 space-y-3">
                         <div className="flex items-center gap-2 mb-2">
                            <FileText className="w-4 h-4 text-purple-400" />
                            <h4 className="text-xs font-bold text-purple-200 uppercase tracking-wider">Base Normativa Aplicada</h4>
                         </div>
-                        <div className="space-y-1.5 text-[12px] text-gray-300">
-                           {(selectedAction.nrRelacionada || selectedAction.nr) && <p><span className="font-bold text-gray-500">NR Relacionada:</span> {selectedAction.nrRelacionada || selectedAction.nr}</p>}
-                           {selectedAction.regraTitulo && <p><span className="font-bold text-gray-500">Regra:</span> {selectedAction.regraTitulo}</p>}
-                           {selectedAction.regraId && <p><span className="font-bold text-gray-500">Regra ID:</span> {selectedAction.regraId}</p>}
+                        <div className="space-y-1.5 text-[12px] text-[var(--text-secondary)]">
+                           {(selectedAction.nrRelacionada || selectedAction.nr) && <p><span className="font-bold text-[var(--text-muted)]">NR Relacionada:</span> {selectedAction.nrRelacionada || selectedAction.nr}</p>}
+                           {selectedAction.regraTitulo && <p><span className="font-bold text-[var(--text-muted)]">Regra:</span> {selectedAction.regraTitulo}</p>}
+                           {selectedAction.regraId && <p><span className="font-bold text-[var(--text-muted)]">Regra ID:</span> {selectedAction.regraId}</p>}
                            
                            {selectedAction.regraFixa === true ? (
-                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Sim</p>
+                              <p><span className="font-bold text-[var(--text-muted)]">Regra Fixa:</span> Sim</p>
                            ) : selectedAction.regraFixa === false ? (
-                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Não</p>
+                              <p><span className="font-bold text-[var(--text-muted)]">Regra Fixa:</span> Não</p>
                            ) : (
-                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Regra normativa não vinculada</p>
+                              <p><span className="font-bold text-[var(--text-muted)]">Regra Fixa:</span> Regra normativa não vinculada</p>
                            )}
 
-                           {selectedAction.perguntaOrigem && <p><span className="font-bold text-gray-500">Pergunta:</span> {selectedAction.perguntaOrigem}</p>}
-                           {selectedAction.respostaOrigem && <p><span className="font-bold text-gray-500">Resposta:</span> {selectedAction.respostaOrigem}</p>}
+                           {selectedAction.perguntaOrigem && <p><span className="font-bold text-[var(--text-muted)]">Pergunta:</span> {selectedAction.perguntaOrigem}</p>}
+                           {selectedAction.respostaOrigem && <p><span className="font-bold text-[var(--text-muted)]">Resposta:</span> {selectedAction.respostaOrigem}</p>}
                            {(selectedAction.inspection_name || selectedAction.checklistId) && (
-                              <p><span className="font-bold text-gray-500">Origem:</span> {selectedAction.inspection_id ? `Inspeção #${selectedAction.inspection_id.substring(0,6).toUpperCase()}` : 'Inspeção'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
+                              <p><span className="font-bold text-[var(--text-muted)]">Origem:</span> {selectedAction.inspection_id ? `Inspeção #${selectedAction.inspection_id.substring(0,6).toUpperCase()}` : 'Inspeção'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
                            )}
                         </div>
                         {selectedAction.explicacaoNormativa && (
@@ -1716,49 +1716,49 @@ export default function RiscosPage() {
                      </div>
                    )}
 
-               <div className="grid grid-cols-2 gap-6 bg-[#0b0f19] p-4 border border-white/5 rounded-xl">
+               <div className="grid grid-cols-2 gap-6 bg-[var(--bg-primary)] p-4 border border-[var(--border)] rounded-xl">
                  <div>
-                    <h4 className="text-xs font-bold text-gray-200 mb-1">Chance de incidente</h4>
+                    <h4 className="text-xs font-bold text-[var(--text-primary)] mb-1">Chance de incidente</h4>
                     <p className={`text-base font-bold ${((selectedAction.chanceIncidente || 0) >= 60 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 60)) ? 'text-red-500' : ((selectedAction.chanceIncidente || 0) >= 35 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 35)) ? 'text-orange-500' : 'text-emerald-500'}`}>
                        {((selectedAction.chanceIncidente || 0) >= 60 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 60)) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 35)) ? 'Média' : 'Baixa'}
                     </p>
-                    <p className="text-[11px] text-gray-500 mt-1">Estimativa: {(selectedAction as any).chanceSum > 0 ? Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) : (selectedAction.chanceIncidente || 0)}%</p>
+                    <p className="text-[11px] text-[var(--text-muted)] mt-1">Estimativa: {(selectedAction as any).chanceSum > 0 ? Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) : (selectedAction.chanceIncidente || 0)}%</p>
                  </div>
-                 <div className="pl-6 border-l border-white/5">
-                    <h4 className="text-xs font-bold text-gray-200 mb-1">Multa estimada</h4>
-                    <p className="text-base font-bold text-white font-mono">
+                 <div className="pl-6 border-l border-[var(--border)]">
+                    <h4 className="text-xs font-bold text-[var(--text-primary)] mb-1">Multa estimada</h4>
+                    <p className="text-base font-bold text-[var(--text-primary)] font-mono">
                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format((selectedAction as any).multaTotal || selectedAction.multaEstimada || 0)}
                     </p>
-                    <p className="text-[11px] text-gray-500 mt-1">Potencial</p>
+                    <p className="text-[11px] text-[var(--text-muted)] mt-1">Potencial</p>
                  </div>
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[#121826] border border-white/5 rounded-xl cursor-pointer hover:border-purple-500/30 transition-colors">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-purple-500/30 transition-colors">
                   <div className="flex items-center gap-4">
                      <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
                         <Activity className="w-4 h-4" />
                      </div>
                      <div>
-                        <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">Checklist vinculado</h4>
-                        <p className="text-[11px] text-gray-500">Checklist {(selectedAction.atividade as string).split(' ')[0]}</p>
+                        <h4 className="text-xs font-bold text-[var(--text-primary)] leading-none mb-1">Checklist vinculado</h4>
+                        <p className="text-[11px] text-[var(--text-muted)]">Checklist {(selectedAction.atividade as string).split(' ')[0]}</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-3 w-[100px]">
                      <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div className="h-full bg-purple-500/80 rounded-full" style={{width: '70%'}}></div>
                      </div>
-                     <span className="text-[11px] font-mono text-gray-400">70%</span>
+                     <span className="text-[11px] font-mono text-[var(--text-muted)]">70%</span>
                   </div>
                </div>
 
-               <div className="flex items-start justify-between p-4 bg-[#121826] border border-red-500/10 rounded-xl">
+               <div className="flex items-start justify-between p-4 bg-[var(--bg-secondary)] border border-red-500/10 rounded-xl">
                   <div className="flex items-start gap-4">
                      <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center mt-0.5 shrink-0">
                         <ShieldAlert className="w-4 h-4" />
                      </div>
                      <div className="flex flex-col gap-1">
-                        <h4 className="text-xs font-bold text-gray-200">EPI/EPC ausente</h4>
-                        <p className="text-[11px] text-gray-400 leading-snug">
+                        <h4 className="text-xs font-bold text-[var(--text-primary)]">EPI/EPC ausente</h4>
+                        <p className="text-[11px] text-[var(--text-muted)] leading-snug">
                            Falta de equipamentos essenciais para atuação segura em {(selectedAction.atividade as string).toLowerCase()}.
                         </p>
                      </div>
@@ -1770,44 +1770,44 @@ export default function RiscosPage() {
                   </div>
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[#121826] border border-white/5 rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors group">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors group">
                   <div className="flex items-center gap-4">
                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                         <Plus className="w-4 h-4" />
                      </div>
                      <div>
-                        <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">Ação recomendada</h4>
-                        <p className="text-[11px] text-gray-500">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${(selectedAction.atividade as string).toLowerCase()}.`}</p>
+                        <h4 className="text-xs font-bold text-[var(--text-primary)] leading-none mb-1">Ação recomendada</h4>
+                        <p className="text-[11px] text-[var(--text-muted)]">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${(selectedAction.atividade as string).toLowerCase()}.`}</p>
                      </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-emerald-400 transition-colors shrink-0" />
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[#121826] border border-white/5 rounded-xl cursor-pointer hover:border-white/20 transition-colors group">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--border)] transition-colors group">
                   <div className="flex items-center gap-4">
-                     <div className="w-8 h-8 rounded-full bg-[#1e1a30] text-gray-400 flex items-center justify-center text-xs font-bold border border-white/10 uppercase shrink-0">
+                     <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs font-bold border border-[var(--border)] uppercase shrink-0">
                         {selectedAction.responsavel ? selectedAction.responsavel.substring(0, 2) : 'JS'}
                      </div>
                      <div>
-                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                        <p className="text-xs font-bold text-white">{selectedAction.responsavel || 'João Silva'}</p>
-                        <p className="text-[11px] text-gray-500">Técnico de Segurança</p>
+                        <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Responsável</h4>
+                        <p className="text-xs font-bold text-[var(--text-primary)]">{selectedAction.responsavel || 'João Silva'}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">Técnico de Segurança</p>
                      </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors shrink-0" />
                </div>
                </>
                )}
 
              </div>
 
-             <div className="p-6 border-t border-white/5 bg-[#0b0f19] space-y-3">
+             <div className="p-6 border-t border-[var(--border)] bg-[var(--bg-primary)] space-y-3">
                {activeTab !== 'Histórico' && (
-                 <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-colors flex justify-center items-center gap-2 border border-purple-500/30">
+                 <button className="w-full bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] py-3 rounded-lg text-sm font-bold shadow-[var(--shadow-glow)] transition-colors flex justify-center items-center gap-2 border border-purple-500/30">
                    Marcar como tratado <CheckCircle2 className="w-4 h-4 ml-1" />
                  </button>
                )}
-               <button onClick={() => setIsDrawerActionOpen(false)} className={`w-full py-3 rounded-lg ${activeTab === 'Histórico' ? 'bg-white/5 hover:bg-white/10 text-white text-sm' : 'text-xs text-gray-400 hover:text-white'} font-bold transition-colors border border-transparent`}>
+               <button onClick={() => setIsDrawerActionOpen(false)} className={`w-full py-3 rounded-lg ${activeTab === 'Histórico' ? 'bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-[var(--text-primary)] text-sm' : 'text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]'} font-bold transition-colors border border-transparent`}>
                  Fechar painel
                </button>
              </div>
@@ -1825,7 +1825,7 @@ export default function RiscosPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              className="fixed inset-0 bg-[var(--bg-primary)] z-40 lg:hidden"
               onClick={() => setSelectedSectorItem(null)}
             />
            <motion.div 
@@ -1833,19 +1833,19 @@ export default function RiscosPage() {
            animate={{ opacity: 1, x: 0 }} 
            exit={{ opacity: 0, x: '100%' }}
            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[#121826] border-l border-white/10 shadow-3xl z-50 flex flex-col overflow-hidden"
+           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
          >
            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
-             <div className="p-6 flex justify-between items-start border-b border-white/5">
-                <h3 className="text-sm font-bold text-white leading-snug">Detalhes do setor</h3>
-                <button onClick={() => setSelectedSectorItem(null)} className="text-gray-500 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors">
+             <div className="p-6 flex justify-between items-start border-b border-[var(--border)]">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] leading-snug">Detalhes do setor</h3>
+                <button onClick={() => setSelectedSectorItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md hover:bg-[var(--bg-active-group)] transition-colors">
                   <X className="w-5 h-5" />
                 </button>
              </div>
 
              <div className="flex-1 overflow-y-auto p-6 space-y-8">
                
-               <div className="flex items-start justify-between border-b border-white/5 pb-4 mb-4">
+               <div className="flex items-start justify-between border-b border-[var(--border)] pb-4 mb-4">
                  <span className="text-sm font-bold text-purple-400">SETOR-{selectedSectorItem.setor.substring(0,3).toUpperCase()}</span>
                  <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
                       ${selectedSectorItem.crits > 0 ? 'text-red-400 border-red-500/20 bg-red-400' : 
@@ -1857,50 +1857,50 @@ export default function RiscosPage() {
                </div>
 
                <div className="flex items-start gap-4 mb-8">
-                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-white/10 bg-[#121826] text-blue-400">
+                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-blue-400">
                    {getActivityIcon(selectedSectorItem.setor)}
                  </div>
                  <div className="flex flex-col gap-1">
-                   <h2 className="text-lg font-bold text-white leading-none">{selectedSectorItem.setor}</h2>
+                   <h2 className="text-lg font-bold text-[var(--text-primary)] leading-none">{selectedSectorItem.setor}</h2>
                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400 font-medium">{selectedSectorItem.nrs[0] || 'NR-Geral'}</span>
+                      <span className="text-xs text-[var(--text-muted)] font-medium">{selectedSectorItem.nrs[0] || 'NR-Geral'}</span>
                       <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                      <span className="text-xs text-gray-400">{selectedSectorItem.count} riscos mapeados</span>
+                      <span className="text-xs text-[var(--text-muted)]">{selectedSectorItem.count} riscos mapeados</span>
                    </div>
                  </div>
                </div>
 
                <div>
-                  <h4 className="text-xs font-bold text-gray-200 mb-2">Visão geral do setor</h4>
-                  <p className="text-[13px] text-gray-400 leading-relaxed">
+                  <h4 className="text-xs font-bold text-[var(--text-primary)] mb-2">Visão geral do setor</h4>
+                  <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
                      {selectedSectorItem.crits > 0 ? 'Setor com maior concentração de riscos críticos.' : 'Setor estável, focar em prevenções rotineiras.'} Processos com exposição aos riscos: {selectedSectorItem.riscosNames.slice(0, 3).join(', ')}.
                   </p>
                </div>
 
-               <div className="grid grid-cols-2 gap-6 bg-[#0b0f19] p-4 border border-white/5 rounded-xl">
+               <div className="grid grid-cols-2 gap-6 bg-[var(--bg-primary)] p-4 border border-[var(--border)] rounded-xl">
                  <div>
-                    <h4 className="text-[10px] uppercase font-bold text-gray-500 mb-1">Chance Incidente</h4>
+                    <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] mb-1">Chance Incidente</h4>
                     <p className={`text-base font-bold ${
                       (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 60 ? 'text-red-500' : 
                       (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 35 ? 'text-orange-500' : 'text-emerald-500'
                     }`}>
                        {(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 60 ? 'Alta' : (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 35 ? 'Média' : 'Baixa'}
                     </p>
-                    <p className="text-[11px] text-gray-500 mt-1">Estimativa: {Math.round(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count))}%</p>
+                    <p className="text-[11px] text-[var(--text-muted)] mt-1">Estimativa: {Math.round(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count))}%</p>
                  </div>
-                 <div className="pl-6 border-l border-white/5">
-                    <h4 className="text-[10px] uppercase font-bold text-gray-500 mb-1">Multa estimada</h4>
-                    <p className="text-base font-bold text-white font-mono">
+                 <div className="pl-6 border-l border-[var(--border)]">
+                    <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] mb-1">Multa estimada</h4>
+                    <p className="text-base font-bold text-[var(--text-primary)] font-mono">
                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(selectedSectorItem.multaTotal)}
                     </p>
                  </div>
                </div>
 
                <div className="space-y-3">
-                  <h4 className="text-[11px] uppercase font-bold text-white mb-2">Riscos mais recorrentes</h4>
+                  <h4 className="text-[11px] uppercase font-bold text-[var(--text-primary)] mb-2">Riscos mais recorrentes</h4>
                   <ul className="space-y-2">
                      {selectedSectorItem.riscosNames.slice(0, 4).map((r: string, i: number) => (
-                        <li key={i} className="flex items-center gap-2 text-[12px] text-gray-400">
+                        <li key={i} className="flex items-center gap-2 text-[12px] text-[var(--text-muted)]">
                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"></span> <span className="truncate">{r}</span>
                         </li>
                      ))}
@@ -1908,32 +1908,32 @@ export default function RiscosPage() {
                </div>
 
                <div className="space-y-3">
-                  <h4 className="text-[11px] uppercase font-bold text-white mb-2">NR dominante</h4>
+                  <h4 className="text-[11px] uppercase font-bold text-[var(--text-primary)] mb-2">NR dominante</h4>
                   <div className="flex items-center gap-3">
                      <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
                         {selectedSectorItem.nrs[0] || 'NR-Geral'}
                      </span>
-                     <span className="text-[12px] text-gray-400 truncate">Avaliada com base nos riscos</span>
+                     <span className="text-[12px] text-[var(--text-muted)] truncate">Avaliada com base nos riscos</span>
                   </div>
                </div>
 
-               <div className="flex flex-col gap-2 p-4 bg-[#121826] border border-white/5 rounded-xl border-l-2 border-l-purple-500">
+               <div className="flex flex-col gap-2 p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl border-l-2 border-l-purple-500">
                   <h4 className="text-[10px] uppercase font-bold text-purple-400 flex items-center gap-1.5">
                      <Zap className="w-3.5 h-3.5"/> Ação sugerida
                   </h4>
-                  <p className="text-[12px] text-gray-300">
+                  <p className="text-[12px] text-[var(--text-secondary)]">
                      Priorizar adequações nas frentes de trabalho relacionadas aos principais riscos detectados no setor de {selectedSectorItem.setor.toLowerCase()} e intensificar inspeções de rotina.
                   </p>
                </div>
 
-               <div className="flex items-center gap-4 py-4 border-t border-white/5 group pt-6">
-                  <div className="w-10 h-10 rounded-full bg-[#1e1a30] text-gray-400 flex items-center justify-center text-sm font-bold border border-purple-500/20 uppercase shrink-0">
+               <div className="flex items-center gap-4 py-4 border-t border-[var(--border)] group pt-6">
+                  <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-sm font-bold border border-purple-500/20 uppercase shrink-0">
                      <UserPlus className="w-4 h-4 text-purple-400"/>
                   </div>
                   <div className="flex-1">
-                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                     <p className="text-sm font-bold text-white">Carlos Eduardo Silva</p>
-                     <p className="text-[11px] text-gray-500">Gerente de {selectedSectorItem.setor}</p>
+                     <h4 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Responsável</h4>
+                     <p className="text-sm font-bold text-[var(--text-primary)]">Carlos Eduardo Silva</p>
+                     <p className="text-[11px] text-[var(--text-muted)]">Gerente de {selectedSectorItem.setor}</p>
                   </div>
                </div>
                
@@ -1964,24 +1964,24 @@ export default function RiscosPage() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }} 
             animate={{ opacity: 1, y: 0, scale: 1 }} 
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="bg-[#121826] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
+            className="bg-[var(--bg-secondary)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
           >
             <div className="flex flex-col h-full overflow-hidden">
-              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#0b0f19] rounded-t-2xl shrink-0">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--bg-primary)] rounded-t-2xl shrink-0">
+                <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">
                   {editingItem ? `Avaliar Condição Existente` : `Registro de Risco`}
                 </h2>
                 <div className="flex items-center gap-2">
                   {editingItem && (
                     <button 
                       onClick={(e) => handleDelete(editingItem.id, e)} 
-                      className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
+                      className="p-1.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
                       title="Excluir"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
-                  <button onClick={() => setIsDrawerOpen(false)} className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+                  <button onClick={() => setIsDrawerOpen(false)} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-active-group)] transition-colors">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -1989,16 +1989,16 @@ export default function RiscosPage() {
 
               <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 
-                <div className="space-y-4 border-b border-white/5 pb-5">
+                <div className="space-y-4 border-b border-[var(--border)] pb-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                      <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                         Prioridade Manual (Opcional)
                       </label>
                       <select 
                         value={formData.prioridade || ''} 
                         onChange={e => setFormData({...formData, prioridade: e.target.value as any})}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
+                        className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors appearance-none"
                       >
                         <option value="">Automático</option>
                         <option value="P1">P1 - Crítico</option>
@@ -2008,29 +2008,29 @@ export default function RiscosPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                      <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                         Prazo Máximo (Opcional)
                       </label>
                       <input 
                         type="text" 
                         value={formData.prazo || ''} 
                         onChange={e => setFormData({...formData, prazo: e.target.value})}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
+                        className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors placeholder:text-[var(--text-secondary)]"
                         placeholder="Ex: Imediato"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                    <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                       Atividade Operacional
                     </label>
                     <select 
                       value={formData.atividade} 
                       onChange={e => setFormData({...formData, atividade: e.target.value})}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
                     >
-                      {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
+                      {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">{opt}</option>)}
                     </select>
 
                     {normativeDetection && (
@@ -2039,15 +2039,15 @@ export default function RiscosPage() {
                            <Shield className="w-4 h-4" /> {normativeDetection.nr} - {normativeDetection.riskType}
                          </h4>
                          <div className="grid grid-cols-2 gap-2 text-[11px]">
-                           <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
-                             <span className="text-gray-500 block mb-0.5">Severidade</span>
+                           <div className="bg-[var(--bg-primary)] p-2 rounded-lg border border-[var(--border)]">
+                             <span className="text-[var(--text-muted)] block mb-0.5">Severidade</span>
                              <span className={`font-bold uppercase ${normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}`}>
                                {normativeDetection.severity}
                              </span>
                            </div>
-                           <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
-                             <span className="text-gray-500 block mb-0.5">Ação Inicial Recomendada</span>
-                             <span className="text-gray-300 font-medium leading-tight">
+                           <div className="bg-[var(--bg-primary)] p-2 rounded-lg border border-[var(--border)]">
+                             <span className="text-[var(--text-muted)] block mb-0.5">Ação Inicial Recomendada</span>
+                             <span className="text-[var(--text-secondary)] font-medium leading-tight">
                                {normativeDetection.recommendedAction}
                              </span>
                            </div>
@@ -2055,10 +2055,10 @@ export default function RiscosPage() {
                          
                          {normativeDetection.documents.length > 0 && (
                            <div>
-                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Documentos Exigidos</span>
+                             <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">Documentos Exigidos</span>
                              <div className="flex flex-wrap gap-1.5">
                                {normativeDetection.documents.map((doc: string) => (
-                                 <span key={doc} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{doc}</span>
+                                 <span key={doc} className="px-2 py-0.5 rounded text-[10px] bg-[var(--bg-active-group)] border border-[var(--border)] text-[var(--text-secondary)]">{doc}</span>
                                ))}
                              </div>
                            </div>
@@ -2066,10 +2066,10 @@ export default function RiscosPage() {
 
                          {normativeDetection.ppe.length > 0 && (
                            <div>
-                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">EPI / EPC Mínimos</span>
+                             <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">EPI / EPC Mínimos</span>
                              <div className="flex flex-wrap gap-1.5">
                                {normativeDetection.ppe.map((epi: string) => (
-                                 <span key={epi} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{epi}</span>
+                                 <span key={epi} className="px-2 py-0.5 rounded text-[10px] bg-[var(--bg-active-group)] border border-[var(--border)] text-[var(--text-secondary)]">{epi}</span>
                                ))}
                              </div>
                            </div>
@@ -2078,15 +2078,15 @@ export default function RiscosPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                    <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                       Área / Setor
                     </label>
                     <select 
                       value={formData.setor} 
                       onChange={e => setFormData({...formData, setor: e.target.value})}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors appearance-none"
                     >
-                      {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
+                      {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">{opt}</option>)}
                     </select>
                   </div>
                 </div>
@@ -2096,52 +2096,52 @@ export default function RiscosPage() {
                     <h3 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider mb-1 flex items-center gap-2">
                        Checklist de Conformidade Base
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-tight">Marque as opções em que o cenário está 100% conforme. Ausências gerarão gatilhos de Criticidade Alta/Extrema baseado na matriz de risco NR.</p>
+                    <p className="text-[11px] text-[var(--text-muted)] leading-tight">Marque as opções em que o cenário está 100% conforme. Ausências gerarão gatilhos de Criticidade Alta/Extrema baseado na matriz de risco NR.</p>
                   </div>
 
                   <div className="space-y-3">
-                    <label className="flex items-start gap-4 p-4 bg-white/5 border border-white/5 hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
+                    <label className="flex items-start gap-4 p-4 bg-[var(--bg-active-group)] border border-[var(--border)] hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
                       <div className="mt-0.5">
                         <input 
                           type="checkbox" 
                           checked={formData.hasEpiEpc} 
                           onChange={e => setFormData({...formData, hasEpiEpc: e.target.checked})} 
-                          className="w-4 h-4 rounded border-gray-600 bg-[#0b0f19] checked:bg-purple-500 checked:border-purple-500"
+                          className="w-4 h-4 rounded border-gray-600 bg-[var(--bg-primary)] checked:bg-purple-500 checked:border-purple-500"
                         />
                       </div>
                       <div>
-                         <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">EPI / EPC (Equipamentos)</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador utiliza os equipamentos obrigatórios corretos para a tarefa (Cinto, ferramentas, proteções ativas)?</span>
+                         <span className="block text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] mb-1">EPI / EPC (Equipamentos)</span>
+                         <span className="block text-[11px] text-[var(--text-muted)] leading-snug">O colaborador utiliza os equipamentos obrigatórios corretos para a tarefa (Cinto, ferramentas, proteções ativas)?</span>
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-4 p-4 bg-white/5 border border-white/5 hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
+                    <label className="flex items-start gap-4 p-4 bg-[var(--bg-active-group)] border border-[var(--border)] hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
                       <div className="mt-0.5">
                         <input 
                           type="checkbox" 
                           checked={formData.hasProcedimento} 
                           onChange={e => setFormData({...formData, hasProcedimento: e.target.checked})} 
-                          className="w-4 h-4 rounded border-gray-600 bg-[#0b0f19] checked:bg-purple-500 checked:border-purple-500"
+                          className="w-4 h-4 rounded border-gray-600 bg-[var(--bg-primary)] checked:bg-purple-500 checked:border-purple-500"
                         />
                       </div>
                       <div>
-                         <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">Procedimento Operacional / PT</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">Existe Permissão de Trabalho (PT), Análise de Risco (APR) preenchida ou protocolo LOTO ativo e seguido?</span>
+                         <span className="block text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] mb-1">Procedimento Operacional / PT</span>
+                         <span className="block text-[11px] text-[var(--text-muted)] leading-snug">Existe Permissão de Trabalho (PT), Análise de Risco (APR) preenchida ou protocolo LOTO ativo e seguido?</span>
                       </div>
                     </label>
 
-                    <label className="flex items-start gap-4 p-4 bg-white/5 border border-white/5 hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
+                    <label className="flex items-start gap-4 p-4 bg-[var(--bg-active-group)] border border-[var(--border)] hover:border-purple-500/30 rounded-xl cursor-pointer transition-colors group">
                       <div className="mt-0.5">
                         <input 
                           type="checkbox" 
                           checked={formData.hasTreinamento} 
                           onChange={e => setFormData({...formData, hasTreinamento: e.target.checked})} 
-                          className="w-4 h-4 rounded border-gray-600 bg-[#0b0f19] checked:bg-purple-500 checked:border-purple-500"
+                          className="w-4 h-4 rounded border-gray-600 bg-[var(--bg-primary)] checked:bg-purple-500 checked:border-purple-500"
                         />
                       </div>
                       <div>
-                         <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">Capacitação Normativa (NR)</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador possui treinamento válido exigido para este maquinário ou risco (ex: NR-35, NR-10)?</span>
+                         <span className="block text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] mb-1">Capacitação Normativa (NR)</span>
+                         <span className="block text-[11px] text-[var(--text-muted)] leading-snug">O colaborador possui treinamento válido exigido para este maquinário ou risco (ex: NR-35, NR-10)?</span>
                       </div>
                     </label>
                   </div>
@@ -2158,16 +2158,16 @@ export default function RiscosPage() {
                 </div>
               </div>
 
-              <div className="p-5 border-t border-white/5 bg-[#0b0f19] flex gap-3 rounded-b-2xl shrink-0">
+              <div className="p-5 border-t border-[var(--border)] bg-[var(--bg-primary)] flex gap-3 rounded-b-2xl shrink-0">
                 <button 
                   onClick={() => setIsDrawerOpen(false)} 
-                  className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold text-gray-400 bg-[#121826] hover:bg-white/10 hover:text-white transition-colors border border-white/10 uppercase tracking-wider"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold text-[var(--text-muted)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)] uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleSaveForm} 
-                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-[11px] font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50 uppercase tracking-wider"
+                  className="flex-[2] bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] px-4 py-2.5 rounded-xl text-[11px] font-bold transition-colors shadow-[0_0_20px_rgba(124,58,237,0.3)] border border-purple-500/50 uppercase tracking-wider"
                 >
                   Salvar Risco
                 </button>
@@ -2192,19 +2192,19 @@ export default function RiscosPage() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-2xl bg-[#0b0f19] border border-white/10 rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative w-full max-w-2xl bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-               <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#121826]">
+               <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-secondary)]">
                  <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                      <Activity className="w-5 h-5 text-blue-400" />
                    </div>
                    <div>
-                     <h2 className="text-sm font-bold text-white uppercase tracking-wider">Detalhamento do Cálculo</h2>
-                     <p className="text-[11px] text-gray-400">Risco: {selectedAction.titulo || selectedAction.atividade}</p>
+                     <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">Detalhamento do Cálculo</h2>
+                     <p className="text-[11px] text-[var(--text-muted)]">Risco: {selectedAction.titulo || selectedAction.atividade}</p>
                    </div>
                  </div>
-                 <button onClick={() => setShowCalculationModal(false)} className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+                 <button onClick={() => setShowCalculationModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 rounded-lg hover:bg-[var(--bg-active-group)] transition-colors">
                    <X className="w-5 h-5" />
                  </button>
                </div>
@@ -2213,56 +2213,56 @@ export default function RiscosPage() {
                  
                  {/* Card 1 */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-[#121826] border border-white/5 rounded-xl p-4">
-                       <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-3 flex items-center gap-2">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                       <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider mb-3 flex items-center gap-2">
                          <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> Variáveis Base
                        </h4>
                        <div className="space-y-2">
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Severidade Padrão</span>
-                             <span className="font-bold text-white">{selectedAction.severidade || selectedAction.gravidade}</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Severidade Padrão</span>
+                             <span className="font-bold text-[var(--text-primary)]">{selectedAction.severidade || selectedAction.gravidade}</span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Prioridade Final</span>
-                             <span className="font-bold text-white">{selectedAction.prioridade}</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Prioridade Final</span>
+                             <span className="font-bold text-[var(--text-primary)]">{selectedAction.prioridade}</span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">NR Relacionada</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">NR Relacionada</span>
                              <span className="font-bold text-blue-400">{selectedAction.nr}</span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Prazo Automático</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Prazo Automático</span>
                              <span className="font-bold text-orange-400">{selectedAction.prazo}</span>
                           </div>
                        </div>
                     </div>
                     
-                    <div className="bg-[#121826] border border-white/5 rounded-xl p-4">
-                       <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-3 flex items-center gap-2">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                       <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider mb-3 flex items-center gap-2">
                          <Activity className="w-3.5 h-3.5 text-red-400" /> Resultados do Motor
                        </h4>
                        <div className="space-y-2">
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Impacto Operacional</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Impacto Operacional</span>
                              <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase
-                                ${selectedAction.impactoOperacional === 'Crítico' ? 'bg-red-500/20 text-red-400' : 
+                                ${selectedAction.impactoOperacional === 'Crítico' ? 'bg-red-500/20 text-red-500 dark:text-red-400' : 
                                   selectedAction.impactoOperacional === 'Alto' ? 'bg-orange-500/20 text-orange-400' :
-                                  selectedAction.impactoOperacional === 'Médio' ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-emerald-500/20 text-emerald-400'
+                                  selectedAction.impactoOperacional === 'Médio' ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' :
+                                  'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                                 }`}>{selectedAction.impactoOperacional}</span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Multa Estimada</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Multa Estimada</span>
                              <span className="font-bold text-red-400 hover:underline cursor-help" title={selectedAction.faixaMulta}>
                                {selectedAction.multaEstimada !== undefined ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAction.multaEstimada) : 'N/D'}
                              </span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Chance de Incidente</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Chance de Incidente</span>
                              <span className="font-bold text-orange-400">{selectedAction.chanceIncidente}%</span>
                           </div>
-                          <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Conformidade</span>
+                          <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
+                             <span className="text-[var(--text-muted)]">Conformidade</span>
                              <span className={`font-bold ${
                                 selectedAction.nivelConformidade === 'Conforme' ? 'text-emerald-400' :
                                 selectedAction.nivelConformidade === 'Atenção' ? 'text-yellow-400' :
@@ -2276,18 +2276,18 @@ export default function RiscosPage() {
 
                  {/* Justifications */}
                  <div className="space-y-3">
-                    <h4 className="text-[11px] uppercase font-bold text-gray-500 tracking-wider">Justificativas</h4>
+                    <h4 className="text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Justificativas</h4>
                     
-                    <div className="bg-[#121826] border border-white/5 rounded-xl p-4">
-                      <div className="text-xs text-gray-300 leading-relaxed mb-3">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
                          <span className="text-blue-400 font-bold block mb-1">Multa Investigada:</span>
                          “{selectedAction.justificativaMulta || 'Cálculo com base em tabela NR.'}”
                       </div>
-                      <div className="text-xs text-gray-300 leading-relaxed mb-3">
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
                          <span className="text-orange-400 font-bold block mb-1">Chance de Incidente:</span>
                          “{selectedAction.justificativaIncidente || 'Variáveis base da matriz.'}”
                       </div>
-                      <div className="text-xs text-gray-300 leading-relaxed">
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
                          <span className="text-emerald-400 font-bold block mb-1">Origem do Dado:</span>
                          “{selectedAction.justificativa || 'Lançado pela inspeção.'}”
                       </div>
@@ -2297,10 +2297,10 @@ export default function RiscosPage() {
                  {/* Fatores Considered */}
                  {selectedAction.fatoresDeCalculo && selectedAction.fatoresDeCalculo.length > 0 && (
                    <div className="space-y-3">
-                      <h4 className="text-[11px] uppercase font-bold text-gray-500 tracking-wider">Fatores Analisados (Agravantes/Mitigantes)</h4>
+                      <h4 className="text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Fatores Analisados (Agravantes/Mitigantes)</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedAction.fatoresDeCalculo.map((f, i) => (
-                          <span key={i} className="px-2.5 py-1 bg-[#121826] border border-white/5 rounded text-[10px] text-gray-300">
+                          <span key={i} className="px-2.5 py-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded text-[10px] text-[var(--text-secondary)]">
                              {f}
                           </span>
                         ))}

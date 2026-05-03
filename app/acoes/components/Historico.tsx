@@ -126,7 +126,7 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
      if (evento.includes('Atualização')) return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
      if (evento.includes('Conclusão')) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
      if (evento.includes('Cancelamento')) return 'text-red-400 bg-red-500/10 border-red-500/30';
-     return 'text-gray-300 bg-white/5 border-white/10';
+     return 'text-[var(--text-secondary)] bg-[var(--bg-active-group)] border-[var(--border)]';
   };
 
   return (
@@ -148,53 +148,53 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
-          <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
              <div className="flex flex-col gap-2 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
                    <History className="w-5 h-5" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-300 mt-1">Registros históricos</h3>
+                <h3 className="text-[14px] font-medium text-[var(--text-secondary)] mt-1">Registros históricos</h3>
              </div>
-             <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+             <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
                 {cards.total}
-                <div className="text-[12px] text-gray-500 font-normal">Total de eventos</div>
+                <div className="text-[12px] text-[var(--text-muted)] font-normal">Total de eventos</div>
              </div>
           </div>
 
-          <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
              <div className="flex flex-col gap-2 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
                    <Settings className="w-5 h-5" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-300 mt-1">Ações automáticas</h3>
+                <h3 className="text-[14px] font-medium text-[var(--text-secondary)] mt-1">Ações automáticas</h3>
              </div>
-             <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+             <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
                 {cards.automaticas}
                 <div className="text-[12px] text-blue-400 font-normal">{cards.autoPerc}% do total</div>
              </div>
           </div>
 
-          <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
              <div className="flex flex-col gap-2 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center">
                    <UserIcon className="w-5 h-5" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-300 mt-1">Ações manuais</h3>
+                <h3 className="text-[14px] font-medium text-[var(--text-secondary)] mt-1">Ações manuais</h3>
              </div>
-             <div className="mt-2 text-white font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
+             <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
                 {cards.manuais}
                 <div className="text-[12px] text-orange-400 font-normal">{cards.manuaisPerc}% do total</div>
              </div>
           </div>
 
-          <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
              <div className="flex flex-col gap-2 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
                    <CalendarClock className="w-5 h-5" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-300 mt-1">Última atualização</h3>
+                <h3 className="text-[14px] font-medium text-[var(--text-secondary)] mt-1">Última atualização</h3>
              </div>
-             <div className="mt-2 text-white font-bold text-[22px] leading-tight flex items-baseline justify-between w-full truncate">
+             <div className="mt-2 text-[var(--text-primary)] font-bold text-[22px] leading-tight flex items-baseline justify-between w-full truncate">
                 {cards.ultima}
                 <div className="text-[12px] text-emerald-500 font-normal shrink-0 ml-2">{cards.relativeTime}</div>
              </div>
@@ -202,44 +202,44 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
         </div>
 
         {/* Tabela */}
-        <div className="bg-[#121826] rounded-xl border border-white/5 overflow-hidden flex-1 flex flex-col min-h-[400px]">
-          <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0">
-             <h2 className="text-[15px] font-medium text-white">Linha do tempo das ações</h2>
+        <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] overflow-hidden flex-1 flex flex-col min-h-[400px]">
+          <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0">
+             <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Linha do tempo das ações</h2>
           </div>
           <div className="overflow-x-auto flex-1 h-0">
              <table className="w-full text-left border-collapse min-w-[1000px]">
                 <thead className="bg-[#0c1018] sticky top-0 z-10">
                    <tr>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">ID</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">Ação</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">Evento</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">Origem</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">Usuário / Sistema</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">ID</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">Ação</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">Evento</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">Origem</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">Usuário / Sistema</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">
                          <div className="flex items-center gap-1">Data e hora <span className="text-[10px]">↓</span></div>
                       </th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5">Status final</th>
-                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400 border-b border-white/5 text-center">Detalhes</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">Status final</th>
+                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)] text-center">Detalhes</th>
                    </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-[var(--border)]">
                    {historyList.map(item => {
                       const isSelected = selectedEvent?.id === item.id;
-                      const avatarColors = ['bg-indigo-500/20 text-indigo-400', 'bg-blue-500/20 text-blue-400', 'bg-purple-500/20 text-purple-400', 'bg-emerald-500/20 text-emerald-400', 'bg-pink-500/20 text-pink-400'];
+                      const avatarColors = ['bg-indigo-500/20 text-indigo-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 'bg-purple-500/20 text-purple-400', 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-pink-500/20 text-pink-400'];
                       const charCode = item.usuario.charCodeAt(0) || 0;
-                      const aColor = item.origem === 'Sistema' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' : avatarColors[charCode % avatarColors.length];
+                      const aColor = item.origem === 'Sistema' ? 'bg-gray-500/20 text-[var(--text-muted)] border-gray-500/30' : avatarColors[charCode % avatarColors.length];
 
                       return (
                          <tr 
                             key={item.id} 
                             onClick={() => setSelectedEvent(item)} 
-                            className={`transition-colors cursor-pointer group ${isSelected ? 'bg-indigo-500/5' : 'hover:bg-white/5'}`}
+                            className={`transition-colors cursor-pointer group ${isSelected ? 'bg-indigo-500/5' : 'hover:bg-[var(--bg-active-group)]'}`}
                          >
                             <td className="px-5 py-4 w-36 whitespace-nowrap">
-                               <span className="text-[12px] font-mono text-gray-400">{item.actionId}</span>
+                               <span className="text-[12px] font-mono text-[var(--text-muted)]">{item.actionId}</span>
                             </td>
                             <td className="px-5 py-4 w-64 max-w-[250px]">
-                               <h3 className="text-[13px] font-medium text-gray-200 group-hover:text-indigo-300 transition-colors truncate">{item.actionTitle}</h3>
+                               <h3 className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-indigo-300 transition-colors truncate">{item.actionTitle}</h3>
                             </td>
                             <td className="px-5 py-4 w-32 whitespace-nowrap">
                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${getEventBadge(item.evento)}`}>
@@ -262,20 +262,20 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold border border-transparent ${aColor}`}>
                                            {getInitials(item.usuario)}
                                         </div>
-                                        <span className="text-[13px] text-gray-300">{item.usuario}</span>
+                                        <span className="text-[13px] text-[var(--text-secondary)]">{item.usuario}</span>
                                      </>
                                   ) : (
-                                     <span className="text-[13px] text-gray-500">Sistema</span>
+                                     <span className="text-[13px] text-[var(--text-muted)]">Sistema</span>
                                   )}
                                </div>
                             </td>
-                            <td className="px-5 py-4 w-40 text-[13px] text-gray-300 whitespace-nowrap">
+                            <td className="px-5 py-4 w-40 text-[13px] text-[var(--text-secondary)] whitespace-nowrap">
                                {new Date(item.dataHora).toLocaleString('pt-BR')}
                             </td>
                             <td className="px-5 py-4 w-36 whitespace-nowrap">
                                <div className="flex items-center gap-1.5">
                                   <CheckCircle2 className={`w-4 h-4 ${item.statusFinal === 'Concluída' ? 'text-emerald-500' : item.statusFinal === 'Cancelada' ? 'text-red-500' : 'text-orange-500'}`} />
-                                  <span className="text-[13px] text-gray-300">{item.statusFinal}</span>
+                                  <span className="text-[13px] text-[var(--text-secondary)]">{item.statusFinal}</span>
                                </div>
                             </td>
                             <td className="px-5 py-4 w-20 text-center">
@@ -288,7 +288,7 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                    })}
                    {historyList.length === 0 && (
                       <tr>
-                         <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">Nenhum evento registrado.</td>
+                         <td colSpan={8} className="px-5 py-12 text-center text-sm text-[var(--text-muted)]">Nenhum evento registrado.</td>
                       </tr>
                    )}
                 </tbody>
@@ -313,23 +313,23 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                  animate={{ width: 440, opacity: 1 }}
                  exit={{ width: 0, opacity: 0 }}
                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                 className="fixed top-0 right-0 h-full lg:relative lg:h-full bg-[#0c1018] border-l border-white/10 shadow-2xl z-50 flex flex-col overflow-hidden shrink-0"
+                 className="fixed top-0 right-0 h-full lg:relative lg:h-full bg-[#0c1018] border-l border-[var(--border)] shadow-2xl z-50 flex flex-col overflow-hidden shrink-0"
                >
                   <div className="w-[440px] h-full flex flex-col overflow-hidden">
                      {/* Header */}
-                     <div className="flex flex-col p-6 border-b border-white/5 shrink-0 bg-[#121826]">
+                     <div className="flex flex-col p-6 border-b border-[var(--border)] shrink-0 bg-[var(--bg-secondary)]">
                         <div className="flex items-center justify-between mb-4">
-                           <h2 className="text-[13px] font-medium text-gray-400">Detalhes do histórico</h2>
-                           <button onClick={() => setSelectedEvent(null)} className="p-1.5 bg-white/5 hover:bg-white/10 rounded-md text-gray-400 hover:text-white transition-colors border border-white/10">
+                           <h2 className="text-[13px] font-medium text-[var(--text-muted)]">Detalhes do histórico</h2>
+                           <button onClick={() => setSelectedEvent(null)} className="p-1.5 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)]">
                              <X className="w-4 h-4" />
                            </button>
                         </div>
                         <div className="flex items-center justify-between gap-4 mb-2">
                            <span className="text-[11px] font-mono text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20">{selectedEvent.actionId}</span>
                         </div>
-                        <h1 className="text-xl font-medium text-white leading-tight mb-4">{selectedEvent.actionTitle}</h1>
+                        <h1 className="text-xl font-medium text-[var(--text-primary)] leading-tight mb-4">{selectedEvent.actionTitle}</h1>
                         <div className="flex items-center gap-2">
-                           <span className="text-[11px] text-gray-500">Evento</span>
+                           <span className="text-[11px] text-[var(--text-muted)]">Evento</span>
                            <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded border ${getEventBadge(selectedEvent.evento)}`}>{selectedEvent.evento}</span>
                         </div>
                      </div>
@@ -338,21 +338,21 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                         
                         {/* Campos Alterados */}
                         <div className="space-y-3">
-                           <h3 className="text-[13px] font-medium text-white mb-2">Campos alterados</h3>
-                           <div className="border border-white/5 rounded-xl overflow-hidden bg-[#121826]">
+                           <h3 className="text-[13px] font-medium text-[var(--text-primary)] mb-2">Campos alterados</h3>
+                           <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--bg-secondary)]">
                               <table className="w-full text-left text-[12px]">
                                  <thead className="bg-[#1a2333]">
                                     <tr>
-                                       <th className="px-3 py-2 text-gray-400 font-medium w-[30%]">Campo</th>
-                                       <th className="px-3 py-2 text-gray-400 font-medium w-[35%]">Valor anterior</th>
-                                       <th className="px-3 py-2 text-gray-400 font-medium w-[35%]">Novo valor</th>
+                                       <th className="px-3 py-2 text-[var(--text-muted)] font-medium w-[30%]">Campo</th>
+                                       <th className="px-3 py-2 text-[var(--text-muted)] font-medium w-[35%]">Valor anterior</th>
+                                       <th className="px-3 py-2 text-[var(--text-muted)] font-medium w-[35%]">Novo valor</th>
                                     </tr>
                                  </thead>
-                                 <tbody className="divide-y divide-white/5">
+                                 <tbody className="divide-y divide-[var(--border)]">
                                     {selectedEvent.camposAlterados.map((c, i) => (
                                        <tr key={i}>
-                                          <td className="px-3 py-2.5 text-gray-300 font-medium">{c.campo}</td>
-                                          <td className="px-3 py-2.5 text-gray-500 line-through decoration-gray-600">{c.anterior || '—'}</td>
+                                          <td className="px-3 py-2.5 text-[var(--text-secondary)] font-medium">{c.campo}</td>
+                                          <td className="px-3 py-2.5 text-[var(--text-muted)] line-through decoration-gray-600">{c.anterior || '—'}</td>
                                           <td className="px-3 py-2.5 text-indigo-300">{c.novo || '—'}</td>
                                        </tr>
                                     ))}
@@ -368,93 +368,93 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                         {/* Vínculos */}
                         <div className="space-y-4 text-[13px]">
                            <div className="flex items-start gap-4">
-                              <AlertTriangle className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <AlertTriangle className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Risco vinculado</span>
-                                 <span className="text-gray-200">{selectedEvent.riscoVinculado}</span>
+                                 <span className="text-[var(--text-muted)]">Risco vinculado</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.riscoVinculado}</span>
                               </div>
                            </div>
                            <div className="flex items-start gap-4">
-                              <ClipboardCheck className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <ClipboardCheck className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Inspeção vinculada</span>
-                                 <span className="text-gray-200">{selectedEvent.inspecaoVinculada}</span>
+                                 <span className="text-[var(--text-muted)]">Inspeção vinculada</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.inspecaoVinculada}</span>
                               </div>
                            </div>
                            <div className="flex items-start gap-4">
-                              <ListChecks className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <ListChecks className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Checklist / Pergunta vinculada</span>
-                                 <span className="text-gray-200 leading-snug">{selectedEvent.checklistPergunta}</span>
+                                 <span className="text-[var(--text-muted)]">Checklist / Pergunta vinculada</span>
+                                 <span className="text-[var(--text-primary)] leading-snug">{selectedEvent.checklistPergunta}</span>
                               </div>
                            </div>
                         </div>
 
-                        <div className="w-full h-px bg-white/5" />
+                        <div className="w-full h-px bg-[var(--bg-active-group)]" />
 
                         {/* Origem */}
                         <div className="space-y-4 text-[13px]">
                            <div className="flex items-start gap-4">
-                              <UserIcon className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <UserIcon className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Origem</span>
-                                 <span className="text-gray-200">{selectedEvent.usuario}</span>
+                                 <span className="text-[var(--text-muted)]">Origem</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.usuario}</span>
                               </div>
                            </div>
                            <div className="flex items-start gap-4">
-                              <Clock className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <Clock className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Data e hora</span>
-                                 <span className="text-gray-200">{new Date(selectedEvent.dataHora).toLocaleString('pt-BR')}</span>
+                                 <span className="text-[var(--text-muted)]">Data e hora</span>
+                                 <span className="text-[var(--text-primary)]">{new Date(selectedEvent.dataHora).toLocaleString('pt-BR')}</span>
                               </div>
                            </div>
                            <div className="flex items-start gap-4">
-                              <FileBadge className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                              <FileBadge className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
                               <div className="flex-1 grid grid-cols-[140px,1fr] gap-2">
-                                 <span className="text-gray-400">Justificativa</span>
-                                 <span className="text-gray-200 leading-relaxed max-w-full">{selectedEvent.justificativa}</span>
+                                 <span className="text-[var(--text-muted)]">Justificativa</span>
+                                 <span className="text-[var(--text-primary)] leading-relaxed max-w-full">{selectedEvent.justificativa}</span>
                               </div>
                            </div>
                         </div>
 
-                        <div className="w-full h-px bg-white/5" />
+                        <div className="w-full h-px bg-[var(--bg-active-group)]" />
 
                         {/* Auditoria */}
                         <div className="space-y-4">
-                           <h3 className="text-[13px] font-medium text-white mb-2">Informações de auditoria</h3>
+                           <h3 className="text-[13px] font-medium text-[var(--text-primary)] mb-2">Informações de auditoria</h3>
                            <div className="space-y-3 text-[13px]">
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-start">
-                                 <div className="flex items-center gap-2 text-gray-400">
+                                 <div className="flex items-center gap-2 text-[var(--text-muted)]">
                                     <Code2 className="w-3.5 h-3.5" />
                                     <span>Hash do registro</span>
                                  </div>
-                                 <span className="text-gray-200 font-mono text-[11px] break-all">{selectedEvent.hash}</span>
+                                 <span className="text-[var(--text-primary)] font-mono text-[11px] break-all">{selectedEvent.hash}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <div className="flex items-center gap-2 text-gray-400">
+                                 <div className="flex items-center gap-2 text-[var(--text-muted)]">
                                     <Layers className="w-3.5 h-3.5" />
                                     <span>Versão</span>
                                  </div>
-                                 <span className="text-gray-200">{selectedEvent.versao}</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.versao}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <span className="text-gray-400 pl-5.5">Registro criado em</span>
-                                 <span className="text-gray-200">{new Date(selectedEvent.dataHora).toLocaleString('pt-BR')}</span>
+                                 <span className="text-[var(--text-muted)] pl-5.5">Registro criado em</span>
+                                 <span className="text-[var(--text-primary)]">{new Date(selectedEvent.dataHora).toLocaleString('pt-BR')}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <span className="text-gray-400 pl-5.5">Criado por</span>
-                                 <span className="text-gray-200">{selectedEvent.usuario}</span>
+                                 <span className="text-[var(--text-muted)] pl-5.5">Criado por</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.usuario}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <span className="text-gray-400 pl-5.5">Fonte</span>
-                                 <span className="text-gray-200">{selectedEvent.fonte}</span>
+                                 <span className="text-[var(--text-muted)] pl-5.5">Fonte</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.fonte}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <span className="text-gray-400 pl-5.5">Ambiente</span>
-                                 <span className="text-gray-200">{selectedEvent.ambiente}</span>
+                                 <span className="text-[var(--text-muted)] pl-5.5">Ambiente</span>
+                                 <span className="text-[var(--text-primary)]">{selectedEvent.ambiente}</span>
                               </div>
                               <div className="grid grid-cols-[140px,1fr] gap-4 items-center">
-                                 <span className="text-gray-400 pl-5.5">Integridade</span>
+                                 <span className="text-[var(--text-muted)] pl-5.5">Integridade</span>
                                  <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
                                     <ShieldCheck className="w-3.5 h-3.5" />
                                     {selectedEvent.integridade}
@@ -466,10 +466,10 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                      </div>
 
                      {/* Footer do Drawer */}
-                     <div className="p-6 border-t border-white/5 shrink-0 bg-[#121826]">
+                     <div className="p-6 border-t border-[var(--border)] shrink-0 bg-[var(--bg-secondary)]">
                         <button 
                            onClick={() => setSelectedEvent(null)}
-                           className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-lg font-medium transition-colors border border-white/10 flex items-center justify-center gap-2 text-[13px]"
+                           className="w-full bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-[var(--text-primary)] py-3 rounded-lg font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2 text-[13px]"
                         >
                            Fechar painel
                         </button>

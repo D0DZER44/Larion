@@ -661,7 +661,7 @@ export default function Dashboard() {
 
     // - item sem prazo (Prio: 4)
     pendingActions.filter(a => !a.prazo || a.prazo.trim() === '').forEach(a => {
-        allAlertas.push({ id: `acao_sem_prazo_${a.id}`, type: 'sem_prazo', icon: Calendar, color: 'text-gray-400', title: 'Ação s/ Prazo', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 4, dateStr: a.created_at || '' });
+        allAlertas.push({ id: `acao_sem_prazo_${a.id}`, type: 'sem_prazo', icon: Calendar, color: 'text-[var(--text-muted)]', title: 'Ação s/ Prazo', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 4, dateStr: a.created_at || '' });
     });
 
     // Ordenar e pegar os top 5
@@ -728,7 +728,7 @@ export default function Dashboard() {
 
     let exposicaoOperacionalClass = 'border-green-500 text-green-500 bg-green-500/10';
     if (exposicaoOperacional === 'Alta') exposicaoOperacionalClass = 'border-red-500 text-red-500 bg-red-500/10';
-    else if (exposicaoOperacional === 'Média') exposicaoOperacionalClass = 'border-white/20 text-white bg-white/5';
+    else if (exposicaoOperacional === 'Média') exposicaoOperacionalClass = 'border-[var(--border)] text-[var(--text-primary)] bg-[var(--bg-active-group)]';
 
     return {
       operationalScore,
@@ -787,31 +787,31 @@ export default function Dashboard() {
   }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#03060e] text-gray-300 font-sans selection:bg-purple-500/30 overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-[var(--bg-primary)] text-[var(--text-secondary)] font-sans selection:bg-purple-500/30 overflow-hidden">
       
       {/* HEADER */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-white/5 shrink-0 gap-4 bg-[#03060e]/80 backdrop-blur-md sticky top-0 z-30">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-[var(--border)] shrink-0 gap-4 bg-[var(--bg-primary)]/80 backdrop-blur-md sticky top-0 z-30">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2 tracking-tight">
             Olá, Operador! <span>👋</span>
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Aqui está o panorama estratégico da segurança hoje.</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Aqui está o panorama estratégico da segurança hoje.</p>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center bg-[#0a0f1a] border border-white/5 rounded-lg px-4 py-2 text-sm text-gray-300">
-            <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+          <div className="flex items-center bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm text-[var(--text-secondary)]">
+            <Calendar className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
             <span>Hoje</span>
           </div>
           
-          <button className="relative p-2.5 text-gray-400 hover:text-white transition-colors bg-[#0a0f1a] rounded-lg border border-white/5">
+          <button className="relative p-2.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
             <Bell className="w-5 h-5" />
             {metrics.alertas.length > 0 && (
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0f1a]"></span>
             )}
           </button>
           
-          <button className="flex items-center bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+          <button className="flex items-center bg-[#7c3aed] hover:bg-[#6d28d9] text-[var(--text-primary)] px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-[var(--shadow-glow)]">
             <Download className="w-4 h-4 mr-2" />
             Exportar relatório
           </button>
@@ -827,25 +827,25 @@ export default function Dashboard() {
           {/* Toggle Sidebar Button */}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`hidden xl:flex absolute top-1/2 -translate-y-1/2 z-50 bg-[#121826] border border-white/10 p-1.5 rounded-l-lg hover:bg-white/10 transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
+            className={`hidden xl:flex absolute top-1/2 -translate-y-1/2 z-50 bg-[var(--bg-secondary)] border border-[var(--border)] p-1.5 rounded-l-lg hover:bg-[var(--bg-active-group)] transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
           >
-            {isSidebarOpen ? <ChevronRight className="w-5 h-5 text-gray-400" /> : <ChevronLeft className="w-5 h-5 text-gray-400" />}
+            {isSidebarOpen ? <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /> : <ChevronLeft className="w-5 h-5 text-[var(--text-muted)]" />}
           </button>
           
           {/* KPIs SUPERIORES */}
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
             {/* KPI 1 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+            <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                  Panorama Executivo do Risco <Activity className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                  Panorama Executivo do Risco <Activity className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-purple-400 transition-colors" />
                 </span>
-                <Info className="w-4 h-4 text-gray-500 opacity-50" />
+                <Info className="w-4 h-4 text-[var(--text-muted)] opacity-50" />
               </div>
               <div className="relative z-10 mt-auto flex flex-col pt-1">
-                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Exposição Total</span>
+                <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold tracking-widest mb-1.5">Exposição Total</span>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className={`text-[2rem] font-bold tracking-tighter ${metrics.exposicaoOperacional === 'Alta' ? 'text-red-500' : metrics.exposicaoOperacional === 'Normal' ? 'text-white' : 'text-green-500'}`}>
+                  <span className={`text-[2rem] font-bold tracking-tighter ${metrics.exposicaoOperacional === 'Alta' ? 'text-red-500' : metrics.exposicaoOperacional === 'Normal' ? 'text-[var(--text-primary)]' : 'text-green-500'}`}>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(metrics.estimatedExposure)}
                   </span>
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase shrink-0 ${metrics.exposicaoOperacionalClass}`}>
@@ -858,10 +858,10 @@ export default function Dashboard() {
                       <span className={metrics.exposureDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
                         {metrics.exposureDiffRaw > 0 ? `+${metrics.exposureDiffRaw}%` : `${metrics.exposureDiffRaw}%`}
                       </span>
-                      <span className="text-gray-500">vs mês anterior</span>
+                      <span className="text-[var(--text-muted)]">vs mês anterior</span>
                     </>
                   ) : (
-                    <span className="text-gray-500">Histórico insuficiente</span>
+                    <span className="text-[var(--text-muted)]">Histórico insuficiente</span>
                   )}
                 </div>
               </div>
@@ -881,51 +881,51 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 2 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Ações Críticas</span>
-                <AlertTriangle className={`w-4 h-4 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-gray-500'}`} />
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider group-hover:text-[var(--text-secondary)] transition-colors">Ações Críticas</span>
+                <AlertTriangle className={`w-4 h-4 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-[var(--text-muted)]'}`} />
               </div>
               <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-gray-300'}`}>
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-[var(--text-secondary)]'}`}>
                   {metrics.criticalActionsCount}
                 </div>
                 <div className="text-[12px] text-red-500 font-bold mb-2">Atenção imediata</div>
-                <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
+                <div className="flex flex-col gap-1 text-[12px] text-[var(--text-muted)] font-medium">
                    {metrics.actionsDelayedCount > 0 ? <span>{metrics.actionsDelayedCount} atrasadas</span> : null}
                    {metrics.actionsExpiringTodayCount > 0 ? <span>{metrics.actionsExpiringTodayCount} vencem hoje</span> : null}
                    {metrics.actionsDelayedCount === 0 && metrics.actionsExpiringTodayCount === 0 && (
-                      <span className="text-gray-500">Tudo em ordem</span>
+                      <span className="text-[var(--text-muted)]">Tudo em ordem</span>
                    )}
                 </div>
               </div>
             </div>
 
             {/* KPI 3 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Inspeções Pendentes</span>
-                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider group-hover:text-[var(--text-secondary)] transition-colors">Inspeções Pendentes</span>
+                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-[var(--text-muted)]'}`} />
               </div>
               <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-300'}`}>
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-400' : 'text-[var(--text-secondary)]'}`}>
                   {metrics.pendingInspectionsCount}
                 </div>
                 <div className="text-[12px] text-blue-400 font-bold mb-2">Urgente</div>
-                <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
+                <div className="flex flex-col gap-1 text-[12px] text-[var(--text-muted)] font-medium">
                    {metrics.vencidasInspectionsCount > 0 ? <span>{metrics.vencidasInspectionsCount} atrasadas</span> : null}
                    {metrics.inspExpiringTodayCount > 0 ? <span>{metrics.inspExpiringTodayCount} vencem hoje</span> : null}
                    {metrics.vencidasInspectionsCount === 0 && metrics.inspExpiringTodayCount === 0 && (
-                      <span className="text-gray-500">Tudo em dia</span>
+                      <span className="text-[var(--text-muted)]">Tudo em dia</span>
                    )}
                 </div>
               </div>
             </div>
 
             {/* KPI 4 */}
-            <Link href="/central?view=conformity" className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#7c3aed]/50 transition-all cursor-pointer group flex-1">
+            <Link href="/central?view=conformity" className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] flex flex-col justify-between hover:border-[#7c3aed]/50 transition-all cursor-pointer group flex-1">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Conformidade</span>
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider group-hover:text-[var(--text-secondary)] transition-colors">Conformidade</span>
                 <ShieldCheck className="w-4 h-4 text-green-500 group-hover:scale-110 transition-transform" />
               </div>
               <div className="mt-auto pt-2">
@@ -936,22 +936,22 @@ export default function Dashboard() {
                       <span className={metrics.conformityDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
                         {metrics.conformityDiffRaw > 0 ? `+${metrics.conformityDiffRaw}pp` : `${metrics.conformityDiffRaw}pp`}
                       </span>
-                      <span className="text-gray-400">vs mês anterior</span>
+                      <span className="text-[var(--text-muted)]">vs mês anterior</span>
                     </>
                   ) : (
-                    <span className="text-gray-500">Histórico insuficiente</span>
+                    <span className="text-[var(--text-muted)]">Histórico insuficiente</span>
                   )}
                 </div>
-                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-[var(--bg-active-group)] rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted ? `${metrics.conformityRate}%` : '0%' }}></div>
                 </div>
               </div>
             </Link>
 
             {/* KPI 5 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Checklists do Dia</span>
+                <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider group-hover:text-[var(--text-secondary)] transition-colors">Checklists do Dia</span>
                 <CheckSquare className="w-4 h-4 text-purple-400" />
               </div>
               <div className="mt-auto pt-2">
@@ -959,7 +959,7 @@ export default function Dashboard() {
                     {metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length}/{Math.min(5, metrics.checklistsTodayCats.length)}
                  </div>
                  <div className="text-[12px] text-purple-400 font-bold mb-2">Concluídos hoje</div>
-                 <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
+                 <div className="flex flex-col gap-1 text-[12px] text-[var(--text-muted)] font-medium">
                      {metrics.checklistsTodayCats.length === 0 ? (
                         <span>Nenhum programado</span>
                      ) : (
@@ -971,125 +971,125 @@ export default function Dashboard() {
           </div>
 
           {/* INTELIGÊNCIA OPERACIONAL (CARD PRINCIPAL) */}
-          <div className="bg-gradient-to-br from-[#120b29] to-[#0a0514] border border-[#7c3aed]/40 p-6 sm:p-8 rounded-xl relative overflow-hidden shadow-[0_0_40px_rgba(124,58,237,0.1)]">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#7c3aed]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+          <div className="bg-[var(--lari-card-bg)] border border-[var(--lari-card-border)] p-6 sm:p-8 rounded-xl relative overflow-hidden shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--bg-active-group)] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             
-            <div className="relative z-10 mb-8 border-b border-white/10 pb-8">
-              <h2 className="text-[22px] font-bold text-white tracking-wide">INTELIGÊNCIA OPERACIONAL</h2>
-              <p className="text-base text-gray-400 mt-1">Resumo automático da operação</p>
+            <div className="relative z-10 mb-8 border-b border-[var(--border)] pb-8">
+              <h2 className="text-[22px] font-bold text-[var(--text-primary)] tracking-wide">INTELIGÊNCIA OPERACIONAL</h2>
+              <p className="text-base text-[var(--text-muted)] mt-1">Resumo automático da operação</p>
 
               {/* CAMADA 1 — Diagnóstico executivo */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/10 mt-8">
+              <div className="grid grid-cols-1 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[var(--border)] mt-8">
                 <div className="flex items-center gap-4 sm:pr-6 py-4 sm:py-0 w-full">
-                  <AlertTriangle className={`w-8 h-8 shrink-0 ${metrics.focosCriticos > 0 ? 'text-red-500' : 'text-gray-500'}`} />
-                  <span className="text-sm text-gray-200 leading-tight"><strong className="text-lg">{metrics.focosCriticos} focos críticos</strong><br/>exigem ação</span>
+                  <AlertTriangle className={`w-8 h-8 shrink-0 ${metrics.focosCriticos > 0 ? 'text-red-500' : 'text-[var(--text-muted)]'}`} />
+                  <span className="text-sm text-[var(--text-primary)] leading-tight"><strong className="text-lg">{metrics.focosCriticos} focos críticos</strong><br/>exigem ação</span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
-                  <ShieldAlert className={`w-8 h-8 shrink-0 ${metrics.diagTopSectorPercentage > 0 ? 'text-orange-500' : 'text-gray-600'}`} />
-                  <span className="text-sm text-gray-200 leading-tight">
+                  <ShieldAlert className={`w-8 h-8 shrink-0 ${metrics.diagTopSectorPercentage > 0 ? 'text-orange-500' : 'text-[var(--text-secondary)]'}`} />
+                  <span className="text-sm text-[var(--text-primary)] leading-tight">
                     {metrics.diagTopSectorPercentage > 0 ? (
                       <><strong className="text-lg">{metrics.diagTopSectorPercentage}% da exposição</strong><br/>em {metrics.diagTopSector}</>
                     ) : (
-                      <><strong className="text-lg text-gray-400">Risco mitigado</strong><br/>Exposição controlada</>
+                      <><strong className="text-lg text-[var(--text-muted)]">Risco mitigado</strong><br/>Exposição controlada</>
                     )}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
                   <ShieldCheck className={`w-8 h-8 shrink-0 ${metrics.prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-400'}`} />
-                  <span className="text-sm text-gray-200 leading-tight">Prioridade:<br/><span className="text-lg text-gray-300">{metrics.prioridadeOperacional}</span></span>
+                  <span className="text-sm text-[var(--text-primary)] leading-tight">Prioridade:<br/><span className="text-lg text-[var(--text-secondary)]">{metrics.prioridadeOperacional}</span></span>
                 </div>
                 <div className="flex items-center gap-4 sm:pl-6 py-4 sm:py-0 w-full">
                   <TrendingUp className={`w-8 h-8 shrink-0 ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`} />
-                  <span className="text-sm text-gray-200 leading-tight"><strong className={`text-lg ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`}>{metrics.updatePlano}</strong><br/>ações direcionadas</span>
+                  <span className="text-sm text-[var(--text-primary)] leading-tight"><strong className={`text-lg ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`}>{metrics.updatePlano}</strong><br/>ações direcionadas</span>
                 </div>
               </div>
             </div>
 
             {/* CAMADA 2 — Operação resumida */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-white/10">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-[var(--border)]">
               {/* Coluna 1 */}
               <Link href="/operacao/inspecoes" className="block hover:bg-white/[0.02] p-2 -m-2 rounded-xl transition-colors cursor-pointer group">
-                <h3 className="text-[12px] font-bold text-gray-400 group-hover:text-[#7c3aed] transition-colors uppercase tracking-widest mb-6">Operação SST Hoje</h3>
+                <h3 className="text-[12px] font-bold text-[var(--text-muted)] group-hover:text-[#7c3aed] transition-colors uppercase tracking-widest mb-6">Operação SST Hoje</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                     <Calendar className="w-5 h-5 text-gray-400 group-hover:text-[#7c3aed] transition-colors" />
-                     <span className="text-2xl font-bold text-white w-8">{metrics.operationsToday}</span>
-                     <span className="text-sm text-gray-400">Previstas</span>
+                     <Calendar className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[#7c3aed] transition-colors" />
+                     <span className="text-2xl font-bold text-[var(--text-primary)] w-8">{metrics.operationsToday}</span>
+                     <span className="text-sm text-[var(--text-muted)]">Previstas</span>
                   </div>
                   <div className="flex items-center gap-4">
                      <CheckCircle2 className="w-5 h-5 text-green-500" />
                      <span className="text-2xl font-bold text-green-500 w-8">{metrics.operationsCompleted}</span>
-                     <span className="text-sm text-gray-400">Concluídas</span>
+                     <span className="text-sm text-[var(--text-muted)]">Concluídas</span>
                   </div>
                   <div className="flex items-center gap-4">
                      <Clock className="w-5 h-5 text-orange-500" />
                      <span className="text-2xl font-bold text-orange-500 w-8">{metrics.operationsPending}</span>
-                     <span className="text-sm text-gray-400">Pendentes</span>
+                     <span className="text-sm text-[var(--text-muted)]">Pendentes</span>
                   </div>
                 </div>
               </Link>
               
               {/* Coluna 2 */}
-              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
-                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Plano de Ação</h3>
+              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-[var(--border)] pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
+                <h3 className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Plano de Ação</h3>
                 <div className="space-y-4">
                   <Link href="/operacao/acoes?filter=abertas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <ClipboardCheck className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-blue-400 w-8 group-hover:text-blue-300 transition-colors">{metrics.actionsTotal}</span>
-                     <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Abertas</span>
+                     <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Abertas</span>
                   </Link>
                   <Link href="/operacao/acoes?filter=andamento" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <Activity className="w-5 h-5 text-orange-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-orange-500 w-8 group-hover:text-orange-400 transition-colors">{metrics.actionsInProgress}</span>
-                     <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Em andamento</span>
+                     <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Em andamento</span>
                   </Link>
                   <Link href="/operacao/acoes?filter=concluidas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <CheckCircle2 className="w-5 h-5 text-green-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-green-500 w-8 group-hover:text-green-400 transition-colors">{metrics.actionsCompleted}</span>
-                     <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Concluídas</span>
+                     <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Concluídas</span>
                   </Link>
                   <Link href="/operacao/acoes?filter=atrasadas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <AlertTriangle className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
                      <span className="text-2xl font-bold text-red-500 w-8 group-hover:text-red-400 transition-colors">{metrics.actionsDelayed}</span>
-                     <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Atrasadas</span>
+                     <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Atrasadas</span>
                   </Link>
                 </div>
               </div>
 
               {/* Coluna 3 */}
-              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
-                <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Pessoas Críticas</h3>
+              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-[var(--border)] pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
+                <h3 className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Pessoas Críticas</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                      <Users className="w-5 h-5 text-purple-400" />
                      <span className="text-2xl font-bold text-purple-400 w-8">42</span>
-                     <span className="text-sm text-gray-400">Monitorados</span>
+                     <span className="text-sm text-[var(--text-muted)]">Monitorados</span>
                   </div>
                   <div className="flex items-center gap-4">
                      <GraduationCap className="w-5 h-5 text-orange-400" />
                      <span className="text-2xl font-bold text-orange-400 w-8">8</span>
-                     <span className="text-sm text-gray-400">Treinamento pendente</span>
+                     <span className="text-sm text-[var(--text-muted)]">Treinamento pendente</span>
                   </div>
                   <div className="flex items-center gap-4">
                      <UserX className="w-5 h-5 text-red-500" />
                      <span className="text-2xl font-bold text-red-500 w-8">3</span>
-                     <span className="text-sm text-gray-400">Sem EPI</span>
+                     <span className="text-sm text-[var(--text-muted)]">Sem EPI</span>
                   </div>
                 </div>
               </div>
 
               {/* Coluna 4 - Conformidade NR */}
-              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0 flex flex-col justify-between">
+              <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-[var(--border)] pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Conformidade NR</h3>
+                  <h3 className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Conformidade NR</h3>
                   <div className="space-y-4">
                     {metrics.conformidadeNR.slice(0, 4).map(item => (
                       <div key={item.nr} className="flex items-center gap-3 group">
-                        <span className="text-[11px] leading-tight font-semibold text-gray-400 w-12 truncate" title={item.nr}>{item.nr}</span>
-                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <span className="text-[11px] leading-tight font-semibold text-[var(--text-muted)] w-12 truncate" title={item.nr}>{item.nr}</span>
+                        <div className="flex-1 h-1.5 bg-[var(--bg-active-group)] rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-in-out`} style={{ width: isMounted ? `${item.val}%` : '0%' }}></div>
                         </div>
-                        <span className="text-[12px] font-bold text-gray-200 w-8 text-right">{item.val}%</span>
+                        <span className="text-[12px] font-bold text-[var(--text-primary)] w-8 text-right">{item.val}%</span>
                       </div>
                     ))}
                   </div>
@@ -1103,16 +1103,16 @@ export default function Dashboard() {
             {/* Botoes Rodape do Card */}
             <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pt-2">
               <Link href="/central">
-                <button className="w-full sm:w-auto bg-[#7c3aed] hover:bg-[#6d28d9] px-6 py-3 rounded-lg text-white font-bold text-sm transition-all flex items-center justify-center gap-2 relative shadow-[0_0_15px_rgba(124,58,237,0.5)]">
+                <button className="w-full sm:w-auto bg-[#7c3aed] hover:bg-[#6d28d9] px-6 py-3 rounded-lg text-[var(--text-primary)] font-bold text-sm transition-all flex items-center justify-center gap-2 relative shadow-[var(--shadow-glow)]">
                    Abrir Central de Inteligência <ArrowRight className="w-4 h-4 ml-2" />
                 </button>
               </Link>
-              <Link href="/operacao/riscos" className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
-                Ver riscos <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+              <Link href="/operacao/riscos" className="w-full sm:w-auto text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
+                Ver riscos <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] group-hover:translate-x-1 transition-all" />
               </Link>
-              <div className="hidden sm:block w-px h-6 bg-white/10 ml-auto mx-4 flex-shrink-0"></div>
-              <button className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
-                Gerar relatório <Download className="w-4 h-4 text-gray-500 group-hover:text-white transition-all" />
+              <div className="hidden sm:block w-px h-6 bg-[var(--bg-active-group)] ml-auto mx-4 flex-shrink-0"></div>
+              <button className="w-full sm:w-auto text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
+                Gerar relatório <Download className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-all" />
               </button>
             </div>
           </div>
@@ -1120,8 +1120,8 @@ export default function Dashboard() {
           {/* LINHA ABAIXO DO CARD PRINCIPAL */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1.7fr] gap-5">
             {/* 1. Riscos que exigem ação */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
+              <div className="px-4 sm:px-5 py-0 border-b border-[var(--border)] flex items-center justify-between bg-[var(--bg-primary)] h-[55px]">
                 <h3 className="text-[11px] font-bold text-[#b48bf8] uppercase tracking-wider">Riscos que exigem ação</h3>
                 <Link href="/operacao/riscos">
                   <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
@@ -1129,7 +1129,7 @@ export default function Dashboard() {
               </div>
               <div className="p-0 overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="text-[9px] text-gray-500 uppercase tracking-widest bg-[#03060e]">
+                  <thead className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest bg-[var(--bg-primary)]">
                     <tr>
                       <th className="px-4 py-2 font-semibold">NR</th>
                       <th className="px-4 py-2 font-semibold">Setor</th>
@@ -1137,13 +1137,13 @@ export default function Dashboard() {
                       <th className="px-4 py-2 font-semibold text-right">Prioridade</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-[var(--border)]">
                     {metrics.topRisks.length > 0 ? metrics.topRisks.map((r) => (
-                      <tr key={r.id} onClick={() => router.push(`/riscos?search=${r.id}`)} className="hover:bg-white/5 transition-colors cursor-pointer group">
-                        <td className="px-4 py-2.5 text-gray-300 max-w-[60px]">
+                      <tr key={r.id} onClick={() => router.push(`/riscos?search=${r.id}`)} className="hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer group">
+                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-[60px]">
                             <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.nr || '-'}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-gray-400 max-w-[70px]">
+                        <td className="px-4 py-2.5 text-[var(--text-muted)] max-w-[70px]">
                            <div className="line-clamp-2 text-[11px] leading-tight break-words">
                               {(() => {
                                  const s = r.setor || r.sector_id || '';
@@ -1159,7 +1159,7 @@ export default function Dashboard() {
                               })()}
                            </div>
                         </td>
-                        <td className="px-4 py-2.5 text-gray-300 max-w-[100px]">
+                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-[100px]">
                            <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.tipoDeRisco || r.title || r.atividade || 'Não especificado'}</div>
                         </td>
                         <td className="px-4 py-2.5 text-right">
@@ -1172,7 +1172,7 @@ export default function Dashboard() {
                       </tr>
                     )) : (
                        <tr>
-                          <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">Sem dados suficientes</td>
+                          <td colSpan={4} className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">Sem dados suficientes</td>
                        </tr>
                     )}
                   </tbody>
@@ -1181,9 +1181,9 @@ export default function Dashboard() {
             </div>
 
             {/* 2. Risco por Setor */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-               <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex flex-col justify-center bg-[#0b0f19] h-[55px]">
-                <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Risco por Setor</h3>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
+               <div className="px-4 sm:px-5 py-0 border-b border-[var(--border)] flex flex-col justify-center bg-[var(--bg-primary)] h-[55px]">
+                <h3 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Risco por Setor</h3>
               </div>
               <div className="p-4 sm:px-5 sm:py-3 flex-1 flex flex-col items-center justify-center gap-4">
                 <div className="flex items-center gap-6">
@@ -1205,13 +1205,13 @@ export default function Dashboard() {
                           ))}
                         </Pie>
                         <Tooltip 
-                           contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
-                           itemStyle={{ color: '#fff' }}
+                           contentStyle={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", borderRadius: '8px', fontSize: '12px' }}
+                           itemStyle={{ color: "var(--text-primary)" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                       <span className="text-[9px] text-gray-400 font-bold uppercase">Riscos</span>
+                       <span className="text-[9px] text-[var(--text-muted)] font-bold uppercase">Riscos</span>
                     </div>
                   </div>
                   <div className="flex flex-col space-y-2 shrink-0">
@@ -1219,19 +1219,19 @@ export default function Dashboard() {
                       <div key={item.name} className="flex justify-between items-start group gap-4">
                         <div className="flex items-center gap-1.5 overflow-hidden w-[65px] pt-[3px]">
                           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }}></div>
-                          <span className="text-[11px] font-medium text-gray-300 truncate group-hover:text-white transition-colors" title={item.name}>{item.name}</span>
+                          <span className="text-[11px] font-medium text-[var(--text-secondary)] truncate group-hover:text-[var(--text-primary)] transition-colors" title={item.name}>{item.name}</span>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                            {item.isEmpty ? (
-                               <span className="text-gray-600 text-[10px]">Sem dados</span>
+                               <span className="text-[var(--text-secondary)] text-[10px]">Sem dados</span>
                            ) : (
                               <div className="flex flex-col items-end leading-tight">
                                 <div className="flex items-baseline gap-1">
-                                  <span className="text-[12px] font-bold text-white">{item.value}</span>
-                                  <span className="text-[10px] text-gray-400 font-medium">({item.percent}%)</span>
+                                  <span className="text-[12px] font-bold text-[var(--text-primary)]">{item.value}</span>
+                                  <span className="text-[10px] text-[var(--text-muted)] font-medium">({item.percent}%)</span>
                                 </div>
                                 {item.avgPriorityLabel && (
-                                   <span className="text-[9px] text-gray-500 font-medium mt-0.5">Prio. <span className={item.avgPriorityLabel === 'Crítico' || item.avgPriorityLabel === 'Alto' ? 'text-red-400/80' : 'text-orange-400/80'}>{item.avgPriorityLabel}</span></span>
+                                   <span className="text-[9px] text-[var(--text-muted)] font-medium mt-0.5">Prio. <span className={item.avgPriorityLabel === 'Crítico' || item.avgPriorityLabel === 'Alto' ? 'text-red-400/80' : 'text-orange-400/80'}>{item.avgPriorityLabel}</span></span>
                                 )}
                               </div>
                            )}
@@ -1244,26 +1244,26 @@ export default function Dashboard() {
             </div>
 
             {/* 3. Evolução da Segurança */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
+              <div className="px-4 sm:px-5 py-0 border-b border-[var(--border)] flex items-center justify-between bg-[var(--bg-primary)] h-[55px]">
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#7c3aed]/20 p-1.5 rounded-lg border border-[#7c3aed]/30">
+                  <div className="bg-[var(--bg-active-group)] p-1.5 rounded-lg border border-[var(--border-active-group)]">
                     <ShieldCheck className="w-4 h-4 text-[#7c3aed]" />
                   </div>
                   <div>
-                    <h3 className="text-[12px] font-bold text-white">Evolução da segurança</h3>
-                    <p className="text-[10px] text-gray-500">Tendência de risco operacional ao longo do tempo.</p>
+                    <h3 className="text-[12px] font-bold text-[var(--text-primary)]">Evolução da segurança</h3>
+                    <p className="text-[10px] text-[var(--text-muted)]">Tendência de risco operacional ao longo do tempo.</p>
                   </div>
                 </div>
-                <div className="flex items-center bg-[#121826] border border-white/5 rounded-lg overflow-hidden pr-2">
+                <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg overflow-hidden pr-2">
                    <select 
                      value={scoreTimeRange} 
                      onChange={(e) => setScoreTimeRange(e.target.value as any)}
-                     className="bg-transparent text-gray-300 text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
+                     className="bg-transparent text-[var(--text-secondary)] text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
                    >
-                     <option className="bg-[#121826]" value="semana">Últimos 7 dias</option>
-                     <option className="bg-[#121826]" value="mes">Últimos 30 dias</option>
-                     <option className="bg-[#121826]" value="ano">Este ano</option>
+                     <option className="bg-[var(--bg-secondary)]" value="semana">Últimos 7 dias</option>
+                     <option className="bg-[var(--bg-secondary)]" value="mes">Últimos 30 dias</option>
+                     <option className="bg-[var(--bg-secondary)]" value="ano">Este ano</option>
                    </select>
                 </div>
               </div>
@@ -1279,12 +1279,12 @@ export default function Dashboard() {
                           <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--text-muted)" }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "var(--text-muted)" }} />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
+                        contentStyle={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: "var(--text-primary)", fontWeight: 'bold' }}
+                        labelStyle={{ color: "var(--text-muted)", marginBottom: '4px' }}
                         formatter={(value: any) => [`${value}`, 'Score']}
                       />
                       <Area 
@@ -1302,8 +1302,8 @@ export default function Dashboard() {
 
                 {/* Right Side (Card) */}
                 <div className="shrink-0 w-full sm:w-[130px] flex flex-col justify-center">
-                  <div className="bg-[#121826] border border-white/5 rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
-                    <span className="text-[10px] text-gray-400 font-medium mb-1">Risco atual</span>
+                  <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
+                    <span className="text-[10px] text-[var(--text-muted)] font-medium mb-1">Risco atual</span>
                     <div className="text-3xl font-bold text-[#b48bf8] leading-none mb-1">{metrics.operationalScore}</div>
                     <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
                     
@@ -1314,10 +1314,10 @@ export default function Dashboard() {
                              {metrics.scoreDiff > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />} 
                              {metrics.scoreDiff > 0 ? `+${metrics.scoreDiff}%` : `${metrics.scoreDiff}%`}
                            </span>
-                           <span className="text-[9px] text-gray-500">vs. período anterior</span>
+                           <span className="text-[9px] text-[var(--text-muted)]">vs. período anterior</span>
                          </>
                        ) : (
-                         <span className="text-[10px] text-gray-500 mt-2">Sem variação no período</span>
+                         <span className="text-[10px] text-[var(--text-muted)] mt-2">Sem variação no período</span>
                        )}
                     </div>
                   </div>
@@ -1328,35 +1328,35 @@ export default function Dashboard() {
         </div>
 
         {/* Right Sidebar */}
-        <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
+        <div className={`hidden xl:flex flex-col bg-[var(--bg-card)] border-l border-[var(--border)] h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
           {/* Card 1: Alertas Críticos */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Alertas Críticos</h3>
               <Link href="/operacao/riscos">
                 <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
               </Link>
             </div>
             <div className="p-4 space-y-4">
               {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 2).map(a => (
-                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
+                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer group">
                   <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
                   <div className="flex-1 min-w-0">
-                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
-                     <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
+                     <p className="text-xs text-[var(--text-primary)] font-bold mb-0.5 group-hover:text-[var(--text-primary)] transition-colors truncate">{a.title}</p>
+                     <p className="text-[10px] text-[var(--text-muted)] line-clamp-2">{a.desc}</p>
                   </div>
                 </Link>
               )) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum alerta crítico no momento.</div>
+                 <div className="text-center py-4 text-[var(--text-muted)] text-xs">Nenhum alerta crítico no momento.</div>
               )}
             </div>
           </div>
 
           {/* Card 2: Atividades Recentes */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Atividades Recentes</h3>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Atividades Recentes</h3>
               <Link href="/central">
                 <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todas</span>
               </Link>
@@ -1382,27 +1382,27 @@ export default function Dashboard() {
                 }
 
                 return (
-                  <div key={log.id} className="flex gap-3 items-start relative before:absolute before:left-[7px] before:top-6 before:bottom-[-20px] before:w-px before:bg-white/10 last:before:hidden group">
-                    <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5 bg-[#121826] relative z-10 transition-transform group-hover:scale-110`} />
+                  <div key={log.id} className="flex gap-3 items-start relative before:absolute before:left-[7px] before:top-6 before:bottom-[-20px] before:w-px before:bg-[var(--bg-active-group)] last:before:hidden group">
+                    <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5 bg-[var(--bg-secondary)] relative z-10 transition-transform group-hover:scale-110`} />
                     <div className="flex-1 min-w-0">
-                       <p className="text-xs text-gray-200 font-bold mb-0.5 truncate" title={log.description}>{log.description}</p>
+                       <p className="text-xs text-[var(--text-primary)] font-bold mb-0.5 truncate" title={log.description}>{log.description}</p>
                        <div className="flex items-center justify-between gap-2">
-                           <p className="text-[10px] text-gray-500 font-medium">Por: {log.user_id}</p>
-                           <p className="text-[9px] text-gray-600 font-bold tracking-wider uppercase">{log.timeStr}</p>
+                           <p className="text-[10px] text-[var(--text-muted)] font-medium">Por: {log.user_id}</p>
+                           <p className="text-[9px] text-[var(--text-secondary)] font-bold tracking-wider uppercase">{log.timeStr}</p>
                        </div>
                     </div>
                   </div>
                 )
               }) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Sem atividades recentes.</div>
+                 <div className="text-center py-4 text-[var(--text-muted)] text-xs">Sem atividades recentes.</div>
               )}
             </div>
           </div>
 
           {/* Card 3: Próximas Ações */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Próximas Ações</h3>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Próximas Ações</h3>
               <Link href="/operacao/acoes">
                 <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todas</span>
               </Link>
@@ -1416,49 +1416,49 @@ export default function Dashboard() {
                 else if (pLower === 'médio' || pLower === 'média') prioColor = 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
                 
                 return (
-                <Link href={a.link} key={a.id} className="flex flex-col p-3 rounded-lg border border-white/5 bg-[#0b0f19] hover:bg-white/5 transition-colors group cursor-pointer">
+                <Link href={a.link} key={a.id} className="flex flex-col p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] transition-colors group cursor-pointer">
                   <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2 max-w-[70%]">
-                         <div className="w-6 h-6 rounded bg-[#121826] border border-white/10 flex items-center justify-center shrink-0">
+                         <div className="w-6 h-6 rounded bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center shrink-0">
                            {a.origin === 'Ação' ? <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> : <ClipboardCheck className="w-3.5 h-3.5 text-orange-400" />}
                          </div>
-                         <p className="text-xs text-gray-200 font-bold truncate group-hover:text-white transition-colors" title={a.title}>{a.title}</p>
+                         <p className="text-xs text-[var(--text-primary)] font-bold truncate group-hover:text-[var(--text-primary)] transition-colors" title={a.title}>{a.title}</p>
                       </div>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${prioColor}`}>{prioText}</span>
                   </div>
                   <div className="flex items-center justify-between mt-auto">
                      <div className="flex gap-2 items-center">
-                        <span className="text-[10px] text-gray-400 font-medium">{a.origin}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-medium">{a.origin}</span>
                         <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                        <span className="text-[10px] text-gray-500 truncate max-w-[80px]" title={a.sector}>{a.sector}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] truncate max-w-[80px]" title={a.sector}>{a.sector}</span>
                      </div>
-                     <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded">
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        <span className="text-[10px] font-bold text-gray-300">{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
+                     <div className="flex items-center gap-1.5 bg-[var(--bg-primary)] px-2 py-1 rounded">
+                        <Calendar className="w-3 h-3 text-[var(--text-muted)]" />
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)]">{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
                      </div>
                   </div>
                 </Link>
                 );
               }) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Sem próximas ações agendadas.</div>
+                 <div className="text-center py-4 text-[var(--text-muted)] text-xs">Sem próximas ações agendadas.</div>
               )}
             </div>
           </div>
 
           {/* Card 4: L.A.R.I */}
-          <div className="bg-[#0b0f19] border border-white/5 rounded-xl p-5 flex flex-col items-center text-center mt-auto shrink-0 relative">
+          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-5 flex flex-col items-center text-center mt-auto shrink-0 relative">
             <div className="flex items-center gap-3 w-full mb-3">
               <div className="w-12 h-12 rounded-full bg-[#1e1145] flex items-center justify-center shrink-0">
                 <Bot className="w-6 h-6 text-[#a78bfa]" />
               </div>
               <div className="flex flex-col items-start px-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-white tracking-widest">L.A.R.I.</h3>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-widest">L.A.R.I.</h3>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">BETA</span>
                 </div>
               </div>
             </div>
-            <p className="text-sm text-gray-400 font-medium mb-6 text-left w-full px-1">
+            <p className="text-sm text-[var(--text-muted)] font-medium mb-6 text-left w-full px-1">
               Seu assistente IA para segurança do trabalho.
             </p>
             <Link href="/chat" className="w-full">

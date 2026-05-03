@@ -29,7 +29,7 @@ const getInitials = (name: string) => {
 };
 
 function getPrazoDetails(prazoStr: string, status: string) {
-  if (!prazoStr || typeof prazoStr !== 'string') return { subtext: '', color: 'text-gray-500' };
+  if (!prazoStr || typeof prazoStr !== 'string') return { subtext: '', color: 'text-[var(--text-muted)]' };
   
   const parts = prazoStr.includes('/') ? prazoStr.split('/') : prazoStr.split('-');
   const dateStr = parts.length === 3 && parts[0].length === 2 ? `${parts[2]}-${parts[1]}-${parts[0]}` : prazoStr;
@@ -37,7 +37,7 @@ function getPrazoDetails(prazoStr: string, status: string) {
   const d = new Date(dateStr);
   const now = new Date();
   
-  if (isNaN(d.getTime())) return { subtext: '', color: 'text-gray-500' };
+  if (isNaN(d.getTime())) return { subtext: '', color: 'text-[var(--text-muted)]' };
 
   d.setHours(0,0,0,0);
   now.setHours(0,0,0,0);
@@ -128,15 +128,15 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       {/* 1. Cards Superiores */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Pendentes */}
-        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                  <ClipboardList className="w-5 h-5 text-purple-400" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Pendentes</h3>
+              <h3 className="text-[15px] font-medium text-[var(--text-secondary)]">Pendentes</h3>
            </div>
            <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.pendentes}</div>
+              <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.pendentes}</div>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-orange-400 font-medium tracking-wide">12 vencem esta semana</p>
                 <div className="flex items-center gap-0.5 text-xs text-red-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 8%</div>
@@ -150,10 +150,10 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                  <Play className="w-5 h-5 fill-blue-400 text-blue-400" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Em andamento</h3>
+              <h3 className="text-[15px] font-medium text-[var(--text-secondary)]">Em andamento</h3>
            </div>
            <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.andamento}</div>
+              <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.andamento}</div>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-blue-400 font-medium tracking-wide">6 responsáveis ativos</p>
                 <div className="flex items-center gap-0.5 text-xs text-blue-400 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 12%</div>
@@ -167,10 +167,10 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
               <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                  <AlertTriangle className="w-5 h-5 text-red-500" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Vencidas</h3>
+              <h3 className="text-[15px] font-medium text-[var(--text-secondary)]">Vencidas</h3>
            </div>
            <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.vencidas}</div>
+              <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.vencidas}</div>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-red-500 font-medium tracking-wide">Exigem priorização imediata</p>
                 <div className="flex items-center gap-0.5 text-xs text-red-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 25%</div>
@@ -184,10 +184,10 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Concluídas</h3>
+              <h3 className="text-[15px] font-medium text-[var(--text-secondary)]">Concluídas</h3>
            </div>
            <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.concluidas}</div>
+              <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.concluidas}</div>
               <div className="flex items-center justify-between">
                 <p className="text-xs text-emerald-500 font-medium tracking-wide">84% dentro do prazo</p>
                 <div className="flex items-center gap-0.5 text-xs text-emerald-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 16%</div>
@@ -203,22 +203,22 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                <AlertTriangle className="w-6 h-6 text-red-500" />
             </div>
             <div>
-               <h3 className="text-lg font-bold text-white leading-tight mb-1">Atenção Operacional</h3>
-               <p className="text-sm text-gray-400">Ações que precisam de intervenção da coordenação hoje.</p>
+               <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight mb-1">Atenção Operacional</h3>
+               <p className="text-sm text-[var(--text-muted)]">Ações que precisam de intervenção da coordenação hoje.</p>
             </div>
          </div>
          <div className="grid grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
                <span className="text-2xl font-bold text-red-500">{stats.vencidas}</span>
-               <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Vencidas</span>
+               <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Vencidas</span>
             </div>
             <div className="flex flex-col items-center">
                <span className="text-2xl font-bold text-pink-400">{acoes.filter(a => a.followUp?.escalado && a.status !== 'Concluída').length}</span>
-               <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Escalonadas</span>
+               <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Escalonadas</span>
             </div>
             <div className="flex flex-col items-center">
                <span className="text-2xl font-bold text-indigo-400">{acoes.filter(a => a.followUp?.precisaFollowUp && a.status !== 'Concluída').length}</span>
-               <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Sem Atualização</span>
+               <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Sem Atualização</span>
             </div>
          </div>
       </div>
@@ -226,8 +226,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       {/* 2. Distribuição & Prioridade */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Gráfico Donut */}
-        <div className="bg-[#121826] border border-white/5 p-6 rounded-[12px] flex flex-col">
-           <h3 className="text-[15px] font-medium text-white mb-5">Distribuição por status</h3>
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+           <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-5">Distribuição por status</h3>
            <div className="flex flex-col gap-4">
               <div className="w-[140px] h-[140px] shrink-0 relative self-center">
                  <ResponsiveContainer width="100%" height="100%">
@@ -248,7 +248,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        </Pie>
                        <Tooltip 
                           contentStyle={{ backgroundColor: '#0c1017', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                          itemStyle={{ color: '#fff' }}
+                          itemStyle={{ color: "var(--text-primary)" }}
                        />
                     </PieChart>
                  </ResponsiveContainer>
@@ -263,10 +263,10 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                     <div key={item.label} className="flex justify-between items-center text-[12px]">
                        <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                          <span className="text-gray-300">{item.label}</span>
+                          <span className="text-[var(--text-secondary)]">{item.label}</span>
                        </div>
                        <div className="flex gap-2">
-                          <span className="text-white font-medium">{item.value}</span>
+                          <span className="text-[var(--text-primary)] font-medium">{item.value}</span>
                        </div>
                     </div>
                  ))}
@@ -275,13 +275,13 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Barras de Prioridade */}
-        <div className="bg-[#121826] border border-white/5 p-6 rounded-[12px] flex flex-col">
-           <h3 className="text-[15px] font-medium text-white mb-6">Ações por prioridade</h3>
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+           <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por prioridade</h3>
            <div className="flex-1 flex flex-col justify-center space-y-5">
               {prioritiesList.map(item => (
                  <div key={item.name} className="flex items-center gap-4 text-[13px]">
-                    <span className="text-gray-300 w-16">{item.name}</span>
-                    <div className="flex-1 bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <span className="text-[var(--text-secondary)] w-16">{item.name}</span>
+                    <div className="flex-1 bg-[var(--bg-active-group)] h-2.5 rounded-full overflow-hidden">
                        <motion.div 
                           className="h-full rounded-full" 
                           style={{ backgroundColor: PRIORITY_COLORS[item.name] }}
@@ -291,8 +291,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        />
                     </div>
                     <div className="flex gap-3 w-16 justify-end">
-                       <span className="text-white font-medium">{item.count}</span>
-                       <span className="text-gray-500 text-xs mt-[1px]">({item.count > 0 ? Math.round(item.pct) : 0}%)</span>
+                       <span className="text-[var(--text-primary)] font-medium">{item.count}</span>
+                       <span className="text-[var(--text-muted)] text-xs mt-[1px]">({item.count > 0 ? Math.round(item.pct) : 0}%)</span>
                     </div>
                  </div>
               ))}
@@ -300,12 +300,12 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Origem das ações */}
-        <div className="bg-[#121826] border border-white/5 p-6 rounded-[12px] flex flex-col">
-           <h3 className="text-[15px] font-medium text-white mb-6">Ações por Origem</h3>
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+           <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por Origem</h3>
            <div className="flex-1 flex flex-col justify-center space-y-6">
                  <div className="flex items-center gap-4 text-[13px]">
-                    <span className="text-gray-300 w-24">Ação Sistêmica</span>
-                    <div className="flex-1 bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <span className="text-[var(--text-secondary)] w-24">Ação Sistêmica</span>
+                    <div className="flex-1 bg-[var(--bg-active-group)] h-2.5 rounded-full overflow-hidden">
                        <motion.div 
                           className="h-full rounded-full bg-indigo-500" 
                           initial={{ width: 0 }}
@@ -314,12 +314,12 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        />
                     </div>
                     <div className="flex gap-3 w-16 justify-end">
-                       <span className="text-white font-medium">{stats.automaticas}</span>
+                       <span className="text-[var(--text-primary)] font-medium">{stats.automaticas}</span>
                     </div>
                  </div>
                  <div className="flex items-center gap-4 text-[13px]">
-                    <span className="text-gray-300 w-24">Ação Manual</span>
-                    <div className="flex-1 bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <span className="text-[var(--text-secondary)] w-24">Ação Manual</span>
+                    <div className="flex-1 bg-[var(--bg-active-group)] h-2.5 rounded-full overflow-hidden">
                        <motion.div 
                           className="h-full rounded-full bg-gray-500" 
                           initial={{ width: 0 }}
@@ -328,20 +328,20 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        />
                     </div>
                     <div className="flex gap-3 w-16 justify-end">
-                       <span className="text-white font-medium">{stats.manuais}</span>
+                       <span className="text-[var(--text-primary)] font-medium">{stats.manuais}</span>
                     </div>
                  </div>
            </div>
         </div>
 
         {/* Ações por NR */}
-        <div className="bg-[#121826] border border-white/5 p-6 rounded-[12px] flex flex-col">
-           <h3 className="text-[15px] font-medium text-white mb-6">Ações por NR</h3>
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+           <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por NR</h3>
            <div className="flex-1 flex flex-col justify-center space-y-5">
               {acoesPorNR.map(item => (
                  <div key={item.name} className="flex items-center gap-4 text-[13px]">
-                    <span className="text-gray-300 w-16">{item.name}</span>
-                    <div className="flex-1 bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <span className="text-[var(--text-secondary)] w-16">{item.name}</span>
+                    <div className="flex-1 bg-[var(--bg-active-group)] h-2.5 rounded-full overflow-hidden">
                        <motion.div 
                           className="h-full rounded-full bg-emerald-500" 
                           initial={{ width: 0 }}
@@ -350,11 +350,11 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        />
                     </div>
                     <div className="flex gap-3 w-16 justify-end">
-                       <span className="text-white font-medium">{item.value}</span>
+                       <span className="text-[var(--text-primary)] font-medium">{item.value}</span>
                     </div>
                  </div>
               ))}
-              {acoesPorNR.length === 0 && <span className="text-gray-500 text-sm">Nenhum dado de NR</span>}
+              {acoesPorNR.length === 0 && <span className="text-[var(--text-muted)] text-sm">Nenhum dado de NR</span>}
            </div>
         </div>
       </div>
@@ -366,44 +366,44 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                  <AlertTriangle className="w-4 h-4" />
                  Cobrança Operacional
              </h3>
-             <p className="text-[13px] text-gray-400">Ações que exigem follow-up, atualização ou estão com prazo crítico.</p>
+             <p className="text-[13px] text-[var(--text-muted)]">Ações que exigem follow-up, atualização ou estão com prazo crítico.</p>
          </div>
          <div className="flex flex-wrap items-center gap-6">
              <div className="flex flex-col">
-                 <span className="text-[11px] text-gray-500 uppercase tracking-widest font-medium">Follow-ups pendentes</span>
-                 <span className="text-[18px] font-bold text-white">{stats.followUpsPendentes}</span>
+                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-medium">Follow-ups pendentes</span>
+                 <span className="text-[18px] font-bold text-[var(--text-primary)]">{stats.followUpsPendentes}</span>
              </div>
-             <div className="w-px h-8 bg-white/10 hidden md:block"></div>
+             <div className="w-px h-8 bg-[var(--bg-active-group)] hidden md:block"></div>
              <div className="flex flex-col">
-                 <span className="text-[11px] text-gray-500 uppercase tracking-widest font-medium">Escalonadas</span>
+                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-medium">Escalonadas</span>
                  <span className="text-[18px] font-bold text-pink-400">{stats.escalonadas}</span>
              </div>
-             <div className="w-px h-8 bg-white/10 hidden md:block"></div>
+             <div className="w-px h-8 bg-[var(--bg-active-group)] hidden md:block"></div>
              <div className="flex flex-col">
-                 <span className="text-[11px] text-gray-500 uppercase tracking-widest font-medium">Sem atualização</span>
+                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-medium">Sem atualização</span>
                  <span className="text-[18px] font-bold text-orange-400">{stats.semAtualizacao}</span>
              </div>
-             <div className="w-px h-8 bg-white/10 hidden md:block"></div>
+             <div className="w-px h-8 bg-[var(--bg-active-group)] hidden md:block"></div>
              <div className="flex flex-col">
-                 <span className="text-[11px] text-gray-500 uppercase tracking-widest font-medium">Vencidas</span>
+                 <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-medium">Vencidas</span>
                  <span className="text-[18px] font-bold text-red-500">{stats.vencidas}</span>
              </div>
-             <button onClick={() => setFilterPriority('Exige atenção')} className="ml-4 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-[13px] font-medium transition-colors">
+             <button onClick={() => setFilterPriority('Exige atenção')} className="ml-4 bg-indigo-600 hover:bg-indigo-500 text-[var(--text-primary)] px-4 py-2 rounded-lg text-[13px] font-medium transition-colors">
                 Ver ações
              </button>
          </div>
       </div>
 
       {/* 3. Tabela Recentes */}
-      <div className="bg-[#121826] rounded-[12px] border border-white/5 overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center justify-between">
-           <h2 className="text-[15px] font-medium text-white">
+      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] overflow-hidden">
+        <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
+           <h2 className="text-[15px] font-medium text-[var(--text-primary)]">
               {filterPriority === 'Exige atenção' ? 'Ações que exigem atenção' : 'Ações recentes'}
            </h2>
            {filterPriority === 'Exige atenção' && (
               <button 
                  onClick={() => setFilterPriority('Todos')}
-                 className="text-[12px] text-gray-400 hover:text-white transition-colors"
+                 className="text-[12px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
               >
                  Limpar filtro
               </button>
@@ -413,31 +413,31 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         <table className="w-full text-left border-collapse min-w-[900px]">
            <thead className="bg-[#0c1018]">
               <tr>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prioridade</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Risco vinculado</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prazo</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Status</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Origem</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400 text-right">Ações</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prioridade</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Ação</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Risco vinculado</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Responsável</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prazo</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Status</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Origem</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)] text-right">Ações</th>
               </tr>
            </thead>
-           <tbody className="divide-y divide-white/5">
+           <tbody className="divide-y divide-[var(--border)]">
               {topAcoes.map(acao => {
                  const pDetails = getPrazoDetails(acao.prazo, acao.status);
                  const rInitials = getInitials(acao.responsavel);
                  
                  const avatarColors = [
-                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
-                    'bg-emerald-500/20 text-emerald-400', 'bg-orange-500/20 text-orange-400',
+                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 
+                    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-400',
                     'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                  ];
                  const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
                  const avatarColor = avatarColors[charCode % avatarColors.length];
 
                  return (
-                    <tr key={acao.id} onClick={() => onOpen(acao)} className="hover:bg-white/5 transition-colors cursor-pointer group">
+                    <tr key={acao.id} onClick={() => onOpen(acao)} className="hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer group">
                        <td className="px-5 py-4 w-28">
                           <span className={`text-[11px] font-medium px-2 py-0.5 rounded border bg-transparent ${
                              acao.prioridade === 'Crítica' ? 'text-red-500 border-red-500/30' :
@@ -450,7 +450,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        </td>
                        <td className="px-5 py-4">
                           <div className="flex flex-col gap-1.5">
-                             <h3 className="text-[13px] text-gray-300 group-hover:text-white transition-colors">{acao.titulo}</h3>
+                             <h3 className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{acao.titulo}</h3>
                              <div className="flex items-center gap-2 flex-wrap">
                                {acao.followUp?.precisaFollowUp && <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Precisa follow-up</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
@@ -459,8 +459,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        </td>
                        <td className="px-5 py-4 w-48">
                           <div className="flex items-center gap-2">
-                             <AlertTriangle className="w-3.5 h-3.5 text-gray-500" />
-                             <span className="text-[13px] text-gray-300 truncate max-w-[150px]">{acao.riscoVinculado || acao.setor || '-'}</span>
+                             <AlertTriangle className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                             <span className="text-[13px] text-[var(--text-secondary)] truncate max-w-[150px]">{acao.riscoVinculado || acao.setor || '-'}</span>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-44">
@@ -468,12 +468,12 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                 {rInitials}
                              </div>
-                             <span className="text-[13px] text-gray-300 truncate max-w-[120px]">{acao.responsavel}</span>
+                             <span className="text-[13px] text-[var(--text-secondary)] truncate max-w-[120px]">{acao.responsavel}</span>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-32">
                           <div className="flex flex-col">
-                             <span className="text-[13px] text-gray-300">{acao.prazo}</span>
+                             <span className="text-[13px] text-[var(--text-secondary)]">{acao.prazo}</span>
                              {pDetails.subtext && <span className={`text-[11px] font-medium mt-0.5 ${pDetails.color}`}>{pDetails.subtext}</span>}
                           </div>
                        </td>
@@ -487,11 +487,11 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                              {acao.status}
                           </span>
                        </td>
-                       <td className="px-5 py-4 w-32 text-[13px] text-gray-400">Inspeção #{acao.id.split('-').pop()?.substring(0,4)}</td>
+                       <td className="px-5 py-4 w-32 text-[13px] text-[var(--text-muted)]">Inspeção #{acao.id.split('-').pop()?.substring(0,4)}</td>
                        <td className="px-5 py-4 text-right">
                           <button 
                              onClick={(e) => { e.stopPropagation(); onOpen(acao); }}
-                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-gray-400 hover:text-white transition-all text-xs font-medium"
+                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] hover:border-[var(--border)] hover:bg-[var(--bg-active-group)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all text-xs font-medium"
                           >
                              <Eye className="w-3.5 h-3.5" />
                              Ver
@@ -502,7 +502,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
               })}
               {topAcoes.length === 0 && (
                  <tr>
-                    <td colSpan={8} className="px-5 py-8 text-center text-sm text-gray-500">Nenhuma ação encontrada.</td>
+                    <td colSpan={8} className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">Nenhuma ação encontrada.</td>
                  </tr>
               )}
            </tbody>
@@ -510,16 +510,16 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
         
         {/* 4. Footer Pagination */}
-        <div className="px-5 py-4 border-t border-white/5 flex items-center justify-between text-sm w-full bg-[#121826]">
-           <span className="text-gray-500">Mostrando 1 a {topAcoes.length} de {stats.total} ações</span>
+        <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-secondary)]">
+           <span className="text-[var(--text-muted)]">Mostrando 1 a {topAcoes.length} de {stats.total} ações</span>
            <div className="flex items-center gap-2">
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-gray-500 hover:bg-white/5 transition-colors" disabled>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>
                  <ChevronLeft className="w-4 h-4" />
               </button>
               <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400 font-medium">
                  1
               </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-gray-500 hover:bg-white/5 transition-colors">
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors">
                  <ChevronRight className="w-4 h-4" />
               </button>
            </div>
