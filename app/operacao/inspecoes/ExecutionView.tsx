@@ -466,8 +466,8 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         <div key={i} className="flex flex-col items-center group">
                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-base font-black transition-all border-2 
                               ${s.color === 'emerald' ? 'bg-emerald-500 text-[var(--text-primary)] border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 
-                                s.color === 'blue' ? 'bg-black border-blue-500 text-blue-600 dark:text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 
-                                'bg-black border-[var(--border)] text-[var(--text-secondary)]'}`}>
+                                s.color === 'blue' ? 'bg-[var(--bg-primary)] border-blue-500 text-blue-600 dark:text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 
+                                'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-secondary)]'}`}>
                               {s.step}
                            </div>
                            <div className="text-center mt-3">
@@ -482,7 +482,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
@@ -495,7 +495,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -508,7 +508,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
@@ -521,7 +521,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
@@ -569,7 +569,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                           className={`bg-[var(--bg-primary)]/40 border rounded-2xl p-5 lg:p-6 flex flex-col lg:flex-row items-start lg:items-center gap-6 transition-all group relative
                             ${isNao ? 'border-red-500/30 bg-red-500/[0.02]' : isParcial ? 'border-orange-500/30 bg-orange-500/[0.02]' : 'border-[var(--border)] hover:border-[var(--border)]'}`}
                         >
-                           <div className="w-12 h-12 rounded-xl border border-[var(--border)] bg-black flex items-center justify-center shrink-0 text-xl font-black text-gray-700 shadow-inner group-hover:text-purple-500 transition-colors">
+                           <div className="w-12 h-12 rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] flex items-center justify-center shrink-0 text-xl font-black text-gray-700 shadow-inner group-hover:text-purple-500 transition-colors">
                               {idx + 1}
                            </div>
                            

@@ -55,14 +55,15 @@ export default function ConfiguracoesPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all duration-300 whitespace-nowrap ${
                   activeTab === tab.id 
-                    ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
-                    : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
+                    ? 'font-semibold active-glow' 
+                    : 'font-medium bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {tab.icon}
                 {tab.label}
+                {activeTab === tab.id && <ChevronRight className="w-4 h-4 ml-auto" style={{ color: 'var(--accent-light)' }} />}
               </button>
             ))}
           </div>
@@ -412,7 +413,7 @@ function TabUsuarios() {
                         <td className="px-5 py-4">
                            <div className="flex items-center gap-3">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=random`} alt={u.name} className="w-8 h-8 rounded-full bg-gray-800" />
+                              <img src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=random`} alt={u.name} className="w-8 h-8 rounded-full bg-[var(--bg-card)]" />
                               <input 
                                  className="bg-transparent border-none text-[13px] font-bold text-[var(--text-primary)] focus:outline-none focus:border-b-2 focus:border-purple-500"
                                  value={u.name}
@@ -1179,7 +1180,7 @@ function TabPerfil() {
                <div className="flex flex-col md:flex-row gap-8 items-start">
                   <div className="flex flex-col items-center gap-3 shrink-0">
                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" className="w-24 h-24 rounded-2xl object-cover bg-gray-800 shadow-xl" />
+                     <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" className="w-24 h-24 rounded-2xl object-cover bg-[var(--bg-card)] shadow-xl" />
                      <button className="text-[11px] font-medium text-[var(--text-primary)] bg-[var(--bg-active-group)] px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-active-group)] transition-colors">
                         Alterar foto
                      </button>

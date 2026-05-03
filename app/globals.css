@@ -68,5 +68,19 @@
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
   }
+  
+  .active-glow {
+    color: #7C3AED !important;
+    background: rgba(124,58,237,0.10) !important;
+    border: 1px solid rgba(124,58,237,0.4) !important;
+    box-shadow: none !important;
+  }
+  
+  .dark .active-glow {
+    color: #F4F4F5 !important;
+    background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10)) !important;
+    border: 1px solid rgba(167,139,250,0.30) !important;
+    box-shadow: 0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  }
 }
 

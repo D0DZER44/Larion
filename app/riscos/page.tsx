@@ -496,10 +496,10 @@ export default function RiscosPage() {
                     setSelectedSectorItem(null);
                     setTimeout(() => setSelectedAction(null), 300);
                   }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab 
-                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
-                      : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
+                      ? 'font-semibold active-glow' 
+                      : 'font-medium bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {tab === 'Visão Geral' && <BarChart2 className="w-4 h-4" />}
@@ -508,6 +508,7 @@ export default function RiscosPage() {
                   {tab === 'Tipo' && <ShieldAlert className="w-4 h-4" />}
                   {tab === 'Histórico' && <Clock className="w-4 h-4" />}
                   {tab}
+                  {activeTab === tab && <ChevronRight className="w-4 h-4 ml-auto" style={{ color: 'var(--accent-light)' }} />}
                 </button>
               ))}
             </div>
@@ -1737,7 +1738,7 @@ export default function RiscosPage() {
                      </div>
                   </div>
                   <div className="flex items-center gap-3 w-[100px]">
-                     <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                     <div className="flex-1 h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden">
                         <div className="h-full bg-purple-500/80 rounded-full" style={{width: '70%'}}></div>
                      </div>
                      <span className="text-[11px] font-mono text-[var(--text-muted)]">70%</span>

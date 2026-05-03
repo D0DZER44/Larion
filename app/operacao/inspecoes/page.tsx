@@ -462,14 +462,15 @@ export default function InspecoesPage() {
                 <button 
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id as any); setCurrentPage(1); setIsDrawerOpen(false); setIsFormDrawerOpen(false); }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
                     activeTab === tab.id 
-                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
-                      : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
+                      ? 'font-semibold active-glow' 
+                      : 'font-medium bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {tab.icon}
                   {tab.label}
+                  {activeTab === tab.id && <ChevronRight className="w-4 h-4 ml-auto" style={{ color: 'var(--accent-light)' }} />}
                 </button>
              ))}
           </div>

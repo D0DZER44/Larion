@@ -82,11 +82,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const isDark = mounted ? resolvedTheme !== 'light' : true;
 
   // Colors matching logic
-  const bgSidebar = isDark ? '#0B0814' : '#FFFFFF';
   const borderRight = isDark ? 'border-[var(--border)]' : 'border-black/5';
 
   return (
-    <aside className={`w-[260px] flex-shrink-0 flex flex-col h-screen ${borderRight} border-r top-0 sticky print:hidden`} style={{ backgroundColor: bgSidebar, transition: 'background-color 300ms ease' }}>
+    <aside className={`w-[260px] flex-shrink-0 flex flex-col h-screen ${borderRight} border-r top-0 sticky print:hidden bg-[var(--bg-primary)]`} style={{ transition: 'background-color 300ms ease' }}>
       {/* Logo Area & Workspace */}
       <div className="p-6 pb-4 flex flex-col gap-6">
         <Link href="/" className="flex items-center gap-3">
@@ -124,18 +123,11 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               <div key={item.name} className="space-y-1">
                 <button
                   onClick={toggleOperacao}
-                  className={`w-full flex items-center justify-between transition-all duration-200 ${
+                  className={`w-full flex items-center justify-between transition-all duration-200 rounded-xl ${
                     isGroupActive 
-                      ? 'px-4 py-3 font-semibold' 
-                      : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
+                      ? 'px-4 py-3 font-semibold active-glow' 
+                      : 'px-4 py-3 text-[#71717A] hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
                   }`}
-                  style={isGroupActive ? {
-                    color: isDark ? '#F4F4F5' : '#7C3AED',
-                    background: isDark ? 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))' : 'rgba(124,58,237,0.10)',
-                    border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid rgba(124,58,237,0.4)',
-                    borderRadius: '12px',
-                    boxShadow: isDark ? '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none'
-                  } : {}}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 shrink-0" style={{ color: isGroupActive ? (isDark ? '#A78BFA' : '#7C3AED') : 'currentColor' }} />
@@ -188,18 +180,11 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               href={item.href!}
               prefetch={true}
               onClick={onClose}
-              className={`flex items-center justify-between transition-all duration-200 ${
+              className={`flex items-center justify-between transition-all duration-200 rounded-xl ${
                 isActive 
-                  ? 'px-4 py-3 font-semibold' 
-                  : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
+                  ? 'px-4 py-3 font-semibold active-glow' 
+                  : 'px-4 py-3 text-[#71717A] hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
               }`}
-              style={isActive ? {
-                color: isDark ? '#F4F4F5' : '#7C3AED',
-                background: isDark ? 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))' : 'rgba(124,58,237,0.10)',
-                border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid rgba(124,58,237,0.4)',
-                borderRadius: '12px',
-                boxShadow: isDark ? '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none'
-              } : {}}
             >
               <div className="flex items-center gap-3 w-full">
                 <item.icon className="w-5 h-5 shrink-0" style={{ color: isActive ? (isDark ? '#A78BFA' : '#7C3AED') : 'currentColor' }} />
@@ -221,7 +206,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* Promotional Card: Lari Copiloto */}
       <div className="px-4 py-2 mt-auto">
         <div style={{
-          background: isDark ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(76,29,149,0.10))' : 'rgba(124,58,237,0.06)',
+          background: 'var(--lari-card-bg)',
           border: isDark ? '1px solid rgba(167,139,250,0.20)' : '1px solid rgba(124,58,237,0.20)',
           borderRadius: '16px'
         }} className="p-4 flex flex-col gap-3">
@@ -267,9 +252,9 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                 alt="Lucas Martins"
                 width={36}
                 height={36}
-                className="rounded-full bg-gray-800"
+                className="rounded-full bg-[var(--bg-card)]"
               />
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 rounded-full" style={{ borderColor: isDark ? '#0B0814' : '#FFFFFF' }}></div>
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 rounded-full border-[var(--bg-primary)]"></div>
             </div>
             <div className="flex flex-col">
               <p className="text-[13px] font-semibold truncate leading-tight" style={{ color: isDark ? '#F4F4F5' : '#18181B' }}>Lucas Martins</p>

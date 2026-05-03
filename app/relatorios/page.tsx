@@ -167,7 +167,7 @@ function RelatorioRiscosPreview() {
         <div key={i} className="border border-[var(--border)] rounded-sm mb-6 overflow-hidden">
           <div className="bg-[var(--bg-primary)] px-4 py-3 border-b border-[var(--border)] flex justify-between items-center">
              <div className="flex gap-3 items-center">
-                <span className="bg-gray-800 text-[var(--text-primary)] text-[10px] font-bold px-2 py-1 uppercase rounded-sm">{risco.nr}</span>
+                <span className="bg-[var(--bg-card)] text-[var(--text-primary)] text-[10px] font-bold px-2 py-1 uppercase rounded-sm">{risco.nr}</span>
                 <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase">{risco.atividade}</h3>
              </div>
              <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase ${risco.nivel === 'Crítico' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>Risco {risco.nivel}</span>

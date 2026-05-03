@@ -247,7 +247,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                           ))}
                        </Pie>
                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#0c1017', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                          contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                           itemStyle={{ color: "var(--text-primary)" }}
                        />
                     </PieChart>
