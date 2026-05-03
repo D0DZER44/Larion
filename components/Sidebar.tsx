@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  Home, ClipboardCheck, Activity, AlertTriangle, 
-  FileText, BarChart2, Settings, MessageSquare, 
-  LogOut, Moon, Sun, Layers, ChevronRight
+  ClipboardCheck, Activity, AlertTriangle, 
+  Settings, LogOut, Moon, Sun, ChevronRight, ChevronDown,
+  LayoutGrid, HardHat, Brain, BarChart3, Bell, HelpCircle, 
+  ShieldCheck, Sparkles, Building2
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -23,11 +24,11 @@ type NavItem = {
 const navGroups: { items: NavItem[] }[] = [
   {
     items: [
-      { name: 'Visão Geral', href: '/', icon: Home },
+      { name: 'Visão Geral', href: '/', icon: LayoutGrid },
       { 
         name: 'Operação',
         href: '/operacao/inspecoes', 
-        icon: Layers,
+        icon: HardHat,
         isGroup: true,
         children: [
           { name: 'Inspeções', href: '/operacao/inspecoes', icon: ClipboardCheck },
@@ -39,10 +40,11 @@ const navGroups: { items: NavItem[] }[] = [
   },
   {
     items: [
-      { name: 'Relatórios', href: '/relatorios', icon: FileText },
-      { name: 'Central de Inteligência', href: '/central', icon: BarChart2, color: 'text-purple-400' },
-      { name: 'L.A.R.I — Copiloto SST', href: '/chat', icon: MessageSquare, badge: 'Novo', color: 'text-purple-400' },
+      { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
+      { name: 'Central de Inteligência', href: '/central', icon: Brain },
+      { name: 'Notificações', href: '/notificacoes', icon: Bell },
       { name: 'Configurações', href: '/configuracoes', icon: Settings },
+      { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
     ]
   }
 ];
@@ -78,34 +80,32 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <aside className="w-[260px] flex-shrink-0 flex flex-col h-screen bg-[#0b0f19] border-r border-white/5 top-0 sticky print:hidden">
-      {/* Logo Area */}
-      <div className="p-6 pb-4">
+    <aside className="w-[260px] flex-shrink-0 flex flex-col h-screen bg-[#0B0814] border-r border-white/5 top-0 sticky print:hidden">
+      {/* Logo Area & Workspace */}
+      <div className="p-6 pb-4 flex flex-col gap-6">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-gradient-to-br from-[#121826] to-[#1e1a30] border border-blue-500/30 overflow-hidden relative group shrink-0">
-            <Image 
-              src="/logo.jpg" 
-              alt="ApexShield Logo" 
-              width={32} 
-              height={32} 
-              className="object-cover w-full h-full relative z-10" 
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
-              }}
-            />
-            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[#121826] z-0">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-400">
-                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-               </svg>
-            </div>
-            <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity z-20"></div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' }}>
+            <ShieldCheck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">Apex Ops</h1>
-            <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">SST Inteligência</p>
+            <h1 className="font-bold text-white text-xl tracking-tight leading-tight">ApexShield</h1>
+            <p className="text-[10px] text-[#71717A] uppercase tracking-widest font-bold">SST INTELIGENTE</p>
           </div>
         </Link>
+
+        {/* Workspace Dropdown */}
+        <div className="flex items-center justify-between px-3 py-2 -mx-3 rounded-xl cursor-pointer hover:bg-[rgba(255,255,255,0.03)] transition-all duration-200">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-[#7C3AED]/20 text-[#A78BFA]">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[11px] text-[#71717A] font-medium leading-none mb-1">Workspace</p>
+              <p className="text-sm font-semibold text-[#F4F4F5] leading-none">ApexShield Corp</p>
+            </div>
+          </div>
+          <ChevronDown className="w-4 h-4 text-[#71717A]" />
+        </div>
       </div>
 
       {/* Navigation */}
@@ -117,17 +117,23 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               <div key={item.name} className="space-y-1">
                 <button
                   onClick={toggleOperacao}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+                  className={`w-full flex items-center justify-between transition-all duration-200 ${
                     isGroupActive 
-                      ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/10' 
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                      ? 'px-4 py-3 text-[#F4F4F5] font-semibold' 
+                      : 'px-4 py-3 text-[#71717A] hover:text-[#F4F4F5] hover:bg-[rgba(255,255,255,0.03)] rounded-xl'
                   }`}
+                  style={isGroupActive ? {
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))',
+                    border: '1px solid rgba(167,139,250,0.30)',
+                    borderRadius: '12px',
+                    boxShadow: '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
+                  } : {}}
                 >
                   <div className="flex items-center gap-3">
-                    <item.icon className="w-[18px] h-[18px] shrink-0" style={{ color: isGroupActive ? '#c084fc' : 'currentColor' }} />
+                    <item.icon className="w-5 h-5 shrink-0" style={{ color: isGroupActive ? '#A78BFA' : 'currentColor' }} />
                     <span className="truncate">{item.name}</span>
                   </div>
-                  <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${operacaoOpen ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-[#A78BFA] transition-transform duration-200 ${operacaoOpen ? 'rotate-90' : ''}`} />
                 </button>
                 {operacaoOpen && (
                   <div className="pl-5 space-y-1 pt-1">
@@ -139,18 +145,21 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                           href={child.href!}
                           prefetch={true}
                           onClick={onClose}
-                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-200 ${
+                          className={`flex items-center justify-between py-2 pl-4 pr-3 text-[12px] font-medium transition-all duration-200 relative rounded-lg ${
                             isChildActive 
-                              ? 'bg-white/10 text-white font-bold' 
-                              : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                              ? 'text-[#F4F4F5] font-semibold' 
+                              : 'text-[#71717A] hover:text-[#F4F4F5] hover:bg-[rgba(255,255,255,0.03)]'
                           }`}
                         >
+                          {isChildActive && (
+                            <div className="absolute left-1 top-1 bottom-1 w-[2px] bg-[#7C3AED] rounded-r-md"></div>
+                          )}
                           <div className="flex items-center gap-3">
-                            <child.icon className={`w-4 h-4 shrink-0 ${isChildActive ? 'text-purple-400' : ''}`} />
+                            <child.icon className={`w-4 h-4 shrink-0 ${isChildActive ? 'text-[#A78BFA]' : 'text-inherit'}`} />
                             <span className="truncate">{child.name}</span>
                           </div>
                           {child.badge && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-gray-300 font-bold uppercase tracking-wider">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#7C3AED]/20 text-[#A78BFA] font-bold uppercase tracking-wider border border-[#A78BFA]/20">
                               {child.badge}
                             </span>
                           )}
@@ -170,71 +179,88 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               href={item.href!}
               prefetch={true}
               onClick={onClose}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+              className={`flex items-center justify-between transition-all duration-200 ${
                 isActive 
-                  ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/10' 
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                  ? 'px-4 py-3 text-[#F4F4F5] font-semibold' 
+                  : 'px-4 py-3 text-[#71717A] hover:text-[#F4F4F5] hover:bg-[rgba(255,255,255,0.03)] rounded-xl'
               }`}
+              style={isActive ? {
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))',
+                border: '1px solid rgba(167,139,250,0.30)',
+                borderRadius: '12px',
+                boxShadow: '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
+              } : {}}
             >
               <div className="flex items-center gap-3 w-full">
-                <item.icon className="w-[18px] h-[18px] shrink-0" style={{ color: isActive ? '#c084fc' : (item.color ? 'var(--tw-colors-purple-400)' : 'currentColor') }} />
+                <item.icon className="w-5 h-5 shrink-0" style={{ color: isActive ? '#A78BFA' : 'currentColor' }} />
                 <span className="truncate">{item.name}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {item.badge && (
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${
-                    typeof item.badge === 'string' 
-                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
-                      : 'bg-white/5 text-gray-300 border-white/10'
-                  }`}>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#7C3AED]/20 text-[#A78BFA] font-bold uppercase tracking-wider border border-[#A78BFA]/20">
                     {item.badge}
                   </span>
                 )}
+                {isActive && <ChevronRight className="w-4 h-4 text-[#A78BFA]" />}
               </div>
             </Link>
           );
         })}
       </div>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-white/5 bg-[#121826]/30 pb-12"> {/* Added padding to push content up and avoid dev indicator */}
-        <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors -mx-2">
-          <Image
-            src="https://picsum.photos/seed/rafael/40/40"
-            alt="Rafael Oliveira"
-            width={36}
-            height={36}
-            className="rounded-full bg-gray-800 border bg-[#121826]"
-          />
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-bold text-white truncate">Rafael Oliveira</p>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 truncate font-medium">Administrador</p>
+      {/* Promotional Card: Lari Copiloto */}
+      <div className="px-4 py-2 mt-auto">
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(76,29,149,0.10))',
+          border: '1px solid rgba(167,139,250,0.20)',
+          borderRadius: '16px'
+        }} className="p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#A78BFA]" />
+              <span className="text-[#F4F4F5] text-[13px] font-semibold">Lari Copiloto</span>
+            </div>
+            <span style={{ background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' }} className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white uppercase tracking-wider">
+              Novo
+            </span>
           </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-500">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+            Sua copiloto de IA em SST. Tire dúvidas sobre NRs, gere documentos e receba orientações.
+          </p>
+          <Link 
+            href="/chat"
+            onClick={onClose}
+            className="w-full text-center text-[12px] font-semibold text-white py-2 rounded-lg transition-colors hover:bg-[rgba(124,58,237,0.25)] flex items-center justify-center gap-1.5"
+            style={{
+              background: 'rgba(124,58,237,0.15)',
+              border: '1px solid rgba(167,139,250,0.20)'
+            }}
+          >
+            Conversar com a Lari <ChevronRight className="w-3 h-3" />
+          </Link>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2 px-2">
-           <button className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-red-400 hover:bg-red-400/10 px-2 py-1.5 rounded-md transition-colors flex-1 -ml-2">
-            <LogOut className="w-3.5 h-3.5" />
-            Sair
-          </button>
-          
-          <div className="flex items-center bg-[#0b0f19] rounded-full p-0.5 border border-white/10 shadow-sm shrink-0">
-            <button 
-              onClick={() => setIsDark(true)}
-              className={`p-1.5 rounded-full transition-all ${isDark ? 'bg-[#1e1a30] text-purple-400 border border-purple-500/30' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-              <Moon className="w-3.5 h-3.5" />
-            </button>
-            <button 
-              onClick={() => setIsDark(false)}
-              className={`p-1.5 rounded-full transition-all ${!isDark ? 'bg-white text-gray-900 shadow border border-gray-200' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-              <Sun className="w-3.5 h-3.5" />
-            </button>
+      {/* User Profile */}
+      <div className="p-4 border-t border-white/5 pb-6">
+        <div className="flex items-center justify-between cursor-pointer group px-2 py-1.5 hover:bg-[rgba(255,255,255,0.03)] rounded-xl -mx-2 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Image
+                src="https://picsum.photos/seed/lucas/40/40"
+                alt="Lucas Martins"
+                width={36}
+                height={36}
+                className="rounded-full bg-gray-800"
+              />
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#22C55E] border-2 border-[#0B0814] rounded-full"></div>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-[13px] font-semibold text-[#F4F4F5] truncate leading-tight">Lucas Martins</p>
+              <p className="text-[10px] uppercase tracking-wider text-[#71717A] truncate font-bold mt-0.5">Administrador</p>
+            </div>
           </div>
+          <ChevronDown className="w-4 h-4 text-[#71717A] group-hover:text-[#F4F4F5] transition-colors" />
         </div>
       </div>
     </aside>
