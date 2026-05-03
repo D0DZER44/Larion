@@ -51,11 +51,11 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
 
   const getStatusColor = (status: string) => {
     switch (status) {
-       case 'Vencida': return 'text-red-400 border-red-500/30 bg-red-500/10';
-       case 'Em andamento': return 'text-blue-400 border-blue-500/30 bg-blue-500/10';
-       case 'Concluída': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+       case 'Vencida': return 'text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10';
+       case 'Em andamento': return 'text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10';
+       case 'Concluída': return 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
        case 'Cancelada': return 'text-[var(--text-muted)] border-gray-500/30 bg-[var(--bg-active-group)]';
-       default: return 'text-orange-400 border-orange-500/30 bg-orange-500/10'; // Pendente
+       default: return 'text-orange-600 dark:text-orange-400 border-orange-500/30 bg-orange-500/10'; // Pendente
     }
   };
 
@@ -71,9 +71,9 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
   const rInitials = getInitials(acao.responsavel);
   const avatarColors = [
     'bg-purple-500/20 text-purple-400 border-purple-500/30', 
-    'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30', 
-    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30', 
-    'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    'bg-blue-500/20 text-blue-600 dark:text-blue-600 dark:text-blue-400 border-blue-500/30', 
+    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-600 dark:text-emerald-400 border-emerald-500/30', 
+    'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30',
   ];
   const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
   const avatarColor = avatarColors[charCode % avatarColors.length];
@@ -87,12 +87,12 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
     return (
       <div className="flex flex-col gap-2 mt-1">
         {acao.riscoId && (
-          <button onClick={() => window.location.href='/operacao/riscos'} className="w-full bg-transparent border border-orange-500/20 hover:bg-orange-500/10 text-orange-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
+          <button onClick={() => window.location.href='/operacao/riscos'} className="w-full bg-transparent border border-orange-500/20 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
             <AlertTriangle className="w-4 h-4" /> Abrir risco vinculado
           </button>
         )}
         {acao.inspecaoId && (
-          <button onClick={() => window.location.href='/operacao/inspecoes'} className="w-full bg-transparent border border-blue-500/20 hover:bg-blue-500/10 text-blue-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
+          <button onClick={() => window.location.href='/operacao/inspecoes'} className="w-full bg-transparent border border-blue-500/20 hover:bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-center gap-2">
             <ClipboardCheck className="w-4 h-4" /> Abrir inspeção vinculada
           </button>
         )}
@@ -112,7 +112,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
         animate={{ width: 440, opacity: 1 }} 
         exit={{ width: 0, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 right-0 h-full lg:relative lg:h-full bg-[#0c1018] border-l border-[var(--border)] shadow-2xl z-[110] flex flex-col overflow-hidden shrink-0"
+        className="fixed top-0 right-0 h-full lg:relative lg:h-full bg-[var(--bg-card)] border-l border-[var(--border)] shadow-2xl z-[110] flex flex-col overflow-hidden shrink-0"
       >
         <div className="w-[440px] h-full flex flex-col overflow-hidden">
           {/* Header */}
@@ -148,7 +148,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
             )}
             {acao.followUp?.nivel === 'bloqueada' && (
                <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
                   <p className="text-[12px] text-orange-200">Há um impedimento registrado que pode atrasar a conclusão.</p>
                </div>
             )}
@@ -180,9 +180,9 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
             {/* Origem normativa e vínculo */}
             {(acao.regraFixa !== undefined || acao.nrRelacionada || (acao as any).nr) && (
                <div className="space-y-2 pb-2">
-                  <div className="bg-[var(--bg-secondary)]/50 p-4 rounded-xl border border-blue-500/20 space-y-3">
+                  <div className="bg-[var(--bg-card)]/50 p-4 rounded-xl border border-[var(--border)] space-y-3">
                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-blue-400" />
+                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <h4 className="text-xs font-bold text-blue-200 uppercase tracking-wider">Origem Normativa e Vínculo</h4>
                      </div>
                      <div className="space-y-1.5 text-[12px] text-[var(--text-secondary)]">
@@ -274,7 +274,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                     <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
                        <div className="w-24 shrink-0 rounded-lg border border-[var(--border)] overflow-hidden group cursor-pointer relative">
                           <Image src="https://images.unsplash.com/photo-1542124578-8ba9fb1720ce?q=80&w=200&auto=format&fit=crop" width={200} height={64} alt="Foto 1" unoptimized className="w-full h-16 object-cover" referrerPolicy="no-referrer" />
-                          <div className="px-2 py-1.5 text-[10px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] flex justify-between items-center group-hover:bg-[#1a2333] transition-colors">
+                          <div className="px-2 py-1.5 text-[10px] bg-[var(--bg-card)] text-[var(--text-secondary)] flex justify-between items-center group-hover:bg-[var(--bg-card)] transition-colors">
                              Foto 1 <Eye className="w-3 h-3 text-[var(--text-muted)]" />
                           </div>
                           <div className="absolute inset-0 bg-[var(--bg-primary)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -283,13 +283,13 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                        </div>
                        <div className="w-24 shrink-0 rounded-lg border border-[var(--border)] overflow-hidden group cursor-pointer relative">
                           <Image src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=200&auto=format&fit=crop" width={200} height={64} alt="Foto 2" unoptimized className="w-full h-16 object-cover" referrerPolicy="no-referrer" />
-                          <div className="px-2 py-1.5 text-[10px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] flex justify-between items-center group-hover:bg-[#1a2333] transition-colors">
+                          <div className="px-2 py-1.5 text-[10px] bg-[var(--bg-card)] text-[var(--text-secondary)] flex justify-between items-center group-hover:bg-[var(--bg-card)] transition-colors">
                              Foto 2 <Eye className="w-3 h-3 text-[var(--text-muted)]" />
                           </div>
                        </div>
-                       <div className="w-20 shrink-0 rounded-lg border border-[var(--border)] overflow-hidden group cursor-pointer relative flex flex-col items-center bg-[#1e2536] pt-3">
-                          <FileText className="w-6 h-6 text-red-400 mb-2" />
-                          <div className="w-full text-center px-2 py-1.5 text-[10px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] group-hover:bg-[#1a2333] transition-colors">
+                       <div className="w-20 shrink-0 rounded-lg border border-[var(--border)] overflow-hidden group cursor-pointer relative flex flex-col items-center bg-[var(--bg-card)] pt-3">
+                          <FileText className="w-6 h-6 text-red-600 dark:text-red-400 mb-2" />
+                          <div className="w-full text-center px-2 py-1.5 text-[10px] bg-[var(--bg-card)] text-[var(--text-secondary)] group-hover:bg-[var(--bg-card)] transition-colors">
                              ART.pdf
                           </div>
                        </div>
@@ -299,14 +299,14 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                  <div className="space-y-3">
                     <h3 className="text-[13px] font-medium text-[var(--text-primary)] border-b border-[var(--border)] pb-2">Antes e depois</h3>
                     <div className="flex items-center gap-3 pt-1">
-                       <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded-lg flex flex-col items-center justify-center gap-1.5">
+                       <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg flex flex-col items-center justify-center gap-1.5">
                           <span className="text-[11px] text-[var(--text-muted)]">Antes</span>
                           <span className="text-[13px] font-medium text-red-500">Risco crítico</span>
                        </div>
                        <ArrowRight className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
                        <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg flex flex-col items-center justify-center gap-1.5">
                           <span className="text-[11px] text-[var(--text-muted)]">Depois</span>
-                          <span className="text-[13px] font-medium text-emerald-400">Risco baixo</span>
+                          <span className="text-[13px] font-medium text-emerald-600 dark:text-emerald-400">Risco baixo</span>
                        </div>
                     </div>
                  </div>
@@ -318,19 +318,19 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                           <div className="flex items-center gap-2 text-[var(--text-muted)]">
                              <AlertTriangle className="w-3.5 h-3.5" /> Risco mitigado
                           </div>
-                          <span className="text-[var(--text-secondary)]">Crítico <span className="text-[var(--text-muted)] mx-1">→</span> <span className="text-emerald-400">Baixo</span></span>
+                          <span className="text-[var(--text-secondary)]">Crítico <span className="text-[var(--text-muted)] mx-1">→</span> <span className="text-emerald-600 dark:text-emerald-400">Baixo</span></span>
                        </div>
                        <div className="flex justify-between items-center text-[13px]">
                           <div className="flex items-center gap-2 text-[var(--text-muted)]">
                              <CheckCircle2 className="w-3.5 h-3.5" /> Efetividade
                           </div>
-                          <span className="text-emerald-400 font-medium">Alta (90%)</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Alta (90%)</span>
                        </div>
                        <div className="flex justify-between items-center text-[13px]">
                           <div className="flex items-center gap-2 text-[var(--text-muted)]">
                              <ShieldAlert className="w-3.5 h-3.5" /> Redução de risco estimada
                           </div>
-                          <span className="text-emerald-400 font-medium">-25%</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">-25%</span>
                        </div>
                        <div className="flex justify-between items-center text-[13px]">
                           <div className="flex items-center gap-2 text-[var(--text-muted)]">
@@ -344,9 +344,9 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                  <div className="space-y-2">
                     <div className="flex justify-between items-center text-[13px]">
                        <span className="text-[var(--text-primary)] font-medium">Progresso da ação</span>
-                       <span className="text-emerald-400 font-bold">100%</span>
+                       <span className="text-emerald-600 dark:text-emerald-400 font-bold">100%</span>
                     </div>
-                    <div className="w-full bg-[#1e2536] rounded-full h-[6px] overflow-hidden">
+                    <div className="w-full bg-[var(--bg-card)] rounded-full h-[6px] overflow-hidden">
                        <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: `100%` }}></div>
                     </div>
                  </div>
@@ -360,7 +360,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                     <span className="text-[var(--text-primary)] font-medium">Progresso da execução</span>
                     <span className="text-[var(--text-primary)] font-bold">{Math.max(0, acao.progresso || 0)} %</span>
                  </div>
-                 <div className="w-full bg-[#1e2536] rounded-full h-[6px] overflow-hidden">
+                 <div className="w-full bg-[var(--bg-card)] rounded-full h-[6px] overflow-hidden">
                     <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${acao.progresso}%` }}></div>
                  </div>
                  <div className="text-[11px] text-[var(--text-muted)] pt-1">
@@ -561,7 +561,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                      </div>
                      <div className="text-right">
                         <div className="text-[var(--text-primary)]">{acao.prazo}</div>
-                        {prazoInfo.label && <div className={`text-[11px] font-medium mt-0.5 ${prazoInfo.diffDays !== null && prazoInfo.diffDays < 0 ? 'text-red-500' : 'text-orange-400'}`}>{prazoInfo.label}</div>}
+                        {prazoInfo.label && <div className={`text-[11px] font-medium mt-0.5 ${prazoInfo.diffDays !== null && prazoInfo.diffDays < 0 ? 'text-red-500' : 'text-orange-600 dark:text-orange-400'}`}>{prazoInfo.label}</div>}
                      </div>
                   </div>
                )}
@@ -585,7 +585,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
 
             {/* Follow-up automático */}
             {acao.followUp && acao.followUp.ativo && (
-               <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[10px] p-4 space-y-3">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[10px] p-4 space-y-3">
                   <div className="flex items-center gap-2 text-[13px] text-indigo-400 font-medium border-b border-[var(--border)] pb-2">
                      <Clock className="w-4 h-4" />
                      Follow-up automático
@@ -595,15 +595,15 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                      <div className="flex justify-between items-center text-[var(--text-muted)]">
                         <span>Nível</span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-                           acao.followUp.nivel === 'urgente' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                           acao.followUp.nivel === 'atenção' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                           acao.followUp.nivel === 'urgente' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' :
+                           acao.followUp.nivel === 'atenção' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' :
                            acao.followUp.nivel === 'bloqueada' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
-                           'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                           'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
                         }`}>{acao.followUp.nivel.toUpperCase()}</span>
                      </div>
                      <div className="flex justify-between items-center text-[var(--text-muted)]">
                         <span>Requer atualização?</span>
-                        <span className={acao.followUp.precisaFollowUp ? 'text-orange-400' : 'text-emerald-400'}>
+                        <span className={acao.followUp.precisaFollowUp ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}>
                            {acao.followUp.precisaFollowUp ? 'Sim' : 'Não'}
                         </span>
                      </div>
@@ -646,7 +646,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
             {/* Impedimentos / Bloqueios (only for Em andamento) */}
             {isAndamento && (
                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[13px] text-orange-400 font-medium">
+                  <div className="flex items-center gap-2 text-[13px] text-orange-600 dark:text-orange-400 font-medium">
                      <AlertTriangle className="w-4 h-4" />
                      Impedimentos / Bloqueios
                   </div>
@@ -658,12 +658,12 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
 
             {/* Progresso (SLA) para Pendentes */}
             {(!isAndamento && !isConcluida) && (
-               <div className="bg-[var(--bg-secondary)] p-4 rounded-[10px] border border-[var(--border)]">
+               <div className="bg-[var(--bg-card)] p-4 rounded-[10px] border border-[var(--border)]">
                   <div className="flex justify-between items-center text-[12px] mb-3">
                      <span className="text-[var(--text-primary)] font-medium">Progresso (SLA)</span>
                      <span className="text-[var(--text-muted)]">{acao.status === 'Pendente' ? 'Aguardando início' : acao.status}</span>
                   </div>
-                  <div className="w-full bg-[#1e2536] rounded-full h-[6px] overflow-hidden mb-2">
+                  <div className="w-full bg-[var(--bg-card)] rounded-full h-[6px] overflow-hidden mb-2">
                      <div className="bg-purple-500 h-full rounded-full w-0 transition-all duration-1000" style={{ width: `${acao.status === 'Pendente' ? 0 : acao.progresso}%` }}></div>
                   </div>
                   <div className="flex justify-between text-[10px]">
@@ -675,7 +675,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
             
           </div>
 
-          <div className="p-6 border-t border-[var(--border)] shrink-0 bg-[#0c1018] space-y-2.5">
+          <div className="p-6 border-t border-[var(--border)] shrink-0 bg-[var(--bg-card)] space-y-2.5">
              {/* Escalonada */}
              {acao.followUp?.escalado && !isConcluida && (
                  <div className="flex flex-col gap-2.5">
@@ -727,7 +727,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                    ) : (
                      <div className="flex items-center gap-2.5">
                         <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-[var(--text-primary)] py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-[13px]">Atualizar progresso</button>
-                        <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-3 rounded-lg font-medium transition-colors border border-emerald-500/20 flex items-center justify-center gap-2 text-[13px]">Concluir</button>
+                        <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-600 dark:text-emerald-400 py-3 rounded-lg font-medium transition-colors border border-emerald-500/20 flex items-center justify-center gap-2 text-[13px]">Concluir</button>
                      </div>
                    )}
                    <div className="flex items-center gap-2.5">
@@ -750,8 +750,8 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                 <div className="flex flex-col gap-2.5">
                    {(acao.riscoId || acao.inspecaoId) && (
                       <div className="flex items-center gap-2.5 w-full">
-                         {acao.riscoId && <button onClick={() => window.location.href='/operacao/riscos'} className="flex-1 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-orange-400 hover:text-orange-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Ver risco</button>}
-                         {acao.inspecaoId && <button onClick={() => window.location.href='/operacao/inspecoes'} className="flex-1 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-blue-400 hover:text-blue-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2"><ClipboardCheck className="w-4 h-4" /> Ver inspeção</button>}
+                         {acao.riscoId && <button onClick={() => window.location.href='/operacao/riscos'} className="flex-1 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-orange-600 dark:text-orange-400 hover:text-orange-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2"><AlertTriangle className="w-4 h-4" /> Ver risco</button>}
+                         {acao.inspecaoId && <button onClick={() => window.location.href='/operacao/inspecoes'} className="flex-1 bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-blue-600 dark:text-blue-400 hover:text-blue-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2"><ClipboardCheck className="w-4 h-4" /> Ver inspeção</button>}
                       </div>
                    )}
                    <button className="w-full bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-[var(--border)] flex items-center justify-center gap-2"><FileText className="w-4 h-4" /> Ver evidências</button>
@@ -773,7 +773,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                  initial={{ scale: 0.95, opacity: 0 }} 
                  animate={{ scale: 1, opacity: 1 }} 
                  exit={{ scale: 0.95, opacity: 0 }}
-                 className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                 className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full shadow-2xl"
               >
                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5 mx-auto">
                     <CheckCircle2 className="w-6 h-6 text-emerald-500" />
@@ -803,7 +803,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                      <textarea
                         value={comentarioLocal}
                         onChange={e => setComentarioLocal(e.target.value)}
-                        className="w-full bg-[#0c1018] border border-[var(--border)] rounded-lg p-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-emerald-500 min-h-[80px]"
+                        className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-emerald-500 min-h-[80px]"
                         placeholder="Deixe um comentário sobre a conclusão..."
                      />
                  </div>
@@ -843,7 +843,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                  initial={{ scale: 0.95, opacity: 0 }} 
                  animate={{ scale: 1, opacity: 1 }} 
                  exit={{ scale: 0.95, opacity: 0 }}
-                 className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                 className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full shadow-2xl"
               >
                  <h2 className="text-lg font-medium text-[var(--text-primary)] mb-4">Atualizar Progresso</h2>
                  
@@ -868,7 +868,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                         <textarea
                            value={comentarioLocal}
                            onChange={e => setComentarioLocal(e.target.value)}
-                           className="w-full bg-[#0c1018] border border-[var(--border)] rounded-lg p-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-purple-500 min-h-[80px]"
+                           className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:border-purple-500 min-h-[80px]"
                            placeholder="O que foi feito..."
                         />
                     </div>

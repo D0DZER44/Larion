@@ -638,12 +638,12 @@ export default function Dashboard() {
 
     // - ação atrasada (Prio: 3)
     atrasadasActions.forEach(a => {
-        allAlertas.push({ id: `acao_atrasada_${a.id}`, type: 'acao_atrasada', icon: AlertCircle, color: 'text-red-400', title: 'Ação Atrasada', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 3, dateStr: a.prazo });
+        allAlertas.push({ id: `acao_atrasada_${a.id}`, type: 'acao_atrasada', icon: AlertCircle, color: 'text-red-600 dark:text-red-400', title: 'Ação Atrasada', desc: a.title || a.titulo || 'Sem título', link: '/operacao/acoes', priority: 3, dateStr: a.prazo });
     });
 
     // - inspeção vencida (Prio: 3)
     vencidasInspections.forEach(i => {
-        allAlertas.push({ id: `insp_vencida_${i.id}`, type: 'insp_vencida', icon: ShieldAlert, color: 'text-orange-400', title: 'Inspeção Vencida', desc: i.title || i.nome || i.titulo || 'Sem título', link: '/operacao/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || '' });
+        allAlertas.push({ id: `insp_vencida_${i.id}`, type: 'insp_vencida', icon: ShieldAlert, color: 'text-orange-600 dark:text-orange-400', title: 'Inspeção Vencida', desc: i.title || i.nome || i.titulo || 'Sem título', link: '/operacao/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || '' });
     });
 
     // - checklist pendente crítico (Prio: 3)
@@ -704,8 +704,8 @@ export default function Dashboard() {
        scoreColorStroke = '#22c55e'; // green-500
     } else if (operationalScore >= 60) {
        scoreClass = 'Bom';
-       scoreColorText = 'text-emerald-400';
-       scoreColorBg = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+       scoreColorText = 'text-emerald-600 dark:text-emerald-400';
+       scoreColorBg = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
        scoreColorStroke = '#34d399'; // emerald-400
     } else if (operationalScore >= 40) {
        scoreClass = 'Atenção';
@@ -827,7 +827,7 @@ export default function Dashboard() {
           {/* Toggle Sidebar Button */}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`hidden xl:flex absolute top-1/2 -translate-y-1/2 z-50 bg-[var(--bg-secondary)] border border-[var(--border)] p-1.5 rounded-l-lg hover:bg-[var(--bg-active-group)] transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
+            className={`hidden xl:flex absolute top-1/2 -translate-y-1/2 z-50 bg-[var(--bg-card)] border border-[var(--border)] p-1.5 rounded-l-lg hover:bg-[var(--bg-active-group)] transition-all ${isSidebarOpen ? 'right-[320px] shadow-[-5px_0_15px_-5px_rgba(0,0,0,0.5)]' : 'right-0'}`}
           >
             {isSidebarOpen ? <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /> : <ChevronLeft className="w-5 h-5 text-[var(--text-muted)]" />}
           </button>
@@ -905,13 +905,13 @@ export default function Dashboard() {
             <div className="bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border)] hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider group-hover:text-[var(--text-secondary)] transition-colors">Inspeções Pendentes</span>
-                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-[var(--text-muted)]'}`} />
+                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--text-muted)]'}`} />
               </div>
               <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-400' : 'text-[var(--text-secondary)]'}`}>
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--text-secondary)]'}`}>
                   {metrics.pendingInspectionsCount}
                 </div>
-                <div className="text-[12px] text-blue-400 font-bold mb-2">Urgente</div>
+                <div className="text-[12px] text-blue-600 dark:text-blue-400 font-bold mb-2">Urgente</div>
                 <div className="flex flex-col gap-1 text-[12px] text-[var(--text-muted)] font-medium">
                    {metrics.vencidasInspectionsCount > 0 ? <span>{metrics.vencidasInspectionsCount} atrasadas</span> : null}
                    {metrics.inspExpiringTodayCount > 0 ? <span>{metrics.inspExpiringTodayCount} vencem hoje</span> : null}
@@ -971,7 +971,7 @@ export default function Dashboard() {
           </div>
 
           {/* INTELIGÊNCIA OPERACIONAL (CARD PRINCIPAL) */}
-          <div className="bg-[var(--lari-card-bg)] border border-[var(--lari-card-border)] p-6 sm:p-8 rounded-xl relative overflow-hidden shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8 rounded-xl relative overflow-hidden shadow-[0_0_40px_rgba(124,58,237,0.1)]">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--bg-active-group)] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             
             <div className="relative z-10 mb-8 border-b border-[var(--border)] pb-8">
@@ -995,7 +995,7 @@ export default function Dashboard() {
                   </span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
-                  <ShieldCheck className={`w-8 h-8 shrink-0 ${metrics.prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-400'}`} />
+                  <ShieldCheck className={`w-8 h-8 shrink-0 ${metrics.prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`} />
                   <span className="text-sm text-[var(--text-primary)] leading-tight">Prioridade:<br/><span className="text-lg text-[var(--text-secondary)]">{metrics.prioridadeOperacional}</span></span>
                 </div>
                 <div className="flex items-center gap-4 sm:pl-6 py-4 sm:py-0 w-full">
@@ -1034,13 +1034,13 @@ export default function Dashboard() {
                 <h3 className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Plano de Ação</h3>
                 <div className="space-y-4">
                   <Link href="/operacao/acoes?filter=abertas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
-                     <ClipboardCheck className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                     <span className="text-2xl font-bold text-blue-400 w-8 group-hover:text-blue-300 transition-colors">{metrics.actionsTotal}</span>
+                     <ClipboardCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                     <span className="text-2xl font-bold text-blue-600 dark:text-blue-400 w-8 group-hover:text-blue-300 transition-colors">{metrics.actionsTotal}</span>
                      <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Abertas</span>
                   </Link>
                   <Link href="/operacao/acoes?filter=andamento" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <Activity className="w-5 h-5 text-orange-500 group-hover:scale-110 transition-transform" />
-                     <span className="text-2xl font-bold text-orange-500 w-8 group-hover:text-orange-400 transition-colors">{metrics.actionsInProgress}</span>
+                     <span className="text-2xl font-bold text-orange-500 w-8 group-hover:text-orange-600 dark:text-orange-400 transition-colors">{metrics.actionsInProgress}</span>
                      <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Em andamento</span>
                   </Link>
                   <Link href="/operacao/acoes?filter=concluidas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
@@ -1050,7 +1050,7 @@ export default function Dashboard() {
                   </Link>
                   <Link href="/operacao/acoes?filter=atrasadas" className="flex items-center gap-4 group cursor-pointer hover:bg-white/[0.04] p-1 -m-1 rounded transition-colors">
                      <AlertTriangle className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
-                     <span className="text-2xl font-bold text-red-500 w-8 group-hover:text-red-400 transition-colors">{metrics.actionsDelayed}</span>
+                     <span className="text-2xl font-bold text-red-500 w-8 group-hover:text-red-600 dark:text-red-400 transition-colors">{metrics.actionsDelayed}</span>
                      <span className="text-sm text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">Atrasadas</span>
                   </Link>
                 </div>
@@ -1066,8 +1066,8 @@ export default function Dashboard() {
                      <span className="text-sm text-[var(--text-muted)]">Monitorados</span>
                   </div>
                   <div className="flex items-center gap-4">
-                     <GraduationCap className="w-5 h-5 text-orange-400" />
-                     <span className="text-2xl font-bold text-orange-400 w-8">8</span>
+                     <GraduationCap className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                     <span className="text-2xl font-bold text-orange-600 dark:text-orange-400 w-8">8</span>
                      <span className="text-sm text-[var(--text-muted)]">Treinamento pendente</span>
                   </div>
                   <div className="flex items-center gap-4">
@@ -1231,7 +1231,7 @@ export default function Dashboard() {
                                   <span className="text-[10px] text-[var(--text-muted)] font-medium">({item.percent}%)</span>
                                 </div>
                                 {item.avgPriorityLabel && (
-                                   <span className="text-[9px] text-[var(--text-muted)] font-medium mt-0.5">Prio. <span className={item.avgPriorityLabel === 'Crítico' || item.avgPriorityLabel === 'Alto' ? 'text-red-400/80' : 'text-orange-400/80'}>{item.avgPriorityLabel}</span></span>
+                                   <span className="text-[9px] text-[var(--text-muted)] font-medium mt-0.5">Prio. <span className={item.avgPriorityLabel === 'Crítico' || item.avgPriorityLabel === 'Alto' ? 'text-red-600 dark:text-red-400/80' : 'text-orange-600 dark:text-orange-400/80'}>{item.avgPriorityLabel}</span></span>
                                 )}
                               </div>
                            )}
@@ -1255,15 +1255,15 @@ export default function Dashboard() {
                     <p className="text-[10px] text-[var(--text-muted)]">Tendência de risco operacional ao longo do tempo.</p>
                   </div>
                 </div>
-                <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg overflow-hidden pr-2">
+                <div className="flex items-center bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden pr-2">
                    <select 
                      value={scoreTimeRange} 
                      onChange={(e) => setScoreTimeRange(e.target.value as any)}
                      className="bg-transparent text-[var(--text-secondary)] text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
                    >
-                     <option className="bg-[var(--bg-secondary)]" value="semana">Últimos 7 dias</option>
-                     <option className="bg-[var(--bg-secondary)]" value="mes">Últimos 30 dias</option>
-                     <option className="bg-[var(--bg-secondary)]" value="ano">Este ano</option>
+                     <option className="bg-[var(--bg-card)]" value="semana">Últimos 7 dias</option>
+                     <option className="bg-[var(--bg-card)]" value="mes">Últimos 30 dias</option>
+                     <option className="bg-[var(--bg-card)]" value="ano">Este ano</option>
                    </select>
                 </div>
               </div>
@@ -1302,7 +1302,7 @@ export default function Dashboard() {
 
                 {/* Right Side (Card) */}
                 <div className="shrink-0 w-full sm:w-[130px] flex flex-col justify-center">
-                  <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
                     <span className="text-[10px] text-[var(--text-muted)] font-medium mb-1">Risco atual</span>
                     <div className="text-3xl font-bold text-[#b48bf8] leading-none mb-1">{metrics.operationalScore}</div>
                     <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
@@ -1310,7 +1310,7 @@ export default function Dashboard() {
                     <div className="flex flex-col items-start gap-1">
                        {metrics.scoreDiff !== 0 ? (
                          <>
-                           <span className={`text-[12px] font-bold flex items-center gap-1 ${metrics.scoreDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                           <span className={`text-[12px] font-bold flex items-center gap-1 ${metrics.scoreDiff > 0 ? 'text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                              {metrics.scoreDiff > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />} 
                              {metrics.scoreDiff > 0 ? `+${metrics.scoreDiff}%` : `${metrics.scoreDiff}%`}
                            </span>
@@ -1331,7 +1331,7 @@ export default function Dashboard() {
         <div className={`hidden xl:flex flex-col bg-[var(--bg-card)] border-l border-[var(--border)] h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
           {/* Card 1: Alertas Críticos */}
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Alertas Críticos</h3>
               <Link href="/operacao/riscos">
@@ -1354,7 +1354,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 2: Atividades Recentes */}
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Atividades Recentes</h3>
               <Link href="/central">
@@ -1368,7 +1368,7 @@ export default function Dashboard() {
                 const isCreate = log.event_type.includes('criad') || log.event_type.includes('registrado');
                 
                 let Icon = Activity;
-                let iconColor = 'text-blue-400';
+                let iconColor = 'text-blue-600 dark:text-blue-400';
                 
                 if (isCheck) {
                     Icon = CheckCircle2;
@@ -1378,12 +1378,12 @@ export default function Dashboard() {
                     iconColor = 'text-purple-400';
                 } else if (isCreate) {
                     Icon = PlusCircle;
-                    iconColor = 'text-blue-400';
+                    iconColor = 'text-blue-600 dark:text-blue-400';
                 }
 
                 return (
                   <div key={log.id} className="flex gap-3 items-start relative before:absolute before:left-[7px] before:top-6 before:bottom-[-20px] before:w-px before:bg-[var(--bg-active-group)] last:before:hidden group">
-                    <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5 bg-[var(--bg-secondary)] relative z-10 transition-transform group-hover:scale-110`} />
+                    <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5 bg-[var(--bg-card)] relative z-10 transition-transform group-hover:scale-110`} />
                     <div className="flex-1 min-w-0">
                        <p className="text-xs text-[var(--text-primary)] font-bold mb-0.5 truncate" title={log.description}>{log.description}</p>
                        <div className="flex items-center justify-between gap-2">
@@ -1400,7 +1400,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 3: Próximas Ações */}
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Próximas Ações</h3>
               <Link href="/operacao/acoes">
@@ -1419,8 +1419,8 @@ export default function Dashboard() {
                 <Link href={a.link} key={a.id} className="flex flex-col p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] transition-colors group cursor-pointer">
                   <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2 max-w-[70%]">
-                         <div className="w-6 h-6 rounded bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center shrink-0">
-                           {a.origin === 'Ação' ? <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> : <ClipboardCheck className="w-3.5 h-3.5 text-orange-400" />}
+                         <div className="w-6 h-6 rounded bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                           {a.origin === 'Ação' ? <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> : <ClipboardCheck className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />}
                          </div>
                          <p className="text-xs text-[var(--text-primary)] font-bold truncate group-hover:text-[var(--text-primary)] transition-colors" title={a.title}>{a.title}</p>
                       </div>

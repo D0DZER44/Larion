@@ -177,7 +177,7 @@ export default function AcaoRecomendadaCard({ context = 'global' }: AcaoRecomend
   }, [store, context]);
 
   return (
-    <div className="bg-[var(--bg-secondary)] border border-indigo-500/20 rounded-xl p-5 mb-6 flex items-start gap-4 shadow-lg shrink-0">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 mb-6 flex items-start gap-4 shadow-lg shrink-0">
       <div className="p-2 bg-indigo-500/10 rounded-full border border-indigo-500/30">
         <Star className="w-5 h-5 text-indigo-400" />
       </div>

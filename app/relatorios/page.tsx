@@ -40,13 +40,13 @@ const mockNaoConformidades = [
 function RelatorioExecutivoPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-start border-b border-gray-200 pb-6">
+      <div className="flex justify-between items-start border-b border-[var(--border)] pb-6">
         <div>
            <div className="flex items-center gap-2 mb-2 text-indigo-700">
              <Shield className="w-8 h-8" />
              <h1 className="text-2xl font-black tracking-tight">Apex Ops</h1>
            </div>
-           <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Relatório Executivo de SST</h2>
+           <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Relatório Executivo de SST</h2>
         </div>
         <div className="text-right text-[11px] text-[var(--text-muted)] space-y-1">
           <p><strong>Período:</strong> 01/05/2026 a 31/05/2026</p>
@@ -55,7 +55,7 @@ function RelatorioExecutivoPreview() {
       </div>
 
       <div>
-        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Resumo Executivo</h3>
+        <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Resumo Executivo</h3>
         <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed text-justify">
           Este relatório apresenta uma visão consolidada do desempenho de Saúde e Segurança do Trabalho no período selecionado, destacando os principais riscos ocupacionais, pendências normativas e oportunidades de controle, baseado em princípios de gestão de riscos e indicadores proativos.
         </p>
@@ -63,12 +63,12 @@ function RelatorioExecutivoPreview() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { title: 'Riscos', val: '28', trend: '+12%', color: 'text-gray-800' },
-          { title: 'Inspeções', val: '46', trend: '+18%', color: 'text-gray-800' },
-          { title: 'Ações', val: '132', trend: '-8%', color: 'text-gray-800' },
-          { title: 'Conformidade', val: '87%', trend: '+5p.p.', color: 'text-gray-800' },
+          { title: 'Riscos', val: '28', trend: '+12%', color: 'text-[var(--text-primary)]' },
+          { title: 'Inspeções', val: '46', trend: '+18%', color: 'text-[var(--text-primary)]' },
+          { title: 'Ações', val: '132', trend: '-8%', color: 'text-[var(--text-primary)]' },
+          { title: 'Conformidade', val: '87%', trend: '+5p.p.', color: 'text-[var(--text-primary)]' },
         ].map((k, i) => (
-          <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+          <div key={i} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--bg-card)]">
             <p className="text-[11px] font-bold text-[var(--text-muted)] uppercase">{k.title}</p>
             <p className={`text-2xl font-black ${k.color} my-1`}>{k.val}</p>
             <p className="text-[10px] text-green-600 font-medium">{k.trend} vs período anterior</p>
@@ -78,12 +78,12 @@ function RelatorioExecutivoPreview() {
 
       <div className="grid grid-cols-2 gap-8">
         <div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Riscos Prioritários</h3>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Riscos Prioritários</h3>
           <table className="w-full text-[12px] text-left border-collapse">
             <tbody className="divide-y divide-gray-100">
               {mockRiscos.map((r, i) => (
                 <tr key={i}>
-                  <td className="py-2.5 text-gray-700 font-medium">{r.atividade}</td>
+                  <td className="py-2.5 text-[var(--text-primary)] font-medium">{r.atividade}</td>
                   <td className="py-2.5 text-right">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${r.nivel === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>{r.nivel}</span>
                   </td>
@@ -93,7 +93,7 @@ function RelatorioExecutivoPreview() {
           </table>
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Inspeções Pendentes</h3>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Inspeções Pendentes</h3>
           <table className="w-full text-[12px] text-left border-collapse">
             <thead>
               <tr className="text-[var(--text-muted)] text-[10px] uppercase">
@@ -104,7 +104,7 @@ function RelatorioExecutivoPreview() {
             <tbody className="divide-y divide-gray-100">
               {mockInspeções.filter(i => i.status === 'Pendente').map((ins, i) => (
                 <tr key={i}>
-                  <td className="py-2.5 text-gray-700 font-medium">{ins.nome}</td>
+                  <td className="py-2.5 text-[var(--text-primary)] font-medium">{ins.nome}</td>
                   <td className="py-2.5 text-right flex justify-end gap-2 items-center">
                     <span className="text-[var(--text-muted)]">{ins.vencimento}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${ins.risco === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>{ins.risco}</span>
@@ -117,8 +117,8 @@ function RelatorioExecutivoPreview() {
       </div>
 
       <div className="grid grid-cols-2 gap-8 items-start">
-        <div className="border border-gray-200 rounded-lg p-5">
-           <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Ações Recomendadas</h3>
+        <div className="border border-[var(--border)] rounded-lg p-5">
+           <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Ações Recomendadas</h3>
            <ul className="space-y-3 text-[12px] text-[var(--text-secondary)]">
              {mockAcoes.map((a, i) => (
                <li key={i} className="flex gap-2 items-start">
@@ -139,14 +139,14 @@ function RelatorioExecutivoPreview() {
         </div>
       </div>
 
-      <div className="pt-12 flex justify-between text-[11px] text-[var(--text-muted)] border-t border-gray-200">
+      <div className="pt-12 flex justify-between text-[11px] text-[var(--text-muted)] border-t border-[var(--border)]">
          <div>
-           <p className="font-bold text-gray-800 uppercase">Responsável Técnico</p>
+           <p className="font-bold text-[var(--text-primary)] uppercase">Responsável Técnico</p>
            <p>André Fernandes</p>
            <p>Téc. Seg. do Trabalho - MTE 12.345</p>
          </div>
          <div>
-           <p className="font-bold text-gray-800 uppercase">Empresa</p>
+           <p className="font-bold text-[var(--text-primary)] uppercase">Empresa</p>
            <p>Apex Ops Indústria Ltda.</p>
            <p>CNPJ 12.345.678/0001-90</p>
          </div>
@@ -158,35 +158,35 @@ function RelatorioExecutivoPreview() {
 function RelatorioRiscosPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-gray-200 pb-6 mb-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Análise Técnica de Riscos Ocupacionais</h2>
+      <div className="border-b border-[var(--border)] pb-6 mb-8 text-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Análise Técnica de Riscos Ocupacionais</h2>
         <p className="text-[12px] text-[var(--text-muted)] mt-2">Relatório técnico estruturado conforme boas práticas de gestão de SST e NBR ISO 31000.</p>
       </div>
 
       {mockRiscos.map((risco, i) => (
-        <div key={i} className="border border-gray-300 rounded-sm mb-6 overflow-hidden">
-          <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 flex justify-between items-center">
+        <div key={i} className="border border-[var(--border)] rounded-sm mb-6 overflow-hidden">
+          <div className="bg-[var(--bg-primary)] px-4 py-3 border-b border-[var(--border)] flex justify-between items-center">
              <div className="flex gap-3 items-center">
                 <span className="bg-gray-800 text-[var(--text-primary)] text-[10px] font-bold px-2 py-1 uppercase rounded-sm">{risco.nr}</span>
-                <h3 className="text-sm font-bold text-gray-800 uppercase">{risco.atividade}</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase">{risco.atividade}</h3>
              </div>
              <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase ${risco.nivel === 'Crítico' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>Risco {risco.nivel}</span>
           </div>
           <div className="p-4 grid grid-cols-2 gap-x-8 gap-y-4 text-[12px]">
-             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Setor/Local</span> <span className="font-medium text-gray-800">{risco.setor}</span></div>
-             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Perigo Identificado</span> <span className="font-medium text-gray-800">{risco.perigo}</span></div>
-             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Possível Consequência</span> <span className="text-gray-700">{risco.consequencia}</span></div>
+             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Setor/Local</span> <span className="font-medium text-[var(--text-primary)]">{risco.setor}</span></div>
+             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Perigo Identificado</span> <span className="font-medium text-[var(--text-primary)]">{risco.perigo}</span></div>
+             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Possível Consequência</span> <span className="text-[var(--text-primary)]">{risco.consequencia}</span></div>
              
-             <div className="col-span-2 grid grid-cols-2 gap-4 my-2 border-y border-dashed border-gray-200 py-3">
-               <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Probabilidade</span> <span className="text-gray-700">{risco.prob}</span></div>
-               <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Severidade</span> <span className="text-gray-700">{risco.sev}</span></div>
+             <div className="col-span-2 grid grid-cols-2 gap-4 my-2 border-y border-dashed border-[var(--border)] py-3">
+               <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Probabilidade</span> <span className="text-[var(--text-primary)]">{risco.prob}</span></div>
+               <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Severidade</span> <span className="text-[var(--text-primary)]">{risco.sev}</span></div>
              </div>
 
-             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Controles Existentes</span> <span className="text-gray-700">{risco.controlesAtuais}</span></div>
+             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Controles Existentes</span> <span className="text-[var(--text-primary)]">{risco.controlesAtuais}</span></div>
              <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Controles Recomendados</span> <span className="font-medium text-blue-700">{risco.controlesRec}</span></div>
              
-             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Responsável pela Ação</span> <span className="text-gray-700">{risco.resp}</span></div>
-             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Prazo Máximo</span> <span className="text-gray-700">{risco.prazo}</span></div>
+             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Responsável pela Ação</span> <span className="text-[var(--text-primary)]">{risco.resp}</span></div>
+             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Prazo Máximo</span> <span className="text-[var(--text-primary)]">{risco.prazo}</span></div>
           </div>
         </div>
       ))}
@@ -201,19 +201,19 @@ function RelatorioRiscosPreview() {
 function RelatorioInspecoesPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-gray-200 pb-6 mb-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Relatório Analítico de Inspeções</h2>
+      <div className="border-b border-[var(--border)] pb-6 mb-8 text-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Relatório Analítico de Inspeções</h2>
         <p className="text-[12px] text-[var(--text-muted)] mt-2">Registro documentado de conformidades, desvios e aplicação de checklists operacionais.</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-50 border border-gray-200 p-4 text-center rounded-sm">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Realizadas</p>
-           <p className="text-2xl font-black text-gray-800 mt-1">12</p>
+           <p className="text-2xl font-black text-[var(--text-primary)] mt-1">12</p>
         </div>
-        <div className="bg-gray-50 border border-gray-200 p-4 text-center rounded-sm">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Pendentes</p>
-           <p className="text-2xl font-black text-gray-800 mt-1">4</p>
+           <p className="text-2xl font-black text-[var(--text-primary)] mt-1">4</p>
         </div>
         <div className="bg-red-50 border border-red-100 p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Vencidas</p>
@@ -221,10 +221,10 @@ function RelatorioInspecoesPreview() {
         </div>
       </div>
 
-      <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-gray-200 pb-1 mb-4">Detalhamento das Inspeções</h3>
+      <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b-2 border-[var(--border)] pb-1 mb-4">Detalhamento das Inspeções</h3>
       
-      <table className="w-full text-[11px] text-left border border-gray-200">
-        <thead className="bg-gray-100">
+      <table className="w-full text-[11px] text-left border border-[var(--border)]">
+        <thead className="bg-[var(--bg-primary)]">
           <tr className="text-[var(--text-secondary)] font-bold uppercase tracking-wider">
             <th className="p-3">Inspeção / Checklist</th>
             <th className="p-3">Status</th>
@@ -236,7 +236,7 @@ function RelatorioInspecoesPreview() {
         <tbody className="divide-y divide-gray-200">
           {mockInspeções.map((ins, i) => (
             <tr key={i}>
-              <td className="p-3 font-medium text-gray-800">{ins.nome} <br/><span className="text-[var(--text-muted)] font-normal">Baseado em NR aplicável</span></td>
+              <td className="p-3 font-medium text-[var(--text-primary)]">{ins.nome} <br/><span className="text-[var(--text-muted)] font-normal">Baseado em NR aplicável</span></td>
               <td className="p-3">
                 <span className={`px-2 py-0.5 rounded-sm font-bold uppercase ${ins.status === 'Concluída' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{ins.status}</span>
               </td>
@@ -248,7 +248,7 @@ function RelatorioInspecoesPreview() {
               </td>
               <td className="p-3 text-right text-[var(--text-secondary)]">
                  {ins.resp} <br/>
-                 <span className="font-bold text-gray-800">{ins.vencimento}</span>
+                 <span className="font-bold text-[var(--text-primary)]">{ins.vencimento}</span>
               </td>
             </tr>
           ))}
@@ -265,30 +265,30 @@ function RelatorioInspecoesPreview() {
 function RelatorioAcoesPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-gray-200 pb-6 mb-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Acompanhamento de Plano de Ação</h2>
+      <div className="border-b border-[var(--border)] pb-6 mb-8 text-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Acompanhamento de Plano de Ação</h2>
         <p className="text-[12px] text-[var(--text-muted)] mt-2">Estrutura metodológica 5W2H para rastreabilidade de correções preventivas e corretivas.</p>
       </div>
 
       {mockAcoes.map((acao, i) => (
-        <div key={i} className="border border-gray-300 rounded-sm mb-6 overflow-hidden">
-          <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 flex justify-between items-center">
+        <div key={i} className="border border-[var(--border)] rounded-sm mb-6 overflow-hidden">
+          <div className="bg-[var(--bg-primary)] px-4 py-3 border-b border-[var(--border)] flex justify-between items-center">
              <div className="flex gap-3 items-center">
                 <span className={`text-[10px] font-bold px-2 py-1 uppercase rounded-sm border ${acao.prioridade === 'Crítica' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>{acao.prioridade}</span>
-                <h3 className="text-sm font-bold text-gray-800 uppercase">{acao.oQue}</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase">{acao.oQue}</h3>
              </div>
-             <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase bg-white px-2 py-1 rounded-sm border border-gray-200">{acao.status}</span>
+             <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase bg-white px-2 py-1 rounded-sm border border-[var(--border)]">{acao.status}</span>
           </div>
           
           <div className="p-0">
              <table className="w-full text-[11px] text-left border-collapse">
                <tbody className="divide-y divide-gray-100">
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">Origem</th><td className="p-3 font-medium text-gray-800">{acao.origem}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">What (O que)</th><td className="p-3 text-gray-800">{acao.oQue}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">Why (Por que)</th><td className="p-3 text-gray-800">{acao.porQue}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">Where (Onde)</th><td className="p-3 text-gray-800">{acao.onde}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">Who (Quem)</th><td className="p-3 text-gray-800">{acao.quem}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-[var(--text-secondary)] uppercase border-r border-gray-100">When (Prazo)</th><td className="p-3 font-bold text-gray-800">{acao.quando}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">Origem</th><td className="p-3 font-medium text-[var(--text-primary)]">{acao.origem}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">What (O que)</th><td className="p-3 text-[var(--text-primary)]">{acao.oQue}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">Why (Por que)</th><td className="p-3 text-[var(--text-primary)]">{acao.porQue}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">Where (Onde)</th><td className="p-3 text-[var(--text-primary)]">{acao.onde}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">Who (Quem)</th><td className="p-3 text-[var(--text-primary)]">{acao.quem}</td></tr>
+                 <tr><th className="p-3 bg-[var(--bg-card)] w-[30%] text-[var(--text-secondary)] uppercase border-r border-[var(--border)]">When (Prazo)</th><td className="p-3 font-bold text-[var(--text-primary)]">{acao.quando}</td></tr>
                </tbody>
              </table>
           </div>
@@ -305,8 +305,8 @@ function RelatorioAcoesPreview() {
 function RelatorioNCPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-gray-200 pb-6 mb-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Desvios e Não Conformidades (RNC)</h2>
+      <div className="border-b border-[var(--border)] pb-6 mb-8 text-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Desvios e Não Conformidades (RNC)</h2>
         <p className="text-[12px] text-[var(--text-muted)] mt-2">Registro de anomalias normativas operacionais, causas raízes e tratativas executadas.</p>
       </div>
 
@@ -322,21 +322,21 @@ function RelatorioNCPreview() {
           </div>
 
           <div className="grid grid-cols-2 gap-6 text-[12px]">
-             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Local / Setor</span> <span className="font-medium text-gray-800">{nc.local}</span></div>
+             <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Local / Setor</span> <span className="font-medium text-[var(--text-primary)]">{nc.local}</span></div>
              <div><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Requisito Legal infringido</span> <span className="font-bold text-gray-900">{nc.nr}</span></div>
-             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Evidência Identificada</span> <span className="text-gray-700">{nc.evid}</span></div>
-             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Causa Provável</span> <span className="text-gray-700">{nc.causa}</span></div>
+             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Evidência Identificada</span> <span className="text-[var(--text-primary)]">{nc.evid}</span></div>
+             <div className="col-span-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Causa Provável</span> <span className="text-[var(--text-primary)]">{nc.causa}</span></div>
              
-             <div className="col-span-2 bg-gray-50 border border-gray-200 p-4 mt-2">
+             <div className="col-span-2 bg-[var(--bg-card)] border border-[var(--border)] p-4 mt-2">
                 <span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-2">Tratativas</span>
                 <div className="space-y-2">
-                   <p><strong className="text-gray-700 mr-2">Correção Imediata:</strong> {nc.correcaoVal}</p>
-                   <p><strong className="text-gray-700 mr-2">Ação Corretiva/Preventiva:</strong> {nc.acaoCorretiva}</p>
+                   <p><strong className="text-[var(--text-primary)] mr-2">Correção Imediata:</strong> {nc.correcaoVal}</p>
+                   <p><strong className="text-[var(--text-primary)] mr-2">Ação Corretiva/Preventiva:</strong> {nc.acaoCorretiva}</p>
                 </div>
              </div>
 
-             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Responsável</span> <span className="text-gray-800">{nc.resp}</span></div>
-             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Status Atual</span> <span className="font-bold text-blue-700 uppercase">{nc.status}</span></div>
+             <div className="border-t border-[var(--border)] pt-4 mt-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Responsável</span> <span className="text-[var(--text-primary)]">{nc.resp}</span></div>
+             <div className="border-t border-[var(--border)] pt-4 mt-2"><span className="text-[var(--text-muted)] font-bold uppercase text-[10px] block mb-1">Status Atual</span> <span className="font-bold text-blue-700 uppercase">{nc.status}</span></div>
           </div>
         </div>
       ))}
@@ -351,8 +351,8 @@ function RelatorioNCPreview() {
 function RelatorioEconomicoPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-gray-200 pb-6 mb-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Estimativa de Impacto Econômico</h2>
+      <div className="border-b border-[var(--border)] pb-6 mb-8 text-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wider">Estimativa de Impacto Econômico</h2>
         <p className="text-[12px] text-[var(--text-muted)] mt-2">Análise monetária preventiva baseada em multas normativas, paralisação operacional e passivos.</p>
       </div>
 
@@ -364,16 +364,16 @@ function RelatorioEconomicoPreview() {
          </div>
       </div>
 
-      <div className="p-8 bg-gray-50 border border-gray-200 text-center rounded-sm mb-8">
+      <div className="p-8 bg-[var(--bg-card)] border border-[var(--border)] text-center rounded-sm mb-8">
          <p className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Exposição Financeira (Riscos Críticos + Altos)</p>
          <h3 className="text-4xl font-black text-gray-900 mb-2">R$ 12.000 <span className="text-[var(--text-muted)] font-medium text-2xl mx-1">a</span> R$ 41.000</h3>
          <p className="text-[11px] text-[var(--text-muted)]">Multas NR, FAP, Lucro Cessante e Indenizações</p>
       </div>
 
-      <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-gray-200 pb-1 mb-4">Cenários de Exposição</h3>
+      <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b-2 border-[var(--border)] pb-1 mb-4">Cenários de Exposição</h3>
       
-      <table className="w-full text-[11px] text-left border border-gray-200">
-        <thead className="bg-gray-100">
+      <table className="w-full text-[11px] text-left border border-[var(--border)]">
+        <thead className="bg-[var(--bg-primary)]">
           <tr className="text-[var(--text-secondary)] font-bold uppercase tracking-wider">
             <th className="p-3">Risco Analisado</th>
             <th className="p-3">Norma</th>
@@ -384,7 +384,7 @@ function RelatorioEconomicoPreview() {
         <tbody className="divide-y divide-gray-200">
           {mockRiscos.map((r, i) => (
             <tr key={i}>
-              <td className="p-3 font-medium text-gray-800">{r.atividade}</td>
+              <td className="p-3 font-medium text-[var(--text-primary)]">{r.atividade}</td>
               <td className="p-3 font-bold text-[var(--text-secondary)]">{r.nr}</td>
               <td className="p-3 text-center text-[var(--text-secondary)]">{r.nivel === 'Crítico' ? 'Embargo Obras' : 'Atraso Linha'}</td>
               <td className="p-3 text-right font-bold text-red-700">Até R$ 25.000</td>
@@ -447,7 +447,7 @@ export default function RelatoriosPage() {
 
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
              <div>
                <p className="text-sm font-semibold text-[var(--text-muted)]">Gerados no mês</p>
                <div className="flex items-end gap-3 mt-1">
@@ -459,7 +459,7 @@ export default function RelatoriosPage() {
                 <FileText className="w-6 h-6" />
              </div>
           </div>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
              <div>
                <p className="text-sm font-semibold text-[var(--text-muted)]">Pendências críticas</p>
                <div className="flex items-end gap-3 mt-1">
@@ -471,7 +471,7 @@ export default function RelatoriosPage() {
                 <AlertOctagon className="w-6 h-6" />
              </div>
           </div>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
              <div>
                <p className="text-sm font-semibold text-[var(--text-muted)]">Ações abertas</p>
                <div className="flex items-end gap-3 mt-1">
@@ -483,7 +483,7 @@ export default function RelatoriosPage() {
                 <CheckSquare className="w-6 h-6" />
              </div>
           </div>
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl flex items-center justify-between group">
              <div>
                <p className="text-sm font-semibold text-[var(--text-muted)]">Impacto evitável</p>
                <div className="flex items-end gap-3 mt-1">
@@ -512,7 +512,7 @@ export default function RelatoriosPage() {
                  className={`w-full text-left p-4 rounded-xl border transition-all duration-300 flex items-center justify-between group
                    ${activeModel === m.id 
                      ? 'bg-purple-900/40 border-purple-500/50 shadow-[0_0_15px_rgba(124,58,237,0.15)]' 
-                     : 'bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] hover:bg-[var(--bg-active-group)]'}
+                     : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] hover:bg-[var(--bg-active-group)]'}
                  `}
                >
                  <div className="flex items-center gap-4">
@@ -538,10 +538,10 @@ export default function RelatoriosPage() {
         {/* Center Column - Preview Paper */}
         <div className="flex-1 flex flex-col min-w-0 print:block">
            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 px-1 print:hidden">Prévia do relatório</h3>
-           <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col relative print:bg-white print:border-none print:rounded-none mt-0">
-              <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/5 flex justify-center pb-20 print:p-0 print:overflow-visible">
+           <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col relative print:bg-white print:border-none print:rounded-none mt-0">
+              <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-[var(--bg-primary)] flex justify-center pb-20 print:p-0 print:overflow-visible">
                  {/* The White Paper */}
-                 <div id="printable-report" className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-gray-200 print:shadow-none print:border-none print:max-w-none print:p-0 print:min-h-0">
+                 <div id="printable-report" className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-[var(--border)] print:shadow-none print:border-none print:max-w-none print:p-0 print:min-h-0">
                     {activeModel === 'Executivo' && <RelatorioExecutivoPreview />}
                     {activeModel === 'Riscos' && <RelatorioRiscosPreview />}
                     {activeModel === 'Inspeções' && <RelatorioInspecoesPreview />}
@@ -567,7 +567,7 @@ export default function RelatoriosPage() {
         <div className="w-full md:w-[320px] flex flex-col shrink-0 gap-6 print:hidden">
            
            {/* Filters */}
-           <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-5">
+           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
               <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Filtros e exportação</h3>
               <div className="space-y-4">
                  <div>
@@ -599,7 +599,7 @@ export default function RelatoriosPage() {
                     <button onClick={() => handlePrint('PDF')} className="w-full bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] border border-[var(--border)] text-[var(--text-primary)] font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                        <Download className="w-4 h-4" /> Exportar PDF
                     </button>
-                    <button onClick={() => handlePrint('Excel')} className="w-full bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] border border-[var(--border)] text-emerald-400 font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
+                    <button onClick={() => handlePrint('Excel')} className="w-full bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] border border-[var(--border)] text-emerald-600 dark:text-emerald-400 font-medium py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                        <Download className="w-4 h-4" /> Exportar Excel
                     </button>
                  </div>
@@ -607,17 +607,17 @@ export default function RelatoriosPage() {
            </div>
 
            {/* Recents */}
-           <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-5 flex flex-col overflow-hidden">
+           <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 flex flex-col overflow-hidden">
              <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">Relatórios recentes</h3>
                 <button className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors">Ver todos</button>
              </div>
              <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
                 {[
-                  { name: 'Relatório Executivo de SST', period: 'Maio/2026', date: '31/05/2026 08:45', icon: <FileText className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-400' },
-                  { name: 'Relatório de Riscos', period: 'Maio/2026', date: '30/05/2026 17:20', icon: <Shield className="w-4 h-4" />, bg: 'bg-orange-500/10 text-orange-400' },
-                  { name: 'Relatório de Inspeções', period: 'Maio/2026', date: '29/05/2026 11:10', icon: <ClipboardCheck className="w-4 h-4" />, bg: 'bg-purple-500/10 text-purple-400' },
-                  { name: 'Relatório de Ações', period: 'Maio/2026', date: '28/05/2026 16:05', icon: <CheckSquare className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-400' },
+                  { name: 'Relatório Executivo de SST', period: 'Maio/2026', date: '31/05/2026 08:45', icon: <FileText className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+                  { name: 'Relatório de Riscos', period: 'Maio/2026', date: '30/05/2026 17:20', icon: <Shield className="w-4 h-4" />, bg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
+                  { name: 'Relatório de Inspeções', period: 'Maio/2026', date: '29/05/2026 11:10', icon: <ClipboardCheck className="w-4 h-4" />, bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-400' },
+                  { name: 'Relatório de Ações', period: 'Maio/2026', date: '28/05/2026 16:05', icon: <CheckSquare className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
                 ].map((rec, i) => (
                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-active-group)] cursor-pointer transition-colors group">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${rec.bg}`}>

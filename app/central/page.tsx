@@ -77,7 +77,7 @@ const PIE_COLORS = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
         <p className="text-[13px] font-bold text-[var(--text-primary)] mb-1">{label || payload[0].name}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-[12px]">
@@ -157,19 +157,19 @@ export default function CentralPage() {
     const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
 
     return [
-      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/operacao/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
+      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/operacao/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
       { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/inspecoes', navLabel: 'Continuar inspeções →' },
-      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
-      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
+      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
+      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
       
       { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
-      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/operacao/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
+      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/operacao/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
       { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/inspecoes', navLabel: 'Ver origem →' },
-      { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
+      { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
       
       { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
       { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/riscos', navLabel: 'Matriz de riscos →' },
+      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/riscos', navLabel: 'Matriz de riscos →' },
       { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-[var(--text-muted)]', bg: 'bg-[var(--bg-active-group)]', border: 'border-[var(--border)]', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
     ];
   }, [riscos, inspecoes, acoes, rules, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen]);
@@ -285,7 +285,7 @@ export default function CentralPage() {
               {topCards.map((card, i) => {
                 if (!card) return null;
                 return (
-                  <div key={card.id} className="bg-[#0e1322] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
+                  <div key={card.id} className="bg-[var(--bg-card)] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
                     {/* Background Glow */}
                     <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30`} style={{ backgroundColor: card.sparkColor }}></div>
                     
@@ -304,7 +304,7 @@ export default function CentralPage() {
                     
                     <div className="flex items-center gap-2 relative z-10">
                       <span className="text-[12px] font-medium text-[var(--text-muted)]">{card.sub}</span>
-                      {card.id === 'c9' && <div className="w-4 h-4 text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
+                      {card.id === 'c9' && <div className="w-4 h-4 text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                       </div>}
                     </div>
@@ -327,7 +327,7 @@ export default function CentralPage() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
               {/* Pie Chart */}
-              <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                 <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Distribuição por nível</h3>
                 <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
                   <div className="w-[180px] h-[180px] relative">
@@ -373,7 +373,7 @@ export default function CentralPage() {
               </div>
 
               {/* Bar Chart Sectors */}
-              <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                 <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por setor</h3>
                 <div className="flex-1 min-h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -402,7 +402,7 @@ export default function CentralPage() {
               </div>
 
               {/* Bar Chart NR */}
-              <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                 <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Multa estimada por NR</h3>
                 <div className="flex-1 min-h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -429,16 +429,16 @@ export default function CentralPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2">
                
                {/* Insights List */}
-               <div className="bg-[#0e1322] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
+               <div className="bg-[var(--bg-card)] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
+                  <div className="absolute inset-0  pointer-events-none"></div>
                   <div className="flex items-center gap-2 mb-6 relative z-10">
                     <Zap className="w-5 h-5 text-purple-400" />
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Insights operacionais</h3>
                   </div>
                   <div className="flex-1 space-y-5 relative z-10">
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <ShieldAlert className="w-4 h-4 text-red-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />
                         </div>
                         <div>
                            <p className="text-[13px] font-medium text-[var(--text-primary)]">{riscoCriticoAberto.length || 8} riscos críticos em aberto exigem ação imediata.</p>
@@ -446,7 +446,7 @@ export default function CentralPage() {
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
                           <TrendingUp className="w-4 h-4 text-yellow-400" />
                         </div>
                         <div>
@@ -455,8 +455,8 @@ export default function CentralPage() {
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <AlertTriangle className="w-4 h-4 text-orange-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div>
                            <p className="text-[13px] font-medium text-[var(--text-primary)]">{listRiscos[0]?.titulo || 'Queda de altura'} lidera os riscos críticos.</p>
@@ -464,8 +464,8 @@ export default function CentralPage() {
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
                            <p className="text-[13px] font-medium text-[var(--text-primary)]">Chance média de incidente em nível {(avgChance||32) < 40 ? 'moderado' : 'alto'}.</p>
@@ -482,7 +482,7 @@ export default function CentralPage() {
                </div>
 
                {/* Top riscos críticos List */}
-               <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                   <div className="flex items-center gap-2 mb-6">
                     <AlertTriangle className="w-5 h-5 text-red-500" />
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top riscos críticos</h3>
@@ -492,7 +492,7 @@ export default function CentralPage() {
                         <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-[var(--border)] last:border-0 group cursor-pointer hover:bg-[var(--bg-active-group)] px-3 -mx-3 rounded-lg transition-colors" onClick={() => {
                           setSelectedDrawerItem({ type: 'risco', data: r });
                         }}>
-                           <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-400 flex items-center justify-center shrink-0">
+                           <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
                               {i+1}
                            </div>
                            <div className="flex-1 min-w-0">
@@ -510,16 +510,16 @@ export default function CentralPage() {
                      ))}
                   </div>
                   <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                    <button className="w-full text-center text-[13px] font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/operacao/riscos'}>
+                    <button className="w-full text-center text-[13px] font-medium text-red-600 dark:text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/operacao/riscos'}>
                       Ver todos os riscos críticos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                </div>
 
                {/* Top 5 Chance progress bars */}
-               <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                   <div className="flex items-center gap-2 mb-6">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top 5 riscos por chance de incidente</h3>
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
@@ -531,14 +531,14 @@ export default function CentralPage() {
                               <h4 className="text-[13px] font-medium text-[var(--text-secondary)] truncate pr-4 group-hover:text-[var(--text-primary)] transition-colors">{r.name}</h4>
                               <span className="text-[13px] font-bold text-[var(--text-primary)]">{r.chance}%</span>
                            </div>
-                           <div className="h-1.5 w-full bg-[#1a1c23] rounded-full overflow-hidden">
+                           <div className="h-1.5 w-full bg-[var(--bg-card)] rounded-full overflow-hidden">
                               <div className="h-full bg-gradient-to-r from-emerald-600 to-green-400 rounded-full transition-all duration-1000" style={{ width: `${r.chance}%` }}></div>
                            </div>
                         </div>
                      ))}
                   </div>
                   <div className="mt-4 pt-5 border-t border-[var(--border)]">
-                    <button className="w-full text-center text-[13px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/operacao/riscos'}>
+                    <button className="w-full text-center text-[13px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/operacao/riscos'}>
                       Ver matriz de riscos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -554,7 +554,7 @@ export default function CentralPage() {
                  {gridKPIs.map(card => {
                     if (!card) return null;
                     return (
-                       <div key={card.id} className={`bg-[#0e1322] border rounded-xl overflow-hidden p-5 flex flex-col relative group transition-colors hover:bg-white/[0.02] cursor-pointer ${card.border}`} onClick={() => window.location.href = card.navTo}>
+                       <div key={card.id} className={`bg-[var(--bg-card)] border rounded-xl overflow-hidden p-5 flex flex-col relative group transition-colors hover:bg-white/[0.02] cursor-pointer ${card.border}`} onClick={() => window.location.href = card.navTo}>
                           <div className="flex items-center justify-between mb-4 relative z-10">
                             <div className="flex items-center gap-3">
                                <div className={`p-2 rounded-lg ${card.bg}`}>
@@ -577,7 +577,7 @@ export default function CentralPage() {
             {/* Tables Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 shrink-0 font-sans pb-12">
                {/* Informative Table 1 */}
-               <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
                  <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] flex items-center gap-2">
                      Últimas Inspeções
@@ -588,7 +588,7 @@ export default function CentralPage() {
                  </div>
                  <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                       <thead className="bg-[var(--bg-secondary)]/50">
+                       <thead className="bg-[var(--bg-card)]/50">
                           <tr>
                              <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Status</th>
                              <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Tipo/Inspeção</th>
@@ -631,7 +631,7 @@ export default function CentralPage() {
                </div>
 
                {/* Informative Table 2 */}
-               <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
                  <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
                    <h3 className="text-[15px] font-medium text-[var(--text-primary)] flex items-center gap-2">
                      Ações Pendentes Prioritárias
@@ -642,7 +642,7 @@ export default function CentralPage() {
                  </div>
                  <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                       <thead className="bg-[var(--bg-secondary)]/50">
+                       <thead className="bg-[var(--bg-card)]/50">
                           <tr>
                              <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Prioridade</th>
                              <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Ação</th>
@@ -657,9 +657,9 @@ export default function CentralPage() {
                              <tr key={acao.id || i} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedDrawerItem({ type: 'acao', data: acao })}>
                                 <td className="px-5 py-4">
                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded border inline-block uppercase ${
-                                      acao.prioridade === 'Urgente' || acao.priority === 'P1' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                      acao.prioridade === 'Alta' || acao.priority === 'P2' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                      acao.prioridade === 'Urgente' || acao.priority === 'P1' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' :
+                                      acao.prioridade === 'Alta' || acao.priority === 'P2' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' :
+                                      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
                                    }`}>{acao.prioridade || acao.priority || 'Normal'}</span>
                                 </td>
                                 <td className="px-5 py-4 min-w-[200px]">
@@ -670,7 +670,7 @@ export default function CentralPage() {
                                 </td>
                                 <td className="px-5 py-4 text-right">
                                    <button 
-                                      className="text-[12px] font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center justify-end gap-1 w-full"
+                                      className="text-[12px] font-bold text-orange-600 dark:text-orange-400 hover:text-orange-300 transition-colors flex items-center justify-end gap-1 w-full"
                                    >Abrir <ArrowRight className="w-3.5 h-3.5" /></button>
                                 </td>
                              </tr>
@@ -692,13 +692,13 @@ export default function CentralPage() {
             animate={{ width: 440, opacity: 1, x: 0 }} 
             exit={{ width: 0, opacity: 0, x: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 bg-[#0e1322] border-l border-[var(--border)] shadow-2xl z-50 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 bg-[var(--bg-card)] border-l border-[var(--border)] shadow-2xl z-50 flex flex-col"
           >
              <div className="w-[440px] h-full flex flex-col pt-safe-top overflow-hidden">
-                <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border)] shrink-0 bg-[var(--bg-secondary)]">
+                <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border)] shrink-0 bg-[var(--bg-card)]">
                    <div className="flex items-center gap-2">
-                     {selectedDrawerItem.type === 'risco' && <ShieldAlert className="w-4 h-4 text-red-400" />}
-                     {selectedDrawerItem.type === 'acao' && <ListChecks className="w-4 h-4 text-orange-400" />}
+                     {selectedDrawerItem.type === 'risco' && <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                     {selectedDrawerItem.type === 'acao' && <ListChecks className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
                      {selectedDrawerItem.type === 'inspecao' && <FileText className="w-4 h-4 text-purple-400" />}
                      <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Visualização de {selectedDrawerItem.type}</h3>
                    </div>
@@ -715,7 +715,7 @@ export default function CentralPage() {
                         <div className="grid grid-cols-2 gap-3 mb-6">
                            <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
                              <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Nível</div>
-                             <div className={`text-[13px] font-bold ${getRiskSeverityLevel(selectedDrawerItem.data) === 'Crítico' ? 'text-red-400' : 'text-orange-400'}`}>{getRiskSeverityLevel(selectedDrawerItem.data)}</div>
+                             <div className={`text-[13px] font-bold ${getRiskSeverityLevel(selectedDrawerItem.data) === 'Crítico' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>{getRiskSeverityLevel(selectedDrawerItem.data)}</div>
                            </div>
                            <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
                              <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Status</div>
@@ -738,7 +738,7 @@ export default function CentralPage() {
                            </div>
                            <div className="p-4 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
                               <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Chance de Incidente</h4>
-                              <div className="text-xl font-bold text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
+                              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
                            </div>
                         </div>
 
@@ -761,7 +761,7 @@ export default function CentralPage() {
                         <div className="grid grid-cols-2 gap-3 mb-6">
                            <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
                              <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Status</div>
-                             <div className={`text-[13px] font-medium ${selectedDrawerItem.data.status === 'Vencida' ? 'text-red-400' : 'text-orange-400'}`}>{selectedDrawerItem.data.status}</div>
+                             <div className={`text-[13px] font-medium ${selectedDrawerItem.data.status === 'Vencida' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>{selectedDrawerItem.data.status}</div>
                            </div>
                            <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
                              <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Responsável</div>
@@ -771,7 +771,7 @@ export default function CentralPage() {
 
                         <div>
                            <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Descrição da Ação</h4>
-                           <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-secondary)] p-4 border border-[var(--border)] rounded-xl">
+                           <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl">
                              {selectedDrawerItem.data.description || 'Nenhuma descrição detalhada fornecida.'}
                            </p>
                         </div>
@@ -807,7 +807,7 @@ export default function CentralPage() {
                    )}
                 </div>
 
-                <div className="p-6 border-t border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
+                <div className="p-6 border-t border-[var(--border)] bg-[var(--bg-card)] shrink-0">
                    <button 
                       onClick={() => {
                          if (selectedDrawerItem.type === 'risco') window.location.href = '/operacao/riscos';

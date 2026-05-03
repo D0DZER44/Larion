@@ -80,7 +80,7 @@ const PIE_COLORS = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
         <p className="text-[13px] font-bold text-[var(--text-primary)] mb-1">{label || payload[0].name}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-[12px]">
@@ -191,11 +191,11 @@ export default function RiscosPage() {
     const term = tipo.toLowerCase();
     if (term.includes('queda')) return <TrendingDown className="w-5 h-5 text-purple-400" />;
     if (term.includes('choque') || term.includes('elétric')) return <Zap className="w-5 h-5 text-yellow-400" />;
-    if (term.includes('asfixia') || term.includes('afogamento')) return <Waves className="w-5 h-5 text-blue-400" />;
-    if (term.includes('químic')) return <FlaskConical className="w-5 h-5 text-emerald-400" />;
-    if (term.includes('máquina') || term.includes('prensamento') || term.includes('corte')) return <Settings className="w-5 h-5 text-orange-400" />;
+    if (term.includes('asfixia') || term.includes('afogamento')) return <Waves className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
+    if (term.includes('químic')) return <FlaskConical className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
+    if (term.includes('máquina') || term.includes('prensamento') || term.includes('corte')) return <Settings className="w-5 h-5 text-orange-600 dark:text-orange-400" />;
     if (term.includes('ergonômico') || term.includes('físico') || term.includes('esforço')) return <Activity className="w-5 h-5 text-indigo-400" />;
-    if (term.includes('incêndio') || term.includes('explosão')) return <AlertTriangle className="w-5 h-5 text-red-400" />;
+    if (term.includes('incêndio') || term.includes('explosão')) return <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />;
     return <AlertTriangle className="w-5 h-5 text-[var(--text-muted)]" />;
   };
 
@@ -210,10 +210,10 @@ export default function RiscosPage() {
 
   const getStatusColor = (status?: string) => {
     switch(status) {
-      case 'Aberto': return 'text-red-400 border-red-500/20';
-      case 'Em análise': return 'text-orange-400 border-orange-500/20';
+      case 'Aberto': return 'text-red-600 dark:text-red-400 border-red-500/20';
+      case 'Em análise': return 'text-orange-600 dark:text-orange-400 border-orange-500/20';
       case 'Mitigado': return 'text-yellow-400 border-yellow-500/20';
-      case 'Resolvido': return 'text-emerald-400 border-emerald-500/20';
+      case 'Resolvido': return 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
       default: return 'text-[var(--text-muted)] border-gray-500/20';
     }
   };
@@ -228,9 +228,9 @@ export default function RiscosPage() {
       case 'almoxarifado': return <Package className="w-5 h-5 text-[var(--text-muted)]" />;
       case 'administrativo': return <User className="w-5 h-5 text-[var(--text-muted)]" />;
       case 'trabalho em altura': return <Activity className="w-5 h-5 text-purple-400" />;
-      case 'manutenção elétrica': return <Settings2 className="w-5 h-5 text-blue-400" />;
-      case 'operação de máquinas': return <Settings className="w-5 h-5 text-orange-400" />;
-      case 'espaço confinado': return <ShieldAlert className="w-5 h-5 text-red-400" />;
+      case 'manutenção elétrica': return <Settings2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
+      case 'operação de máquinas': return <Settings className="w-5 h-5 text-orange-600 dark:text-orange-400" />;
+      case 'espaço confinado': return <ShieldAlert className="w-5 h-5 text-red-600 dark:text-red-400" />;
       case 'movimentação de cargas': return <Truck className="w-5 h-5 text-yellow-400" />;
       default: return <Activity className="w-5 h-5 text-[var(--text-muted)]" />;
     }
@@ -388,7 +388,7 @@ export default function RiscosPage() {
     { id: 'c9', label: 'Total de riscos', val: combinedData.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
     { id: 'c5', label: 'Críticos em aberto', val: criticosCount, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.red },
     { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(totalMultaAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-    { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
   const storeInspecoes = useAppStore(state => state.inspecoes);
@@ -486,7 +486,7 @@ export default function RiscosPage() {
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
           <header className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shrink-0">
-            <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
+            <div className="flex bg-[var(--bg-card)] p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
               {SUB_TABS.map((tab) => (
                 <button
                   key={tab}
@@ -498,7 +498,7 @@ export default function RiscosPage() {
                   }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab 
-                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
                       : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                   }`}
                 >
@@ -563,7 +563,7 @@ export default function RiscosPage() {
                  </p>
                </div>
                {activeTab === 'Tipo' && (
-                 <div className="flex items-center gap-2 bg-[var(--bg-secondary)] p-1.5 rounded-lg border border-[var(--border)]">
+                 <div className="flex items-center gap-2 bg-[var(--bg-card)] p-1.5 rounded-lg border border-[var(--border)]">
                    <Filter className="w-4 h-4 text-[var(--text-muted)] ml-2" />
                    <select 
                      value={tipoFilter} 
@@ -592,7 +592,7 @@ export default function RiscosPage() {
                   {topCards.map((card, i) => {
                     if (!card) return null;
                     return (
-                      <div key={card.id} className="bg-[#0e1322] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
+                      <div key={card.id} className="bg-[var(--bg-card)] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
                         <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30`} style={{ backgroundColor: card.sparkColor }}></div>
                         <div className="flex items-start justify-between relative z-10 mb-4">
                           <div className="flex items-center gap-3">
@@ -607,7 +607,7 @@ export default function RiscosPage() {
                         </div>
                         <div className="flex items-center gap-2 relative z-10">
                           <span className="text-[12px] font-medium text-[var(--text-muted)]">{card.sub}</span>
-                          {card.id === 'c9' && <div className="w-4 h-4 text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
+                          {card.id === 'c9' && <div className="w-4 h-4 text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                           </div>}
                         </div>
@@ -627,7 +627,7 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Distribuição por nível</h3>
                     <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
                       <div className="w-[180px] h-[180px] relative">
@@ -669,7 +669,7 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por setor</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -694,7 +694,7 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Multa estimada por NR</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -715,7 +715,7 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2">
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por NR</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -731,7 +731,7 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por Origem</h3>
                     <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8 min-h-[220px]">
                       <div className="w-[180px] h-[180px] relative">
@@ -758,7 +758,7 @@ export default function RiscosPage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
                     <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Chance Média de Incidente por NR (%)</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
@@ -775,16 +775,16 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2 pb-12">
-                   <div className="bg-[#0e1322] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
+                   <div className="bg-[var(--bg-card)] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
+                      <div className="absolute inset-0  pointer-events-none"></div>
                       <div className="flex items-center gap-2 mb-6 relative z-10">
                         <Zap className="w-5 h-5 text-purple-400" />
                         <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Insights operacionais</h3>
                       </div>
                       <div className="flex-1 space-y-5 relative z-10">
                          <div className="flex gap-4">
-                            <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
-                              <ShieldAlert className="w-4 h-4 text-red-400" />
+                            <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
+                              <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />
                             </div>
                             <div>
                                <p className="text-[13px] font-medium text-[var(--text-primary)]">{criticosCount} riscos críticos em aberto exigem ação imediata.</p>
@@ -792,7 +792,7 @@ export default function RiscosPage() {
                             </div>
                          </div>
                          <div className="flex gap-4">
-                            <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
+                            <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
                               <TrendingUp className="w-4 h-4 text-yellow-400" />
                             </div>
                             <div>
@@ -801,8 +801,8 @@ export default function RiscosPage() {
                             </div>
                          </div>
                          <div className="flex gap-4">
-                            <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
-                              <AlertTriangle className="w-4 h-4 text-orange-400" />
+                            <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
+                              <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div>
                                <p className="text-[13px] font-medium text-[var(--text-primary)]">{listRiscos[0]?.titulo || 'Sem riscos'} lidera as chances de incidente.</p>
@@ -812,7 +812,7 @@ export default function RiscosPage() {
                       </div>
                    </div>
 
-                   <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+                   <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                       <div className="flex items-center gap-2 mb-6">
                         <AlertTriangle className="w-5 h-5 text-red-500" />
                         <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top riscos críticos</h3>
@@ -824,7 +824,7 @@ export default function RiscosPage() {
                                 setEditingItem(r); 
                                 setIsDrawerOpen(true);
                             }}>
-                               <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-400 flex items-center justify-center shrink-0">
+                               <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
                                   {i+1}
                                </div>
                                <div className="flex-1 min-w-0">
@@ -841,9 +841,9 @@ export default function RiscosPage() {
                       </div>
                    </div>
 
-                   <div className="bg-[#0e1322] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+                   <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
                       <div className="flex items-center gap-2 mb-6">
-                        <TrendingUp className="w-5 h-5 text-emerald-400" />
+                        <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top 5 riscos por chance (%)</h3>
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
@@ -853,7 +853,7 @@ export default function RiscosPage() {
                                   <h4 className="text-[13px] font-medium text-[var(--text-secondary)] truncate pr-4 group-hover:text-[var(--text-primary)] transition-colors">{r.name}</h4>
                                   <span className="text-[13px] font-bold text-[var(--text-primary)]">{r.chance}%</span>
                                </div>
-                               <div className="h-1.5 w-full bg-[#1a1c23] rounded-full overflow-hidden">
+                               <div className="h-1.5 w-full bg-[var(--bg-card)] rounded-full overflow-hidden">
                                   <div className="h-full bg-gradient-to-r from-emerald-600 to-green-400 rounded-full transition-all duration-1000" style={{ width: `${Math.min(r.chance, 100)}%` }}></div>
                                </div>
                             </div>
@@ -871,7 +871,7 @@ export default function RiscosPage() {
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-2 pb-6">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
                            <Users className="w-5 h-5" />
@@ -889,7 +889,7 @@ export default function RiscosPage() {
                      </div>
                   </div>
 
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      {maxCritSector && <div className="absolute -top-12 -right-12 w-32 h-32 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>}
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500">
@@ -897,37 +897,37 @@ export default function RiscosPage() {
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-red-400 mb-1">Setor mais crítico</h3>
+                        <h3 className="text-xs font-bold text-red-600 dark:text-red-400 mb-1">Setor mais crítico</h3>
                         <p className="text-2xl font-bold text-[var(--text-primary)] tracking-tight leading-snug mb-2 truncate">{maxCritSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
                            <span className="text-xs text-[var(--text-muted)]">{maxCritSector?.crits || 0} riscos críticos</span>
                         </div>
-                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
+                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
                            Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                      </div>
                   </div>
 
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      {maxConcSector && <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-colors"></div>}
                      <div className="flex items-start justify-between relative z-10 mb-4">
-                        <div className="p-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400">
+                        <div className="p-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400">
                            <PieChartIcon className="w-5 h-5" />
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-orange-400 mb-1">Maior concentração de risco</h3>
+                        <h3 className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-1">Maior concentração de risco</h3>
                         <p className="text-2xl font-bold text-[var(--text-primary)] tracking-tight leading-snug mb-2 truncate">{maxConcSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
                            <span className="text-xs text-[var(--text-muted)]">{totalRiscosSetores > 0 ? Math.round((maxConcSector?.count || 0) / totalRiscosSetores * 100) : 0}% do total de riscos</span>
                         </div>
-                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
+                        <button onClick={() => {}} className="mt-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-[var(--border)] w-full text-left">
                            Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                      </div>
                   </div>
 
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl shadow-lg relative overflow-hidden group">
                      <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
                      <div className="flex items-start justify-between relative z-10 mb-4">
                         <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
@@ -935,14 +935,14 @@ export default function RiscosPage() {
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-emerald-400 mb-1">Exposição financeira por setor</h3>
+                        <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1">Exposição financeira por setor</h3>
                         <p className="text-2xl font-bold text-[var(--text-primary)] font-mono tracking-tight mb-2">
                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalMultaSetores)}
                         </p>
                         <div className="flex items-center gap-2">
                            <span className="text-xs text-[var(--text-muted)]">Estimativa total de multas</span>
                         </div>
-                        <div className="mt-3 text-xs font-medium text-emerald-400 flex items-center gap-1pt-3 pt-3 border-t border-[var(--border)]">
+                        <div className="mt-3 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1pt-3 pt-3 border-t border-[var(--border)]">
                            <ArrowDownRight className="w-3 h-3" /> -8,4% <span className="text-[var(--text-muted)] font-normal">vs mês anterior</span>
                         </div>
                      </div>
@@ -967,7 +967,7 @@ export default function RiscosPage() {
                                     setSelectedSectorItem(group);
                                 }
                             }}
-                            className={`bg-[var(--bg-secondary)] border rounded-xl p-4 flex flex-col items-start cursor-pointer hover:bg-[var(--bg-active-group)] transition-colors relative overflow-hidden
+                            className={`bg-[var(--bg-card)] border rounded-xl p-4 flex flex-col items-start cursor-pointer hover:bg-[var(--bg-active-group)] transition-colors relative overflow-hidden
                             ${isSelected ? 'border-purple-500 shadow-[var(--shadow-glow)] ring-1 ring-purple-500/50' : 'border-[var(--border)]'}`}>
                           
                           <div className="flex w-full items-center gap-3 mb-3">
@@ -995,7 +995,7 @@ export default function RiscosPage() {
                   })}
                 </div>
 
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                    <div className="overflow-x-auto">
                      <table className="w-full text-left">
                         <thead className="bg-[var(--bg-primary)] border-b border-[var(--border)]">
@@ -1017,7 +1017,7 @@ export default function RiscosPage() {
                              const isSelected = selectedSectorItem?.setor === group.setor;
                              const avgChance = group.count > 0 ? Math.round(group.chanceSum / group.count) : 0;
                              const chanceLabel = avgChance >= 60 ? 'Alta' : avgChance >= 35 ? 'Média' : 'Baixa';
-                             const chanceColor = avgChance >= 60 ? 'text-red-400 bg-red-500/10 border border-red-500/20' : avgChance >= 35 ? 'text-orange-400 bg-orange-500/10 border border-orange-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20';
+                             const chanceColor = avgChance >= 60 ? 'text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20' : avgChance >= 35 ? 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20' : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20';
 
                              return (
                                <tr key={idx} 
@@ -1078,7 +1078,7 @@ export default function RiscosPage() {
             {activeTab === 'Tipo' && (
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                         <Settings2 className="w-6 h-6 text-purple-400" />
                      </div>
@@ -1088,39 +1088,39 @@ export default function RiscosPage() {
                         <p className="text-[11px] text-[var(--text-muted)]">Cobrem 100% dos riscos ativos</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                        <PieChartIcon className="w-6 h-6 text-blue-400" />
+                        <PieChartIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-blue-400 mb-0.5">Tipo mais recorrente</h3>
+                        <h3 className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-0.5">Tipo mais recorrente</h3>
                         <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight truncate">{topType}</p>
                         <p className="text-[11px] text-[var(--text-muted)]">{Math.round(((countByType[topType] || 0) / Math.max(1, combinedData.length))*100)}% dos riscos registrados</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 z-10">
-                        <ShieldAlert className="w-6 h-6 text-orange-400" />
+                        <ShieldAlert className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                      </div>
                      <div className="z-10 relative">
-                        <h3 className="text-xs font-bold text-orange-400 mb-0.5">Maior criticidade</h3>
+                        <h3 className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-0.5">Maior criticidade</h3>
                         <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight">Crítico</p>
                         <p className="text-[11px] text-[var(--text-muted)]">{combinedData.filter((c: any) => c.nivel === 'Crítico').length} tipos classificados como críticos</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-4 border border-emerald-500/30 rounded-xl relative overflow-hidden flex items-center gap-4 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                  <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden flex items-center gap-4 ">
                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 z-10">
-                        <DollarSign className="w-6 h-6 text-emerald-400" />
+                        <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                      </div>
                      <div className="z-10 relative">
-                        <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Risco financeiro por tipo</h3>
+                        <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">Risco financeiro por tipo</h3>
                         <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5 leading-tight">{formatCurrency(totalMultaAberto)}</p>
                         <p className="text-[11px] text-[var(--text-muted)]">Exposição total estimada</p>
                      </div>
                   </div>
                 </div>
 
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                    <div className="overflow-x-auto">
                      <table className="w-full text-left">
                         <thead className="bg-[var(--bg-primary)]">
@@ -1178,7 +1178,7 @@ export default function RiscosPage() {
                                  </td>
                                  <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-[var(--text-secondary)]">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(item.multaEstimada || 0)}</td>
                                  <td className="px-5 py-4 align-middle text-center">
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' ? 'text-red-400' : 'text-[var(--text-muted)]'}`}>
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-600 dark:text-emerald-400' : item.status === 'Crítico' ? 'text-red-600 dark:text-red-400' : 'text-[var(--text-muted)]'}`}>
                                        {item.status === 'Monitorado' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-0.5"></span>}
                                        {item.status}
                                     </span>
@@ -1194,9 +1194,9 @@ export default function RiscosPage() {
 
             {activeTab === 'Histórico' && (
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
-                <div className="bg-[var(--bg-secondary)] border border-blue-500/20 rounded-xl p-4 flex items-center gap-4 bg-gradient-to-r from-blue-500/5 to-transparent">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-4 ">
                   <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20">
-                     <Info className="w-4 h-4 text-blue-400" />
+                     <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[var(--text-primary)]">Este histórico é imutável e somente leitura.</p>
@@ -1205,7 +1205,7 @@ export default function RiscosPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                         <FileText className="w-6 h-6 text-purple-400" />
                      </div>
@@ -1215,39 +1215,39 @@ export default function RiscosPage() {
                         <p className="text-[11px] text-[var(--text-muted)]">Total de registros</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                        <Bot className="w-6 h-6 text-blue-400" />
+                        <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automática</h3>
+                        <h3 className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-0.5">Origem automática</h3>
                         <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length}</p>
                         <p className="text-[11px] text-[var(--text-muted)]">{Math.round((combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <User className="w-6 h-6 text-emerald-400" />
+                        <User className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Origem manual</h3>
+                        <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">Origem manual</h3>
                         <p className="text-2xl font-bold text-[var(--text-primary)] mb-0.5">{combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length}</p>
                         <p className="text-[11px] text-[var(--text-muted)]">{Math.round((combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-secondary)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
+                  <div className="bg-[var(--bg-card)] p-5 border border-[var(--border)] rounded-xl flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-                        <CalendarDays className="w-6 h-6 text-orange-400" />
+                        <CalendarDays className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-orange-400 mb-0.5">Última atualização</h3>
+                        <h3 className="text-xs font-bold text-orange-600 dark:text-orange-400 mb-0.5">Última atualização</h3>
                         <p className="text-lg font-bold text-[var(--text-primary)] mb-0.5">Hoje, 08:42</p>
                         <p className="text-[11px] text-[var(--text-muted)]">21/05/2025</p>
                      </div>
                   </div>
                 </div>
 
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg flex flex-col min-h-0 overflow-hidden">
                   <div className="flex-1 overflow-x-auto">
                     <table className="w-full text-left">
                       <thead className="bg-[var(--bg-primary)]">
@@ -1263,7 +1263,7 @@ export default function RiscosPage() {
                           <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] text-center">Detalhes</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[var(--border)] bg-[var(--bg-secondary)]">
+                      <tbody className="divide-y divide-[var(--border)] bg-[var(--bg-card)]">
                         {combinedData.map((item) => {
                           const isSelected = selectedAction?.id === item.id;
                           const isAuto = (item.origem || '').toLowerCase().includes('auto') || (item.origem || '').toLowerCase().includes('inspe');
@@ -1284,7 +1284,7 @@ export default function RiscosPage() {
                               <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.tipoDeRisco || item.atividade}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[var(--bg-primary)] ${isAuto ? 'text-blue-400 border-blue-500/20' : 'text-emerald-400 border-emerald-500/20'}`}>
+                              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[var(--bg-primary)] ${isAuto ? 'text-blue-600 dark:text-blue-400 border-blue-500/20' : 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20'}`}>
                                  {isAuto ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                                  {isAuto ? 'Automática' : 'Manual'}
                               </div>
@@ -1302,7 +1302,7 @@ export default function RiscosPage() {
                               <span className="text-[13px] text-[var(--text-secondary)]">21/05/2025 08:42</span>
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' || item.status === 'Aberto' ? 'text-red-400' : 'text-blue-400'}`}>
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-600 dark:text-emerald-400' : item.status === 'Crítico' || item.status === 'Aberto' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                  <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'Monitorado' ? 'bg-emerald-500' : item.status === 'Crítico' || item.status === 'Aberto' ? 'bg-red-500' : 'bg-blue-500'} mb-0.5`}></span>
                                  {item.status}
                               </span>
@@ -1324,7 +1324,7 @@ export default function RiscosPage() {
             {activeTab === 'Atividade' && (
             <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[var(--bg-secondary)] p-4 border border-purple-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <Activity className="w-16 h-16" />
                   </div>
@@ -1332,23 +1332,23 @@ export default function RiscosPage() {
                   <p className="text-3xl font-bold text-[var(--text-primary)] mb-2 z-10 relative">{totalAtividades}</p>
                   <p className="text-xs text-[var(--text-muted)] z-10 relative">+3 desde a semana passada</p>
                 </div>
-                <div className="bg-[var(--bg-secondary)] p-4 border border-red-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <ShieldAlert className="w-16 h-16 text-red-500" />
                   </div>
-                  <h3 className="text-[12px] text-red-400 mb-1 z-10 relative">Atividades com risco crítico</h3>
+                  <h3 className="text-[12px] text-red-600 dark:text-red-400 mb-1 z-10 relative">Atividades com risco crítico</h3>
                   <p className="text-3xl font-bold text-[var(--text-primary)] mb-2 z-10 relative">{atividadesCriticas}</p>
                   <p className="text-xs text-[var(--text-muted)] z-10 relative">{getPercentage(atividadesCriticas, totalAtividades)}% do total</p>
                 </div>
-                <div className="bg-[var(--bg-secondary)] p-4 border border-orange-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <TrendingUp className="w-16 h-16 text-orange-500" />
                   </div>
-                  <h3 className="text-[12px] text-orange-400 mb-1 z-10 relative">Maior atividade de risco</h3>
+                  <h3 className="text-[12px] text-orange-600 dark:text-orange-400 mb-1 z-10 relative">Maior atividade de risco</h3>
                   <p className="text-2xl font-bold text-[var(--text-primary)] mb-2 z-10 relative truncate">{maiorAtividade}</p>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-red-500/20 bg-red-500/10 text-red-400 z-10 relative">Crítico</span>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 z-10 relative">Crítico</span>
                 </div>
-                <div className="bg-[var(--bg-secondary)] p-4 border border-yellow-500/30 rounded-xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <BadgeInfo className="w-16 h-16 text-yellow-500" />
                   </div>
@@ -1358,7 +1358,7 @@ export default function RiscosPage() {
                 </div>
               </div>
 
-              <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
                 <div className="overflow-x-auto min-h-[300px]">
                   <table className="w-full text-left">
                     <thead className="bg-[var(--bg-primary)] border-b border-[var(--border)]">
@@ -1438,7 +1438,7 @@ export default function RiscosPage() {
                                  {item.episAusentes > 0 ? (
                                     <>
                                       <span className="text-[13px] text-[var(--text-primary)] truncate max-w-[150px]">Cinto paraquedista...</span>
-                                      <span className="text-[10px] font-bold text-red-400 bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded w-max">{item.episAusentes} de {item.episTotal} ausentes</span>
+                                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded w-max">{item.episAusentes} de {item.episTotal} ausentes</span>
                                     </>
                                  ) : (
                                     <span className="text-[11px] text-[var(--text-muted)] bg-[var(--bg-active-group)] border border-[var(--border)] px-2 py-1 rounded w-max font-medium">Sem equipamento</span>
@@ -1458,10 +1458,10 @@ export default function RiscosPage() {
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
                                <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border tracking-wider bg-opacity-10 
-                                  ${item.maxNivelName === 'Crítico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
-                                    item.maxNivelName === 'Alto' ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
+                                  ${item.maxNivelName === 'Crítico' ? 'text-red-600 dark:text-red-400 border-red-500/20 bg-red-400' : 
+                                    item.maxNivelName === 'Alto' ? 'text-orange-600 dark:text-orange-400 border-orange-500/20 bg-orange-400' : 
                                     item.maxNivelName === 'Médio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
-                                    'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
+                                    'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
                                  {item.maxNivelName}
                                </span>
                             </td>
@@ -1480,7 +1480,7 @@ export default function RiscosPage() {
                          <button className="px-2 py-1 rounded hover:text-[var(--text-primary)] transition-colors disabled:opacity-50" disabled><ChevronRight className="w-4 h-4" /></button>
                       </div>
                       <div className="flex items-center gap-2">
-                         <select className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-muted)] focus:outline-none">
+                         <select className="bg-[var(--bg-card)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-muted)] focus:outline-none">
                             <option>10 por página</option>
                          </select>
                       </div>
@@ -1509,7 +1509,7 @@ export default function RiscosPage() {
            animate={{ opacity: 1, x: 0 }} 
            exit={{ opacity: 0, x: '100%' }}
            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
+           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-card)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
          >
            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
              <div className="p-6 flex justify-between items-start border-b border-[var(--border)]">
@@ -1528,16 +1528,16 @@ export default function RiscosPage() {
                    <div className="flex items-start justify-between border-b border-[var(--border)] pb-4 mb-4">
                      <span className="text-sm font-bold text-purple-400">{selectedAction.id}</span>
                      <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
-                          ${selectedAction.status === 'Crítico' || selectedAction.status === 'Pendente' ? 'text-red-400 border-red-500/20 bg-red-400' : 
-                            selectedAction.status === 'Em análise' ? 'text-blue-400 border-blue-500/20 bg-blue-400' :
-                            selectedAction.status === 'Concluído' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-400' : 
+                          ${selectedAction.status === 'Crítico' || selectedAction.status === 'Pendente' ? 'text-red-600 dark:text-red-400 border-red-500/20 bg-red-400' : 
+                            selectedAction.status === 'Em análise' ? 'text-blue-600 dark:text-blue-400 border-blue-500/20 bg-blue-400' :
+                            selectedAction.status === 'Concluído' ? 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-400' : 
                             'text-yellow-400 border-yellow-500/20 bg-yellow-400'}`}>
                        {selectedAction.status}
                      </span>
                    </div>
 
                    <div className="flex items-start gap-4 mb-8">
-                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-blue-400">
+                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-card)] text-blue-600 dark:text-blue-400">
                        <ShieldAlert className="w-5 h-5" />
                      </div>
                      <div className="flex flex-col gap-1">
@@ -1593,7 +1593,7 @@ export default function RiscosPage() {
                      </div>
                      <div className="flex justify-between items-center gap-6 border-b border-[var(--border)] pb-4">
                         <span className="text-[13px] text-[var(--text-muted)] shrink-0">Chance de incidente</span>
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border flex items-center gap-1 min-w-0 ${((selectedAction.chanceIncidente || 0) >= 60) ? 'text-red-400 border-red-500/20 bg-red-500/10' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'text-orange-400 border-orange-500/20 bg-orange-500/10' : 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'}`}>
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border flex items-center gap-1 min-w-0 ${((selectedAction.chanceIncidente || 0) >= 60) ? 'text-red-600 dark:text-red-400 border-red-500/20 bg-red-500/10' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'text-orange-600 dark:text-orange-400 border-orange-500/20 bg-orange-500/10' : 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10'}`}>
                            <span className={`w-1.5 h-1.5 rounded-full ${((selectedAction.chanceIncidente || 0) >= 60) ? 'bg-red-500' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
                            {((selectedAction.chanceIncidente || 0) >= 60) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'Média' : 'Baixa'}
                         </span>
@@ -1619,7 +1619,7 @@ export default function RiscosPage() {
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-[var(--text-muted)] shrink-0">Origem</span>
-                        <div className="flex items-center gap-2 text-[13px] text-blue-400">
+                        <div className="flex items-center gap-2 text-[13px] text-blue-600 dark:text-blue-400">
                            {(selectedAction.origem || '').toLowerCase().includes('inspe') ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                            {selectedAction.origem || 'Automática'} 
                             <span className="text-[var(--text-muted)] text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
@@ -1631,7 +1631,7 @@ export default function RiscosPage() {
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-[var(--text-muted)] shrink-0">Atualizado por</span>
-                        <div className="flex items-center gap-2 text-[13px] text-blue-400">
+                        <div className="flex items-center gap-2 text-[13px] text-blue-600 dark:text-blue-400">
                            <Settings2 className="w-3.5 h-3.5" />
                            Sistema
                         </div>
@@ -1653,7 +1653,7 @@ export default function RiscosPage() {
                  <>
                    <div className="flex items-start justify-between">
                      <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-purple-400">
+                       <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-card)] text-purple-400">
                          {activeTab === 'Tipo' ? getRiskTypeIcon(selectedAction.tipoDeRisco || '') : getActivityIcon(selectedAction.atividade)}
                        </div>
                        <div className="flex flex-col gap-1">
@@ -1666,10 +1666,10 @@ export default function RiscosPage() {
                        </div>
                      </div>
                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-opacity-10 
-                          ${selectedAction.nivel === 'Crítico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
-                            selectedAction.nivel === 'Alto' ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
+                          ${selectedAction.nivel === 'Crítico' ? 'text-red-600 dark:text-red-400 border-red-500/20 bg-red-400' : 
+                            selectedAction.nivel === 'Alto' ? 'text-orange-600 dark:text-orange-400 border-orange-500/20 bg-orange-400' : 
                             selectedAction.nivel === 'Médio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
-                            'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
+                            'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
                        {selectedAction.nivel}
                      </span>
                    </div>
@@ -1682,7 +1682,7 @@ export default function RiscosPage() {
                    </div>
 
                    {(selectedAction.regraFixa !== undefined || selectedAction.nrRelacionada || selectedAction.nr) && (
-                     <div className="bg-[var(--bg-secondary)]/50 p-4 rounded-xl border border-purple-500/20 space-y-3">
+                     <div className="bg-[var(--bg-card)]/50 p-4 rounded-xl border border-[var(--border)] space-y-3">
                         <div className="flex items-center gap-2 mb-2">
                            <FileText className="w-4 h-4 text-purple-400" />
                            <h4 className="text-xs font-bold text-purple-200 uppercase tracking-wider">Base Normativa Aplicada</h4>
@@ -1733,9 +1733,9 @@ export default function RiscosPage() {
                  </div>
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-purple-500/30 transition-colors">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--border)] transition-colors">
                   <div className="flex items-center gap-4">
-                     <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                     <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 flex items-center justify-center">
                         <Activity className="w-4 h-4" />
                      </div>
                      <div>
@@ -1751,9 +1751,9 @@ export default function RiscosPage() {
                   </div>
                </div>
 
-               <div className="flex items-start justify-between p-4 bg-[var(--bg-secondary)] border border-red-500/10 rounded-xl">
+               <div className="flex items-start justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl">
                   <div className="flex items-start gap-4">
-                     <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center mt-0.5 shrink-0">
+                     <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mt-0.5 shrink-0">
                         <ShieldAlert className="w-4 h-4" />
                      </div>
                      <div className="flex flex-col gap-1">
@@ -1770,9 +1770,9 @@ export default function RiscosPage() {
                   </div>
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors group">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--border)] transition-colors group">
                   <div className="flex items-center gap-4">
-                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <Plus className="w-4 h-4" />
                      </div>
                      <div>
@@ -1780,12 +1780,12 @@ export default function RiscosPage() {
                         <p className="text-[11px] text-[var(--text-muted)]">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${(selectedAction.atividade as string).toLowerCase()}.`}</p>
                      </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-emerald-400 transition-colors shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-emerald-600 dark:text-emerald-400 transition-colors shrink-0" />
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--border)] transition-colors group">
+               <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--border)] transition-colors group">
                   <div className="flex items-center gap-4">
-                     <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-xs font-bold border border-[var(--border)] uppercase shrink-0">
+                     <div className="w-8 h-8 rounded-full bg-[var(--bg-card)] text-[var(--text-muted)] flex items-center justify-center text-xs font-bold border border-[var(--border)] uppercase shrink-0">
                         {selectedAction.responsavel ? selectedAction.responsavel.substring(0, 2) : 'JS'}
                      </div>
                      <div>
@@ -1833,7 +1833,7 @@ export default function RiscosPage() {
            animate={{ opacity: 1, x: 0 }} 
            exit={{ opacity: 0, x: '100%' }}
            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
+           className="fixed inset-y-0 right-0 w-full sm:w-[400px] h-full bg-[var(--bg-card)] border-l border-[var(--border)] shadow-3xl z-50 flex flex-col overflow-hidden"
          >
            <div className="h-full flex flex-col pt-safe-top overflow-y-auto">
              <div className="p-6 flex justify-between items-start border-b border-[var(--border)]">
@@ -1848,16 +1848,16 @@ export default function RiscosPage() {
                <div className="flex items-start justify-between border-b border-[var(--border)] pb-4 mb-4">
                  <span className="text-sm font-bold text-purple-400">SETOR-{selectedSectorItem.setor.substring(0,3).toUpperCase()}</span>
                  <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
-                      ${selectedSectorItem.crits > 0 ? 'text-red-400 border-red-500/20 bg-red-400' : 
-                        selectedSectorItem.altos > 0 ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
+                      ${selectedSectorItem.crits > 0 ? 'text-red-600 dark:text-red-400 border-red-500/20 bg-red-400' : 
+                        selectedSectorItem.altos > 0 ? 'text-orange-600 dark:text-orange-400 border-orange-500/20 bg-orange-400' : 
                         selectedSectorItem.medios > 0 ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
-                        'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
+                        'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
                    {selectedSectorItem.crits > 0 ? 'Crítico' : selectedSectorItem.altos > 0 ? 'Alto' : selectedSectorItem.medios > 0 ? 'Médio' : 'Baixo'}
                  </span>
                </div>
 
                <div className="flex items-start gap-4 mb-8">
-                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-secondary)] text-blue-400">
+                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--bg-card)] text-blue-600 dark:text-blue-400">
                    {getActivityIcon(selectedSectorItem.setor)}
                  </div>
                  <div className="flex flex-col gap-1">
@@ -1917,7 +1917,7 @@ export default function RiscosPage() {
                   </div>
                </div>
 
-               <div className="flex flex-col gap-2 p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl border-l-2 border-l-purple-500">
+               <div className="flex flex-col gap-2 p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl border-l-2 border-l-purple-500">
                   <h4 className="text-[10px] uppercase font-bold text-purple-400 flex items-center gap-1.5">
                      <Zap className="w-3.5 h-3.5"/> Ação sugerida
                   </h4>
@@ -1927,7 +1927,7 @@ export default function RiscosPage() {
                </div>
 
                <div className="flex items-center gap-4 py-4 border-t border-[var(--border)] group pt-6">
-                  <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center text-sm font-bold border border-purple-500/20 uppercase shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] text-[var(--text-muted)] flex items-center justify-center text-sm font-bold border border-[var(--border)] uppercase shrink-0">
                      <UserPlus className="w-4 h-4 text-purple-400"/>
                   </div>
                   <div className="flex-1">
@@ -1964,7 +1964,7 @@ export default function RiscosPage() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }} 
             animate={{ opacity: 1, y: 0, scale: 1 }} 
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="bg-[var(--bg-secondary)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
+            className="bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden"
           >
             <div className="flex flex-col h-full overflow-hidden">
               <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--bg-primary)] rounded-t-2xl shrink-0">
@@ -1975,7 +1975,7 @@ export default function RiscosPage() {
                   {editingItem && (
                     <button 
                       onClick={(e) => handleDelete(editingItem.id, e)} 
-                      className="p-1.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
+                      className="p-1.5 text-[var(--text-muted)] hover:text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
                       title="Excluir"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -2030,7 +2030,7 @@ export default function RiscosPage() {
                       onChange={e => setFormData({...formData, atividade: e.target.value})}
                       className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
                     >
-                      {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">{opt}</option>)}
+                      {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{opt}</option>)}
                     </select>
 
                     {normativeDetection && (
@@ -2041,7 +2041,7 @@ export default function RiscosPage() {
                          <div className="grid grid-cols-2 gap-2 text-[11px]">
                            <div className="bg-[var(--bg-primary)] p-2 rounded-lg border border-[var(--border)]">
                              <span className="text-[var(--text-muted)] block mb-0.5">Severidade</span>
-                             <span className={`font-bold uppercase ${normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}`}>
+                             <span className={`font-bold uppercase ${normativeDetection.severity === 'crítica' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
                                {normativeDetection.severity}
                              </span>
                            </div>
@@ -2086,7 +2086,7 @@ export default function RiscosPage() {
                       onChange={e => setFormData({...formData, setor: e.target.value})}
                       className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:border-purple-500 transition-colors appearance-none"
                     >
-                      {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">{opt}</option>)}
+                      {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[var(--bg-card)] text-[var(--text-primary)]">{opt}</option>)}
                     </select>
                   </div>
                 </div>
@@ -2147,7 +2147,7 @@ export default function RiscosPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-[#121826] to-purple-900/10 border border-purple-500/20 p-5 rounded-xl flex items-start gap-3">
+                <div className="bg-gradient-to-br from-[var(--bg-card)] to-purple-900/10 border border-purple-500/20 p-5 rounded-xl flex items-start gap-3">
                   <Settings2 className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider mb-1">Cálculo de Tipo / Severidade Automático</h4>
@@ -2161,7 +2161,7 @@ export default function RiscosPage() {
               <div className="p-5 border-t border-[var(--border)] bg-[var(--bg-primary)] flex gap-3 rounded-b-2xl shrink-0">
                 <button 
                   onClick={() => setIsDrawerOpen(false)} 
-                  className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold text-[var(--text-muted)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)] uppercase tracking-wider"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold text-[var(--text-muted)] bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)] uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
@@ -2194,10 +2194,10 @@ export default function RiscosPage() {
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="relative w-full max-w-2xl bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-               <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-secondary)]">
+               <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-card)]">
                  <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                     <Activity className="w-5 h-5 text-blue-400" />
+                     <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                    </div>
                    <div>
                      <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">Detalhamento do Cálculo</h2>
@@ -2213,9 +2213,9 @@ export default function RiscosPage() {
                  
                  {/* Card 1 */}
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
                        <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider mb-3 flex items-center gap-2">
-                         <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> Variáveis Base
+                         <ShieldAlert className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Variáveis Base
                        </h4>
                        <div className="space-y-2">
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
@@ -2228,46 +2228,46 @@ export default function RiscosPage() {
                           </div>
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">NR Relacionada</span>
-                             <span className="font-bold text-blue-400">{selectedAction.nr}</span>
+                             <span className="font-bold text-blue-600 dark:text-blue-400">{selectedAction.nr}</span>
                           </div>
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">Prazo Automático</span>
-                             <span className="font-bold text-orange-400">{selectedAction.prazo}</span>
+                             <span className="font-bold text-orange-600 dark:text-orange-400">{selectedAction.prazo}</span>
                           </div>
                        </div>
                     </div>
                     
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
                        <h4 className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider mb-3 flex items-center gap-2">
-                         <Activity className="w-3.5 h-3.5 text-red-400" /> Resultados do Motor
+                         <Activity className="w-3.5 h-3.5 text-red-600 dark:text-red-400" /> Resultados do Motor
                        </h4>
                        <div className="space-y-2">
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">Impacto Operacional</span>
                              <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase
-                                ${selectedAction.impactoOperacional === 'Crítico' ? 'bg-red-500/20 text-red-500 dark:text-red-400' : 
-                                  selectedAction.impactoOperacional === 'Alto' ? 'bg-orange-500/20 text-orange-400' :
+                                ${selectedAction.impactoOperacional === 'Crítico' ? 'bg-red-500/20 text-red-500 dark:text-red-600 dark:text-red-400' : 
+                                  selectedAction.impactoOperacional === 'Alto' ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400' :
                                   selectedAction.impactoOperacional === 'Médio' ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' :
-                                  'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                  'bg-emerald-500/20 text-emerald-600 dark:text-emerald-600 dark:text-emerald-400'
                                 }`}>{selectedAction.impactoOperacional}</span>
                           </div>
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">Multa Estimada</span>
-                             <span className="font-bold text-red-400 hover:underline cursor-help" title={selectedAction.faixaMulta}>
+                             <span className="font-bold text-red-600 dark:text-red-400 hover:underline cursor-help" title={selectedAction.faixaMulta}>
                                {selectedAction.multaEstimada !== undefined ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAction.multaEstimada) : 'N/D'}
                              </span>
                           </div>
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">Chance de Incidente</span>
-                             <span className="font-bold text-orange-400">{selectedAction.chanceIncidente}%</span>
+                             <span className="font-bold text-orange-600 dark:text-orange-400">{selectedAction.chanceIncidente}%</span>
                           </div>
                           <div className="flex justify-between items-center bg-[var(--bg-primary)] p-2 rounded text-xs">
                              <span className="text-[var(--text-muted)]">Conformidade</span>
                              <span className={`font-bold ${
-                                selectedAction.nivelConformidade === 'Conforme' ? 'text-emerald-400' :
+                                selectedAction.nivelConformidade === 'Conforme' ? 'text-emerald-600 dark:text-emerald-400' :
                                 selectedAction.nivelConformidade === 'Atenção' ? 'text-yellow-400' :
-                                selectedAction.nivelConformidade === 'Não conforme crítico' ? 'text-red-400' :
-                                'text-orange-400'
+                                selectedAction.nivelConformidade === 'Não conforme crítico' ? 'text-red-600 dark:text-red-400' :
+                                'text-orange-600 dark:text-orange-400'
                              }`}>{selectedAction.nivelConformidade}</span>
                           </div>
                        </div>
@@ -2278,17 +2278,17 @@ export default function RiscosPage() {
                  <div className="space-y-3">
                     <h4 className="text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Justificativas</h4>
                     
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
                       <div className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
-                         <span className="text-blue-400 font-bold block mb-1">Multa Investigada:</span>
+                         <span className="text-blue-600 dark:text-blue-400 font-bold block mb-1">Multa Investigada:</span>
                          “{selectedAction.justificativaMulta || 'Cálculo com base em tabela NR.'}”
                       </div>
                       <div className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
-                         <span className="text-orange-400 font-bold block mb-1">Chance de Incidente:</span>
+                         <span className="text-orange-600 dark:text-orange-400 font-bold block mb-1">Chance de Incidente:</span>
                          “{selectedAction.justificativaIncidente || 'Variáveis base da matriz.'}”
                       </div>
                       <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                         <span className="text-emerald-400 font-bold block mb-1">Origem do Dado:</span>
+                         <span className="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">Origem do Dado:</span>
                          “{selectedAction.justificativa || 'Lançado pela inspeção.'}”
                       </div>
                     </div>
@@ -2300,7 +2300,7 @@ export default function RiscosPage() {
                       <h4 className="text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Fatores Analisados (Agravantes/Mitigantes)</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedAction.fatoresDeCalculo.map((f, i) => (
-                          <span key={i} className="px-2.5 py-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded text-[10px] text-[var(--text-secondary)]">
+                          <span key={i} className="px-2.5 py-1 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[10px] text-[var(--text-secondary)]">
                              {f}
                           </span>
                         ))}

@@ -34,11 +34,11 @@ export default function TimelineHistory({ itemId, relatedInspectionId, relatedRi
   const getIconForEvent = (eventType: string) => {
     switch(eventType) {
       case 'inspecao_criada':
-      case 'inspecao_editada': return <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />;
-      case 'item_nao_conforme_identificado': return <AlertTriangle className="w-3.5 h-3.5 text-red-400" />;
-      case 'risco_gerado': return <Activity className="w-3.5 h-3.5 text-orange-400" />;
+      case 'inspecao_editada': return <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />;
+      case 'item_nao_conforme_identificado': return <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />;
+      case 'risco_gerado': return <Activity className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />;
       case 'acao_gerada': return <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />;
-      case 'acao_concluida': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+      case 'acao_concluida': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />;
       case 'relatorio_gerado': return <FileText className="w-3.5 h-3.5 text-[var(--text-muted)]" />;
       default: return <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />;
     }
@@ -50,11 +50,11 @@ export default function TimelineHistory({ itemId, relatedInspectionId, relatedRi
         <Clock className="w-4 h-4 text-purple-400" />
         Linha do Tempo do Item
       </h4>
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5">
         <div className="relative border-l border-[var(--border)] ml-3 space-y-6">
           {itemLogs.map((log, index) => (
             <div key={log.id || index} className="relative pl-6">
-               <span className="absolute -left-3 top-0.5 w-6 h-6 rounded-full bg-[var(--bg-secondary)] border-2 border-[var(--border)] flex items-center justify-center">
+               <span className="absolute -left-3 top-0.5 w-6 h-6 rounded-full bg-[var(--bg-card)] border-2 border-[var(--border)] flex items-center justify-center">
                   {getIconForEvent(log.event_type)}
                </span>
                <div className="flex flex-col">

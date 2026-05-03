@@ -16,7 +16,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Top Header */}
       <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-[var(--bg-primary)] border-b border-[var(--border)] z-50 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-[var(--bg-secondary)] border border-blue-500/30 overflow-hidden relative shrink-0">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden relative shrink-0">
             <Image 
               src="/logo.jpg" 
               alt="ApexShield Logo" 
@@ -28,8 +28,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
                 e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
               }}
             />
-            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[var(--bg-secondary)] z-0">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-400">
+            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-0">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-600 dark:text-blue-400">
                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                </svg>
             </div>

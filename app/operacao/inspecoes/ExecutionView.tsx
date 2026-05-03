@@ -441,7 +441,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3 text-emerald-400 font-medium"
+                    className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3 text-emerald-600 dark:text-emerald-400 font-medium"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                     {saveMessage}
@@ -466,7 +466,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         <div key={i} className="flex flex-col items-center group">
                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-base font-black transition-all border-2 
                               ${s.color === 'emerald' ? 'bg-emerald-500 text-[var(--text-primary)] border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 
-                                s.color === 'blue' ? 'bg-black border-blue-500 text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 
+                                s.color === 'blue' ? 'bg-black border-blue-500 text-blue-600 dark:text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 
                                 'bg-black border-[var(--border)] text-[var(--text-secondary)]'}`}>
                               {s.step}
                            </div>
@@ -482,11 +482,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[#0d121e] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                           <ClipboardCheck className="w-5 h-5 text-blue-400" />
+                           <ClipboardCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
                            <p className="text-xs text-[var(--text-muted)] uppercase font-black tracking-widest">Progresso Real</p>
@@ -495,11 +495,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[#0d121e] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                           <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
                            <p className="text-xs text-[var(--text-muted)] uppercase font-black tracking-widest">Conformidade</p>
@@ -508,11 +508,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[#0d121e] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                           <AlertTriangle className="w-5 h-5 text-red-400" />
+                           <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                         </div>
                         <div>
                            <p className="text-xs text-[var(--text-muted)] uppercase font-black tracking-widest">Desvios IA</p>
@@ -521,11 +521,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         </div>
                      </div>
                   </div>
-                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[#0d121e] transition-all relative overflow-hidden">
+                  <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-5 rounded-2xl group hover:border-[var(--border)] hover:bg-[var(--bg-card)] transition-all relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 blur-[40px] rounded-full"></div>
                      <div className="flex flex-col gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                           <Zap className="w-5 h-5 text-orange-400" />
+                           <Zap className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div>
                            <p className="text-xs text-[var(--text-muted)] uppercase font-black tracking-widest">Ações Sugeridas</p>
@@ -577,12 +577,12 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                               <div>
                                  <p className="text-base lg:text-lg font-bold text-[var(--text-primary)] group-hover:text-purple-100 transition-colors leading-tight mb-2">{item.text}</p>
                                  <div className="flex flex-wrap items-center gap-3">
-                                    <span className="flex items-center gap-1.5 bg-blue-500/10 text-xs font-black text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg uppercase tracking-widest">
+                                    <span className="flex items-center gap-1.5 bg-blue-500/10 text-xs font-black text-blue-600 dark:text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg uppercase tracking-widest">
                                        <Activity className="w-3.5 h-3.5" /> Normativa: NR-{item.nr || '35.5'}
                                     </span>
                                     <span className={`flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-lg border uppercase tracking-widest
                                        ${item.riskMap === 'Crítica' ? 'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 
-                                         item.riskMap === 'Alta' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
+                                         item.riskMap === 'Alta' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' : 
                                          'bg-[var(--bg-active-group)] text-[var(--text-muted)] border-[var(--border)]'}`}
                                     >
                                        {item.riskMap === 'Crítica' && <ShieldAlert className="w-3.5 h-3.5" />}
@@ -623,7 +623,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
          </div>
 
          <div className="w-[450px] bg-[var(--bg-primary)] border-l border-[var(--border)] shrink-0 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] relative z-20">
-            <div className="p-8 border-b border-[var(--border)] bg-[#0d121e]/80 backdrop-blur-md">
+            <div className="p-8 border-b border-[var(--border)] bg-[var(--bg-card)]/80 backdrop-blur-md">
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-5">
                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 text-[var(--text-primary)] flex items-center justify-center font-black text-xl border border-purple-400/30 shadow-[0_10px_30px_rgba(124,58,237,0.4)]">
@@ -655,7 +655,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                      <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
                      <p className="text-xs text-[var(--text-muted)] font-black uppercase tracking-widest mb-3">Health Score</p>
                      <div className="flex items-baseline gap-2 mt-2">
-                        <span className={`text-6xl font-black tracking-tighter ${conformidade > 0.8 ? 'text-emerald-500' : conformidade > 0.5 ? 'text-orange-400' : 'text-red-500'}`}>
+                        <span className={`text-6xl font-black tracking-tighter ${conformidade > 0.8 ? 'text-emerald-500' : conformidade > 0.5 ? 'text-orange-600 dark:text-orange-400' : 'text-red-500'}`}>
                            {Math.round(conformidade * 100)}
                         </span>
                         <span className="text-sm text-[var(--text-muted)] font-bold ml-1">PTS</span>
@@ -672,7 +672,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="bg-[var(--bg-secondary)]/80 border border-[var(--border)] rounded-[32px] p-8 space-y-8 relative overflow-hidden group hover:border-red-500/20 transition-all shadow-xl"
+                          className="bg-[var(--bg-card)]/80 border border-[var(--border)] rounded-[32px] p-8 space-y-8 relative overflow-hidden group hover:border-[var(--border)] transition-all shadow-xl"
                         >
                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/[0.02] blur-3xl rounded-full"></div>
                            
@@ -687,7 +687,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                            <div className="grid grid-cols-2 gap-3 relative z-10">
                               <div className="bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border)]">
                                  <p className="text-xs text-[var(--text-muted)] font-black uppercase tracking-widest mb-1.5">Severidade</p>
-                                 <p className={`text-sm font-black uppercase ${nc.severidade === 'Crítica' ? 'text-red-500' : 'text-orange-400'}`}>{nc.severidade}</p>
+                                 <p className={`text-sm font-black uppercase ${nc.severidade === 'Crítica' ? 'text-red-500' : 'text-orange-600 dark:text-orange-400'}`}>{nc.severidade}</p>
                               </div>
                               <div className="bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border)]">
                                  <p className="text-xs text-[var(--text-muted)] font-black uppercase tracking-widest mb-1.5">Impacto Financeiro</p>
@@ -698,7 +698,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                            <div className="space-y-4 relative z-10">
                               <div className="flex justify-between items-end">
                                  <p className="text-xs text-[var(--text-muted)] font-black uppercase tracking-[0.2em]">Probabilidade Incidente</p>
-                                 <span className={`text-sm font-black ${nc.chance > 60 ? 'text-red-500' : 'text-orange-400'}`}>{nc.chance}%</span>
+                                 <span className={`text-sm font-black ${nc.chance > 60 ? 'text-red-500' : 'text-orange-600 dark:text-orange-400'}`}>{nc.chance}%</span>
                               </div>
                               <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden border border-[var(--border)] relative">
                                  <motion.div 
@@ -740,7 +740,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                         <h4 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-[0.25em] pl-1">Ações Corretivas Geradas</h4>
                         <div className="space-y-4">
                            {store.acoes.filter((a) => a.inspecaoId === inspection.id).map((acao) => (
-                              <div key={acao.id} className="bg-[var(--bg-secondary)]/80 border border-[var(--border)] rounded-2xl p-5 flex items-start gap-4">
+                              <div key={acao.id} className="bg-[var(--bg-card)]/80 border border-[var(--border)] rounded-2xl p-5 flex items-start gap-4">
                                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border mt-1"
                                       style={{
                                         backgroundColor: acao.status === 'Concluída' ? 'rgba(16, 185, 129, 0.1)' : acao.status === 'Vencida' ? 'rgba(239, 68, 68, 0.1)' : acao.status === 'Em andamento' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(249, 115, 22, 0.1)',
@@ -763,7 +763,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                                     </div>
                                     <div className="text-[12px] text-[var(--text-muted)] space-y-1">
                                        <p className="truncate"><span className="text-[var(--text-muted)]">Responsável:</span> {acao.responsavel}</p>
-                                       <p><span className="text-[var(--text-muted)]">Prazo:</span> {acao.prazo} <span className="text-[var(--text-secondary)] mx-2">|</span> <span className="text-[var(--text-muted)]">Prioridade:</span> <span className={acao.prioridade === 'Crítica' ? 'text-red-400' : acao.prioridade === 'Alta' ? 'text-orange-400' : 'text-emerald-400'}>{acao.prioridade}</span></p>
+                                       <p><span className="text-[var(--text-muted)]">Prazo:</span> {acao.prazo} <span className="text-[var(--text-secondary)] mx-2">|</span> <span className="text-[var(--text-muted)]">Prioridade:</span> <span className={acao.prioridade === 'Crítica' ? 'text-red-600 dark:text-red-400' : acao.prioridade === 'Alta' ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}>{acao.prioridade}</span></p>
                                     </div>
                                  </div>
                               </div>
@@ -812,7 +812,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
               className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-[32px] p-8 max-w-md w-full relative z-10 shadow-2xl"
             >
               <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-6">
-                <AlertTriangle className="w-8 h-8 text-orange-400" />
+                <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
               </div>
               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight mb-2">Sair sem salvar?</h3>
               <p className="text-[var(--text-muted)] leading-relaxed mb-8">Existem respostas não salvas. Se você sair agora, as alterações temporárias serão descartadas.</p>
@@ -853,7 +853,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
               className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-[40px] p-10 max-w-lg w-full relative z-10 shadow-2xl flex flex-col items-center text-center"
             >
               <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-8">
-                <ShieldCheck className="w-10 h-10 text-emerald-400" />
+                <ShieldCheck className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tight mb-4">Confirmar conclusão</h3>
               <p className="text-[var(--text-muted)] leading-relaxed mb-8">Tem certeza que esta inspeção foi concluída? O status será alterado e ela será enviada para o histórico de Realizadas.</p>
@@ -865,11 +865,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                 </div>
                 <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
                   <span className="text-[var(--text-muted)] font-medium">Conformidade Final</span>
-                  <span className={`font-black ${conformidade > 0.7 ? 'text-emerald-400' : 'text-orange-400'}`}>{Math.round(conformidade * 100)}%</span>
+                  <span className={`font-black ${conformidade > 0.7 ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>{Math.round(conformidade * 100)}%</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)] font-medium">Riscos/Ações Geradas</span>
-                  <span className="text-red-400 font-bold">{ncsDetectadasCount}</span>
+                  <span className="text-red-600 dark:text-red-400 font-bold">{ncsDetectadasCount}</span>
                 </div>
               </div>
 

@@ -43,7 +43,7 @@ export default function ModalNovaAcao({ onClose, onCreate }: { onClose: () => vo
         initial={{ opacity: 0, scale: 0.95, y: 20 }} 
         animate={{ opacity: 1, scale: 1, y: 0 }} 
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-[var(--bg-secondary)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col"
+        className="bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col"
       >
         <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
            <h2 className="text-lg font-bold text-[var(--text-primary)]">Nova Ação Correta</h2>

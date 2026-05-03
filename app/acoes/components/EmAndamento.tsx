@@ -100,7 +100,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
       
       {/* Cards Superiores */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center">
                  <Play className="w-5 h-5 fill-current" />
@@ -109,11 +109,11 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
            </div>
            <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               {stats.totais}
-              <div className="text-[12px] text-blue-400 font-normal">{stats.responsaveisAtivos} responsáveis ativos</div>
+              <div className="text-[12px] text-blue-600 dark:text-blue-400 font-normal">{stats.responsaveisAtivos} responsáveis ativos</div>
            </div>
         </div>
 
-        <div className="bg-[#1a1315] border border-red-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center">
                  <AlertTriangle className="w-5 h-5" />
@@ -126,7 +126,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
            </div>
         </div>
 
-        <div className="bg-[#1a1713] border border-orange-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-orange-500/20 p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 flex items-center justify-center">
                  <Clock className="w-5 h-5" />
@@ -135,11 +135,11 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
            </div>
            <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               <div className="flex items-baseline gap-1">{stats.prazoMedio} <span className="text-[16px] font-normal text-[var(--text-muted)]">dias</span></div>
-              <div className="text-[12px] text-emerald-400 font-normal">-0,4 dia vs semana passada</div>
+              <div className="text-[12px] text-emerald-600 dark:text-emerald-400 font-normal">-0,4 dia vs semana passada</div>
            </div>
         </div>
 
-        <div className="bg-[#131a16] border border-emerald-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center relative">
                  <Activity className="w-5 h-5" />
@@ -148,13 +148,13 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
            </div>
            <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               <div className="flex items-baseline gap-1">{stats.progressoMedio}<span className="text-[20px] font-medium text-[var(--text-muted)]">%</span></div>
-              <div className="text-[12px] text-emerald-400 font-normal">↑ 8 p.p. vs semana passada</div>
+              <div className="text-[12px] text-emerald-600 dark:text-emerald-400 font-normal">↑ 8 p.p. vs semana passada</div>
            </div>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-6 bg-[var(--bg-secondary)] border border-[var(--border)] p-4 rounded-[12px]">
+      <div className="flex flex-wrap items-center gap-6 bg-[var(--bg-card)] border border-[var(--border)] p-4 rounded-[12px]">
          <div className="flex items-center gap-2">
             {['Todos', 'Crítico', 'Alta', 'Média', 'Baixa', 'Exige atenção'].map(p => {
                const isActive = filterPriority === p;
@@ -192,13 +192,13 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
       </div>
 
       {/* Tabela */}
-      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] overflow-hidden">
+      <div className="bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] overflow-hidden">
         <div className="p-5 border-b border-[var(--border)]">
            <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Ações em andamento</h2>
         </div>
         <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
-           <thead className="bg-[#0c1018]">
+           <thead className="bg-[var(--bg-card)]">
               <tr>
                  <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prioridade</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Ação</th>
@@ -215,8 +215,8 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                  const prioCircle = pColors.split(' ')[0].replace('text-', 'bg-');
                  const rInitials = getInitials(acao.responsavel);
                  const avatarColors = [
-                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 
-                    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-400',
+                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-600 dark:text-blue-400', 
+                    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
                     'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                  ];
                  const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
@@ -235,12 +235,12 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                        </td>
                        <td className="px-5 py-4 w-64">
                           <div className="flex flex-col gap-1.5">
-                             <h3 className="font-medium text-[var(--text-primary)] group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
+                             <h3 className="font-medium text-[var(--text-primary)] group-hover:text-blue-600 dark:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
                              <div className="flex items-center gap-2 flex-wrap">
                                {acao.followUp?.precisaFollowUp && <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Requer atualização</span>}
-                               {acao.followUp?.nivel === 'bloqueada' && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com bloqueio</span>}
+                               {acao.followUp?.nivel === 'bloqueada' && <span className="text-[9px] bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com bloqueio</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
-                               {isWarning && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Prazo crítico</span>}
+                               {isWarning && <span className="text-[9px] bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Prazo crítico</span>}
                              </div>
                           </div>
                        </td>
@@ -258,19 +258,19 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                        <td className="px-5 py-4 w-44">
                           <div className="flex items-center gap-3">
                              <span className="text-[var(--text-primary)] font-medium w-8">{Math.max(0, acao.progresso || 0)}%</span>
-                             <div className="w-full bg-[#1e2536] rounded-full h-[6px] overflow-hidden">
+                             <div className="w-full bg-[var(--bg-card)] rounded-full h-[6px] overflow-hidden">
                                 <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${acao.progresso}%` }}></div>
                              </div>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-40">
                           <div className="text-[var(--text-primary)]">{acao.prazo}</div>
-                          <div className={`text-[11px] font-medium mt-0.5 ${isLate ? 'text-red-500' : isWarning ? 'text-orange-400' : 'text-[var(--text-muted)]'}`}>
+                          <div className={`text-[11px] font-medium mt-0.5 ${isLate ? 'text-red-500' : isWarning ? 'text-orange-600 dark:text-orange-400' : 'text-[var(--text-muted)]'}`}>
                              {prazoLabel}
                           </div>
                        </td>
                        <td className="px-5 py-4 w-32">
-                          <div className="px-2 py-1 rounded border text-[11px] font-medium flex items-center justify-center w-fit text-blue-400 border-blue-500/30 bg-blue-500/10">
+                          <div className="px-2 py-1 rounded border text-[11px] font-medium flex items-center justify-center w-fit text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10">
                              {acao.status}
                           </div>
                        </td>
@@ -287,7 +287,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
         </div>
         
         {/* Footer Pagination */}
-        <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-secondary)]">
+        <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-card)]">
            <span className="text-[var(--text-muted)]">Mostrando 1 a {list.length > 10 ? 10 : list.length} de {list.length} ações</span>
            <div className="flex items-center gap-2">
               <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>

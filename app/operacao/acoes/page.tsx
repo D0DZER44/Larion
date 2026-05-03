@@ -35,7 +35,7 @@ class ErrorBoundary extends Component<{children: ReactNode, fallback: (error: Er
 export default function AcoesPage() {
   return (
     <ErrorBoundary fallback={(error) => (
-      <div className="p-8 text-red-400 bg-[var(--bg-primary)] h-full">
+      <div className="p-8 text-red-600 dark:text-red-400 bg-[var(--bg-primary)] h-full">
         Erro ao carregar Ações: {error.message}
       </div>
     )}>
@@ -125,7 +125,7 @@ function AcoesContent() {
           </header>
 
           {/* Subabas */}
-          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
+          <div className="flex bg-[var(--bg-card)] p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
             {[
               { id: 'VisaoGeral', label: 'Visão Geral', icon: <BarChart2 className="w-4 h-4" /> },
               { id: 'Pendentes', label: 'Pendentes', icon: <AlertCircle className="w-4 h-4" /> },
@@ -138,7 +138,7 @@ function AcoesContent() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
                   activeTab === tab.id 
-                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                    ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
                     : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                 }`}
               >

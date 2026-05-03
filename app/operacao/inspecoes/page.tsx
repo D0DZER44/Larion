@@ -386,17 +386,17 @@ export default function InspecoesPage() {
   const getStatusStyle = (situacao: string) => {
     switch(situacao) {
       case 'Pendente': return 'text-yellow-500 border-yellow-500/30 bg-transparent';
-      case 'Atrasada': return 'text-red-400 border-red-500/30 bg-red-500/10';
-      case 'Revisar': return 'text-blue-400 border-blue-500/30 bg-blue-500/10';
-      case 'Agendada': return 'text-blue-400 border-blue-500/30 bg-transparent';
-      case 'Ativo': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
-      case 'Rascunho': return 'text-orange-400 border-orange-500/30 bg-orange-500/10';
+      case 'Atrasada': return 'text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10';
+      case 'Revisar': return 'text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10';
+      case 'Agendada': return 'text-blue-600 dark:text-blue-400 border-blue-500/30 bg-transparent';
+      case 'Ativo': return 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+      case 'Rascunho': return 'text-orange-600 dark:text-orange-400 border-orange-500/30 bg-orange-500/10';
       case 'Em andamento': return 'text-purple-400 border-purple-500/30 bg-purple-500/10';
       case 'Em revisão': return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
-      case 'Concluída': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
-      case 'Finalizada': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+      case 'Concluída': return 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+      case 'Finalizada': return 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
       case 'Arquivado': return 'text-[var(--text-muted)] border-gray-500/30 bg-gray-500/10';
-      case 'Cancelada': return 'text-red-400 border-red-500/30 bg-red-500/10 opacity-70';
+      case 'Cancelada': return 'text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10 opacity-70';
       case 'Anulada': return 'text-[var(--text-muted)] border-gray-500/30 bg-gray-500/10 opacity-70';
       default: return 'text-[var(--text-muted)] border-gray-500/30 bg-transparent';
     }
@@ -453,7 +453,7 @@ export default function InspecoesPage() {
             </div>
           </header>
 
-          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
+          <div className="flex bg-[var(--bg-card)] p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
              {[
                { id: 'Agendadas', label: 'Agendadas', icon: <Calendar className="w-4 h-4" /> },
                { id: 'Realizadas', label: 'Realizadas', icon: <CheckCircle2 className="w-4 h-4" /> },
@@ -464,7 +464,7 @@ export default function InspecoesPage() {
                   onClick={() => { setActiveTab(tab.id as any); setCurrentPage(1); setIsDrawerOpen(false); setIsFormDrawerOpen(false); }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
                     activeTab === tab.id 
-                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
                       : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                   }`}
                 >
@@ -478,7 +478,7 @@ export default function InspecoesPage() {
             
             {activeTab === 'Checklists' && (
               <div className="bg-blue-500/5 border border-blue-500/20 p-3 px-4 rounded-xl flex items-center gap-3 shrink-0">
-                <Info className="w-4 h-4 text-blue-400 shrink-0" />
+                <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 <p className="text-[12px] text-blue-200">
                   <span className="font-bold">Os checklists são gerenciados em Configurações.</span> Checklists padrão do motor são essenciais e não podem ser removidos.
                 </p>
@@ -491,26 +491,26 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Checklists ativos</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{checklistsStats.ativos}</div>
-                         <span className="text-[12px] text-emerald-400 font-medium">Em uso</span>
+                         <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">Em uso</span>
                       </div>
                    </div>
 
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-blue-400" />
+                            <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Padrão do motor</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{checklistsStats.padraoMotor}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Auto-gerenciados</span>
+                         <span className="text-[12px] text-blue-600 dark:text-blue-400 font-medium">Auto-gerenciados</span>
                       </div>
                    </div>
 
@@ -530,13 +530,13 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                            <HardHat className="w-5 h-5 text-orange-400" />
+                            <HardHat className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">NRs vinculadas</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{checklistsStats.nrsVinculadas}</div>
-                         <span className="text-[12px] text-orange-400 font-medium">Conformidade Legal</span>
+                         <span className="text-[12px] text-orange-600 dark:text-orange-400 font-medium">Conformidade Legal</span>
                       </div>
                    </div>
                  </>
@@ -545,13 +545,13 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                            <CheckSquare className="w-5 h-5 text-emerald-400" />
+                            <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Inspeções realizadas</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{realizadas.length}</div>
-                         <span className="text-[12px] text-emerald-400 font-medium">Total concluído</span>
+                         <span className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">Total concluído</span>
                       </div>
                    </div>
 
@@ -584,13 +584,13 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-blue-400" />
+                            <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Ações abertas</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{totalAcoesRealizadas}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Em andamento</span>
+                         <span className="text-[12px] text-blue-600 dark:text-blue-400 font-medium">Em andamento</span>
                       </div>
                    </div>
                  </>
@@ -599,13 +599,13 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-blue-400" />
+                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Inspeções hoje</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{pendentesHoje}</div>
-                         <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                         <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
                            <Activity className="w-3 h-3" /> 3 vs ontem
                          </span>
                       </div>
@@ -614,13 +614,13 @@ export default function InspecoesPage() {
                    <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] p-5 rounded-2xl shadow-lg relative overflow-hidden group">
                       <div className="flex items-center gap-3 mb-4">
                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Power className="w-5 h-5 text-blue-400" />
+                            <Power className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                          </div>
                          <h3 className="text-[13px] font-medium text-[var(--text-muted)]">Em andamento</h3>
                       </div>
                       <div className="flex items-end justify-between mt-2">
                          <div className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{activeExecutions}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Execuções ativas</span>
+                         <span className="text-[12px] text-blue-600 dark:text-blue-400 font-medium">Execuções ativas</span>
                       </div>
                    </div>
 
@@ -662,7 +662,7 @@ export default function InspecoesPage() {
             <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border border-[var(--border)] rounded-2xl shadow-xl flex-1 flex flex-col min-h-0 overflow-hidden relative">
               <div className="flex-1 overflow-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-[var(--bg-secondary)]/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
+                  <thead className="bg-[var(--bg-card)]/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
                     {activeTab === 'Checklists' ? (
                       <tr>
                         <th className="px-5 py-4 text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)] whitespace-nowrap">Nome do checklist</th>
@@ -715,12 +715,12 @@ export default function InspecoesPage() {
                               </div>
                             </td>
                             <td className="px-5 py-4">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${item.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${item.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>
                                 {item.tipo}
                               </span>
                             </td>
                             <td className="px-5 py-4"><span className="text-[13px] text-[var(--text-muted)]">{item.atividade}</span></td>
-                            <td className="px-5 py-4"><span className="text-[13px] text-blue-400 font-medium">{item.nr}</span></td>
+                            <td className="px-5 py-4"><span className="text-[13px] text-blue-600 dark:text-blue-400 font-medium">{item.nr}</span></td>
                             <td className="px-5 py-4 text-center"><span className="text-[13px] text-[var(--text-muted)] font-bold">{item.totalPerguntas}</span></td>
                             <td className="px-5 py-4 text-center">
                               {item.riscoAuto ? <CheckSquare className="w-4 h-4 text-emerald-500 mx-auto" /> : <X className="w-4 h-4 text-[var(--text-secondary)] mx-auto" />}
@@ -741,7 +741,7 @@ export default function InspecoesPage() {
                                     setDrawerMode('CHECKLIST_VIEW');
                                     setIsDrawerOpen(true);
                                   }}
-                                  className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
+                                  className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-300 transition-colors"
                                  >Visualizar</button>
                                  <div className="w-[1px] h-3 bg-[var(--bg-active-group)]" />
                                  <button 
@@ -770,7 +770,7 @@ export default function InspecoesPage() {
                             <td className="px-6 py-4 font-medium text-[var(--text-secondary)] text-[13px]">{item.data || item.proximaInspecao}</td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2">
-                                <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />
+                                <ShieldAlert className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                 <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.tipoInspecao || item.checklist}</span>
                               </div>
                             </td>
@@ -783,10 +783,10 @@ export default function InspecoesPage() {
                                 <span className="text-[13px] text-[var(--text-muted)]">{item.responsavel}</span>
                               </div>
                             </td>
-                            <td className="px-5 py-4 text-[13px] text-blue-400">{item.checklist}</td>
+                            <td className="px-5 py-4 text-[13px] text-blue-600 dark:text-blue-400">{item.checklist}</td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2">
-                                <span className={`text-[13px] font-bold ${conformidadeNum > 70 ? 'text-emerald-400' : conformidadeNum > 40 ? 'text-orange-400' : 'text-red-400'}`}>{conformidadeNum}%</span>
+                                <span className={`text-[13px] font-bold ${conformidadeNum > 70 ? 'text-emerald-600 dark:text-emerald-400' : conformidadeNum > 40 ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'}`}>{conformidadeNum}%</span>
                                 <div className="h-1.5 w-12 bg-[var(--bg-active-group)] rounded-full overflow-hidden">
                                   <div className={`h-full rounded-full ${conformidadeNum > 70 ? 'bg-emerald-500' : conformidadeNum > 40 ? 'bg-orange-500' : 'bg-red-500'}`} style={{ width: `${conformidadeNum}%` }}></div>
                                 </div>
@@ -795,7 +795,7 @@ export default function InspecoesPage() {
                             <td className="px-5 py-4 text-[13px] text-red-500/80 font-medium">{itemRiscos.length}</td>
                             <td className="px-5 py-4 text-[13px] text-orange-500/80 font-medium">{itemAcoes.length}</td>
                             <td className="px-5 py-4">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-emerald-500/10 border-emerald-500/20 text-emerald-400`}>Concluída</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400`}>Concluída</span>
                             </td>
                             <td className="px-5 py-4 text-center">
                               <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"><MoreVertical className="w-4 h-4" /></button>
@@ -828,8 +828,8 @@ export default function InspecoesPage() {
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
                              {item.checklist.includes('Altura') || item.checklist.includes('NR-35') ? <Activity className="w-3.5 h-3.5 text-purple-400" /> :
-                              item.checklist.includes('Elétrica') || item.checklist.includes('NR-10') ? <Zap className="w-3.5 h-3.5 text-orange-400" /> :
-                              <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />}
+                              item.checklist.includes('Elétrica') || item.checklist.includes('NR-10') ? <Zap className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" /> :
+                              <ShieldAlert className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                              <span className="text-[13px] font-bold text-[var(--text-primary)]">{item.tipoInspecao || item.checklist.replace('Checklist ', '')}</span>
                           </div>
                         </td>
@@ -852,13 +852,13 @@ export default function InspecoesPage() {
                            </span>
                         </td>
                         <td className="px-5 py-4">
-                           <span className="text-[13px] text-blue-400 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 rounded-md hover:bg-blue-500/20 transition-colors cursor-pointer">{item.checklist}</span>
+                           <span className="text-[13px] text-blue-600 dark:text-blue-400 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 rounded-md hover:bg-blue-500/20 transition-colors cursor-pointer">{item.checklist}</span>
                         </td>
                         <td className="px-5 py-4">
-                           <span className={`text-[13px] font-medium ${itemRiscos.length > 0 ? 'text-red-400' : 'text-[var(--text-muted)]'}`}>{itemRiscos.length} risco{itemRiscos.length !== 1 && 's'}</span>
+                           <span className={`text-[13px] font-medium ${itemRiscos.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-[var(--text-muted)]'}`}>{itemRiscos.length} risco{itemRiscos.length !== 1 && 's'}</span>
                         </td>
                         <td className="px-5 py-4">
-                           <span className={`text-[13px] font-medium ${itemAcoes.length > 0 ? 'text-orange-400' : 'text-[var(--text-muted)]'}`}>{itemAcoes.length} ação{itemAcoes.length !== 1 && 'ões'}</span>
+                           <span className={`text-[13px] font-medium ${itemAcoes.length > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-[var(--text-muted)]'}`}>{itemAcoes.length} ação{itemAcoes.length !== 1 && 'ões'}</span>
                         </td>
                         <td className="px-5 py-4">
                            <div className="flex items-center gap-3 w-32">
@@ -897,7 +897,7 @@ export default function InspecoesPage() {
                              {rStatus === 'Concluída' && (
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleOpenDrawer(item, 'VIEW'); }}
-                                  className={`px-3 py-1 text-[11px] font-medium rounded transition-colors border flex items-center gap-1.5 focus:outline-none bg-transparent hover:bg-[var(--bg-active-group)] text-emerald-400 border-emerald-500/30`}
+                                  className={`px-3 py-1 text-[11px] font-medium rounded transition-colors border flex items-center gap-1.5 focus:outline-none bg-transparent hover:bg-[var(--bg-active-group)] text-emerald-600 dark:text-emerald-400 border-emerald-500/30`}
                                 >
                                   Ver detalhes
                                 </button>
@@ -946,7 +946,7 @@ export default function InspecoesPage() {
                        )}
                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} className="px-2 py-1 rounded bg-transparent border border-transparent hover:text-[var(--text-primary)] transition-colors disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button>
                     </div>
-                    <div className="flex items-center gap-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-2 h-8">
+                    <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-2 h-8">
                        <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-transparent outline-none text-[var(--text-secondary)] font-medium">
                           <option value={10}>10 por página</option>
                           <option value={20}>20 por página</option>
@@ -970,13 +970,13 @@ export default function InspecoesPage() {
              animate={{ opacity: 1, width: 420 }} 
              exit={{ opacity: 0, width: 0 }}
              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-             className="h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-2xl z-40 flex flex-col overflow-hidden shrink-0 relative"
+             className="h-full bg-[var(--bg-card)] border-l border-[var(--border)] shadow-2xl z-40 flex flex-col overflow-hidden shrink-0 relative"
            >
              <div className="w-[420px] h-full flex flex-col pt-safe-top overflow-hidden">
                <div className="p-6 flex justify-between items-start border-b border-[var(--border)] shrink-0 bg-[var(--bg-primary)]">
                   <div>
                     <h3 className="text-sm font-bold text-[var(--text-primary)] mb-2 tracking-tight">Detalhes do Checklist</h3>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${selectedChecklist.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>{selectedChecklist.tipo}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${selectedChecklist.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>{selectedChecklist.tipo}</span>
                     <h2 className="text-xl font-bold text-[var(--text-primary)] leading-snug mt-3">{selectedChecklist.name}</h2>
                     <p className="text-[11px] font-bold text-[var(--text-muted)] mt-1 uppercase tracking-widest">{selectedChecklist.nr} • {selectedChecklist.atividade}</p>
                   </div>
@@ -1000,16 +1000,16 @@ export default function InspecoesPage() {
                   <div className="space-y-4">
                      <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest border-b border-[var(--border)] pb-2">Configurações Ativas</h4>
                      <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
-                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[13px] text-emerald-400 font-medium">Geração de Risco Automático</span>
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-[13px] text-emerald-600 dark:text-emerald-400 font-medium">Geração de Risco Automático</span>
                      </div>
                      <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
-                        <Zap className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[13px] text-emerald-400 font-medium">Geração de Ação Automática</span>
+                        <Zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-[13px] text-emerald-600 dark:text-emerald-400 font-medium">Geração de Ação Automática</span>
                      </div>
                      <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/10 p-3 rounded-xl">
-                        <Activity className="w-4 h-4 text-blue-400" />
-                        <span className="text-[13px] text-blue-400 font-medium">Impacto no Score: <span className="font-bold">+{selectedChecklist.impactoScore} pts</span></span>
+                        <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-[13px] text-blue-600 dark:text-blue-400 font-medium">Impacto no Score: <span className="font-bold">+{selectedChecklist.impactoScore} pts</span></span>
                      </div>
                     </div>
 
@@ -1028,7 +1028,7 @@ export default function InspecoesPage() {
                   </div>
                </div>
 
-               <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)] bg-[var(--bg-secondary)]/90 backdrop-blur-md space-y-3 shrink-0">
+               <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)] bg-[var(--bg-card)]/90 backdrop-blur-md space-y-3 shrink-0">
                   {!selectedChecklist.regraFixa ? (
                      <button 
                        onClick={() => router.push('/configuracoes?tab=checklists')}
@@ -1051,7 +1051,7 @@ export default function InspecoesPage() {
            animate={{ opacity: 1, width: 420 }} 
            exit={{ opacity: 0, width: 0 }}
            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-           className="h-full bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-2xl z-40 flex flex-col overflow-hidden shrink-0 relative"
+           className="h-full bg-[var(--bg-card)] border-l border-[var(--border)] shadow-2xl z-40 flex flex-col overflow-hidden shrink-0 relative"
          >
            <div className="w-[420px] h-full flex flex-col pt-safe-top overflow-y-auto">
              <div className="p-6 flex justify-between items-start border-b border-[var(--border)] shrink-0 bg-[var(--bg-primary)]">
@@ -1072,7 +1072,7 @@ export default function InspecoesPage() {
                   <>
                   {selectedInspecao.situacao === 'Concluída' ? (
                      <>
-                        <div className="bg-[#1a1f2e] border border-[var(--border)] rounded-xl p-5 mb-6">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 mb-6">
                            <div className="flex items-center gap-3 mb-5">
                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                  <TrendingUp className="w-4 h-4 text-indigo-400" />
@@ -1121,14 +1121,14 @@ export default function InspecoesPage() {
                                    <>
                                       <div className="flex justify-between items-center">
                                          <span className="text-[13px] text-[var(--text-muted)]">Score de conformidade</span>
-                                         <span className={`text-[15px] font-bold ${finalScore >= 90 ? 'text-emerald-400' : finalScore >= 70 ? 'text-orange-400' : 'text-red-500'}`}>{finalScore.toFixed(1)}%</span>
+                                         <span className={`text-[15px] font-bold ${finalScore >= 90 ? 'text-emerald-600 dark:text-emerald-400' : finalScore >= 70 ? 'text-orange-600 dark:text-orange-400' : 'text-red-500'}`}>{finalScore.toFixed(1)}%</span>
                                       </div>
                                       <div className="flex justify-between items-center">
                                          <span className="text-[13px] text-[var(--text-muted)]">Impacto no score</span>
-                                         <span className={`text-[13px] font-bold ${impactScore < 0 ? 'text-red-500' : 'text-emerald-400'}`}>{impactScore < 0 ? `${impactScore.toFixed(1)} pts` : 'Nenhum'}</span>
+                                         <span className={`text-[13px] font-bold ${impactScore < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>{impactScore < 0 ? `${impactScore.toFixed(1)} pts` : 'Nenhum'}</span>
                                       </div>
                                       {rulesApplied > 0 && (
-                                        <div className="bg-[var(--bg-secondary)]/50 p-3 mt-2 rounded border border-purple-500/20 text-[12px] text-[var(--text-secondary)] space-y-1">
+                                        <div className="bg-[var(--bg-card)]/50 p-3 mt-2 rounded border border-[var(--border)] text-[12px] text-[var(--text-secondary)] space-y-1">
                                           <p><span className="font-bold text-[var(--text-muted)]">Regras fixas aplicadas:</span> {rulesApplied}</p>
                                           {nrsAfetadas.size > 0 && <p><span className="font-bold text-[var(--text-muted)]">NRs afetadas:</span> {Array.from(nrsAfetadas).join(', ')}</p>}
                                         </div>
@@ -1167,7 +1167,7 @@ export default function InspecoesPage() {
                            const conformityScore = totalQuestions > 0 ? Math.round(((totalQuestions - nonConformities) / totalQuestions) * 100) : 100;
 
                            return (
-                              <div className="bg-[#1a1f2e] border border-[var(--border)] rounded-xl p-5 mb-6">
+                              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 mb-6">
                                  <div className="flex items-center gap-3 mb-4">
                                     <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                        <ShieldCheck className="w-4 h-4 text-indigo-400" />
@@ -1176,37 +1176,37 @@ export default function InspecoesPage() {
                                  </div>
                                  
                                  <div className="mb-4">
-                                    <span className={`text-[13px] font-bold flex items-center gap-1.5 ${conformityScore >= 80 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <span className={`text-[13px] font-bold flex items-center gap-1.5 ${conformityScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                                        {conformityScore >= 80 ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />} 
                                        Checklist aprovado: {conformityScore}%
                                     </span>
                                  </div>
 
                                  <div className="grid grid-cols-4 gap-2">
-                                    <div className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
+                                    <div className="bg-[var(--bg-card)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
                                        <div className="flex items-center gap-2 mb-1">
                                           <ListChecks className="w-4 h-4 text-indigo-400" />
                                           <span className="text-lg font-bold text-[var(--text-primary)]">{totalQuestions}/{totalQuestions}</span>
                                        </div>
                                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Respondidas</span>
                                     </div>
-                                    <div className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
+                                    <div className="bg-[var(--bg-card)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
                                        <div className="flex items-center gap-2 mb-1">
                                           <XCircle className="w-4 h-4 text-red-500" />
                                           <span className="text-lg font-bold text-[var(--text-primary)]">{nonConformities}</span>
                                        </div>
                                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Reprovadas</span>
                                     </div>
-                                    <div className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
+                                    <div className="bg-[var(--bg-card)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
                                        <div className="flex items-center gap-2 mb-1">
-                                          <AlertTriangle className="w-4 h-4 text-orange-400" />
+                                          <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                                           <span className="text-lg font-bold text-[var(--text-primary)]">{inspectionRisks.length}</span>
                                        </div>
                                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Riscos gerados</span>
                                     </div>
-                                    <div className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
+                                    <div className="bg-[var(--bg-card)] rounded-lg p-3 border border-[var(--border)] flex flex-col justify-between">
                                        <div className="flex items-center gap-2 mb-1">
-                                          <CheckCircle2 className="w-4 h-4 text-blue-400" />
+                                          <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                           <span className="text-lg font-bold text-[var(--text-primary)]">{inspectionActions.length}</span>
                                        </div>
                                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Ações geradas</span>
@@ -1216,7 +1216,7 @@ export default function InspecoesPage() {
                            );
                         })()}
 
-                        <div className="bg-[#1a1f2e] border border-[var(--border)] rounded-xl p-5 mb-6">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 mb-6">
                            <div className="flex items-center gap-3 mb-4">
                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                  <ClipboardList className="w-4 h-4 text-indigo-400" />
@@ -1231,13 +1231,13 @@ export default function InspecoesPage() {
                               </div>
                               <button 
                                  onClick={() => setDrawerMode('CHECKLIST_VIEW')}
-                                 className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] text-[12px] font-medium rounded-lg border border-[var(--border)] transition-colors flex items-center justify-center gap-2">
+                                 className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] text-[12px] font-medium rounded-lg border border-[var(--border)] transition-colors flex items-center justify-center gap-2">
                                  Visualizar todas as respostas <ExternalLink className="w-3.5 h-3.5" />
                               </button>
                            </div>
                         </div>
 
-                        <div className="bg-[#1a1f2e] border border-[var(--border)] rounded-xl p-5 mb-6">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 mb-6">
                            <div className="flex items-center gap-3 mb-5">
                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                  <Clock className="w-4 h-4 text-indigo-400" />
@@ -1264,7 +1264,7 @@ export default function InspecoesPage() {
                            </div>
                         </div>
 
-                        <div className="bg-[#1a1f2e] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-2">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-2">
                            <div className="flex items-center gap-2 mb-1">
                               <Share2 className="w-4 h-4 text-indigo-400" />
                               <h4 className="text-[13px] font-semibold text-[var(--text-secondary)]">Origem e conectividade</h4>
@@ -1284,7 +1284,7 @@ export default function InspecoesPage() {
                         <h4 className="text-sm font-bold text-[var(--text-primary)] border-b border-[var(--border)] pb-2 flex items-center justify-between">
                            Resumo da inspeção
                            {selectedInspecao.situacao === 'Concluída' && (
-                             <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Auditada</span>
+                             <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Auditada</span>
                            )}
                          </h4>
                         <div className="space-y-3">
@@ -1315,7 +1315,7 @@ export default function InspecoesPage() {
                         <h4 className="text-sm font-bold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">Checklist respondido</h4>
                         <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-4 space-y-3">
                            <div className="flex items-center gap-3 mb-2">
-                              <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-400 border border-blue-500/20"><ClipboardCheck className="w-4 h-4" /></div>
+                              <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-500/20"><ClipboardCheck className="w-4 h-4" /></div>
                               <span className="text-sm font-bold text-[var(--text-primary)]">{selectedInspecao.checklist}</span>
                            </div>
                            
@@ -1354,7 +1354,7 @@ export default function InspecoesPage() {
                 {/* Execute and Cancel logics would go here as they already exist */}
              </div>
 
-             <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)] bg-[var(--bg-secondary)]/90 backdrop-blur-md space-y-4 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
+             <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)] bg-[var(--bg-card)]/90 backdrop-blur-md space-y-4 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
                {drawerMode === 'VIEW' && (
                   <>
                      <div className="flex flex-col gap-4">
@@ -1441,7 +1441,7 @@ export default function InspecoesPage() {
         {isFormDrawerOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFormDrawerOpen(false)} />
-             <div className="bg-[var(--bg-secondary)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 flex flex-col p-8 max-h-[90vh]">
+             <div className="bg-[var(--bg-card)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 flex flex-col p-8 max-h-[90vh]">
                 <div className="mb-6 flex justify-between items-start">
                   <div>
                     <h2 className="text-xl font-bold text-[var(--text-primary)]">{isEditing ? 'Editar Inspeção' : 'Nova Inspeção'}</h2>
@@ -1452,7 +1452,7 @@ export default function InspecoesPage() {
                 
                 {isEditing && selectedInspecao?.situacao === 'Em andamento' && (
                    <div className="mb-6 bg-orange-500/10 border border-orange-500/20 p-3 px-4 rounded-xl flex items-center gap-3">
-                      <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0" />
                       <p className="text-[12px] text-orange-200">
                         Esta inspeção já foi iniciada. Para preservar a rastreabilidade, tipo, setor e checklist não podem ser alterados.
                       </p>

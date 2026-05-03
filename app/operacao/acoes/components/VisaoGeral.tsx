@@ -46,7 +46,7 @@ function getPrazoDetails(prazoStr: string, status: string) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   if (status === 'Vencida' || diffDays < 0) return { subtext: 'Vencido', color: 'text-red-500' };
-  if (diffDays === 0) return { subtext: 'Hoje', color: 'text-orange-400' };
+  if (diffDays === 0) return { subtext: 'Hoje', color: 'text-orange-600 dark:text-orange-400' };
   return { subtext: `Em ${diffDays} dias`, color: 'text-emerald-500' };
 }
 
@@ -128,7 +128,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       {/* 1. Cards Superiores */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Pendentes */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                  <ClipboardList className="w-5 h-5 text-purple-400" />
@@ -138,31 +138,31 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
            <div>
               <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.pendentes}</div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-orange-400 font-medium tracking-wide">12 vencem esta semana</p>
+                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium tracking-wide">12 vencem esta semana</p>
                 <div className="flex items-center gap-0.5 text-xs text-red-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 8%</div>
               </div>
            </div>
         </div>
 
         {/* Em andamento */}
-        <div className="bg-[#1a2336] border border-blue-500/20 p-5 rounded-[12px] flex flex-col justify-between shadow-[0_0_20px_rgba(59,130,246,0.05)]">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between shadow-[var(--shadow)]">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                 <Play className="w-5 h-5 fill-blue-400 text-blue-400" />
+                 <Play className="w-5 h-5 fill-blue-400 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="text-[15px] font-medium text-[var(--text-secondary)]">Em andamento</h3>
            </div>
            <div>
               <div className="text-[32px] leading-tight font-bold text-[var(--text-primary)] mb-1.5">{stats.andamento}</div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-blue-400 font-medium tracking-wide">6 responsáveis ativos</p>
-                <div className="flex items-center gap-0.5 text-xs text-blue-400 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 12%</div>
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium tracking-wide">6 responsáveis ativos</p>
+                <div className="flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 12%</div>
               </div>
            </div>
         </div>
 
         {/* Vencidas */}
-        <div className="bg-[#1e1318] border border-red-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                  <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -179,7 +179,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Concluídas */}
-        <div className="bg-[#121c17] border border-emerald-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -226,7 +226,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       {/* 2. Distribuição & Prioridade */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Gráfico Donut */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
            <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-5">Distribuição por status</h3>
            <div className="flex flex-col gap-4">
               <div className="w-[140px] h-[140px] shrink-0 relative self-center">
@@ -275,7 +275,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Barras de Prioridade */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
            <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por prioridade</h3>
            <div className="flex-1 flex flex-col justify-center space-y-5">
               {prioritiesList.map(item => (
@@ -300,7 +300,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Origem das ações */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
            <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por Origem</h3>
            <div className="flex-1 flex flex-col justify-center space-y-6">
                  <div className="flex items-center gap-4 text-[13px]">
@@ -335,7 +335,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
 
         {/* Ações por NR */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[12px] flex flex-col">
            <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Ações por NR</h3>
            <div className="flex-1 flex flex-col justify-center space-y-5">
               {acoesPorNR.map(item => (
@@ -360,7 +360,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       </div>
 
       {/* Card de Cobrança Operacional */}
-      <div className="bg-[#1a1727] border border-indigo-500/20 p-4 rounded-[12px] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-4 rounded-[12px] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
          <div className="flex flex-col gap-1">
              <h3 className="text-[15px] font-medium text-indigo-300 flex items-center gap-2">
                  <AlertTriangle className="w-4 h-4" />
@@ -381,7 +381,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
              <div className="w-px h-8 bg-[var(--bg-active-group)] hidden md:block"></div>
              <div className="flex flex-col">
                  <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-widest font-medium">Sem atualização</span>
-                 <span className="text-[18px] font-bold text-orange-400">{stats.semAtualizacao}</span>
+                 <span className="text-[18px] font-bold text-orange-600 dark:text-orange-400">{stats.semAtualizacao}</span>
              </div>
              <div className="w-px h-8 bg-[var(--bg-active-group)] hidden md:block"></div>
              <div className="flex flex-col">
@@ -395,7 +395,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
       </div>
 
       {/* 3. Tabela Recentes */}
-      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] overflow-hidden">
+      <div className="bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] overflow-hidden">
         <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
            <h2 className="text-[15px] font-medium text-[var(--text-primary)]">
               {filterPriority === 'Exige atenção' ? 'Ações que exigem atenção' : 'Ações recentes'}
@@ -411,7 +411,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
         <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[900px]">
-           <thead className="bg-[#0c1018]">
+           <thead className="bg-[var(--bg-card)]">
               <tr>
                  <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prioridade</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Ação</th>
@@ -429,8 +429,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                  const rInitials = getInitials(acao.responsavel);
                  
                  const avatarColors = [
-                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 
-                    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-400',
+                    'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-600 dark:text-blue-400', 
+                    'bg-emerald-500/20 text-emerald-600 dark:text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
                     'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                  ];
                  const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
@@ -479,10 +479,10 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                        </td>
                        <td className="px-5 py-4 w-32">
                           <span className={`text-[11px] font-medium px-2 py-0.5 rounded border flex items-center justify-center w-fit ${
-                             acao.status === 'Vencida' ? 'text-red-400 border-red-500/30 bg-red-500/10' :
-                             acao.status === 'Em andamento' ? 'text-blue-400 border-blue-500/30 bg-blue-500/10' :
-                             acao.status === 'Concluída' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' :
-                             'text-orange-400 border-orange-500/30 bg-orange-500/10'
+                             acao.status === 'Vencida' ? 'text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10' :
+                             acao.status === 'Em andamento' ? 'text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10' :
+                             acao.status === 'Concluída' ? 'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10' :
+                             'text-orange-600 dark:text-orange-400 border-orange-500/30 bg-orange-500/10'
                           }`}>
                              {acao.status}
                           </span>
@@ -510,7 +510,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         </div>
         
         {/* 4. Footer Pagination */}
-        <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-secondary)]">
+        <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-card)]">
            <span className="text-[var(--text-muted)]">Mostrando 1 a {topAcoes.length} de {stats.total} ações</span>
            <div className="flex items-center gap-2">
               <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>

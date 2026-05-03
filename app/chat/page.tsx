@@ -80,11 +80,11 @@ export default function ChatPage() {
          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-red-500">
                <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Riscos Críticos</p>
-               <p className={`text-xl font-bold ${ctx.criticalRisks > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{ctx.criticalRisks}</p>
+               <p className={`text-xl font-bold ${ctx.criticalRisks > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{ctx.criticalRisks}</p>
             </div>
             <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-orange-500">
                <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Ações Atrasadas</p>
-               <p className={`text-xl font-bold ${ctx.acoesAtrasadas > 0 ? 'text-orange-400' : 'text-emerald-400'}`}>{ctx.acoesAtrasadas}</p>
+               <p className={`text-xl font-bold ${ctx.acoesAtrasadas > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{ctx.acoesAtrasadas}</p>
             </div>
             <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-yellow-500">
                <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Insp. Pendentes</p>
@@ -92,7 +92,7 @@ export default function ChatPage() {
             </div>
             <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-blue-500">
                <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Score Operacional</p>
-               <p className={`text-xl font-bold ${ctx.operationalScore >= 80 ? 'text-emerald-400' : (ctx.operationalScore >= 60 ? 'text-yellow-400' : 'text-red-400')}`}>{ctx.operationalScore}</p>
+               <p className={`text-xl font-bold ${ctx.operationalScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' : (ctx.operationalScore >= 60 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400')}`}>{ctx.operationalScore}</p>
             </div>
          </div>
          
@@ -110,9 +110,9 @@ export default function ChatPage() {
          </div>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-               { icon: <Clock className="w-4 h-4 text-orange-400" />, title: 'O que exige ação hoje?', desc: 'Veja ações e checklists do dia.', msg: 'O que exige ação hoje?' },
+               { icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />, title: 'O que exige ação hoje?', desc: 'Veja ações e checklists do dia.', msg: 'O que exige ação hoje?' },
                { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, title: 'Qual setor mais crítico?', desc: 'Setor com mais itens graves abertos.', msg: 'Qual setor está mais crítico?' },
-               { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, title: 'O que derrubou o score?', desc: 'Análise de impacto no seu Score.', msg: 'O que derrubou o score?' },
+               { icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />, title: 'O que derrubou o score?', desc: 'Análise de impacto no seu Score.', msg: 'O que derrubou o score?' },
                { icon: <FileText className="w-4 h-4 text-purple-400" />, title: 'Gere um resumo', desc: 'Resumo para enviar a gerência.', msg: 'Gere um resumo para relatório' },
                { icon: <Zap className="w-4 h-4 text-yellow-400" />, title: 'O que devo priorizar?', desc: 'Dicas práticas de atuação.', msg: 'Quais ações devo priorizar?' }
             ].map((card, idx) => (
@@ -151,11 +151,11 @@ export default function ChatPage() {
         if (intent === 'Check_Risks') {
           // ... Risk mapping ...
           component = (
-            <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="mt-4 bg-[var(--bg-card)] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-red-500" />
-                  <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
+                  <span className="text-sm font-bold text-red-600 dark:text-red-400">Risco Crítico Identificado</span>
                 </div>
                 <span className="text-xs text-[var(--text-muted)] font-medium">Há 2 horas</span>
               </div>
@@ -164,7 +164,7 @@ export default function ChatPage() {
                 <p className="text-sm text-[var(--text-muted)]">Ativo: Prensa 03 • Responsável: João Silva</p>
               </div>
               <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
-                <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
+                <span className="text-xs text-red-600 dark:text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
               </div>
             </div>
           );
@@ -175,11 +175,11 @@ export default function ChatPage() {
         } else if (intent === 'Check_Actions') {
 // ...
           component = (
-            <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="mt-4 bg-[var(--bg-card)] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
-                   <Clock className="w-5 h-5 text-orange-400" />
-                   <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
+                   <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                   <span className="text-sm font-bold text-orange-600 dark:text-orange-400">Ação Vencida há 3 dias</span>
                 </div>
               </div>
               <div className="pointer-events-none">
@@ -194,7 +194,7 @@ export default function ChatPage() {
           ];
         } else if (intent === 'Get_Report') {
           component = (
-            <div className="mt-4 bg-[var(--bg-secondary)] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[var(--shadow-glow)]">
+            <div className="mt-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-4 shadow-[var(--shadow-glow)]">
               <div className="flex items-center gap-2 pointer-events-none">
                 <FileText className="w-5 h-5 text-purple-400" />
                 <span className="text-[15px] font-bold text-[var(--text-primary)]">Resumo Executivo (Este Mês)</span>
@@ -206,7 +206,7 @@ export default function ChatPage() {
                 </div>
                 <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-lg flex items-center justify-between">
                   <span className="text-xs text-[var(--text-muted)] font-medium">Ações Fechadas</span>
-                  <span className="text-sm font-bold text-emerald-400">89%</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">89%</span>
                 </div>
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function ChatPage() {
              </h4>
              <div className="text-[12px] text-[var(--text-secondary)]">
                 <span className="block mb-1"><strong>Status:</strong> {decision.decision}</span>
-                <span className="block mb-1"><strong>Impacto:</strong> <span className={decision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-blue-400'}>{decision.operationalImpact}</span></span>
+                <span className="block mb-1"><strong>Impacto:</strong> <span className={decision.operationalImpact === 'Alto' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}>{decision.operationalImpact}</span></span>
                 <span className="block mb-1"><strong>Efeito Estimado:</strong> {decision.causeAndEffect.effect}</span>
              </div>
            </div>
@@ -249,7 +249,7 @@ export default function ChatPage() {
                </h4>
                <div className="text-[12px] text-[var(--text-secondary)]">
                   <span className="block mb-1"><strong>Risco Específico:</strong> {normMatch.riskType}</span>
-                  <span className="block mb-1"><strong>Severidade:</strong> <span className={normMatch.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normMatch.severity.toUpperCase()}</span></span>
+                  <span className="block mb-1"><strong>Severidade:</strong> <span className={normMatch.severity === 'crítica' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}>{normMatch.severity.toUpperCase()}</span></span>
                   {riskLevelData && <span className="block mb-1"><strong>Nível de Risco:</strong> <span className={RiskEngine.getRiskColor(riskLevelData.level)} style={{padding: '0.1rem 0.3rem', borderRadius: '4px'}}>{riskLevelData.level.toUpperCase()}</span></span>}
                   <span className="block mb-1"><strong>Documentos:</strong> {normMatch.documents.join(', ')}</span>
                   <span className="block mb-1"><strong>EPI:</strong> {normMatch.ppe.join(', ')}</span>
@@ -298,7 +298,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-[var(--text-primary)] font-sans">
+    <div className="flex w-full h-full overflow-hidden bg-[var(--bg-card)] text-[var(--text-primary)] font-sans">
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
@@ -313,10 +313,10 @@ export default function ChatPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-              <button className="flex items-center shrink-0 gap-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
+              <button className="flex items-center shrink-0 gap-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
                 <Calendar className="w-4 h-4 text-[var(--text-muted)]" /> <span className="hidden sm:inline">01/05/2024 – 31/05/2024</span><span className="sm:hidden">Maio 2024</span> <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rotate-90" />
               </button>
-              <button onClick={() => setMessages([])} className="flex items-center shrink-0 gap-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
+              <button onClick={() => setMessages([])} className="flex items-center shrink-0 gap-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
                 <MessageSquare className="w-4 h-4 text-[var(--text-muted)]" /> Nova conversa
               </button>
               <button 
@@ -340,7 +340,7 @@ export default function ChatPage() {
 
           <div className="flex-1 flex gap-6 overflow-hidden mt-2">
             
-            <div className="flex-[2.5] bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col shadow-lg overflow-hidden relative">
+            <div className="flex-[2.5] bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col shadow-lg overflow-hidden relative">
                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
                   <AnimatePresence initial={false}>
                     {messages.length === 0 && welcomeMessage}
@@ -375,7 +375,7 @@ export default function ChatPage() {
                                   onClick={act.onClick}
                                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
                                     act.primary 
-                                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30' 
+                                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 hover:bg-purple-600/30' 
                                       : 'bg-[var(--bg-active-group)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-active-group)]'
                                   }`}
                                >
@@ -427,7 +427,7 @@ export default function ChatPage() {
                               }
                            }}
                            placeholder="Pergunte sobre riscos, inspeções, ações ou alertas..."
-                           className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl pl-5 pr-12 h-[52px] text-[15px] text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
+                           className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl pl-5 pr-12 h-[52px] text-[15px] text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
                         />
                      </div>
                      <button 
@@ -435,7 +435,7 @@ export default function ChatPage() {
                         className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
                            inputValue.trim() 
                               ? 'bg-purple-600 text-[var(--text-primary)] hover:bg-purple-700 shadow-[var(--shadow-glow)] border border-purple-500/50' 
-                              : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--border)]'
+                              : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border)]'
                         }`}
                      >
                         <Send className="w-5 h-5 ml-0.5" />
@@ -448,7 +448,7 @@ export default function ChatPage() {
             </div>
 
             <div className="flex-1 flex flex-col gap-6 w-full max-w-[340px] shrink-0 hidden lg:flex">
-               <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col pt-2 shadow-lg">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col pt-2 shadow-lg">
                   <div className="flex items-center justify-between p-5 border-b border-[var(--border)] mx-1">
                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                         <Activity className="w-[18px] h-[18px] text-purple-400" />
@@ -462,9 +462,9 @@ export default function ChatPage() {
 
                   <div className="flex flex-col py-2">
                      {[
-                        { title: 'Riscos críticos', subtitle: 'vs período anterior', val: '7', stat: '16%', up: true, icon: <AlertTriangle className="w-4 h-4 text-red-500" />, iconBg: 'bg-[#1e1b1d] border-red-500/20' },
-                        { title: 'Inspeções pendentes', subtitle: 'vs período anterior', val: '53', stat: '23%', up: true, icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, iconBg: 'bg-[#1a1e28] border-blue-500/20' },
-                        { title: 'Ações atrasadas', subtitle: 'vs período anterior', val: '18', stat: '37%', up: true, icon: <Clock className="w-4 h-4 text-orange-400" />, iconBg: 'bg-[#221e1a] border-orange-500/20' },
+                        { title: 'Riscos críticos', subtitle: 'vs período anterior', val: '7', stat: '16%', up: true, icon: <AlertTriangle className="w-4 h-4 text-red-500" />, iconBg: 'bg-[var(--bg-card)] border-red-500/20' },
+                        { title: 'Inspeções pendentes', subtitle: 'vs período anterior', val: '53', stat: '23%', up: true, icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />, iconBg: 'bg-[var(--bg-card)] border-blue-500/20' },
+                        { title: 'Ações atrasadas', subtitle: 'vs período anterior', val: '18', stat: '37%', up: true, icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />, iconBg: 'bg-[var(--bg-card)] border-orange-500/20' },
                      ].map((item, i) => (
                         <div key={i} className="flex items-center justify-between py-4 px-6 hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer relative group">
                            {i !== 2 && <div className="absolute bottom-0 left-6 right-6 h-px bg-[var(--bg-active-group)]"></div>}
@@ -479,7 +479,7 @@ export default function ChatPage() {
                            </div>
                            <div className="flex flex-col items-end">
                               <span className="text-[22px] font-bold text-[var(--text-primary)] leading-tight mb-1">{item.val}</span>
-                              <span className={`text-[11px] font-bold flex items-center gap-0.5 ${item.up ? 'text-red-400' : 'text-emerald-400'}`}>
+                              <span className={`text-[11px] font-bold flex items-center gap-0.5 ${item.up ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                  <ArrowUp className="w-3 h-3" /> {item.stat}
                               </span>
                            </div>
@@ -488,7 +488,7 @@ export default function ChatPage() {
                   </div>
                </div>
 
-               <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col shadow-lg">
+               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col shadow-lg">
                   <div className="flex items-center gap-2 p-5 border-b border-[var(--border)] mx-1">
                      <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px] text-purple-400" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m13 2-2 2.5h3L11 22l2-2.5h-3L13 2z"/>
@@ -499,8 +499,8 @@ export default function ChatPage() {
                   <div className="flex flex-col px-3 py-3">
                      {[
                         { title: 'Riscos', icon: <AlertTriangle className="w-4 h-4 text-red-500" /> },
-                        { title: 'Inspeções', icon: <ShieldCheck className="w-4 h-4 text-blue-400" /> },
-                        { title: 'Ações', icon: <Clock className="w-4 h-4 text-orange-400" /> },
+                        { title: 'Inspeções', icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" /> },
+                        { title: 'Ações', icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" /> },
                      ].map((item, i) => (
                         <div key={i} className="flex items-center justify-between p-3.5 px-4 hover:bg-[var(--bg-active-group)] rounded-xl cursor-pointer transition-colors group">
                            <div className="flex items-center gap-3">

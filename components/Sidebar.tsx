@@ -101,7 +101,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
 
         {/* Workspace Dropdown */}
-        <div className="flex items-center justify-between px-3 py-2 -mx-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-[rgba(124,58,237,0.04)] dark:hover:bg-[rgba(255,255,255,0.03)]">
+        <div className="flex items-center justify-between px-3 py-2 -mx-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-[var(--bg-active-group)]">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-[#7C3AED]/10 dark:bg-[#7C3AED]/20 text-[#7C3AED] dark:text-[#A78BFA]">
               <Building2 className="w-4 h-4" />
@@ -127,12 +127,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                   className={`w-full flex items-center justify-between transition-all duration-200 ${
                     isGroupActive 
                       ? 'px-4 py-3 font-semibold' 
-                      : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[rgba(0,0,0,0.04)] dark:hover:bg-[rgba(255,255,255,0.03)] hover:text-[#18181B] dark:hover:text-[#F4F4F5]'
+                      : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
                   }`}
                   style={isGroupActive ? {
                     color: isDark ? '#F4F4F5' : '#7C3AED',
                     background: isDark ? 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))' : 'rgba(124,58,237,0.10)',
-                    border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid transparent',
+                    border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid rgba(124,58,237,0.4)',
                     borderRadius: '12px',
                     boxShadow: isDark ? '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none'
                   } : {}}
@@ -156,12 +156,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                           className={`flex items-center justify-between py-2 pl-4 pr-3 text-[12px] font-medium transition-all duration-200 relative rounded-lg ${
                             isChildActive 
                               ? 'font-semibold' 
-                              : 'text-[#71717A] hover:bg-[rgba(0,0,0,0.04)] dark:hover:bg-[rgba(255,255,255,0.03)] hover:text-[#18181B] dark:hover:text-[#F4F4F5]'
+                              : 'text-[#71717A] hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
                           }`}
                           style={isChildActive ? { color: isDark ? '#F4F4F5' : '#7C3AED' } : {}}
                         >
                           {isChildActive && (
-                            <div className="absolute left-1 top-1 bottom-1 w-[2px] bg-[#7C3AED] rounded-r-md"></div>
+                            <div className="absolute left-1 top-1 bottom-1 w-[3px] bg-[#7C3AED] rounded-r-md"></div>
                           )}
                           <div className="flex items-center gap-3">
                             <child.icon className={`w-4 h-4 shrink-0`} style={{ color: isChildActive ? (isDark ? '#A78BFA' : '#7C3AED') : 'inherit' }} />
@@ -191,12 +191,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               className={`flex items-center justify-between transition-all duration-200 ${
                 isActive 
                   ? 'px-4 py-3 font-semibold' 
-                  : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[rgba(0,0,0,0.04)] dark:hover:bg-[rgba(255,255,255,0.03)] hover:text-[#18181B] dark:hover:text-[#F4F4F5]'
+                  : 'px-4 py-3 text-[#71717A] rounded-xl hover:bg-[var(--bg-active-group)] hover:text-[var(--accent)]'
               }`}
               style={isActive ? {
                 color: isDark ? '#F4F4F5' : '#7C3AED',
                 background: isDark ? 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.10))' : 'rgba(124,58,237,0.10)',
-                border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid transparent',
+                border: isDark ? '1px solid rgba(167,139,250,0.30)' : '1px solid rgba(124,58,237,0.4)',
                 borderRadius: '12px',
                 boxShadow: isDark ? '0 0 20px rgba(124,58,237,0.15), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none'
               } : {}}
@@ -259,7 +259,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
       {/* User Profile */}
       <div className={`p-4 border-t pb-6 ${borderRight}`}>
-        <div className="flex items-center justify-between cursor-pointer group px-2 py-1.5 rounded-xl -mx-2 transition-all hover:bg-[rgba(0,0,0,0.04)] dark:hover:bg-[rgba(255,255,255,0.03)]">
+        <div className="flex items-center justify-between cursor-pointer group px-2 py-1.5 rounded-xl -mx-2 transition-all hover:bg-[var(--bg-active-group)]">
           <div className="flex items-center gap-3">
             <div className="relative">
               <Image

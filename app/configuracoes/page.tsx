@@ -29,11 +29,11 @@ export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('geral');
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-[var(--text-primary)] font-sans">
+    <div className="flex w-full h-full overflow-hidden bg-[var(--bg-card)] text-[var(--text-primary)] font-sans">
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Background elements for depth */}
-        <div className="absolute top-0 inset-x-0 h-[300px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none"></div>
+        <div className="absolute top-0 inset-x-0 h-[300px]  pointer-events-none"></div>
 
         <div className="p-6 md:p-8 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden relative z-10">
           
@@ -43,21 +43,21 @@ export default function ConfiguracoesPage() {
               <p className="text-sm text-[var(--text-muted)] mt-1">Gerencie as principais configurações e regras do sistema.</p>
             </div>
             <div>
-               <button className="relative p-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] rounded-lg transition-colors border border-[var(--border)]">
+               <button className="relative p-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] rounded-lg transition-colors border border-[var(--border)]">
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500"></span>
                </button>
             </div>
           </header>
 
-          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full overflow-x-auto custom-scrollbar gap-1 mb-6">
+          <div className="flex bg-[var(--bg-card)] p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full overflow-x-auto custom-scrollbar gap-1 mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                   activeTab === tab.id 
-                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
+                    ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[var(--shadow-glow)]' 
                     : 'bg-transparent text-[var(--text-muted)] border border-transparent hover:bg-[var(--bg-active-group)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -111,11 +111,11 @@ function TabGeral() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
          {[
-            { title: "Configurações críticas", val: "3", desc: "requerem atenção", icon: <AlertTriangle className="text-red-400" />, border: "border-red-500/20", bg: "bg-red-500/5", color: "text-red-400" },
-            { title: "Integrações ativas", val: "6", desc: "serviços conectados", icon: <CheckCircle2 className="text-emerald-400" />, border: "border-emerald-500/20", bg: "bg-emerald-500/5", color: "text-emerald-400" },
-            { title: "Alertas ativos", val: "12", desc: "notificações habilitadas", icon: <Bell className="text-blue-400" />, border: "border-blue-500/20", bg: "bg-blue-500/5", color: "text-blue-400" },
+            { title: "Configurações críticas", val: "3", desc: "requerem atenção", icon: <AlertTriangle className="text-red-600 dark:text-red-400" />, border: "border-red-500/20", bg: "bg-red-500/5", color: "text-red-600 dark:text-red-400" },
+            { title: "Integrações ativas", val: "6", desc: "serviços conectados", icon: <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" />, border: "border-emerald-500/20", bg: "bg-emerald-500/5", color: "text-emerald-600 dark:text-emerald-400" },
+            { title: "Alertas ativos", val: "12", desc: "notificações habilitadas", icon: <Bell className="text-blue-600 dark:text-blue-400" />, border: "border-blue-500/20", bg: "bg-blue-500/5", color: "text-blue-600 dark:text-blue-400" },
          ].map((card, i) => (
-            <div key={i} className={`bg-[var(--bg-secondary)] border overflow-hidden p-5 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-[var(--bg-active-group)] transition-colors relative ${card.border}`}>
+            <div key={i} className={`bg-[var(--bg-card)] border overflow-hidden p-5 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-[var(--bg-active-group)] transition-colors relative ${card.border}`}>
                <div className="flex gap-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${card.bg} ${card.border}`}>
                      {card.icon}
@@ -137,7 +137,7 @@ function TabGeral() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
          
          {/* Block 1 */}
-         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
                <Building2 className="w-5 h-5 text-purple-400" />
                <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Informações da Empresa</h3>
@@ -167,7 +167,7 @@ function TabGeral() {
          </div>
 
          {/* Block 2 */}
-         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
                <Settings className="w-5 h-5 text-purple-400" />
                <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Configurações do Sistema</h3>
@@ -195,9 +195,9 @@ function TabGeral() {
          </div>
 
          {/* Block 3 */}
-         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
              <div className="flex items-center gap-3 mb-6">
-               <Activity className="w-5 h-5 text-emerald-400" />
+               <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Impacto Econômico</h3>
             </div>
             
@@ -263,7 +263,7 @@ function TabEmpresa() {
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
          
          <div className="flex-1 space-y-6">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
                <div className="mb-6">
                   <h3 className="text-lg font-bold text-[var(--text-primary)]">Dados Essenciais</h3>
                   <p className="text-sm text-[var(--text-muted)]">Informações principais que aparecem em laudos e cabeçalhos.</p>
@@ -299,7 +299,7 @@ function TabEmpresa() {
                </div>
             </div>
 
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
                <div className="mb-6 flex justify-between items-center">
                   <div>
                      <h3 className="text-lg font-bold text-[var(--text-primary)]">Prefêrencias Locais</h3>
@@ -327,7 +327,7 @@ function TabEmpresa() {
          </div>
 
          <div className="w-full lg:w-[450px] space-y-6">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
                <h3 className="text-[15px] font-bold text-[var(--text-primary)] mb-4">Logo da Empresa</h3>
                <div className="border border-dashed border-[var(--border)] rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-[var(--bg-active-group)] hover:border-purple-500/50 transition-colors cursor-pointer group">
                   <div className="w-16 h-16 bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -338,7 +338,7 @@ function TabEmpresa() {
                </div>
             </div>
 
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 flex flex-col h-[400px]">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 flex flex-col h-[400px]">
                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Setores</h3>
                   <button onClick={handleAddSector} className="text-[11px] font-bold text-purple-400 uppercase tracking-wider hover:text-purple-300 transition-colors flex items-center gap-1">
@@ -355,7 +355,7 @@ function TabEmpresa() {
                            className="bg-transparent border-none text-[13px] font-medium text-[var(--text-primary)] flex-1 focus:outline-none focus:border-b border-purple-500" 
                         />
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button onClick={() => deleteSector(setor.id)} className="text-red-500/70 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                           <button onClick={() => deleteSector(setor.id)} className="text-red-500/70 hover:text-red-600 dark:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                      </div>
                   ))}
@@ -378,7 +378,7 @@ function TabUsuarios() {
    };
 
    return (
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col overflow-hidden">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col overflow-hidden">
          <div className="p-5 border-b border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full sm:w-[300px]">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
@@ -438,11 +438,11 @@ function TabUsuarios() {
                            <button 
                               onClick={() => updateUser(u.id, { status: u.status === 'Ativo' ? 'Inativo' : 'Ativo' })}
                               className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
-                              u.status === 'Ativo' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-[var(--text-muted)] bg-[var(--bg-active-group)] border-[var(--border)]'
+                              u.status === 'Ativo' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-[var(--text-muted)] bg-[var(--bg-active-group)] border-[var(--border)]'
                            }`}>{u.status}</button>
                         </td>
                         <td className="px-5 py-4 text-right">
-                           <button onClick={() => deleteUser(u.id)} className="p-1.5 text-[var(--text-muted)] hover:text-red-400 rounded transition-colors">
+                           <button onClick={() => deleteUser(u.id)} className="p-1.5 text-[var(--text-muted)] hover:text-red-600 dark:text-red-400 rounded transition-colors">
                               <Trash2 className="w-4 h-4" />
                            </button>
                         </td>
@@ -473,7 +473,7 @@ function TabChecklists() {
       <div className="flex flex-col xl:flex-row gap-6 w-full items-start h-[600px]">
          
          {/* Left: Templates */}
-         <div className="w-full xl:w-[280px] bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-5 flex flex-col h-full shrink-0">
+         <div className="w-full xl:w-[280px] bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 flex flex-col h-full shrink-0">
             <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Modelos de Checklist</h3>
             <div className="relative mb-4">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
@@ -488,7 +488,7 @@ function TabChecklists() {
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                {filteredChecklists.map((c) => {
                   const isActive = c.id === selectedId;
-                  let color = 'bg-gray-500';
+                  let color = 'bg-[var(--bg-card)]0';
                   if(c.status === 'Ativo') color = 'bg-emerald-500';
                   if(c.status === 'Rascunho') color = 'bg-orange-500';
 
@@ -510,7 +510,7 @@ function TabChecklists() {
 
          {/* Middle: Builder */}
          {activeChecklist ? (
-            <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col h-full overflow-hidden shadow-lg">
+            <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col h-full overflow-hidden shadow-lg">
                <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-primary)]">
                   <div>
                      <h2 className="text-lg font-bold text-[var(--text-primary)] mb-0.5">Construtor de Checklist</h2>
@@ -518,16 +518,16 @@ function TabChecklists() {
                   </div>
                   <div className="flex items-center gap-2">
                      {!activeChecklist.regraFixa && (
-                        <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                        <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-600 dark:text-red-400 transition-colors">Excluir</button>
                      )}
                   </div>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[#0A0D14]">
+               <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[var(--bg-card)]">
                   
                   <div className="max-w-3xl mx-auto space-y-6">
                      {/* Basic Info */}
-                     <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-2xl space-y-4">
+                     <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-1.5">
                               <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Nome do checklist</label>
@@ -558,8 +558,8 @@ function TabChecklists() {
                      {/* Sections */}
                      <div className="space-y-4">
                         {activeChecklist.sections.map((section: any, sIndex: number) => (
-                           <div key={section.id} className="bg-[#1e1b4b]/20 border border-purple-500/20 p-1 rounded-2xl relative group/section">
-                              <div className="bg-[var(--bg-secondary)] rounded-xl overflow-hidden border border-[var(--border)]">
+                           <div key={section.id} className="bg-[var(--bg-card)] border border-purple-500/20 p-1 rounded-2xl relative group/section">
+                              <div className="bg-[var(--bg-card)] rounded-xl overflow-hidden border border-[var(--border)]">
                                  <div className="p-3 bg-[var(--bg-primary)] border-b border-[var(--border)] flex items-center justify-between">
                                     <div className="flex items-center gap-3 flex-1">
                                        <GripVertical className="w-4 h-4 text-[var(--text-secondary)] cursor-move" />
@@ -713,13 +713,13 @@ function SubTabRegrasFixas() {
    const [selectedRule, setSelectedRule] = useState<any>(null);
 
    return (
-      <div className="flex-1 flex flex-col h-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden relative">
          <div className="p-5 border-b border-[var(--border)] shrink-0 flex items-center justify-between bg-[var(--bg-primary)]">
             <div>
                <h3 className="text-[15px] font-bold text-[var(--text-primary)]">Regras fixas NR</h3>
                <p className="text-xs text-[var(--text-muted)] mt-1.5">Base normativa imutável que compõe o motor inteligente ApexShield.</p>
             </div>
-            <div className="bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full text-[11px] font-bold border border-purple-500/20">
+            <div className="bg-purple-500/10 text-purple-700 dark:text-purple-400 px-3 py-1 rounded-full text-[11px] font-bold border border-purple-500/20">
                Regras do Gerenciamento de Risco
             </div>
          </div>
@@ -742,13 +742,13 @@ function SubTabRegrasFixas() {
                         <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${rule.severidadeBase === 'Crítica' || rule.severidadeBase === 'Crítico' ? 'bg-red-500/10 text-red-500 border-red-500/20' : rule.severidadeBase === 'Alta' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>{rule.severidadeBase}</span></td>
                         <td className="px-5 py-3 text-center">
                            <div className="flex items-center justify-center gap-2 text-xs">
-                              <span className={rule.geraRisco ? 'text-emerald-400' : 'text-[var(--text-muted)]'}>Risco</span>
+                              <span className={rule.geraRisco ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--text-muted)]'}>Risco</span>
                               <span className="text-[var(--text-secondary)]">•</span>
-                              <span className={rule.geraAcao ? 'text-emerald-400' : 'text-[var(--text-muted)]'}>Ação</span>
+                              <span className={rule.geraAcao ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--text-muted)]'}>Ação</span>
                            </div>
                         </td>
                         <td className="px-5 py-3 flex items-center gap-3">
-                           <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded">Ativa</span>
+                           <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded">Ativa</span>
                            <button onClick={() => setSelectedRule(rule)} className="text-purple-400 hover:text-purple-300 text-xs font-bold underline transition-colors">Visualizar</button>
                         </td>
                      </tr>
@@ -762,13 +762,13 @@ function SubTabRegrasFixas() {
             {selectedRule && (
                <>
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[var(--bg-primary)] z-10" onClick={() => setSelectedRule(null)} />
-                  <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="absolute top-0 right-0 bottom-0 w-[500px] max-w-[90%] bg-[var(--bg-secondary)] border-l border-[var(--border)] z-20 shadow-2xl flex flex-col">
+                  <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="absolute top-0 right-0 bottom-0 w-[500px] max-w-[90%] bg-[var(--bg-card)] border-l border-[var(--border)] z-20 shadow-2xl flex flex-col">
                      <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-primary)]">
                         <div>
                            <div className="flex items-center gap-2 mb-1.5">
                               <h2 className="text-lg font-black text-[var(--text-primary)]">{selectedRule.nr}</h2>
-                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-purple-500/10 text-purple-400 border-purple-500/20">Regra Fixa</span>
-                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-gray-500/10 text-[var(--text-muted)] border-[var(--border)]">Não Editável</span>
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20">Regra Fixa</span>
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-[var(--bg-card)]0/10 text-[var(--text-muted)] border-[var(--border)]">Não Editável</span>
                            </div>
                            <p className="text-sm text-[var(--text-secondary)]">{selectedRule.titulo}</p>
                         </div>
@@ -799,7 +799,7 @@ function SubTabRegrasFixas() {
 
                         {/* Gatilho */}
                         <div className="space-y-4">
-                           <h4 className="flex items-center gap-2 text-sm font-bold text-orange-400 pb-2 border-b border-[var(--border)]">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-orange-600 dark:text-orange-400 pb-2 border-b border-[var(--border)]">
                               <AlertTriangle className="w-4 h-4" /> Gatilho
                            </h4>
                            <div className="bg-[var(--bg-primary)] p-3 rounded-xl border border-[var(--border)] space-y-2">
@@ -814,32 +814,32 @@ function SubTabRegrasFixas() {
 
                         {/* Efeitos Automáticos */}
                         <div className="space-y-4">
-                           <h4 className="flex items-center gap-2 text-sm font-bold text-blue-400 pb-2 border-b border-[var(--border)]">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 pb-2 border-b border-[var(--border)]">
                               <Activity className="w-4 h-4" /> Efeitos Automáticos
                            </h4>
                            <div className="grid grid-cols-2 gap-3">
                               <div className="flex items-center justify-between bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
                                  <span className="text-xs text-[var(--text-muted)]">Gera Risco</span>
-                                 <span className={selectedRule.geraRisco ? 'text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.geraRisco ? 'Sim' : 'Não'}</span>
+                                 <span className={selectedRule.geraRisco ? 'text-emerald-600 dark:text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.geraRisco ? 'Sim' : 'Não'}</span>
                               </div>
                               <div className="flex items-center justify-between bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
                                  <span className="text-xs text-[var(--text-muted)]">Gera Ação</span>
-                                 <span className={selectedRule.geraAcao ? 'text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.geraAcao ? 'Sim' : 'Não'}</span>
+                                 <span className={selectedRule.geraAcao ? 'text-emerald-600 dark:text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.geraAcao ? 'Sim' : 'Não'}</span>
                               </div>
                               <div className="flex items-center justify-between bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
                                  <span className="text-xs text-[var(--text-muted)]">Impacta Score</span>
-                                 <span className={selectedRule.impactaScore ? 'text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.impactaScore ? 'Sim' : 'Não'}</span>
+                                 <span className={selectedRule.impactaScore ? 'text-emerald-600 dark:text-emerald-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.impactaScore ? 'Sim' : 'Não'}</span>
                               </div>
                               <div className="flex items-center justify-between bg-[var(--bg-primary)] p-3 rounded border border-[var(--border)]">
                                  <span className="text-xs text-[var(--text-muted)]">Bloqueante</span>
-                                 <span className={selectedRule.bloqueante ? 'text-red-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.bloqueante ? 'Sim' : 'Não'}</span>
+                                 <span className={selectedRule.bloqueante ? 'text-red-600 dark:text-red-400 text-xs font-bold' : 'text-[var(--text-muted)] text-xs font-medium'}>{selectedRule.bloqueante ? 'Sim' : 'Não'}</span>
                               </div>
                            </div>
                         </div>
 
                         {/* Cálculos */}
                         <div className="space-y-4">
-                           <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-400 pb-2 border-b border-[var(--border)]">
+                           <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 pb-2 border-b border-[var(--border)]">
                               <CheckCircle2 className="w-4 h-4" /> Cálculos Predefinidos
                            </h4>
                            <div className="grid grid-cols-2 gap-4">
@@ -865,8 +865,8 @@ function SubTabRegrasFixas() {
                         {/* Proteção */}
                         <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl mt-6 font-mono text-xs">
                            <div className="flex items-start gap-2 mb-2">
-                              <Lock className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                              <span className="text-red-400 font-bold">Proteção do Sistema Aplicada</span>
+                              <Lock className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                              <span className="text-red-600 dark:text-red-400 font-bold">Proteção do Sistema Aplicada</span>
                            </div>
                            <div className="ml-6 space-y-1 text-[var(--text-muted)]">
                               <p>&gt; editavel: <span className="text-orange-300">false</span></p>
@@ -911,7 +911,7 @@ function SubTabRegrasPersonalizadas() {
    return (
       <div className="flex flex-col w-full h-[600px] gap-6 xl:flex-row">
          {/* Left Side: Rule List */}
-         <div className="w-full xl:w-[280px] bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-5 flex flex-col h-full shrink-0">
+         <div className="w-full xl:w-[280px] bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 flex flex-col h-full shrink-0">
             <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Regras Personalizadas</h3>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                {rules.map((r: any) => {
@@ -921,7 +921,7 @@ function SubTabRegrasPersonalizadas() {
                   return (
                      <div key={r.id} onClick={() => setSelectedId(r.id)} className={`p-3 rounded-xl border transition-colors cursor-pointer ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-[var(--bg-active-group)] border-[var(--border)] hover:border-[var(--border)]'}`}>
                         <div className="flex justify-between items-start mb-2">
-                           <span className={`w-2 h-2 rounded-full mt-1 ${isActiveRule ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
+                           <span className={`w-2 h-2 rounded-full mt-1 ${isActiveRule ? 'bg-emerald-500' : 'bg-[var(--bg-card)]0'}`}></span>
                            <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold">{severity}</span>
                         </div>
                         <p className={`text-[13px] font-bold ${isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>{r.name}</p>
@@ -936,14 +936,14 @@ function SubTabRegrasPersonalizadas() {
 
          {/* Left Side: Rule Builder */}
          {activeRule ? (
-         <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col h-full shadow-lg">
+         <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col h-full shadow-lg">
             <div className="p-5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-[var(--bg-primary)]">
                <div>
                   <h2 className="text-lg font-bold text-[var(--text-primary)] mb-0.5">{(activeRule as any).regraFixa ? 'Visualizador de Regra Fixa' : 'Construtor de Regra (Risco Automático)'}</h2>
                   <p className="text-xs text-[var(--text-muted)]">{(activeRule as any).regraFixa ? 'Esta regra é normativa e não pode ser alterada.' : 'Transforme respostas em ações proativas no sistema.'}</p>
                </div>
                <div className="flex items-center gap-2">
-                  {!(activeRule as any).regraFixa && <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>}
+                  {!(activeRule as any).regraFixa && <button onClick={() => deleteRule(activeRule.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-600 dark:text-red-400 transition-colors">Excluir</button>}
                   {!(activeRule as any).regraFixa && (
                     <button className="bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] px-4 py-2 rounded-lg text-[13px] font-bold transition-colors" onClick={() => updateRule(activeRule.id, { isActive: !activeRule.isActive })}>
                        {activeRule.isActive ? 'Desativar Regra' : 'Ativar Regra'}
@@ -994,7 +994,7 @@ function SubTabRegrasPersonalizadas() {
                      <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-4 rounded-xl flex gap-6">
                         <div className="space-y-1">
                            <label className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Severidade</label>
-                           <select value={activeRule.severity} onChange={e => updateRule(activeRule.id, { severity: e.target.value as any })} className="bg-transparent text-[var(--text-primary)] font-bold text-[13px] border-none focus:outline-none cursor-pointer text-red-400">
+                           <select value={activeRule.severity} onChange={e => updateRule(activeRule.id, { severity: e.target.value as any })} className="bg-transparent text-[var(--text-primary)] font-bold text-[13px] border-none focus:outline-none cursor-pointer text-red-600 dark:text-red-400">
                               <option>Crítico</option>
                               <option>Alto</option>
                               <option>Médio</option>
@@ -1013,7 +1013,7 @@ function SubTabRegrasPersonalizadas() {
                   <div className="relative">
                      <div className="absolute w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center -left-[30px] top-1 text-[10px] font-bold text-[var(--text-primary)] shadow-[0_0_10px_rgba(249,115,22,0.5)]">3</div>
                      <h4 className="text-sm font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-orange-400" /> Ação Corretiva
+                        <ShieldCheck className="w-4 h-4 text-orange-600 dark:text-orange-400" /> Ação Corretiva
                      </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
@@ -1041,7 +1041,7 @@ function SubTabRegrasPersonalizadas() {
          ) : null}
 
          {/* Right Side: Simulation Summary */}
-         <div className="w-full xl:w-[320px] shrink-0 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+         <div className="w-full xl:w-[320px] shrink-0 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
              {/* decorative gradient */}
             <div className="absolute top-[-50px] right-[-50px] w-40 h-40 bg-purple-500/10 blur-3xl rounded-full"></div>
             
@@ -1064,7 +1064,7 @@ function SubTabRegrasPersonalizadas() {
                </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 text-xs font-bold w-full justify-center">
+            <div className="mt-6 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 text-xs font-bold w-full justify-center">
                <CheckCircle2 className="w-4 h-4" /> Lógica validada sem conflitos
             </div>
          </div>
@@ -1077,7 +1077,7 @@ function TabSlas() {
 
    return (
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
-         <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
             <div className="mb-6">
                <h3 className="text-lg font-bold text-[var(--text-primary)]">Configuração de SLAs</h3>
                <p className="text-sm text-[var(--text-muted)]">Prazos de resolução e regras de escalonamento com base na severidade.</p>
@@ -1085,7 +1085,7 @@ function TabSlas() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                <div className="space-y-2">
-                  <label className="text-xs font-bold text-red-400 uppercase tracking-wider">Risco Crítico (em Horas)</label>
+                  <label className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Risco Crítico (em Horas)</label>
                   <input 
                      type="number" 
                      value={engineConfig.slas.criticoHoras} 
@@ -1094,7 +1094,7 @@ function TabSlas() {
                   />
                </div>
                <div className="space-y-2">
-                  <label className="text-xs font-bold text-orange-400 uppercase tracking-wider">Risco Alto (em Horas)</label>
+                  <label className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Risco Alto (em Horas)</label>
                   <input 
                      type="number" 
                      value={engineConfig.slas.altoHoras} 
@@ -1112,7 +1112,7 @@ function TabSlas() {
                   />
                </div>
                <div className="space-y-2">
-                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Risco Baixo (em Dias)</label>
+                  <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Risco Baixo (em Dias)</label>
                   <input 
                      type="number" 
                      value={engineConfig.slas.baixoDias} 
@@ -1131,7 +1131,7 @@ function TabAlertas() {
 
    return (
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
-         <div className="w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
             <div className="mb-6">
                <h3 className="text-lg font-bold text-[var(--text-primary)]">Central de Notificações</h3>
                <p className="text-sm text-[var(--text-muted)]">Gerencie a cadência e comportamento dos alertas gerados.</p>
@@ -1174,7 +1174,7 @@ function TabPerfil() {
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
          <div className="flex-1 space-y-6">
             
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-6">Meu Perfil Corporativo</h3>
                <div className="flex flex-col md:flex-row gap-8 items-start">
                   <div className="flex flex-col items-center gap-3 shrink-0">
@@ -1210,8 +1210,8 @@ function TabPerfil() {
                </div>
             </div>
 
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-6 text-emerald-400">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-6 text-emerald-600 dark:text-emerald-400">
                   <Shield className="w-5 h-5" />
                   <h3 className="text-lg font-bold text-[var(--text-primary)]">Segurança da Conta</h3>
                </div>
@@ -1230,7 +1230,7 @@ function TabPerfil() {
                      <div className="pl-3">
                         <div className="flex items-center gap-2">
                            <p className="text-[14px] font-bold text-[var(--text-primary)]">Autenticação 2FA</p>
-                           <span className="text-[9px] font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Ativa</span>
+                           <span className="text-[9px] font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Ativa</span>
                         </div>
                         <p className="text-[12px] text-[var(--text-muted)] mt-1">Proteção por app autenticador ligada.</p>
                      </div>
@@ -1243,7 +1243,7 @@ function TabPerfil() {
 
          </div>
 
-         <div className="w-full lg:w-[400px] h-fit bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-6">
+         <div className="w-full lg:w-[400px] h-fit bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6">
             <h3 className="text-[15px] font-bold text-[var(--text-primary)] mb-6">Preferências de Notificação</h3>
             <div className="space-y-5">
                {[
@@ -1359,7 +1359,7 @@ function TabIndicadores() {
    };
 
    return (
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl flex flex-col overflow-hidden max-h-full">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col overflow-hidden max-h-full">
          <div className="p-5 border-b border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
                <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">Horas Trabalhadas (HET)</h2>
@@ -1406,8 +1406,8 @@ function TabIndicadores() {
                               <td className="px-5 py-4">
                                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                                     w.calculation_mode === 'Estimado' 
-                                       ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' 
-                                       : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                       ? 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20' 
+                                       : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                                  }`}>{w.calculation_mode}</span>
                               </td>
                               <td className="px-5 py-4">
@@ -1419,7 +1419,7 @@ function TabIndicadores() {
                               <td className="px-5 py-4 text-right">
                                  <div className="flex items-center justify-end gap-2">
                                     <button onClick={() => handleEdit(w)} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded transition-colors"><Edit2 className="w-4 h-4" /></button>
-                                    <button onClick={() => deleteWorkHours(w.id)} className="p-1.5 text-[var(--text-muted)] hover:text-red-400 rounded transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                    <button onClick={() => deleteWorkHours(w.id)} className="p-1.5 text-[var(--text-muted)] hover:text-red-600 dark:text-red-400 rounded transition-colors"><Trash2 className="w-4 h-4" /></button>
                                  </div>
                               </td>
                            </tr>
@@ -1438,9 +1438,9 @@ function TabIndicadores() {
                      initial={{ opacity: 0, scale: 0.95 }}
                      animate={{ opacity: 1, scale: 1 }}
                      exit={{ opacity: 0, scale: 0.95 }}
-                     className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl w-full max-w-2xl max-h-full overflow-y-auto custom-scrollbar shadow-2xl relative"
+                     className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl w-full max-w-2xl max-h-full overflow-y-auto custom-scrollbar shadow-2xl relative"
                   >
-                     <div className="p-6 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--bg-secondary)] z-10">
+                     <div className="p-6 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--bg-card)] z-10">
                         <h3 className="text-xl font-bold text-[var(--text-primary)]">{editingItem ? 'Editar Lançamento' : 'Novo Lançamento de Horas'}</h3>
                         <button onClick={() => setIsModalOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2">
                            <X className="w-5 h-5"/>
@@ -1478,7 +1478,7 @@ function TabIndicadores() {
                               </button>
                               <button 
                                  onClick={() => setCalculationMode('Estimado')}
-                                 className={`flex-1 py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-colors ${calculationMode === 'Estimado' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                 className={`flex-1 py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-bold transition-colors ${calculationMode === 'Estimado' ? 'bg-blue-600/20 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
                               >
                                  <Activity className="w-4 h-4"/> Estimado / CCT
                               </button>
@@ -1488,9 +1488,9 @@ function TabIndicadores() {
                         {calculationMode === 'Manual' ? (
                            <div className="bg-[var(--bg-primary)]/50 p-5 rounded-xl border border-[var(--border)] space-y-4 shadow-inner">
                               <div className="space-y-2">
-                                 <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider items-center flex gap-2"> <FileText className="w-4 h-4 text-emerald-400"/> Total de Horas Trabalhadas</label>
+                                 <label className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider items-center flex gap-2"> <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400"/> Total de Horas Trabalhadas</label>
                                  <div className="relative">
-                                    <input type="number" step="1" value={totalHoursManual} onChange={e => setTotalHoursManual(Number(e.target.value))} className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-lg font-bold text-emerald-400 focus:outline-none focus:border-emerald-500" />
+                                    <input type="number" step="1" value={totalHoursManual} onChange={e => setTotalHoursManual(Number(e.target.value))} className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-lg font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500" />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">horas totais</span>
                                  </div>
                                  <p className="text-[11px] text-[var(--text-muted)] mt-2">Informe diretamente o total global do período (Extraia do sistema de ponto/RH).</p>
@@ -1499,15 +1499,15 @@ function TabIndicadores() {
                         ) : (
                            <div className="bg-[var(--bg-primary)]/50 p-5 rounded-xl border border-[var(--border)] space-y-5 shadow-inner">
                               <div className="grid grid-cols-3 gap-4">
-                                 <div className="space-y-1.5 focus-within:text-blue-400 text-[var(--text-muted)] transition-colors">
+                                 <div className="space-y-1.5 focus-within:text-blue-600 dark:text-blue-400 text-[var(--text-muted)] transition-colors">
                                     <label className="text-[10px] font-bold uppercase tracking-wider block">Total Colaboradores</label>
                                     <input type="number" value={employeeCount} onChange={e => setEmployeeCount(Number(e.target.value))} className="w-full bg-transparent border-b border-[var(--border)] focus:border-blue-500 text-[16px] font-bold text-[var(--text-primary)] py-1 outline-none transition-colors" />
                                  </div>
-                                 <div className="space-y-1.5 focus-within:text-blue-400 text-[var(--text-muted)] transition-colors">
+                                 <div className="space-y-1.5 focus-within:text-blue-600 dark:text-blue-400 text-[var(--text-muted)] transition-colors">
                                     <label className="text-[10px] font-bold uppercase tracking-wider block">Horas/Dia (Média)</label>
                                     <input type="number" value={hoursPerDay} onChange={e => setHoursPerDay(Number(e.target.value))} className="w-full bg-transparent border-b border-[var(--border)] focus:border-blue-500 text-[16px] font-bold text-[var(--text-primary)] py-1 outline-none transition-colors" />
                                  </div>
-                                 <div className="space-y-1.5 focus-within:text-blue-400 text-[var(--text-muted)] transition-colors">
+                                 <div className="space-y-1.5 focus-within:text-blue-600 dark:text-blue-400 text-[var(--text-muted)] transition-colors">
                                     <label className="text-[10px] font-bold uppercase tracking-wider block">Dias Trabalhados</label>
                                     <input type="number" value={workDays} onChange={e => setWorkDays(Number(e.target.value))} className="w-full bg-transparent border-b border-[var(--border)] focus:border-blue-500 text-[16px] font-bold text-[var(--text-primary)] py-1 outline-none transition-colors" />
                                  </div>
@@ -1517,7 +1517,7 @@ function TabIndicadores() {
                                     <label className="text-[10px] font-bold uppercase tracking-wider block">+ Horas Extras Totais</label>
                                     <input type="number" value={overtimeHours} onChange={e => setOvertimeHours(Number(e.target.value))} className="w-full bg-transparent border-b border-[var(--border)] focus:border-green-500 text-[16px] font-bold text-[var(--text-primary)] py-1 outline-none transition-colors" />
                                  </div>
-                                 <div className="space-y-1.5 focus-within:text-red-400 text-[var(--text-muted)] transition-colors border-l-2 border-red-500/50 pl-3">
+                                 <div className="space-y-1.5 focus-within:text-red-600 dark:text-red-400 text-[var(--text-muted)] transition-colors border-l-2 border-red-500/50 pl-3">
                                     <label className="text-[10px] font-bold uppercase tracking-wider block">- Ausência (Absenteísmo)</label>
                                     <input type="number" value={absenceHours} onChange={e => setAbsenceHours(Number(e.target.value))} className="w-full bg-transparent border-b border-[var(--border)] focus:border-red-500 text-[16px] font-bold text-[var(--text-primary)] py-1 outline-none transition-colors" />
                                  </div>

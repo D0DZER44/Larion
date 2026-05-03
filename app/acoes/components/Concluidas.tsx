@@ -102,7 +102,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
       
       {/* Cards Superiores */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
                  <CheckCircle2 className="w-5 h-5" />
@@ -115,7 +115,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
            </div>
         </div>
 
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center">
                  <CalendarCheck className="w-5 h-5" />
@@ -124,13 +124,13 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
            </div>
            <div className="mt-2 text-[var(--text-primary)] font-bold text-[32px] leading-tight flex items-baseline justify-between w-full">
               {stats.noPrazoCount}
-              <div className="text-[12px] text-blue-400 font-normal">{stats.noPrazoPerc}% das concluídas</div>
+              <div className="text-[12px] text-blue-600 dark:text-blue-400 font-normal">{stats.noPrazoPerc}% das concluídas</div>
            </div>
         </div>
 
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center">
                  <ShieldCheck className="w-5 h-5" />
               </div>
               <h3 className="text-[14px] font-medium text-[var(--text-secondary)]">Mitigaram risco crítico</h3>
@@ -141,7 +141,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
            </div>
         </div>
 
-        <div className="bg-[#1a1c18] border border-emerald-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        <div className="bg-[var(--bg-card)] border border-emerald-500/20 p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center justify-center">
                  <DollarSign className="w-5 h-5" />
@@ -156,13 +156,13 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
       </div>
 
       {/* Gráfico Resultados */}
-      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] p-5">
+      <div className="bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] p-5">
          <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6">Resultados</h3>
          <div className="space-y-4">
             <div className="flex items-center gap-4">
                <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">No prazo</div>
                <div className="flex-1 -mr-2">
-                  <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
+                  <div className="h-4 bg-[var(--bg-card)] rounded-full overflow-hidden">
                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.max(1, (stats.noPrazoCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
@@ -171,7 +171,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
             <div className="flex items-center gap-4">
                <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Com atraso</div>
                <div className="flex-1 -mr-2">
-                  <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
+                  <div className="h-4 bg-[var(--bg-card)] rounded-full overflow-hidden">
                      <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.max(1, (stats.comAtrasoCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
@@ -180,7 +180,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
             <div className="flex items-center gap-4">
                <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Críticas mitigadas</div>
                <div className="flex-1 -mr-2">
-                  <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
+                  <div className="h-4 bg-[var(--bg-card)] rounded-full overflow-hidden">
                      <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.max(1, (stats.criticasMitigadas / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
@@ -189,7 +189,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
             <div className="flex items-center gap-4">
                <div className="w-32 text-[13px] text-[var(--text-muted)] shrink-0">Evidência anexada</div>
                <div className="flex-1 -mr-2">
-                  <div className="h-4 bg-[#1e2536] rounded-full overflow-hidden">
+                  <div className="h-4 bg-[var(--bg-card)] rounded-full overflow-hidden">
                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.max(1, (stats.evidenciaAnexadaCount / (stats.totais || 1)) * 100)}%` }}></div>
                   </div>
                </div>
@@ -199,7 +199,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
       </div>
 
       {/* Tabela */}
-      <div className="bg-[var(--bg-secondary)] rounded-[12px] border border-[var(--border)] overflow-hidden">
+      <div className="bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] overflow-hidden">
          <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
             <h2 className="text-[15px] font-medium text-[var(--text-primary)]">Ações concluídas</h2>
             <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
          </div>
          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[1000px]">
-               <thead className="bg-[#0c1018]">
+               <thead className="bg-[var(--bg-card)]">
                   <tr>
                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Prioridade</th>
                      <th className="px-5 py-3.5 text-xs font-medium text-[var(--text-muted)]">Ação</th>
@@ -237,8 +237,8 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                      const prioCircle = pColors.split(' ')[0].replace('text-', 'bg-');
                      const rInitials = getInitials(acao.responsavel);
                      const avatarColors = [
-                        'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-400', 
-                        'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-400',
+                        'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-600 dark:text-blue-600 dark:text-blue-400', 
+                        'bg-emerald-500/20 text-emerald-600 dark:text-emerald-600 dark:text-emerald-400', 'bg-orange-500/20 text-orange-600 dark:text-orange-400',
                         'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                      ];
                      const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
@@ -251,16 +251,16 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                      const isCritico = acao.prioridade === 'Crítica' || acao.prioridade === 'Alta';
 
                      let resultText = 'Concluída';
-                     let resultClass = 'text-emerald-400';
+                     let resultClass = 'text-emerald-600 dark:text-emerald-400';
                      if (!onTime) {
                         resultText = 'Concluída com atraso';
-                        resultClass = 'text-orange-400';
+                        resultClass = 'text-orange-600 dark:text-orange-400';
                      } else if (isCritico) {
                         resultText = 'Mitigou risco crítico';
                         resultClass = 'text-emerald-500';
                      } else {
                         resultText = 'Concluída no prazo';
-                        resultClass = 'text-emerald-400';
+                        resultClass = 'text-emerald-600 dark:text-emerald-400';
                      }
 
                      return (
@@ -273,12 +273,12 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                            </td>
                            <td className="px-5 py-4 w-64">
                               <div className="flex flex-col gap-1.5">
-                                 <h3 className="font-medium text-[var(--text-primary)] group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
+                                 <h3 className="font-medium text-[var(--text-primary)] group-hover:text-blue-600 dark:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
                                  <div className="flex items-center gap-2 flex-wrap">
-                                   {onTime && !isCritico && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">No prazo</span>}
-                                   {!onTime && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com atraso</span>}
-                                   {isCritico && onTime && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Risco mitigado</span>}
-                                   <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Evidência anexada</span>
+                                   {onTime && !isCritico && <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">No prazo</span>}
+                                   {!onTime && <span className="text-[9px] bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com atraso</span>}
+                                   {isCritico && onTime && <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Risco mitigado</span>}
+                                   <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Evidência anexada</span>
                                  </div>
                               </div>
                            </td>
@@ -326,7 +326,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
          </div>
          
          {/* Footer Pagination */}
-         <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-secondary)]">
+         <div className="px-5 py-4 border-t border-[var(--border)] flex items-center justify-between text-sm w-full bg-[var(--bg-card)]">
             <span className="text-[var(--text-muted)]">Mostrando 1 a {list.length > 10 ? 10 : list.length} de {list.length} ações</span>
             <div className="flex items-center gap-2">
                <button className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-active-group)] transition-colors" disabled>
