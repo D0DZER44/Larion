@@ -62,14 +62,7 @@ export default function Dashboard() {
   const [scoreTimeRange, setScoreTimeRange] = useState<'dia' | 'semana' | 'mes' | 'ano'>('semana');
   const [lariInput, setLariInput] = useState('');
   const [lariIsTyping, setLariIsTyping] = useState(false);
-  const [lariMessages, setLariMessages] = useState([
-    {
-      id: '1',
-      sender: 'lari',
-      text: "Olá! Posso te ajudar rapidamente com riscos, inspeções e ações.",
-      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    }
-  ]);
+  const [lariMessages, setLariMessages] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const scrollToBottom = () => {
@@ -82,6 +75,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsMounted(true);
+    setLariMessages([
+      {
+        id: '1',
+        sender: 'lari',
+        text: "Olá! Posso te ajudar rapidamente com riscos, inspeções e ações.",
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      }
+    ]);
   }, []);
 
   const handleLariSubmit = (e: React.FormEvent) => {

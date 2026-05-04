@@ -17,9 +17,9 @@ const navGroups = [
       { 
         name: 'Operação', 
         href: '#', 
-        icon: HardHat,
+        icon: ShieldCheck,
         subItems: [
-          { name: 'Inspeções', href: '/operacao/inspecoes', icon: ClipboardCheck },
+          { name: 'Inspeções', href: '/operacao/inspecoes', icon: HardHat },
           { name: 'Riscos', href: '/operacao/riscos', icon: AlertTriangle },
           { name: 'Ações', href: '/operacao/acoes', icon: Activity },
         ]
@@ -46,10 +46,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   });
 
   useEffect(() => {
-    if (pathname.startsWith('/operacao')) {
+    if (pathname.startsWith('/operacao') && !expanded['Operação']) {
       setExpanded(prev => ({ ...prev, 'Operação': true }));
     }
-  }, [pathname]);
+  }, [pathname, expanded]);
 
   useEffect(() => {
     if (isDark) {
