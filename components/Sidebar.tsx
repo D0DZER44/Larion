@@ -30,7 +30,7 @@ const navGroups = [
   },
   {
     items: [
-      { name: 'Workspace', href: '/workspace', icon: Building2 },
+      { name: 'Organização', href: '/organizacao', icon: Building2 },
       { name: 'Notificações', href: '/notificacoes', icon: Bell },
       { name: 'Configurações', href: '/configuracoes', icon: Settings },
       { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
@@ -81,7 +81,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <Building2 className="w-4 h-4 text-[#A78BFA]" />
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-[10px] text-[#71717A] font-medium leading-none mb-1">Workspace</p>
+            <p className="text-[10px] text-[#71717A] font-medium leading-none mb-1">Organização ativa</p>
             <p className="text-sm font-semibold text-[#F4F4F5] truncate">ApexShield Corp</p>
           </div>
           <ChevronDown className="w-4 h-4 text-[#71717A] group-hover:text-white transition-colors" />
