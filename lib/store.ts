@@ -70,11 +70,12 @@ export type ChecklistTemplate = {
   status: 'Ativo' | 'Rascunho' | 'Inativo' | 'Revisar';
   proximaRevisao?: string;
   sections: ChecklistSection[];
-  pacote?: string;
-  segmento?: string;
-  atividade?: string;
-  nrRelacionada?: string;
-  criticidade?: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  pacote: string;
+  segmentos: string[];
+  atividades: string[];
+  nr: string;
+  criticidadePadrao?: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  ativo: boolean;
   regraFixa?: boolean;
 };
 
@@ -232,7 +233,7 @@ type AppStore = {
 };
 
 // Helper to map NR to Package
-const nrToPackage: Record<string, string> = {
+export const nrToPackage: Record<string, string> = {
   'NR-32': 'Saúde/Hospitalar',
   'NR-18': 'Construção Civil',
   'NR-35': 'Construção Civil',
@@ -247,7 +248,7 @@ const nrToPackage: Record<string, string> = {
   'NR-17': 'Base SST',
 };
 
-function getPackageFromNr(nr?: string) {
+export function getPackageFromNr(nr?: string) {
   if (!nr) return 'Base SST';
   const match = nr.match(/NR[- \s]?(\d+)/i);
   if (match) {
@@ -334,6 +335,7 @@ const processAutoActions = () => {
             category: 'Riscos',
             sector_id: r.sector_id || r.setor || '',
             responsavel: r.responsavel || 'SSO',
+            pacote: r.pacote || getPackageFromNr(r.nr),
             due_date: prazo.toISOString(),
             prazo: prazo.toISOString().split('T')[0],
             created_by: 'Sistema (Auto)',
@@ -809,39 +811,39 @@ export const useAppStore = create<AppStore>()(
 
       checklists: [
         // Base SST
-        { id: 'c-bst-1', name: 'Inspeção geral de ambiente', category: 'Base SST', pacote: 'Base SST', segmento: 'Geral', atividade: 'Ordem e limpeza', status: 'Ativo', sections: [] },
-        { id: 'c-bst-2', name: 'Uso básico de EPI', category: 'Base SST', pacote: 'Base SST', segmento: 'Geral', atividade: 'EPI', status: 'Ativo', sections: [] },
-        { id: 'c-bst-3', name: 'Organização e limpeza', category: 'Base SST', pacote: 'Base SST', segmento: 'Geral', atividade: 'Ordem e limpeza', status: 'Ativo', sections: [] },
-        { id: 'c-bst-4', name: 'Sinalização básica', category: 'Base SST', pacote: 'Base SST', segmento: 'Geral', atividade: 'Sinalização', status: 'Ativo', sections: [] },
-        { id: 'c-bst-5', name: 'Evidências obrigatórias', category: 'Base SST', pacote: 'Base SST', segmento: 'Geral', atividade: 'Outro', status: 'Ativo', sections: [] },
+        { id: 'c-bst-1', name: 'Inspeção geral de ambiente', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Ordem e limpeza'], nr: 'NR-01', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-bst-2', name: 'Uso básico de EPI', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['EPI'], nr: 'NR-06', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-bst-3', name: 'Organização e limpeza', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Ordem e limpeza'], nr: 'NR-01', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-bst-4', name: 'Sinalização básica', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Sinalização'], nr: 'NR-26', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-bst-5', name: 'Evidências obrigatórias', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Gestão SST'], nr: 'Gestão SST', status: 'Ativo', ativo: true, sections: [] },
 
         // Construção Civil
-        { id: 'c-con-1', name: 'Trabalho em altura', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Trabalho em altura', nrRelacionada: 'NR-35', status: 'Ativo', sections: [] },
-        { id: 'c-con-2', name: 'Andaimes', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Trabalho em altura', nrRelacionada: 'NR-18', status: 'Ativo', sections: [] },
-        { id: 'c-con-3', name: 'Escadas', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Trabalho em altura', nrRelacionada: 'NR-18', status: 'Ativo', sections: [] },
-        { id: 'c-con-4', name: 'Escavações', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Escavação', nrRelacionada: 'NR-18', status: 'Ativo', sections: [] },
-        { id: 'c-con-5', name: 'Sinalização de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Sinalização', nrRelacionada: 'NR-18', status: 'Ativo', sections: [] },
-        { id: 'c-con-6', name: 'Máquinas de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Máquinas e equipamentos', nrRelacionada: 'NR-12', status: 'Ativo', sections: [] },
-        { id: 'c-con-7', name: 'Eletricidade temporária', category: 'Construção Civil', pacote: 'Construção Civil', segmento: 'Construção', atividade: 'Eletricidade', nrRelacionada: 'NR-10', status: 'Ativo', sections: [] },
+        { id: 'c-con-1', name: 'Trabalho em altura', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-35', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-2', name: 'Andaimes', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-3', name: 'Escadas', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-4', name: 'Escavações', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Escavação'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-5', name: 'Sinalização de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Sinalização'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-6', name: 'Máquinas de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Máquinas e equipamentos'], nr: 'NR-12', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-con-7', name: 'Eletricidade temporária', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Eletricidade'], nr: 'NR-10', status: 'Ativo', ativo: true, sections: [] },
 
         // Indústria
-        { id: 'c-ind-1', name: 'Máquinas e proteções', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Máquinas e equipamentos', nrRelacionada: 'NR-12', status: 'Ativo', sections: [] },
-        { id: 'c-ind-2', name: 'Bloqueio e etiquetagem', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Eletricidade', nrRelacionada: 'NR-10', status: 'Ativo', sections: [] },
-        { id: 'c-ind-3', name: 'Produtos químicos', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Produtos químicos', nrRelacionada: 'NR-26', status: 'Ativo', sections: [] },
-        { id: 'c-ind-4', name: 'Ruído', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Ruído', nrRelacionada: 'NR-15', status: 'Ativo', sections: [] },
-        { id: 'c-ind-5', name: 'Calor', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Calor', nrRelacionada: 'NR-15', status: 'Ativo', sections: [] },
-        { id: 'c-ind-6', name: 'Empilhadeiras', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Movimentação de carga', nrRelacionada: 'NR-11', status: 'Ativo', sections: [] },
-        { id: 'c-ind-7', name: 'Manutenção', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Outro', status: 'Ativo', sections: [] },
-        { id: 'c-ind-8', name: 'Ergonomia operacional', category: 'Indústria', pacote: 'Indústria', segmento: 'Indústria', atividade: 'Ergonomia', nrRelacionada: 'NR-17', status: 'Ativo', sections: [] },
+        { id: 'c-ind-1', name: 'Máquinas e proteções', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Máquinas e equipamentos'], nr: 'NR-12', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-2', name: 'Bloqueio e etiquetagem', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Eletricidade', 'Energias Perigosas'], nr: 'NR-10', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-3', name: 'Produtos químicos', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria', 'Geral'], atividades: ['Produtos químicos'], nr: 'NR-26', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-4', name: 'Ruído', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Ruído', 'Higiene Ocupacional'], nr: 'NR-15', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-5', name: 'Calor', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Calor', 'Higiene Ocupacional'], nr: 'NR-15', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-6', name: 'Empilhadeiras', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria', 'Logística'], atividades: ['Movimentação de carga'], nr: 'NR-11', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-7', name: 'Manutenção', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Gestão SST'], nr: 'Geral', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-ind-8', name: 'Ergonomia operacional', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Ergonomia'], nr: 'NR-17', status: 'Ativo', ativo: true, sections: [] },
 
         // Saúde
-        { id: 'c-sau-1', name: 'Risco biológico', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Risco biológico', nrRelacionada: 'NR-32', status: 'Ativo', sections: [] },
-        { id: 'c-sau-2', name: 'Perfurocortantes', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Risco biológico', nrRelacionada: 'NR-32', status: 'Ativo', sections: [] },
-        { id: 'c-sau-3', name: 'Resíduos de saúde', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Resíduos', nrRelacionada: 'NR-32', status: 'Ativo', sections: [] },
-        { id: 'c-sau-4', name: 'Higienização', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Outro', status: 'Ativo', sections: [] },
-        { id: 'c-sau-5', name: 'EPIs específicos', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'EPI', status: 'Ativo', sections: [] },
-        { id: 'c-sau-6', name: 'Produtos químicos hospitalares', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Produtos químicos', nrRelacionada: 'NR-32', status: 'Ativo', sections: [] },
-        { id: 'c-sau-7', name: 'Áreas contaminadas', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmento: 'Saúde', atividade: 'Risco biológico', status: 'Ativo', sections: [] },
+        { id: 'c-sau-1', name: 'Risco biológico', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-2', name: 'Perfurocortantes', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico', 'Gestão de Resíduos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-3', name: 'Resíduos de saúde', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Resíduos', 'Gestão de Resíduos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-4', name: 'Higienização', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Controle de Infecção'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-5', name: 'EPIs específicos', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['EPI'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-6', name: 'Produtos químicos hospitalares', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Produtos químicos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
+        { id: 'c-sau-7', name: 'Áreas contaminadas', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico', 'Controle de Infecção'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
       ],
       addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, { ...checklist, id: crypto.randomUUID() }] })),
       updateChecklist: (id, checklist) => set((state) => ({ checklists: state.checklists.map((c) => c.id === id ? { ...c, ...checklist } : c) })),

@@ -19,8 +19,10 @@ import {
   AlertTriangle,
   ClipboardCheck,
   ListChecks,
-  Clock
+  Clock,
+  Package
 } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 interface ExHistoryEvent {
   id: string;
@@ -41,6 +43,7 @@ interface ExHistoryEvent {
   fonte: string;
   ambiente: string;
   integridade: string;
+  pacote?: string;
 }
 
 const getInitials = (name: string) => {
@@ -58,6 +61,8 @@ const hashCode = (s: string) => {
 
 export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a: ActionItem) => void }) {
   const [selectedEvent, setSelectedEvent] = useState<ExHistoryEvent | null>(null);
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const historyList = useMemo(() => {
      let allEvents: ExHistoryEvent[] = [];
@@ -89,7 +94,8 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                  versao: evt.versao || `v${idx + 1}`,
                  fonte: 'Interface Web',
                  ambiente: 'Produção',
-                 integridade: evt.integridade || 'Verificada'
+                 integridade: evt.integridade || 'Verificada',
+                 pacote: (a as any).pacote
               });
            });
         }
@@ -239,7 +245,15 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                                <span className="text-[12px] font-mono text-gray-400">{item.actionId}</span>
                             </td>
                             <td className="px-5 py-4 w-64 max-w-[250px]">
-                               <h3 className="text-[13px] font-medium text-gray-200 group-hover:text-indigo-300 transition-colors truncate">{item.actionTitle}</h3>
+                               <div className="flex flex-col gap-1">
+                                  <h3 className="text-[13px] font-medium text-gray-200 group-hover:text-indigo-300 transition-colors truncate">{item.actionTitle}</h3>
+                                  {item.pacote && item.pacote !== 'Base SST' && !activePackageNames.includes(item.pacote) && (
+                                    <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1 w-fit">
+                                      <Package className="w-2.5 h-2.5" />
+                                      {item.pacote} (Inativo)
+                                    </span>
+                                  )}
+                               </div>
                             </td>
                             <td className="px-5 py-4 w-32 whitespace-nowrap">
                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${getEventBadge(item.evento)}`}>

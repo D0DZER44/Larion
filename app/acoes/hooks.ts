@@ -2,16 +2,18 @@
 
 import { useAppStore } from '@/lib/store';
 import { ActionItem, AcaoStatus, AcaoPrioridade, ActionFollowUp } from './types';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 
 export function useAcoes() {
   const storeAcoes = useAppStore(state => state.acoes);
   const storeRiscos = useAppStore(state => state.riscos);
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
   const addAcao = useAppStore(state => state.addAcao);
   const updateAcao = useAppStore(state => state.updateAcao);
   const addLog = useAppStore(state => state.addLog);
 
-  const acoes: ActionItem[] = useMemo(() => {
+  const allAcoes: ActionItem[] = useMemo(() => {
     return (storeAcoes || []).filter(a => {
       if (!a) return false;
       const textFields = [a.title, a.titulo, a.description, a.descricao, a.category].filter(Boolean).join(' ').toLowerCase();
@@ -52,6 +54,7 @@ export function useAcoes() {
 
       // Find risk
       const relatedRisk = storeRiscos.find(r => r.id === (a.risk_id || a.riscoId || a.item_origem_id));
+      const pacote = a.pacote || relatedRisk?.pacote || relatedRisk?.package || 'Base SST';
 
       return {
         id: a.id,
@@ -71,6 +74,7 @@ export function useAcoes() {
         perguntaOrigem: a.perguntaOrigem || '',
         respostaOrigem: a.respostaOrigem || '',
         nrRelacionada: a.nrRelacionada || a.nr || relatedRisk?.nr,
+        pacote,
         multaEstimada: a.multaEstimada || 0,
         chanceIncidente: a.chanceIncidente || 'Baixa',
         criadoEm: a.criadoEm || a.createdAt || new Date().toISOString(),
@@ -82,6 +86,16 @@ export function useAcoes() {
       };
     }).sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
   }, [storeAcoes, storeRiscos]);
+
+  const [showInactive, setShowInactive] = useState(false);
+
+  const acoes = useMemo(() => {
+    if (showInactive) return allAcoes;
+    return allAcoes.filter(a => {
+      const p = (a as any).pacote || 'Base SST';
+      return p === 'Base SST' || activePackageNames.includes(p);
+    });
+  }, [allAcoes, showInactive, activePackageNames]);
 
   const calcularFollowUp = useCallback((action: ActionItem) => {
     if (action.status === 'Concluída' || action.status === 'Cancelada') {
@@ -547,6 +561,8 @@ export function useAcoes() {
 
   return {
     acoes,
+    showInactive,
+    setShowInactive,
     updateActionStatus,
     createAction,
     criarAcaoAutomatica,

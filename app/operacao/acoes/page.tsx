@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User, BarChart2, AlertCircle, History } from 'lucide-react';
+import { Settings, Download, Plus, AlertTriangle, Clock, Activity, CheckCircle2, PlayCircle, Filter, Sparkles, X, User, BarChart2, AlertCircle, History, Package } from 'lucide-react';
 import { useAcoes } from '../../acoes/hooks';
 import VisaoGeral from '../../acoes/components/VisaoGeral';
 import Pendentes from '../../acoes/components/Pendentes';
@@ -46,7 +46,20 @@ export default function AcoesPage() {
 
 function AcoesContent() {
   const [isMounted, setIsMounted] = useState(false);
-  const { acoes, createAction, updateActionStatus, iniciarAcao, atualizarProgresso, concluirAcao, reatribuirAcao, cancelarAcao, reabrirAcao, executarFollowUps } = useAcoes();
+  const { 
+    acoes, 
+    showInactive, 
+    setShowInactive, 
+    createAction, 
+    updateActionStatus, 
+    iniciarAcao, 
+    atualizarProgresso, 
+    concluirAcao, 
+    reatribuirAcao, 
+    cancelarAcao, 
+    reabrirAcao, 
+    executarFollowUps 
+  } = useAcoes();
   const [activeTab, setActiveTab] = useState<'VisaoGeral' | 'Pendentes' | 'EmAndamento' | 'Concluidas' | 'Historico'>('VisaoGeral');
   
   const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
@@ -104,6 +117,17 @@ function AcoesContent() {
             </div>
             
             <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setShowInactive(!showInactive)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
+                  showInactive 
+                    ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' 
+                    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                <Package className="w-4 h-4" />
+                {showInactive ? 'Ocultar Inativos' : 'Mostrar Inativos'}
+              </button>
               <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/10">
                 <Filter className="w-4 h-4" />
                 Filtros

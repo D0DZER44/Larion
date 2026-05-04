@@ -129,8 +129,22 @@ export default function RiscosPage() {
 
   const storeRiscosRaw = useAppStore(state => state.riscos);
   const storeAcoesRaw = useAppStore(state => state.acoes);
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
   
-  const storeRiscos = useMemo(() => filterJunk(storeRiscosRaw || []), [storeRiscosRaw]);
+  const [showInactivePackages, setShowInactivePackages] = useState(false);
+
+  const storeRiscos = useMemo(() => {
+    let base = filterJunk(storeRiscosRaw || []);
+    if (!showInactivePackages) {
+      return base.filter(r => {
+        const pacote = r.pacote || r.package || 'Base SST';
+        return pacote === 'Base SST' || activePackageNames.includes(pacote);
+      });
+    }
+    return base;
+  }, [storeRiscosRaw, showInactivePackages, activePackageNames]);
+
   const storeAcoes = useMemo(() => filterJunk(storeAcoesRaw || []), [storeAcoesRaw]);
 
   const [activeTab, setActiveTab] = useState<TabType>('Visão Geral');
@@ -436,6 +450,7 @@ export default function RiscosPage() {
   
   combinedData.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado').forEach(r => {
     const act = r.atividade || 'Diversos';
+    const pacote = r.pacote || r.package || 'Base SST';
     if (!activityGroups[act]) {
       activityGroups[act] = {
         count: 0,
@@ -449,15 +464,17 @@ export default function RiscosPage() {
         episTotal: 0,
         episAusentes: 0,
         nrString: r.nr || 'NR-Geral',
-        atividade: act
+        atividade: act,
+        pacotes: []
       };
     }
     
-    const obj = activityGroups[act];
+    const obj = activityGroups[act] as any;
     obj.count++;
     if (r.tipoDeRisco && !obj.riscosNames.includes(r.tipoDeRisco)) obj.riscosNames.push(r.tipoDeRisco);
     if (r.setor && !obj.setores.includes(r.setor)) obj.setores.push(r.setor);
     if (r.nr && !obj.nrs.includes(r.nr)) obj.nrs.push(r.nr);
+    if (pacote && !obj.pacotes.includes(pacote)) obj.pacotes.push(pacote);
     obj.multaTotal += r.multaEstimada || 0;
     obj.chanceSum += r.chanceIncidente || 0;
     
@@ -564,22 +581,37 @@ export default function RiscosPage() {
                     {activeTab === 'Histórico' && "Trilha de auditoria imutável de todos os riscos da plataforma."}
                  </p>
                </div>
-               {activeTab === 'Tipo' && (
-                 <div className="flex items-center gap-2 bg-[#121826] p-1.5 rounded-lg border border-white/5">
-                   <Filter className="w-4 h-4 text-gray-400 ml-2" />
-                   <select 
-                     value={tipoFilter} 
-                     onChange={(e) => { setTipoFilter(e.target.value as any); setCurrentPage(1); }}
-                     className="bg-transparent text-sm text-white focus:outline-none px-2"
-                   >
-                     <option value="Todos">Todos os níveis</option>
-                     <option value="Crítico">Crítico</option>
-                     <option value="Alto">Alto</option>
-                     <option value="Médio">Médio</option>
-                     <option value="Baixo">Baixo</option>
-                   </select>
-                 </div>
-               )}
+               {(activeTab === 'Tipo' || activeTab === 'Histórico' || activeTab === 'Atividade') && (
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setShowInactivePackages(!showInactivePackages)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                        showInactivePackages 
+                          ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' 
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      Mostrar itens de pacotes inativos
+                    </button>
+                    {activeTab === 'Tipo' && (
+                      <div className="flex items-center gap-2 bg-[#121826] p-1.5 rounded-lg border border-white/5">
+                        <Filter className="w-4 h-4 text-gray-400 ml-2" />
+                        <select 
+                          value={tipoFilter} 
+                          onChange={(e) => { setTipoFilter(e.target.value as any); setCurrentPage(1); }}
+                          className="bg-transparent text-sm text-white focus:outline-none px-2"
+                        >
+                          <option value="Todos">Todos os níveis</option>
+                          <option value="Crítico">Crítico</option>
+                          <option value="Alto">Alto</option>
+                          <option value="Médio">Médio</option>
+                          <option value="Baixo">Baixo</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
                <div className="flex items-center gap-3">
                  <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-colors">
                    Exportar
@@ -1155,7 +1187,15 @@ export default function RiscosPage() {
                                       <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center ${isSelected ? 'text-purple-400' : 'text-purple-500/50'}`}>
                                          {getRiskTypeIcon(item.tipoDeRisco || 'Outro')}
                                       </div>
-                                      <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco}</span>
+                                      <div className="flex flex-col">
+                                        <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco}</span>
+                                        {item.pacote && item.pacote !== 'Base SST' && !activePackageNames.includes(item.pacote) && (
+                                          <span className="text-[10px] text-orange-400 font-medium flex items-center gap-1">
+                                            <Package className="w-2.5 h-2.5" />
+                                            {item.pacote} (Inativo)
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                  </td>
                                  <td className="px-5 py-4 align-middle">
@@ -1283,7 +1323,15 @@ export default function RiscosPage() {
                               <span className="text-[13px] text-gray-300">{item.id}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco || item.atividade}</span>
+                              <div className="flex flex-col">
+                                <span className="text-[13px] font-bold text-gray-200">{item.tipoDeRisco || item.atividade}</span>
+                                {item.pacote && item.pacote !== 'Base SST' && !activePackageNames.includes(item.pacote) && (
+                                  <span className="text-[10px] text-orange-400 font-medium flex items-center gap-1">
+                                    <Package className="w-2.5 h-2.5" />
+                                    {item.pacote} (Inativo)
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
                               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[#0b0f19] ${isAuto ? 'text-blue-400 border-blue-500/20' : 'text-emerald-400 border-emerald-500/20'}`}>
@@ -1421,7 +1469,20 @@ export default function RiscosPage() {
                                    {getActivityIcon(item.atividade)}
                                 </div>
                                 <div className="flex flex-col gap-0.5">
-                                   <span className="text-[13px] font-bold text-gray-200">{item.atividade}</span>
+                                   <div className="flex flex-col">
+                                     <span className="text-[13px] font-bold text-gray-200">{item.atividade}</span>
+                                     {(item as any).pacotes?.map((p: string) => {
+                                       if (p !== 'Base SST' && !activePackageNames.includes(p)) {
+                                         return (
+                                           <span key={p} className="text-[10px] text-orange-400 font-medium flex items-center gap-1">
+                                             <Package className="w-2.5 h-2.5" />
+                                             {p} (Inativo)
+                                           </span>
+                                         );
+                                       }
+                                       return null;
+                                     })}
+                                   </div>
                                    <span className="text-[11px] text-gray-500">{Array.from(new Set(item.nrs))[0] || item.nrString}</span>
                                 </div>
                               </div>

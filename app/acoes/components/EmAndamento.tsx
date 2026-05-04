@@ -3,7 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ActionItem } from '../types';
-import { Play, AlertTriangle, Clock, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, AlertTriangle, Clock, Activity, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 const PRIORITY_COLORS: Record<string, string> = {
   'Crítica': 'text-red-500 border-red-500/30 bg-red-500/10',
@@ -40,6 +41,8 @@ import { getEmAndamento } from '../hooks';
 export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], onOpen: (a: ActionItem) => void }) {
   const [filterPriority, setFilterPriority] = useState<string>('Todos');
   const [filterSetor, setFilterSetor] = useState<string>('Todos');
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const { list, stats } = useMemo(() => {
      let emAndamentoList = getEmAndamento(acoes);
@@ -241,6 +244,12 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                                {acao.followUp?.nivel === 'bloqueada' && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com bloqueio</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
                                {isWarning && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Prazo crítico</span>}
+                               {(acao as any).pacote && (acao as any).pacote !== 'Base SST' && !activePackageNames.includes((acao as any).pacote) && (
+                                 <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                   <Package className="w-2.5 h-2.5" />
+                                   {(acao as any).pacote} (Inativo)
+                                 </span>
+                               )}
                              </div>
                           </div>
                        </td>

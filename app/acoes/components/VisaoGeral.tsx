@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ActionItem } from '../types';
-import { Clock, Play, CheckCircle2, AlertTriangle, Eye, ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList } from 'lucide-react';
+import { Clock, Play, CheckCircle2, AlertTriangle, Eye, ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Package } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const PIE_COLORS: Record<string, string> = {
@@ -57,6 +57,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
   const [filterPriority, setFilterPriority] = useState<string>('Todos');
   const storeRiscos = useAppStore(state => state.riscos);
   const storeInspecoes = useAppStore(state => state.inspecoes);
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const nrMetrics = useMemo(() => getNrMetrics({ inspections: storeInspecoes || [], risks: storeRiscos || [], actions: acoes }), [storeInspecoes, storeRiscos, acoes]);
 
@@ -454,6 +456,12 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                              <div className="flex items-center gap-2 flex-wrap">
                                {acao.followUp?.precisaFollowUp && <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Precisa follow-up</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
+                               {(acao as any).pacote && (acao as any).pacote !== 'Base SST' && !activePackageNames.includes((acao as any).pacote) && (
+                                 <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                   <Package className="w-2.5 h-2.5" />
+                                   {(acao as any).pacote} (Inativo)
+                                 </span>
+                               )}
                              </div>
                           </div>
                        </td>

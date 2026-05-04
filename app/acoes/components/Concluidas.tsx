@@ -3,7 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ActionItem } from '../types';
-import { CheckCircle2, CalendarCheck, ShieldCheck, DollarSign, FileText, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { CheckCircle2, CalendarCheck, ShieldCheck, DollarSign, FileText, ChevronLeft, ChevronRight, Eye, Package } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 const PRIORITY_COLORS: Record<string, string> = {
   'Crítica': 'text-red-500 border-red-500/30 bg-red-500/10',
@@ -40,6 +41,8 @@ import { getConcluidas } from '../hooks';
 export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onOpen: (a: ActionItem) => void }) {
   const [filterPeriod, setFilterPeriod] = useState<string>('30 dias');
   const [filterResponsavel, setFilterResponsavel] = useState<string>('Todos');
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const { list, stats } = useMemo(() => {
      let concluidasList = getConcluidas(acoes);
@@ -279,6 +282,12 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                                    {!onTime && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com atraso</span>}
                                    {isCritico && onTime && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Risco mitigado</span>}
                                    <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Evidência anexada</span>
+                                   {(acao as any).pacote && (acao as any).pacote !== 'Base SST' && !activePackageNames.includes((acao as any).pacote) && (
+                                     <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                       <Package className="w-2.5 h-2.5" />
+                                       {(acao as any).pacote} (Inativo)
+                                     </span>
+                                   )}
                                  </div>
                               </div>
                            </td>

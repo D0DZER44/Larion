@@ -1,6 +1,6 @@
 // lib/engines.ts
 
-import { useAppStore, AppState } from './store';
+import { useAppStore, AppState, nrToPackage } from './store';
 
 // ==================================================
 // NORMATIVE ENGINE
@@ -66,26 +66,37 @@ export const NormativeEngine = {
 
   detect(activityText: string) {
     const text = activityText.toLowerCase();
-    let bestMatch: any = null;
-    let maxMatches = 0;
-    let matchedKeywords: string[] = [];
+    const state = useAppStore.getState();
+    const activePackages = state.rulePackages.filter(p => p.isActive).map(p => p.name);
+
+    let candidates: any[] = [];
 
     this.rules.forEach(rule => {
       const matches = rule.keywords.filter(kw => text.includes(kw));
       if (matches.length > 0) {
-        if (matches.length > maxMatches) {
-          maxMatches = matches.length;
-          bestMatch = rule;
-          matchedKeywords = matches;
+        // RULE: Apply package filter
+        const pacoteDaNR = nrToPackage[rule.nr] || "Base SST";
+        const podeAplicarNR = pacoteDaNR === "Base SST" || activePackages.includes(pacoteDaNR);
+
+        if (podeAplicarNR) {
+          candidates.push({
+            rule,
+            matches,
+            matchCount: matches.length
+          });
         }
       }
     });
 
-    if (bestMatch) {
+    if (candidates.length > 0) {
+      // Sort by match count descending
+      candidates.sort((a, b) => b.matchCount - a.matchCount);
+      const best = candidates[0];
+      
       return {
-        ...bestMatch,
-        confidence: maxMatches > 1 ? 'alta' : 'média',
-        matchedKeywords
+        ...best.rule,
+        confidence: best.matchCount > 1 ? 'alta' : 'média',
+        matchedKeywords: best.matches
       };
     }
 

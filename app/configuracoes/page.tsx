@@ -234,7 +234,7 @@ function TabGeral() {
 }
 
 function TabChecklists() {
-   const { checklists, addChecklist, updateChecklist, deleteChecklist, rulePackages } = useAppStore();
+   const { checklists, addChecklist, updateChecklist, deleteChecklist, rulePackages, organization } = useAppStore();
    const [search, setSearch] = useState('');
    const [filterPacote, setFilterPacote] = useState('Todos');
    const [filterSegmento, setFilterSegmento] = useState('Todos');
@@ -243,19 +243,27 @@ function TabChecklists() {
    const allChecklists = getTodosChecklistsAtivos(checklists);
    
    // Filtering logic
-   const filteredChecklists = allChecklists.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || 
-                          (c.atividade || '').toLowerCase().includes(search.toLowerCase()) ||
-                          (c.nrRelacionada || '').toLowerCase().includes(search.toLowerCase());
-      const matchPacote = filterPacote === 'Todos' || c.pacote === filterPacote;
-      const matchSegmento = filterSegmento === 'Todos' || c.segmento === filterSegmento;
-      const matchStatus = filterStatus === 'Todos' || c.status === filterStatus;
+   const filteredChecklists = allChecklists.filter(checklist => {
+      const matchSearch = checklist.name.toLowerCase().includes(search.toLowerCase()) || 
+                          (checklist.atividade || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (checklist.nrRelacionada || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (checklist.nr || '').toLowerCase().includes(search.toLowerCase());
       
-      // Check if package is active
-      const pkg = rulePackages.find(p => p.name === c.pacote);
-      const isPackageActive = pkg ? pkg.isActive : true;
+      const pacotesAtivos = rulePackages.filter(p => p.isActive).map(p => p.name);
+      
+      const matchPacote = (checklist.pacote === "Base SST" || pacotesAtivos.includes(checklist.pacote));
+      
+      const matchOrganization = (
+        checklist.pacote === "Base SST" ||
+        (checklist.segmentos && checklist.segmentos.includes(organization.segmento)) ||
+        (checklist.atividades && checklist.atividades.some(a => (organization.atividadesCriticas || []).includes(a)))
+      );
 
-      return matchSearch && matchPacote && matchSegmento && matchStatus && isPackageActive;
+      const matchFiltroPacote = filterPacote === 'Todos' || checklist.pacote === filterPacote;
+      const matchFiltroSegmento = filterSegmento === 'Todos' || (checklist.segmentos && checklist.segmentos.includes(filterSegmento));
+      const matchStatus = filterStatus === 'Todos' || (checklist.status === filterStatus || (filterStatus === 'Ativo' && checklist.ativo));
+
+      return matchSearch && matchPacote && matchOrganization && matchFiltroPacote && matchFiltroSegmento && matchStatus;
    });
 
    const [selectedId, setSelectedId] = useState(filteredChecklists[0]?.id || allChecklists[0]?.id);
@@ -263,7 +271,7 @@ function TabChecklists() {
 
    // Options for filters
    const pacotes = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.pacote).filter(Boolean)))];
-   const segmentos = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.segmento).filter(Boolean)))];
+   const segmentos = ['Todos', ...Array.from(new Set(allChecklists.flatMap(c => c.segmentos || []).filter(Boolean)))];
 
    const handleAdd = () => {
       addChecklist({ 
@@ -272,8 +280,10 @@ function TabChecklists() {
          status: 'Rascunho', 
          sections: [],
          pacote: 'Base SST',
-         segmento: 'Geral',
-         atividade: 'Outro'
+         segmentos: ['Geral'],
+         atividades: ['Outro'],
+         nr: 'NR-01',
+         ativo: true
       });
    };
 
@@ -493,17 +503,42 @@ function TabChecklists() {
                            </div>
 
                            <div className="space-y-1.5 text-indigo-400">
-                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Criticidade Padrão</label>
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Ativo</label>
                               <select 
-                                 value={activeChecklist.criticidade || 'Médio'}
-                                 onChange={(e) => updateChecklist(activeChecklist.id, { criticidade: e.target.value as any })}
+                                 value={activeChecklist.ativo ? 'true' : 'false'}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { ativo: e.target.value === 'true' })}
                                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none font-bold"
                               >
-                                 <option value="Baixo">Baixo</option>
-                                 <option value="Médio">Médio</option>
-                                 <option value="Alto">Alto</option>
-                                 <option value="Crítico">Crítico</option>
+                                 <option value="true">Ativo</option>
+                                 <option value="false">Inativo</option>
                               </select>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="bg-[#121826] border border-white/5 p-6 rounded-2xl space-y-4">
+                        <div className="flex items-center gap-2 text-purple-400 mb-2">
+                           <Shield className="w-4 h-4" />
+                           <h4 className="text-xs font-bold uppercase tracking-widest">Regras de Segmento e Atividade</h4>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="space-y-1.5">
+                               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Segmentos (separados por vírgula)</label>
+                               <input 
+                                  type="text" 
+                                  value={(activeChecklist.segmentos || []).join(', ')} 
+                                  onChange={(e) => updateChecklist(activeChecklist.id, { segmentos: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" 
+                               />
+                           </div>
+                           <div className="space-y-1.5">
+                               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Atividades (separadas por vírgula)</label>
+                               <input 
+                                  type="text" 
+                                  value={(activeChecklist.atividades || []).join(', ')} 
+                                  onChange={(e) => updateChecklist(activeChecklist.id, { atividades: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" 
+                               />
                            </div>
                         </div>
                      </div>
