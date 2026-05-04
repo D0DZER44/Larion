@@ -81,8 +81,7 @@ export default function Dashboard() {
   }, [lariMessages, lariIsTyping]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 100);
-    return () => clearTimeout(timer);
+    setIsMounted(true);
   }, []);
 
   const handleLariSubmit = (e: React.FormEvent) => {
@@ -785,6 +784,10 @@ export default function Dashboard() {
     };
 
   }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange]);
+
+  if (!isMounted) {
+    return <div className="flex h-screen w-full items-center justify-center bg-[#03060e] text-purple-500">Carregando...</div>;
+  }
 
   return (
     <div className="flex flex-col h-full w-full bg-[#03060e] text-gray-300 font-sans selection:bg-purple-500/30 overflow-hidden">
