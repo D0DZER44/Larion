@@ -45,7 +45,7 @@ export default function FloatingChat() {
         if (msgs[0]) {
           msgs[0].quickActions = [
             { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
-            { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-600 dark:text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
+            { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
           ];
         }
         return msgs;
@@ -90,16 +90,16 @@ export default function FloatingChat() {
         if (criticalRisks.length > 0) {
           const firstRisk = criticalRisks[0];
           component = (
-            <div className="mt-4 bg-[var(--bg-card)] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-red-500" />
-                  <span className="text-[13px] font-bold text-red-600 dark:text-red-400">{criticalRisks.length} Risco{criticalRisks.length > 1 ? 's' : ''} Crítico{criticalRisks.length > 1 ? 's' : ''}</span>
+                  <span className="text-[13px] font-bold text-red-400">{criticalRisks.length} Risco{criticalRisks.length > 1 ? 's' : ''} Crítico{criticalRisks.length > 1 ? 's' : ''}</span>
                 </div>
               </div>
               <div className="pointer-events-none">
-                <p className="font-bold text-[var(--text-primary)] text-sm mb-1">{firstRisk.atividade || firstRisk.title || firstRisk.setor}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">Ativo • {firstRisk.responsavel || 'SST'}</p>
+                <p className="font-bold text-white text-sm mb-1">{firstRisk.atividade || firstRisk.title || firstRisk.setor}</p>
+                <p className="text-[11px] text-gray-400">Ativo • {firstRisk.responsavel || 'SST'}</p>
               </div>
             </div>
           );
@@ -116,16 +116,16 @@ export default function FloatingChat() {
          if (atrasadas.length > 0) {
            const firstAcao = atrasadas[0];
            component = (
-             <div className="mt-4 bg-[var(--bg-card)] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+             <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
                <div className="flex items-center justify-between pointer-events-none">
                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                   <span className="text-[13px] font-bold text-orange-600 dark:text-orange-400">{atrasadas.length} Ações Atrasadas</span>
+                    <Clock className="w-4 h-4 text-orange-400" />
+                   <span className="text-[13px] font-bold text-orange-400">{atrasadas.length} Ações Atrasadas</span>
                  </div>
                </div>
                <div className="pointer-events-none">
-                 <p className="font-bold text-[var(--text-primary)] text-sm mb-1">{firstAcao.titulo || firstAcao.title}</p>
-                 <p className="text-[11px] text-[var(--text-muted)]">Resp: {firstAcao.responsavel || firstAcao.owner}</p>
+                 <p className="font-bold text-white text-sm mb-1">{firstAcao.titulo || firstAcao.title}</p>
+                 <p className="text-[11px] text-gray-400">Resp: {firstAcao.responsavel || firstAcao.owner}</p>
                </div>
              </div>
            );
@@ -139,19 +139,19 @@ export default function FloatingChat() {
       } else if (intent === 'Get_Report') {
         const atrasadas = (storeState.acoes || []).filter((a: any) => a.status === 'Atrasada' || a.status === 'Urgente');
         component = (
-          <div className="mt-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-4 shadow-[var(--shadow-glow)]">
+          <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-4 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
             <div className="flex items-center gap-2 pointer-events-none">
               <FileText className="w-4 h-4 text-purple-400" />
-              <span className="text-[13px] font-bold text-[var(--text-primary)]">Resumo Atualógico</span>
+              <span className="text-[13px] font-bold text-white">Resumo Atualógico</span>
             </div>
             <div className="grid grid-cols-2 gap-2 pointer-events-none">
-              <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-2 rounded-lg flex flex-col">
-                <span className="text-[10px] text-[var(--text-muted)] font-medium">Ações Pendentes</span>
-                <span className="text-sm font-bold text-[var(--text-primary)]">{atrasadas.length}</span>
+              <div className="bg-[#0b0f19] border border-white/5 p-2 rounded-lg flex flex-col">
+                <span className="text-[10px] text-gray-400 font-medium">Ações Pendentes</span>
+                <span className="text-sm font-bold text-white">{atrasadas.length}</span>
               </div>
-              <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-2 rounded-lg flex flex-col">
-                <span className="text-[10px] text-[var(--text-muted)] font-medium">Inspeções</span>
-                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{storeState.inspecoes?.length || 0}</span>
+              <div className="bg-[#0b0f19] border border-white/5 p-2 rounded-lg flex flex-col">
+                <span className="text-[10px] text-gray-400 font-medium">Inspeções</span>
+                <span className="text-sm font-bold text-emerald-400">{storeState.inspecoes?.length || 0}</span>
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function FloatingChat() {
              <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
                <ShieldCheck className="w-3 h-3" /> {decision.title}
              </h4>
-             <div className="text-[11px] text-[var(--text-secondary)]">
+             <div className="text-[11px] text-gray-300">
                 <span className="block mb-1"><strong>Status:</strong> {decision.decision}</span>
              </div>
            </div>
@@ -180,7 +180,7 @@ export default function FloatingChat() {
                <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
                  <ShieldCheck className="w-3 h-3" /> NR: {normMatch.nr}
                </h4>
-               <div className="text-[11px] text-[var(--text-secondary)]">
+               <div className="text-[11px] text-gray-300">
                   <span className="block mb-1"><strong>Risco:</strong> {normMatch.riskType}</span>
                   {riskLevelData && <span className="block mb-1"><strong>Nível:</strong> {riskLevelData.level.toUpperCase()}</span>}
                </div>
@@ -222,33 +222,33 @@ export default function FloatingChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 w-[360px] h-[500px] max-h-[80vh] flex flex-col glass-panel rounded-2xl overflow-hidden shadow-2xl border border-[var(--border)] relative"
+            className="mb-4 w-[360px] h-[500px] max-h-[80vh] flex flex-col glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--border)] bg-[var(--bg-card)]/80 text-[var(--text-primary)] shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#121826]/80 text-white shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center relative">
-                  <Sparkles className="w-4 h-4 text-[var(--text-primary)]" />
+                  <Sparkles className="w-4 h-4 text-white" />
                   <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 border border-[#121826] rounded-full"></span>
                 </div>
                 <div>
                   <h3 className="font-bold text-sm">L.A.R.I — Copiloto SST</h3>
-                  <p className="text-[10px] text-[var(--text-muted)]">Inteligência Artificial</p>
+                  <p className="text-[10px] text-gray-400">Inteligência Artificial</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md transition-colors"
+                className="text-gray-400 hover:text-white p-1 rounded-md transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none flex flex-col bg-[var(--bg-primary)]/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none flex flex-col bg-[#0b0f19]/50">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl p-3 ${msg.sender === 'user' ? 'bg-purple-600 text-[var(--text-primary)] rounded-tr-sm' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-sm'}`}>
+                  <div className={`max-w-[85%] rounded-2xl p-3 ${msg.sender === 'user' ? 'bg-purple-600 text-white rounded-tr-sm' : 'bg-[#121826] border border-white/5 text-gray-200 rounded-tl-sm'}`}>
                     {msg.sender === 'lari' && (
                       <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
                         <Sparkles className="w-3 h-3 text-purple-400" />
@@ -270,7 +270,7 @@ export default function FloatingChat() {
                           <button 
                             key={i}
                             onClick={action.action}
-                            className="text-[11px] bg-[var(--bg-active-group)] hover:bg-[var(--bg-active-group)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-left transition-colors flex items-center gap-2"
+                            className="text-[11px] bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-2.5 py-1.5 text-left transition-colors flex items-center gap-2"
                           >
                             {action.icon}
                             {action.label}
@@ -284,9 +284,9 @@ export default function FloatingChat() {
               
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-3 rounded-tl-sm flex items-center gap-2">
+                  <div className="bg-[#121826] border border-white/5 rounded-2xl p-3 rounded-tl-sm flex items-center gap-2">
                     <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
-                    <span className="text-[12px] text-[var(--text-muted)]">L.A.R.I está processando...</span>
+                    <span className="text-[12px] text-gray-400">L.A.R.I está processando...</span>
                   </div>
                 </div>
               )}
@@ -295,22 +295,22 @@ export default function FloatingChat() {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 border-t border-[var(--border)] bg-[var(--bg-card)]/80 shrink-0">
-              <div className="flex items-center gap-2 bg-[var(--bg-primary)] rounded-xl border border-[var(--border)] p-1.5 pr-2 focus-within:border-purple-500/50 transition-colors">
+            <div className="p-3 border-t border-white/10 bg-[#121826]/80 shrink-0">
+              <div className="flex items-center gap-2 bg-[#0b0f19] rounded-xl border border-white/10 p-1.5 pr-2 focus-within:border-purple-500/50 transition-colors">
                 <input 
                   type="text" 
                   value={inputVal}
                   onChange={e => setInputVal(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSend(inputVal)}
                   placeholder="Pergunte à L.A.R.I..." 
-                  className="flex-1 bg-transparent border-none text-[var(--text-primary)] text-sm focus:outline-none px-3 py-2"
+                  className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none px-3 py-2"
                 />
                 <button 
                   onClick={() => handleSend(inputVal)}
                   disabled={!inputVal.trim()}
                   className="bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0"
                 >
-                  <Send className="w-4 h-4 text-[var(--text-primary)]" />
+                  <Send className="w-4 h-4 text-white" />
                 </button>
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function FloatingChat() {
 
       <button 
          onClick={() => setIsOpen(!isOpen)}
-         className={`w-14 h-14 rounded-full flex items-center justify-center shadow-[var(--shadow)] transition-all text-[var(--text-primary)] border border-purple-400/30 z-50 ${isOpen ? 'bg-[var(--bg-card)] border-[var(--border)] scale-90' : 'bg-purple-600 hover:bg-purple-500 hover:scale-105'}`}
+         className={`w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all text-white border border-purple-400/30 z-50 ${isOpen ? 'bg-[#121826] border-white/10 scale-90' : 'bg-purple-600 hover:bg-purple-500 hover:scale-105'}`}
       >
         {isOpen ? <X className="w-6 h-6" /> : (
           <>

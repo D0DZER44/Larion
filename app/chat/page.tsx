@@ -65,34 +65,34 @@ export default function ChatPage() {
          <div className="relative mb-4">
             <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
             <div className="w-20 h-20 rounded-full border border-purple-500/30 bg-gradient-to-b from-[#1E1B4B] to-[#121826] flex items-center justify-center relative z-10 shadow-[0_0_30px_rgba(124,58,237,0.2)]">
-               <span className="text-3xl font-bold text-[var(--text-primary)]">L</span>
+               <span className="text-3xl font-bold text-white">L</span>
                <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 border-2 border-[#121826] rounded-full"></div>
             </div>
          </div>
-         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">L.A.R.I</h2>
-         <p className="text-sm text-[var(--text-muted)]">Copiloto SST</p>
+         <h2 className="text-xl font-bold text-white mb-1">L.A.R.I</h2>
+         <p className="text-sm text-gray-400">Copiloto SST</p>
       </div>
 
-      <div className="bg-[var(--bg-active-group)] border border-[var(--border)] rounded-2xl p-6 max-w-2xl w-full mb-8 text-[var(--text-secondary)] text-[15px] leading-relaxed mx-auto">
-         <p className="font-bold text-[var(--text-primary)] mb-2">Olá, sou a L.A.R.I — sua Assistente Inteligente baseada no contexto real da operação.</p>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mb-8 text-gray-300 text-[15px] leading-relaxed mx-auto">
+         <p className="font-bold text-white mb-2">Olá, sou a L.A.R.I — sua Assistente Inteligente baseada no contexto real da operação.</p>
          <p className="text-sm mb-4">Aqui está o seu panorama operacional neste momento:</p>
          
          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-red-500">
-               <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Riscos Críticos</p>
-               <p className={`text-xl font-bold ${ctx.criticalRisks > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{ctx.criticalRisks}</p>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-red-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Riscos Críticos</p>
+               <p className={`text-xl font-bold ${ctx.criticalRisks > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{ctx.criticalRisks}</p>
             </div>
-            <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-orange-500">
-               <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Ações Atrasadas</p>
-               <p className={`text-xl font-bold ${ctx.acoesAtrasadas > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{ctx.acoesAtrasadas}</p>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-orange-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Ações Atrasadas</p>
+               <p className={`text-xl font-bold ${ctx.acoesAtrasadas > 0 ? 'text-orange-400' : 'text-emerald-400'}`}>{ctx.acoesAtrasadas}</p>
             </div>
-            <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-yellow-500">
-               <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Insp. Pendentes</p>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-yellow-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Insp. Pendentes</p>
                <p className={`text-xl font-bold text-yellow-400`}>{ctx.inspecoesPendentes}</p>
             </div>
-            <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-xl border-l-2 border-l-blue-500">
-               <p className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide uppercase mb-1">Score Operacional</p>
-               <p className={`text-xl font-bold ${ctx.operationalScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' : (ctx.operationalScore >= 60 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400')}`}>{ctx.operationalScore}</p>
+            <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-xl border-l-2 border-l-blue-500">
+               <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase mb-1">Score Operacional</p>
+               <p className={`text-xl font-bold ${ctx.operationalScore >= 80 ? 'text-emerald-400' : (ctx.operationalScore >= 60 ? 'text-yellow-400' : 'text-red-400')}`}>{ctx.operationalScore}</p>
             </div>
          </div>
          
@@ -110,24 +110,24 @@ export default function ChatPage() {
          </div>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-               { icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />, title: 'O que exige ação hoje?', desc: 'Veja ações e checklists do dia.', msg: 'O que exige ação hoje?' },
+               { icon: <Clock className="w-4 h-4 text-orange-400" />, title: 'O que exige ação hoje?', desc: 'Veja ações e checklists do dia.', msg: 'O que exige ação hoje?' },
                { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, title: 'Qual setor mais crítico?', desc: 'Setor com mais itens graves abertos.', msg: 'Qual setor está mais crítico?' },
-               { icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />, title: 'O que derrubou o score?', desc: 'Análise de impacto no seu Score.', msg: 'O que derrubou o score?' },
+               { icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, title: 'O que derrubou o score?', desc: 'Análise de impacto no seu Score.', msg: 'O que derrubou o score?' },
                { icon: <FileText className="w-4 h-4 text-purple-400" />, title: 'Gere um resumo', desc: 'Resumo para enviar a gerência.', msg: 'Gere um resumo para relatório' },
                { icon: <Zap className="w-4 h-4 text-yellow-400" />, title: 'O que devo priorizar?', desc: 'Dicas práticas de atuação.', msg: 'Quais ações devo priorizar?' }
             ].map((card, idx) => (
                <div 
                  key={idx} 
                  onClick={() => handleSend(card.msg)}
-                 className="bg-transparent border border-[var(--border)] hover:bg-[var(--bg-active-group)] hover:border-[var(--border)] p-4 rounded-2xl cursor-pointer transition-colors group flex flex-col justify-between"
+                 className="bg-transparent border border-white/10 hover:bg-white/5 hover:border-white/20 p-4 rounded-2xl cursor-pointer transition-colors group flex flex-col justify-between"
                >
                   <div className="flex items-center gap-2 mb-2">
                      {card.icon}
-                     <h4 className="text-[13px] font-bold text-[var(--text-primary)] leading-tight">{card.title}</h4>
+                     <h4 className="text-[13px] font-bold text-gray-200 leading-tight">{card.title}</h4>
                   </div>
                   <div className="flex items-end justify-between gap-4 mt-2">
-                     <p className="text-[11px] text-[var(--text-muted)] leading-relaxed flex-1">{card.desc}</p>
-                     <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors" />
+                     <p className="text-[11px] text-gray-500 leading-relaxed flex-1">{card.desc}</p>
+                     <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   </div>
                </div>
             ))}
@@ -151,20 +151,20 @@ export default function ChatPage() {
         if (intent === 'Check_Risks') {
           // ... Risk mapping ...
           component = (
-            <div className="mt-4 bg-[var(--bg-card)] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="mt-4 bg-[#1e1b1d] border border-red-500/20 rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-red-500" />
-                  <span className="text-sm font-bold text-red-600 dark:text-red-400">Risco Crítico Identificado</span>
+                  <span className="text-sm font-bold text-red-400">Risco Crítico Identificado</span>
                 </div>
-                <span className="text-xs text-[var(--text-muted)] font-medium">Há 2 horas</span>
+                <span className="text-xs text-gray-400 font-medium">Há 2 horas</span>
               </div>
               <div className="pointer-events-none">
-                <p className="font-bold text-[var(--text-primary)] text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
-                <p className="text-sm text-[var(--text-muted)]">Ativo: Prensa 03 • Responsável: João Silva</p>
+                <p className="font-bold text-white text-[15px] mb-1">Esmagamento em Prensa Hidráulica</p>
+                <p className="text-sm text-gray-400">Ativo: Prensa 03 • Responsável: João Silva</p>
               </div>
               <div className="pt-3 mt-1 border-t border-red-500/20 flex items-center justify-between">
-                <span className="text-xs text-red-600 dark:text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
+                <span className="text-xs text-red-400/80 font-medium bg-red-500/10 px-2 py-1 rounded inline-block">Prazo Recomendado: Imediato</span>
               </div>
             </div>
           );
@@ -175,16 +175,16 @@ export default function ChatPage() {
         } else if (intent === 'Check_Actions') {
 // ...
           component = (
-            <div className="mt-4 bg-[var(--bg-card)] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
+            <div className="mt-4 bg-[#221e1a] border border-orange-500/20 rounded-xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
-                   <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                   <span className="text-sm font-bold text-orange-600 dark:text-orange-400">Ação Vencida há 3 dias</span>
+                   <Clock className="w-5 h-5 text-orange-400" />
+                   <span className="text-sm font-bold text-orange-400">Ação Vencida há 3 dias</span>
                 </div>
               </div>
               <div className="pointer-events-none">
-                <p className="font-bold text-[var(--text-primary)] text-[15px] mb-1">Troca de mangote exaustor</p>
-                <p className="text-sm text-[var(--text-muted)]">Local: Solda 02 • Responsável: Marcos Antônio</p>
+                <p className="font-bold text-white text-[15px] mb-1">Troca de mangote exaustor</p>
+                <p className="text-sm text-gray-400">Local: Solda 02 • Responsável: Marcos Antônio</p>
               </div>
             </div>
           );
@@ -194,19 +194,19 @@ export default function ChatPage() {
           ];
         } else if (intent === 'Get_Report') {
           component = (
-            <div className="mt-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-4 shadow-[var(--shadow-glow)]">
+            <div className="mt-4 bg-[#121826] border border-purple-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
               <div className="flex items-center gap-2 pointer-events-none">
                 <FileText className="w-5 h-5 text-purple-400" />
-                <span className="text-[15px] font-bold text-[var(--text-primary)]">Resumo Executivo (Este Mês)</span>
+                <span className="text-[15px] font-bold text-white">Resumo Executivo (Este Mês)</span>
               </div>
               <div className="grid grid-cols-2 gap-3 pointer-events-none">
-                <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-xs text-[var(--text-muted)] font-medium">Inspeções</span>
-                  <span className="text-sm font-bold text-[var(--text-primary)]">142</span>
+                <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                  <span className="text-xs text-gray-400 font-medium">Inspeções</span>
+                  <span className="text-sm font-bold text-white">142</span>
                 </div>
-                <div className="bg-[var(--bg-primary)] border border-[var(--border)] p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-xs text-[var(--text-muted)] font-medium">Ações Fechadas</span>
-                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">89%</span>
+                <div className="bg-[#0b0f19] border border-white/5 p-3 rounded-lg flex items-center justify-between">
+                  <span className="text-xs text-gray-400 font-medium">Ações Fechadas</span>
+                  <span className="text-sm font-bold text-emerald-400">89%</span>
                 </div>
               </div>
             </div>
@@ -231,9 +231,9 @@ export default function ChatPage() {
              <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
                <ShieldCheck className="w-4 h-4" /> Decisão: {decision.title}
              </h4>
-             <div className="text-[12px] text-[var(--text-secondary)]">
+             <div className="text-[12px] text-gray-300">
                 <span className="block mb-1"><strong>Status:</strong> {decision.decision}</span>
-                <span className="block mb-1"><strong>Impacto:</strong> <span className={decision.operationalImpact === 'Alto' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}>{decision.operationalImpact}</span></span>
+                <span className="block mb-1"><strong>Impacto:</strong> <span className={decision.operationalImpact === 'Alto' ? 'text-red-400' : 'text-blue-400'}>{decision.operationalImpact}</span></span>
                 <span className="block mb-1"><strong>Efeito Estimado:</strong> {decision.causeAndEffect.effect}</span>
              </div>
            </div>
@@ -247,9 +247,9 @@ export default function ChatPage() {
                <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
                  <ShieldCheck className="w-4 h-4" /> Detecção Normativa: {normMatch.nr}
                </h4>
-               <div className="text-[12px] text-[var(--text-secondary)]">
+               <div className="text-[12px] text-gray-300">
                   <span className="block mb-1"><strong>Risco Específico:</strong> {normMatch.riskType}</span>
-                  <span className="block mb-1"><strong>Severidade:</strong> <span className={normMatch.severity === 'crítica' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}>{normMatch.severity.toUpperCase()}</span></span>
+                  <span className="block mb-1"><strong>Severidade:</strong> <span className={normMatch.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}>{normMatch.severity.toUpperCase()}</span></span>
                   {riskLevelData && <span className="block mb-1"><strong>Nível de Risco:</strong> <span className={RiskEngine.getRiskColor(riskLevelData.level)} style={{padding: '0.1rem 0.3rem', borderRadius: '4px'}}>{riskLevelData.level.toUpperCase()}</span></span>}
                   <span className="block mb-1"><strong>Documentos:</strong> {normMatch.documents.join(', ')}</span>
                   <span className="block mb-1"><strong>EPI:</strong> {normMatch.ppe.join(', ')}</span>
@@ -298,26 +298,26 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-[var(--bg-card)] text-[var(--text-primary)] font-sans">
+    <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col h-full overflow-hidden">
           
           <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6 shrink-0">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-[var(--shadow-glow)]">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-[0_0_15px_rgba(124,58,237,0.3)]">
                 L
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">L.A.R.I — Copiloto SST</h1>
-                <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5 sm:mt-1">Assistente operacional conectada a riscos, inspeções ações e alertas.</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">L.A.R.I — Copiloto SST</h1>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">Assistente operacional conectada a riscos, inspeções ações e alertas.</p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-              <button className="flex items-center shrink-0 gap-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
-                <Calendar className="w-4 h-4 text-[var(--text-muted)]" /> <span className="hidden sm:inline">01/05/2024 – 31/05/2024</span><span className="sm:hidden">Maio 2024</span> <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] rotate-90" />
+              <button className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
+                <Calendar className="w-4 h-4 text-gray-500" /> <span className="hidden sm:inline">01/05/2024 – 31/05/2024</span><span className="sm:hidden">Maio 2024</span> <ChevronRight className="w-4 h-4 text-gray-600 rotate-90" />
               </button>
-              <button onClick={() => setMessages([])} className="flex items-center shrink-0 gap-2 bg-[var(--bg-card)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-[var(--border)]">
-                <MessageSquare className="w-4 h-4 text-[var(--text-muted)]" /> Nova conversa
+              <button onClick={() => setMessages([])} className="flex items-center shrink-0 gap-2 bg-[#121826] hover:bg-white/5 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-colors border border-white/10">
+                <MessageSquare className="w-4 h-4 text-gray-500" /> Nova conversa
               </button>
               <button 
                 onClick={() => {
@@ -331,7 +331,7 @@ export default function ChatPage() {
                   });
                   alert("Gerando relatório com base no contexto atual...");
                 }}
-                className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[var(--shadow-glow)] border border-purple-500/50"
+                className="flex items-center shrink-0 gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-[13px] font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
               >
                 <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Gerar relatório</span><span className="sm:hidden">Relatório</span>
               </button>
@@ -340,7 +340,7 @@ export default function ChatPage() {
 
           <div className="flex-1 flex gap-6 overflow-hidden mt-2">
             
-            <div className="flex-[2.5] bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col shadow-lg overflow-hidden relative">
+            <div className="flex-[2.5] bg-[#121826] border border-white/5 rounded-2xl flex flex-col shadow-lg overflow-hidden relative">
                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-6">
                   <AnimatePresence initial={false}>
                     {messages.length === 0 && welcomeMessage}
@@ -353,15 +353,15 @@ export default function ChatPage() {
                       >
                         {msg.sender === 'bot' && (
                           <div className="flex items-center gap-2 mb-2 ml-1">
-                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">L</div>
-                             <span className="text-xs font-bold text-[var(--text-muted)]">L.A.R.I</span>
+                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
+                             <span className="text-xs font-bold text-gray-400">L.A.R.I</span>
                           </div>
                         )}
                         
                         <div className={`
-                          ${msg.sender === 'user' ? 'bg-purple-600 text-[var(--text-primary)] shadow-[var(--shadow-glow)] ml-12' : 'max-w-[90%]'}
+                          ${msg.sender === 'user' ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(124,58,237,0.2)] ml-12' : 'max-w-[90%]'}
                           px-5 py-3.5 rounded-2xl
-                          ${msg.sender === 'bot' ? 'bg-[var(--bg-active-group)] border border-[var(--border)] text-[var(--text-primary)]' : ''}
+                          ${msg.sender === 'bot' ? 'bg-white/5 border border-white/10 text-gray-200' : ''}
                         `}>
                           {msg.content.text && <p className="leading-relaxed whitespace-pre-wrap text-[15px]">{msg.content.text}</p>}
                           {msg.content.component}
@@ -375,8 +375,8 @@ export default function ChatPage() {
                                   onClick={act.onClick}
                                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
                                     act.primary 
-                                      ? 'bg-purple-600/10 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 hover:bg-purple-600/30' 
-                                      : 'bg-[var(--bg-active-group)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-active-group)]'
+                                      ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30' 
+                                      : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                                   }`}
                                >
                                   {act.icon}
@@ -397,10 +397,10 @@ export default function ChatPage() {
                         className="flex flex-col items-start"
                       >
                          <div className="flex items-center gap-2 mb-2 ml-1">
-                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">L</div>
-                             <span className="text-xs font-bold text-[var(--text-muted)]">L.A.R.I está digitando...</span>
+                             <div className="w-6 h-6 rounded-full bg-purple-600 border border-purple-500 flex items-center justify-center text-[10px] font-bold text-white">L</div>
+                             <span className="text-xs font-bold text-gray-400">L.A.R.I está digitando...</span>
                           </div>
-                          <div className="bg-[var(--bg-active-group)] border border-[var(--border)] px-5 py-4 rounded-2xl flex gap-1.5 items-center">
+                          <div className="bg-white/5 border border-white/10 px-5 py-4 rounded-2xl flex gap-1.5 items-center">
                             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
@@ -411,9 +411,9 @@ export default function ChatPage() {
                   </AnimatePresence>
                </div>
 
-               <div className="p-5 md:p-6 shrink-0 bg-transparent relative z-10 border-t border-[var(--border)]">
+               <div className="p-5 md:p-6 shrink-0 bg-transparent relative z-10 border-t border-white/5">
                   <div className="flex items-center gap-3">
-                     <button className="w-[52px] h-[52px] rounded-xl border border-[var(--border)] bg-[var(--bg-primary)] flex items-center justify-center text-purple-400 hover:bg-[var(--bg-active-group)] transition-colors shrink-0">
+                     <button className="w-[52px] h-[52px] rounded-xl border border-white/10 bg-[#0b0f19] flex items-center justify-center text-purple-400 hover:bg-white/5 transition-colors shrink-0">
                         <Activity className="w-5 h-5" />
                      </button>
                      <div className="flex-1 relative">
@@ -427,59 +427,59 @@ export default function ChatPage() {
                               }
                            }}
                            placeholder="Pergunte sobre riscos, inspeções, ações ou alertas..."
-                           className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl pl-5 pr-12 h-[52px] text-[15px] text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
+                           className="w-full bg-[#121826] border border-white/10 rounded-xl pl-5 pr-12 h-[52px] text-[15px] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner"
                         />
                      </div>
                      <button 
                         onClick={() => handleSend(inputValue)}
                         className={`w-[52px] h-[52px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
                            inputValue.trim() 
-                              ? 'bg-purple-600 text-[var(--text-primary)] hover:bg-purple-700 shadow-[var(--shadow-glow)] border border-purple-500/50' 
-                              : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border)]'
+                              ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-[0_0_15px_rgba(124,58,237,0.4)] border border-purple-500/50' 
+                              : 'bg-[#121826] text-gray-400 border border-white/10'
                         }`}
                      >
                         <Send className="w-5 h-5 ml-0.5" />
                      </button>
                   </div>
-                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
                      <Lock className="w-3 h-3" /> As respostas da L.A.R.I são baseadas nos dados do sistema e podem não refletir todas as particularidades.
                   </div>
                </div>
             </div>
 
             <div className="flex-1 flex flex-col gap-6 w-full max-w-[340px] shrink-0 hidden lg:flex">
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col pt-2 shadow-lg">
-                  <div className="flex items-center justify-between p-5 border-b border-[var(--border)] mx-1">
-                     <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+               <div className="bg-[#121826] border border-white/5 rounded-2xl flex flex-col pt-2 shadow-lg">
+                  <div className="flex items-center justify-between p-5 border-b border-white/5 mx-1">
+                     <div className="flex items-center gap-2 text-gray-300">
                         <Activity className="w-[18px] h-[18px] text-purple-400" />
-                        <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Contexto do sistema</h3>
+                        <h3 className="text-[14px] font-bold text-white">Contexto do sistema</h3>
                      </div>
                      <div className="flex items-center gap-1.5 justify-end">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
-                        <span className="text-[10px] text-[var(--text-muted)] font-medium">Atualizado agora</span>
+                        <span className="text-[10px] text-gray-500 font-medium">Atualizado agora</span>
                      </div>
                   </div>
 
                   <div className="flex flex-col py-2">
                      {[
-                        { title: 'Riscos críticos', subtitle: 'vs período anterior', val: '7', stat: '16%', up: true, icon: <AlertTriangle className="w-4 h-4 text-red-500" />, iconBg: 'bg-[var(--bg-card)] border-red-500/20' },
-                        { title: 'Inspeções pendentes', subtitle: 'vs período anterior', val: '53', stat: '23%', up: true, icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />, iconBg: 'bg-[var(--bg-card)] border-blue-500/20' },
-                        { title: 'Ações atrasadas', subtitle: 'vs período anterior', val: '18', stat: '37%', up: true, icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />, iconBg: 'bg-[var(--bg-card)] border-orange-500/20' },
+                        { title: 'Riscos críticos', subtitle: 'vs período anterior', val: '7', stat: '16%', up: true, icon: <AlertTriangle className="w-4 h-4 text-red-500" />, iconBg: 'bg-[#1e1b1d] border-red-500/20' },
+                        { title: 'Inspeções pendentes', subtitle: 'vs período anterior', val: '53', stat: '23%', up: true, icon: <ShieldCheck className="w-4 h-4 text-blue-400" />, iconBg: 'bg-[#1a1e28] border-blue-500/20' },
+                        { title: 'Ações atrasadas', subtitle: 'vs período anterior', val: '18', stat: '37%', up: true, icon: <Clock className="w-4 h-4 text-orange-400" />, iconBg: 'bg-[#221e1a] border-orange-500/20' },
                      ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between py-4 px-6 hover:bg-[var(--bg-active-group)] transition-colors cursor-pointer relative group">
-                           {i !== 2 && <div className="absolute bottom-0 left-6 right-6 h-px bg-[var(--bg-active-group)]"></div>}
+                        <div key={i} className="flex items-center justify-between py-4 px-6 hover:bg-white/5 transition-colors cursor-pointer relative group">
+                           {i !== 2 && <div className="absolute bottom-0 left-6 right-6 h-px bg-white/5"></div>}
                            <div className="flex items-center gap-4">
                               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${item.iconBg}`}>
                                  {item.icon}
                               </div>
                               <div className="flex flex-col">
-                                 <span className="text-[13px] font-bold text-[var(--text-primary)] leading-tight mb-0.5 group-hover:text-purple-400 transition-colors">{item.title}</span>
-                                 <span className="text-[11px] text-[var(--text-muted)]">{item.subtitle}</span>
+                                 <span className="text-[13px] font-bold text-white leading-tight mb-0.5 group-hover:text-purple-400 transition-colors">{item.title}</span>
+                                 <span className="text-[11px] text-gray-500">{item.subtitle}</span>
                               </div>
                            </div>
                            <div className="flex flex-col items-end">
-                              <span className="text-[22px] font-bold text-[var(--text-primary)] leading-tight mb-1">{item.val}</span>
-                              <span className={`text-[11px] font-bold flex items-center gap-0.5 ${item.up ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                              <span className="text-[22px] font-bold text-white leading-tight mb-1">{item.val}</span>
+                              <span className={`text-[11px] font-bold flex items-center gap-0.5 ${item.up ? 'text-red-400' : 'text-emerald-400'}`}>
                                  <ArrowUp className="w-3 h-3" /> {item.stat}
                               </span>
                            </div>
@@ -488,31 +488,31 @@ export default function ChatPage() {
                   </div>
                </div>
 
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col shadow-lg">
-                  <div className="flex items-center gap-2 p-5 border-b border-[var(--border)] mx-1">
+               <div className="bg-[#121826] border border-white/5 rounded-2xl overflow-hidden flex flex-col shadow-lg">
+                  <div className="flex items-center gap-2 p-5 border-b border-white/5 mx-1">
                      <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px] text-purple-400" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m13 2-2 2.5h3L11 22l2-2.5h-3L13 2z"/>
                      </svg>
-                     <h3 className="text-[14px] font-bold text-[var(--text-primary)]">Acesso rápido</h3>
+                     <h3 className="text-[14px] font-bold text-white">Acesso rápido</h3>
                   </div>
                   
                   <div className="flex flex-col px-3 py-3">
                      {[
                         { title: 'Riscos', icon: <AlertTriangle className="w-4 h-4 text-red-500" /> },
-                        { title: 'Inspeções', icon: <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" /> },
-                        { title: 'Ações', icon: <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" /> },
+                        { title: 'Inspeções', icon: <ShieldCheck className="w-4 h-4 text-blue-400" /> },
+                        { title: 'Ações', icon: <Clock className="w-4 h-4 text-orange-400" /> },
                      ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between p-3.5 px-4 hover:bg-[var(--bg-active-group)] rounded-xl cursor-pointer transition-colors group">
+                        <div key={i} className="flex items-center justify-between p-3.5 px-4 hover:bg-white/5 rounded-xl cursor-pointer transition-colors group">
                            <div className="flex items-center gap-3">
                               {item.icon}
-                              <span className="text-[13px] font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{item.title}</span>
+                              <span className="text-[13px] font-medium text-gray-300 group-hover:text-white transition-colors">{item.title}</span>
                            </div>
-                           <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors" />
+                           <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                         </div>
                      ))}
                   </div>
                   
-                  <div className="p-4 px-6 border-t border-[var(--border)]">
+                  <div className="p-4 px-6 border-t border-white/5">
                      <button className="text-[13px] font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors">
                         Ver todos os módulos <ChevronRight className="w-3.5 h-3.5" />
                      </button>

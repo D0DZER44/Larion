@@ -20,10 +20,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/app/acoes/*": ["./app/operacao/acoes/*"],
-      "@/app/inspecoes/*": ["./app/operacao/inspecoes/*"],
-      "@/app/riscos/*": ["./app/operacao/riscos/*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

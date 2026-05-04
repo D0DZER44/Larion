@@ -2,6 +2,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -20,21 +21,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ['motion'],
   async redirects() {
     return [
-      {
-        source: '/inspecoes',
-        destination: '/operacao/inspecoes',
-        permanent: true,
-      },
-      {
-        source: '/riscos',
-        destination: '/operacao/riscos',
-        permanent: true,
-      },
-      {
-        source: '/acoes',
-        destination: '/operacao/acoes',
-        permanent: true,
-      },
+      { source: '/inspecoes', destination: '/operacao/inspecoes', permanent: true },
+      { source: '/riscos', destination: '/operacao/riscos', permanent: true },
+      { source: '/acoes', destination: '/operacao/acoes', permanent: true },
     ];
   },
   webpack: (config, {dev}) => {

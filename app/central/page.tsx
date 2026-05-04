@@ -62,7 +62,7 @@ const Sparkline = ({ data, color }: { data: number[], color: string }) => {
       </defs>
       <polygon points={areaPoints} fill={`url(#${gradientId})`} />
       <polyline points={points} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={width} cy={endY} fill="var(--text-primary)" stroke={color} strokeWidth="2" r="3" />
+      <circle cx={width} cy={endY} fill="#ffffff" stroke={color} strokeWidth="2" r="3" />
     </svg>
   );
 };
@@ -77,13 +77,13 @@ const PIE_COLORS = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
-        <p className="text-[13px] font-bold text-[var(--text-primary)] mb-1">{label || payload[0].name}</p>
+      <div className="bg-[#121826] border border-white/10 p-3 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-[100]">
+        <p className="text-[13px] font-bold text-white mb-1">{label || payload[0].name}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-[12px]">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
-            <span className="text-[var(--text-secondary)]">{entry.name === 'Total' ? 'Valor' : entry.name}:</span>
-            <span className="font-bold text-[var(--text-primary)] whitespace-nowrap">
+            <span className="text-gray-300">{entry.name === 'Total' ? 'Valor' : entry.name}:</span>
+            <span className="font-bold text-white whitespace-nowrap">
               {entry.name === 'Total' && entry.value > 1000 ? formatCurrency(entry.value) : entry.value}
             </span>
           </div>
@@ -157,20 +157,20 @@ export default function CentralPage() {
     const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
 
     return [
-      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/operacao/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
-      { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/inspecoes', navLabel: 'Continuar inspeções →' },
-      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
-      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
+      { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
+      { id: 'c2', label: 'Inspeções em andamento', val: inspEmAndamento.length, sub: 'Execução ativa', icon: Activity, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/inspecoes', navLabel: 'Continuar inspeções →' },
+      { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
+      { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
       
-      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/operacao/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
-      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/operacao/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
-      { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/inspecoes', navLabel: 'Ver origem →' },
-      { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
+      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
+      { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/inspecoes', navLabel: 'Ver origem →' },
+      { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
       
-      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/operacao/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
-      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/operacao/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/operacao/riscos', navLabel: 'Matriz de riscos →' },
-      { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-[var(--text-muted)]', bg: 'bg-[var(--bg-active-group)]', border: 'border-[var(--border)]', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
+      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
+      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
+      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →' },
+      { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-gray-400', bg: 'bg-white/5', border: 'border-white/10', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
     ];
   }, [riscos, inspecoes, acoes, rules, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen]);
 
@@ -251,28 +251,28 @@ export default function CentralPage() {
   const latestInspections = [...inspecoes].sort((a:any,b:any) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime()).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans overflow-x-hidden flex flex-col">
+    <div className="min-h-screen bg-[#03060e] text-white font-sans overflow-x-hidden flex flex-col">
       <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full p-4 md:p-6 lg:p-8 shrink-0">
         
         {/* Header */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-900/40 border border-purple-500/30 rounded-xl flex items-center justify-center shrink-0 shadow-[var(--shadow-glow)]">
+            <div className="w-12 h-12 bg-purple-900/40 border border-purple-500/30 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
               <BarChart2 className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">Central de Inteligência</h1>
-              <p className="text-[13px] text-[var(--text-muted)] mt-0.5 font-medium tracking-wide">Painel consolidado de inteligência operacional de SST.</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Central de Inteligência</h1>
+              <p className="text-[13px] text-gray-400 mt-0.5 font-medium tracking-wide">Painel consolidado de inteligência operacional de SST.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-[var(--border)]">
+            <button className="flex items-center gap-2 bg-[#0b0f19] hover:bg-white/5 text-gray-300 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-white/10">
               <Filter className="w-4 h-4" /> Filtros
             </button>
-            <button className="flex items-center gap-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-active-group)] text-[var(--text-secondary)] px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-[var(--border)]">
+            <button className="flex items-center gap-2 bg-[#0b0f19] hover:bg-white/5 text-gray-300 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-white/10">
               <Download className="w-4 h-4" /> Exportar
             </button>
-            <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-[var(--shadow-glow)] border border-purple-500/50">
+            <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
               + Registrar Risco
             </button>
           </div>
@@ -285,7 +285,7 @@ export default function CentralPage() {
               {topCards.map((card, i) => {
                 if (!card) return null;
                 return (
-                  <div key={card.id} className="bg-[var(--bg-card)] border border-[var(--border)] p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-[var(--border)] transition-all">
+                  <div key={card.id} className="bg-[#0e1322] border border-white/10 p-5 lg:p-6 rounded-xl flex flex-col relative group overflow-hidden shadow-lg shadow-black/20 hover:border-white/20 transition-all">
                     {/* Background Glow */}
                     <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30`} style={{ backgroundColor: card.sparkColor }}></div>
                     
@@ -294,17 +294,17 @@ export default function CentralPage() {
                         <div className={`p-2 rounded-lg border ${card.bg} ${card.border}`}>
                           <card.icon className={`w-5 h-5 ${card.color}`} />
                         </div>
-                        <h3 className="text-[13px] font-medium text-[var(--text-secondary)]">{card.label}</h3>
+                        <h3 className="text-[13px] font-medium text-gray-300">{card.label}</h3>
                       </div>
                     </div>
                     
-                    <div className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] tracking-tight relative z-10 mb-2">
+                    <div className="text-3xl md:text-4xl font-bold text-white tracking-tight relative z-10 mb-2">
                       {card.val}
                     </div>
                     
                     <div className="flex items-center gap-2 relative z-10">
-                      <span className="text-[12px] font-medium text-[var(--text-muted)]">{card.sub}</span>
-                      {card.id === 'c9' && <div className="w-4 h-4 text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-medium text-gray-400">{card.sub}</span>
+                      {card.id === 'c9' && <div className="w-4 h-4 text-emerald-400 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0">
                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                       </div>}
                     </div>
@@ -315,7 +315,7 @@ export default function CentralPage() {
                       </div>
                     )}
                     {card.id === 'c11' && (
-                      <div className="absolute bottom-6 left-6 right-6 h-[5px] bg-[var(--bg-active-group)] rounded-full overflow-hidden z-10">
+                      <div className="absolute bottom-6 left-6 right-6 h-[5px] bg-white/5 rounded-full overflow-hidden z-10">
                          <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full" style={{ width: card.val }}></div>
                       </div>
                     )}
@@ -327,8 +327,8 @@ export default function CentralPage() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
               {/* Pie Chart */}
-              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
-                <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Distribuição por nível</h3>
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Distribuição por nível</h3>
                 <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
                   <div className="w-[180px] h-[180px] relative">
                     <ResponsiveContainer width="100%" height="100%">
@@ -351,36 +351,36 @@ export default function CentralPage() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center font-sans mt-1">
-                      <span className="text-3xl font-bold text-[var(--text-primary)] leading-none">{openRisks.length || 128}</span>
-                      <span className="text-[12px] text-[var(--text-muted)] font-medium mt-1">Total</span>
+                      <span className="text-3xl font-bold text-white leading-none">{openRisks.length || 128}</span>
+                      <span className="text-[12px] text-gray-400 font-medium mt-1">Total</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-3 font-sans">
                     {riskPieData.length > 0 ? riskPieData.map((entry) => (
                       <div key={entry.name} className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] opacity-90" style={{ backgroundColor: PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || '#555', color: PIE_COLORS[entry.name as keyof typeof PIE_COLORS] }}></div>
-                        <span className="text-[13px] text-[var(--text-secondary)] w-16">{entry.name}</span>
-                        <span className="text-[13px] font-bold text-[var(--text-primary)]">{entry.value} <span className="font-normal text-[var(--text-muted)]">({Math.round((entry.value/openRisks.length)*100)}%)</span></span>
+                        <span className="text-[13px] text-gray-300 w-16">{entry.name}</span>
+                        <span className="text-[13px] font-bold text-white">{entry.value} <span className="font-normal text-gray-500">({Math.round((entry.value/openRisks.length)*100)}%)</span></span>
                       </div>
                     )) : (
-                      <div className="text-xs text-[var(--text-muted)]">Sem dados suficientes</div>
+                      <div className="text-xs text-gray-500">Sem dados suficientes</div>
                     )}
                   </div>
                 </div>
                 <div className="mt-4 text-right">
-                  <span className="text-[11px] text-[var(--text-muted)] font-sans">Última atualização: hoje 08:30</span>
+                  <span className="text-[11px] text-gray-500 font-sans">Última atualização: hoje 08:30</span>
                 </div>
               </div>
 
               {/* Bar Chart Sectors */}
-              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
-                <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Riscos por setor</h3>
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Riscos por setor</h3>
                 <div className="flex-1 min-h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={riskBarData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
                       <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                       <Bar dataKey="Total" fill="#7c3aed" radius={[2, 2, 0, 0]} barSize={32}>
                         {riskBarData.map((entry, index) => (
@@ -396,20 +396,20 @@ export default function CentralPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 text-center border-t border-[var(--border)] pt-4">
-                  <span className="text-[12px] text-[var(--text-muted)] font-sans tracking-wide">Total de riscos</span>
+                <div className="mt-4 text-center border-t border-white/5 pt-4">
+                  <span className="text-[12px] text-gray-500 font-sans tracking-wide">Total de riscos</span>
                 </div>
               </div>
 
               {/* Bar Chart NR */}
-              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col">
-                <h3 className="text-[15px] font-medium text-[var(--text-primary)] mb-6 font-sans">Multa estimada por NR</h3>
+              <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
+                <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Multa estimada por NR</h3>
                 <div className="flex-1 min-h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" data={nrBarData} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
-                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
-                      <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--text-muted)" }} width={55} />
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => val >= 1000 ? `${val/1000}k` : val} />
+                      <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} width={55} />
                       <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                       <Bar dataKey="Total" fill="#eab308" radius={[0, 2, 2, 0]} barSize={16}>
                           {nrBarData.map((entry, index) => (
@@ -419,8 +419,8 @@ export default function CentralPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 text-center border-t border-[var(--border)] pt-4">
-                  <span className="text-[12px] text-[var(--text-muted)] font-sans tracking-wide">Valor estimado (R$)</span>
+                <div className="mt-4 text-center border-t border-white/5 pt-4">
+                  <span className="text-[12px] text-gray-500 font-sans tracking-wide">Valor estimado (R$)</span>
                 </div>
               </div>
             </div>
@@ -429,76 +429,76 @@ export default function CentralPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 mt-2">
                
                {/* Insights List */}
-               <div className="bg-[var(--bg-card)] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
-                  <div className="absolute inset-0  pointer-events-none"></div>
+               <div className="bg-[#0e1322] border border-purple-500/20 rounded-xl p-6 flex flex-col shadow-[0_0_30px_rgba(124,58,237,0.03)] font-sans relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
                   <div className="flex items-center gap-2 mb-6 relative z-10">
                     <Zap className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Insights operacionais</h3>
+                    <h3 className="text-[15px] font-medium text-white">Insights operacionais</h3>
                   </div>
                   <div className="flex-1 space-y-5 relative z-10">
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-red-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <ShieldAlert className="w-4 h-4 text-red-400" />
                         </div>
                         <div>
-                           <p className="text-[13px] font-medium text-[var(--text-primary)]">{riscoCriticoAberto.length || 8} riscos críticos em aberto exigem ação imediata.</p>
-                           <p className="text-[12px] text-[var(--text-muted)] mt-1">Impacto potencial alto em SST e conformidade.</p>
+                           <p className="text-[13px] font-medium text-gray-200">{riscoCriticoAberto.length || 8} riscos críticos em aberto exigem ação imediata.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Impacto potencial alto em SST e conformidade.</p>
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-yellow-500/20 flex items-center justify-center shrink-0 mt-1">
                           <TrendingUp className="w-4 h-4 text-yellow-400" />
                         </div>
                         <div>
-                           <p className="text-[13px] font-medium text-[var(--text-primary)]">NR-12 concentra {Math.round(((nrBarData[0]?.Total || 412000) / (multaEmAberto||1.248e6)) * 100) || 33}% da multa estimada total.</p>
-                           <p className="text-[12px] text-[var(--text-muted)] mt-1">Priorize adequações e controles de máquina e equipamento.</p>
+                           <p className="text-[13px] font-medium text-gray-200">NR-12 concentra {Math.round(((nrBarData[0]?.Total || 412000) / (multaEmAberto||1.248e6)) * 100) || 33}% da multa estimada total.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Priorize adequações e controles de máquina e equipamento.</p>
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-orange-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <AlertTriangle className="w-4 h-4 text-orange-400" />
                         </div>
                         <div>
-                           <p className="text-[13px] font-medium text-[var(--text-primary)]">{listRiscos[0]?.titulo || 'Queda de altura'} lidera os riscos críticos.</p>
-                           <p className="text-[12px] text-[var(--text-muted)] mt-1">Reforce treinamentos, EPCs e inspeções em altura.</p>
+                           <p className="text-[13px] font-medium text-gray-200">{listRiscos[0]?.titulo || 'Queda de altura'} lidera os riscos críticos.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Reforce treinamentos, EPCs e inspeções em altura.</p>
                         </div>
                      </div>
                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <div className="w-9 h-9 rounded-xl bg-[#1a1c23] border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         </div>
                         <div>
-                           <p className="text-[13px] font-medium text-[var(--text-primary)]">Chance média de incidente em nível {(avgChance||32) < 40 ? 'moderado' : 'alto'}.</p>
-                           <p className="text-[12px] text-[var(--text-muted)] mt-1">Mantenha o monitoramento e fortaleça controles preventivos.</p>
+                           <p className="text-[13px] font-medium text-gray-200">Chance média de incidente em nível {(avgChance||32) < 40 ? 'moderado' : 'alto'}.</p>
+                           <p className="text-[12px] text-gray-500 mt-1">Mantenha o monitoramento e fortaleça controles preventivos.</p>
                         </div>
                      </div>
                   </div>
-                  <div className="mt-6 pt-4 border-t border-[var(--border)] flex items-center justify-between relative z-10">
-                    <span className="text-[12px] text-[var(--text-muted)] tracking-wide">Dados consolidados até hoje 08:30</span>
-                    <button className="text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-2 transition-colors border border-[var(--border)] px-4 py-2 rounded-lg hover:bg-[var(--bg-active-group)]">
+                  <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between relative z-10">
+                    <span className="text-[12px] text-gray-500 tracking-wide">Dados consolidados até hoje 08:30</span>
+                    <button className="text-[12px] font-medium text-gray-300 hover:text-white flex items-center gap-2 transition-colors border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5">
                       Ver todos os insights <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                </div>
 
                {/* Top riscos críticos List */}
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
                   <div className="flex items-center gap-2 mb-6">
                     <AlertTriangle className="w-5 h-5 text-red-500" />
-                    <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top riscos críticos</h3>
+                    <h3 className="text-[15px] font-medium text-white">Top riscos críticos</h3>
                   </div>
                   <div className="flex-1 space-y-3">
                      {listRiscos.map((r, i) => (
-                        <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-[var(--border)] last:border-0 group cursor-pointer hover:bg-[var(--bg-active-group)] px-3 -mx-3 rounded-lg transition-colors" onClick={() => {
+                        <div key={r.id || i} className="flex items-center gap-4 py-2 border-b border-white/5 last:border-0 group cursor-pointer hover:bg-white/5 px-3 -mx-3 rounded-lg transition-colors" onClick={() => {
                           setSelectedDrawerItem({ type: 'risco', data: r });
                         }}>
-                           <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                           <div className="w-6 h-6 rounded bg-red-500/10 text-[12px] font-bold text-red-400 flex items-center justify-center shrink-0">
                               {i+1}
                            </div>
                            <div className="flex-1 min-w-0">
-                              <h4 className="text-[13px] font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--text-primary)] transition-colors">{r.titulo || r.atividade}</h4>
+                              <h4 className="text-[13px] font-medium text-gray-200 truncate group-hover:text-white transition-colors">{r.titulo || r.atividade}</h4>
                            </div>
-                           <div className="text-[12px] text-[var(--text-muted)] truncate text-right">
+                           <div className="text-[12px] text-gray-400 truncate text-right">
                               {r.setor || r.sector_id}
                            </div>
                            <div className="w-8 flex justify-end">
@@ -509,36 +509,36 @@ export default function CentralPage() {
                         </div>
                      ))}
                   </div>
-                  <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                    <button className="w-full text-center text-[13px] font-medium text-red-600 dark:text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/operacao/riscos'}>
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <button className="w-full text-center text-[13px] font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 py-2.5 rounded-lg flex items-center justify-center gap-2" onClick={() => window.location.href='/riscos'}>
                       Ver todos os riscos críticos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                </div>
 
                {/* Top 5 Chance progress bars */}
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 flex flex-col font-sans">
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
                   <div className="flex items-center gap-2 mb-6">
-                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <h3 className="text-[15px] font-medium text-[var(--text-primary)]">Top 5 riscos por chance de incidente</h3>
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-[15px] font-medium text-white">Top 5 riscos por chance de incidente</h3>
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
                      {renderTopRisksChance.map((r, i) => (
                         <div key={i} className="cursor-pointer group" onClick={() => {
-                          window.location.href = '/operacao/riscos'; 
+                          window.location.href = '/riscos'; 
                         }}>
                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-[13px] font-medium text-[var(--text-secondary)] truncate pr-4 group-hover:text-[var(--text-primary)] transition-colors">{r.name}</h4>
-                              <span className="text-[13px] font-bold text-[var(--text-primary)]">{r.chance}%</span>
+                              <h4 className="text-[13px] font-medium text-gray-300 truncate pr-4 group-hover:text-white transition-colors">{r.name}</h4>
+                              <span className="text-[13px] font-bold text-gray-200">{r.chance}%</span>
                            </div>
-                           <div className="h-1.5 w-full bg-[var(--bg-card)] rounded-full overflow-hidden">
+                           <div className="h-1.5 w-full bg-[#1a1c23] rounded-full overflow-hidden">
                               <div className="h-full bg-gradient-to-r from-emerald-600 to-green-400 rounded-full transition-all duration-1000" style={{ width: `${r.chance}%` }}></div>
                            </div>
                         </div>
                      ))}
                   </div>
-                  <div className="mt-4 pt-5 border-t border-[var(--border)]">
-                    <button className="w-full text-center text-[13px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/operacao/riscos'}>
+                  <div className="mt-4 pt-5 border-t border-white/5">
+                    <button className="w-full text-center text-[13px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20" onClick={() => window.location.href='/riscos'}>
                       Ver matriz de riscos <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -547,27 +547,27 @@ export default function CentralPage() {
 
             {/* Other System Metrics Data Grid */}
             <div className="mt-6 shrink-0 font-sans">
-              <h2 className="text-[16px] font-medium text-[var(--text-primary)] mb-6 flex items-center gap-2">
+              <h2 className="text-[16px] font-medium text-white mb-6 flex items-center gap-2">
                  Visão Setorial Integrada
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                  {gridKPIs.map(card => {
                     if (!card) return null;
                     return (
-                       <div key={card.id} className={`bg-[var(--bg-card)] border rounded-xl overflow-hidden p-5 flex flex-col relative group transition-colors hover:bg-white/[0.02] cursor-pointer ${card.border}`} onClick={() => window.location.href = card.navTo}>
+                       <div key={card.id} className={`bg-[#0e1322] border rounded-xl overflow-hidden p-5 flex flex-col relative group transition-colors hover:bg-white/[0.02] cursor-pointer ${card.border}`} onClick={() => window.location.href = card.navTo}>
                           <div className="flex items-center justify-between mb-4 relative z-10">
                             <div className="flex items-center gap-3">
                                <div className={`p-2 rounded-lg ${card.bg}`}>
                                   <card.icon className={`w-4 h-4 ${card.color}`} />
                                </div>
-                               <h4 className="text-[13px] font-medium text-[var(--text-secondary)] leading-tight">{card.label}</h4>
+                               <h4 className="text-[13px] font-medium text-gray-300 leading-tight">{card.label}</h4>
                             </div>
-                            <ArrowRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--text-muted)] transition-colors" />
+                            <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
                           </div>
                           <div className="flex items-end gap-3 mt-1 relative z-10">
-                             <div className="text-3xl font-bold text-[var(--text-primary)] leading-none">{card.val}</div>
+                             <div className="text-3xl font-bold text-white leading-none">{card.val}</div>
                           </div>
-                          <div className="text-[12px] font-medium text-[var(--text-muted)] mt-3 relative z-10">{card.sub}</div>
+                          <div className="text-[12px] font-medium text-gray-500 mt-3 relative z-10">{card.sub}</div>
                        </div>
                     );
                  })}
@@ -577,28 +577,28 @@ export default function CentralPage() {
             {/* Tables Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 shrink-0 font-sans pb-12">
                {/* Informative Table 1 */}
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
-                 <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
-                   <h3 className="text-[15px] font-medium text-[var(--text-primary)] flex items-center gap-2">
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                   <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
                      Últimas Inspeções
                    </h3>
-                   <button className="text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-lg transition-colors border border-[var(--border)] hover:bg-[var(--bg-active-group)]" onClick={() => window.location.href='/operacao/inspecoes'}>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/inspecoes'}>
                      Ver todas
                    </button>
                  </div>
                  <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                       <thead className="bg-[var(--bg-card)]/50">
+                       <thead className="bg-[#121826]/50">
                           <tr>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Status</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Tipo/Inspeção</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Setor</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider text-right">Ação</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Status</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Tipo/Inspeção</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Setor</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider text-right">Ação</th>
                           </tr>
                        </thead>
-                       <tbody className="divide-y divide-[var(--border)]">
+                       <tbody className="divide-y divide-white/5">
                           {latestInspections.length === 0 ? (
-                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-[var(--text-muted)]">Nenhuma inspeção recente.</td></tr>
+                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-gray-500">Nenhuma inspeção recente.</td></tr>
                           ) : latestInspections.map((insp:any, i:number) => (
                              <tr key={insp.id || i} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedDrawerItem({ type: 'inspecao', data: insp })}>
                                 <td className="px-5 py-4">
@@ -609,14 +609,14 @@ export default function CentralPage() {
                                         insp.status === 'Em andamento' ? 'bg-purple-500' :
                                         'bg-blue-500'
                                      }`}></div>
-                                     <span className="text-[12px] font-medium text-[var(--text-secondary)]">{insp.status}</span>
+                                     <span className="text-[12px] font-medium text-gray-300">{insp.status}</span>
                                    </div>
                                 </td>
                                 <td className="px-5 py-4 min-w-[200px]">
-                                   <p className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors capitalize">{insp.title || insp.nome || 'Inspeção de Rotina'}</p>
+                                   <p className="text-[13px] font-medium text-gray-200 group-hover:text-white transition-colors capitalize">{insp.title || insp.nome || 'Inspeção de Rotina'}</p>
                                 </td>
                                 <td className="px-5 py-4">
-                                  <span className="text-[12px] text-[var(--text-muted)]">{insp.setor || insp.sector_id || 'Geral'}</span>
+                                  <span className="text-[12px] text-gray-400">{insp.setor || insp.sector_id || 'Geral'}</span>
                                 </td>
                                 <td className="px-5 py-4 text-right">
                                    <button 
@@ -631,46 +631,46 @@ export default function CentralPage() {
                </div>
 
                {/* Informative Table 2 */}
-               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl flex flex-col overflow-hidden">
-                 <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
-                   <h3 className="text-[15px] font-medium text-[var(--text-primary)] flex items-center gap-2">
+               <div className="bg-[#0e1322] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                   <h3 className="text-[15px] font-medium text-white flex items-center gap-2">
                      Ações Pendentes Prioritárias
                    </h3>
-                   <button className="text-[12px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-lg transition-colors border border-[var(--border)] hover:bg-[var(--bg-active-group)]" onClick={() => window.location.href='/operacao/acoes'}>
+                   <button className="text-[12px] font-medium text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10 hover:bg-white/5" onClick={() => window.location.href='/acoes'}>
                      Ir para Ações
                    </button>
                  </div>
                  <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                       <thead className="bg-[var(--bg-card)]/50">
+                       <thead className="bg-[#121826]/50">
                           <tr>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Prioridade</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Ação</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Responsável</th>
-                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-[var(--text-muted)] tracking-wider text-right">Ação</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Prioridade</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Ação</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider">Responsável</th>
+                             <th className="px-5 py-3 text-[11px] uppercase font-bold text-gray-500 tracking-wider text-right">Ação</th>
                           </tr>
                        </thead>
-                       <tbody className="divide-y divide-[var(--border)]">
+                       <tbody className="divide-y divide-white/5">
                           {acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada').slice(0,5).length === 0 ? (
-                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-[var(--text-muted)]">Nenhuma ação pendente.</td></tr>
+                            <tr><td colSpan={4} className="p-8 text-center text-[13px] text-gray-500">Nenhuma ação pendente.</td></tr>
                           ) : acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada').slice(0,5).map((acao:any, i:number) => (
                              <tr key={acao.id || i} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedDrawerItem({ type: 'acao', data: acao })}>
                                 <td className="px-5 py-4">
                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded border inline-block uppercase ${
-                                      acao.prioridade === 'Urgente' || acao.priority === 'P1' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' :
-                                      acao.prioridade === 'Alta' || acao.priority === 'P2' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' :
-                                      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                                      acao.prioridade === 'Urgente' || acao.priority === 'P1' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                      acao.prioridade === 'Alta' || acao.priority === 'P2' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                    }`}>{acao.prioridade || acao.priority || 'Normal'}</span>
                                 </td>
                                 <td className="px-5 py-4 min-w-[200px]">
-                                   <p className="text-[13px] font-medium text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors truncate max-w-[200px]">{acao.title || acao.titulo}</p>
+                                   <p className="text-[13px] font-medium text-gray-200 group-hover:text-white transition-colors truncate max-w-[200px]">{acao.title || acao.titulo}</p>
                                 </td>
                                 <td className="px-5 py-4">
-                                   <span className="text-[12px] text-[var(--text-muted)]">{acao.responsavel || 'Equipe'}</span>
+                                   <span className="text-[12px] text-gray-400">{acao.responsavel || 'Equipe'}</span>
                                 </td>
                                 <td className="px-5 py-4 text-right">
                                    <button 
-                                      className="text-[12px] font-bold text-orange-600 dark:text-orange-400 hover:text-orange-300 transition-colors flex items-center justify-end gap-1 w-full"
+                                      className="text-[12px] font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center justify-end gap-1 w-full"
                                    >Abrir <ArrowRight className="w-3.5 h-3.5" /></button>
                                 </td>
                              </tr>
@@ -692,17 +692,17 @@ export default function CentralPage() {
             animate={{ width: 440, opacity: 1, x: 0 }} 
             exit={{ width: 0, opacity: 0, x: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 bg-[var(--bg-card)] border-l border-[var(--border)] shadow-2xl z-50 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 bg-[#0e1322] border-l border-white/10 shadow-2xl z-50 flex flex-col"
           >
              <div className="w-[440px] h-full flex flex-col pt-safe-top overflow-hidden">
-                <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border)] shrink-0 bg-[var(--bg-card)]">
+                <div className="flex items-center justify-between p-6 pb-4 border-b border-white/5 shrink-0 bg-[#121826]">
                    <div className="flex items-center gap-2">
-                     {selectedDrawerItem.type === 'risco' && <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />}
-                     {selectedDrawerItem.type === 'acao' && <ListChecks className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
+                     {selectedDrawerItem.type === 'risco' && <ShieldAlert className="w-4 h-4 text-red-400" />}
+                     {selectedDrawerItem.type === 'acao' && <ListChecks className="w-4 h-4 text-orange-400" />}
                      {selectedDrawerItem.type === 'inspecao' && <FileText className="w-4 h-4 text-purple-400" />}
-                     <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Visualização de {selectedDrawerItem.type}</h3>
+                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Visualização de {selectedDrawerItem.type}</h3>
                    </div>
-                   <button onClick={() => setSelectedDrawerItem(null)} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-active-group)] rounded-md transition-colors">
+                   <button onClick={() => setSelectedDrawerItem(null)} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors">
                       <X className="w-5 h-5" />
                    </button>
                 </div>
@@ -710,35 +710,35 @@ export default function CentralPage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                    {selectedDrawerItem.type === 'risco' && (
                      <>
-                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 leading-tight">{selectedDrawerItem.data.titulo || selectedDrawerItem.data.atividade}</h2>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.titulo || selectedDrawerItem.data.atividade}</h2>
                         
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Nível</div>
-                             <div className={`text-[13px] font-bold ${getRiskSeverityLevel(selectedDrawerItem.data) === 'Crítico' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>{getRiskSeverityLevel(selectedDrawerItem.data)}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Nível</div>
+                             <div className={`text-[13px] font-bold ${getRiskSeverityLevel(selectedDrawerItem.data) === 'Crítico' ? 'text-red-400' : 'text-orange-400'}`}>{getRiskSeverityLevel(selectedDrawerItem.data)}</div>
                            </div>
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Status</div>
-                             <div className="text-[13px] font-medium text-[var(--text-secondary)]">{selectedDrawerItem.data.status}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                             <div className="text-[13px] font-medium text-gray-300">{selectedDrawerItem.data.status}</div>
                            </div>
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Setor</div>
-                             <div className="text-[13px] font-medium text-[var(--text-primary)]">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'N/A'}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Setor</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'N/A'}</div>
                            </div>
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">NR Base</div>
-                             <div className="text-[13px] font-medium text-[var(--text-primary)] truncate" title={selectedDrawerItem.data.nr}>{selectedDrawerItem.data.nr || 'Não especificada'}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">NR Base</div>
+                             <div className="text-[13px] font-medium text-white truncate" title={selectedDrawerItem.data.nr}>{selectedDrawerItem.data.nr || 'Não especificada'}</div>
                            </div>
                         </div>
 
                         <div className="space-y-4">
-                           <div className="p-4 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                              <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Multa Estimada</h4>
+                           <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Multa Estimada</h4>
                               <div className="text-xl font-bold text-yellow-500">{formatCurrency(getMultaEstimada(selectedDrawerItem.data))}</div>
                            </div>
-                           <div className="p-4 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                              <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Chance de Incidente</h4>
-                              <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
+                           <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Chance de Incidente</h4>
+                              <div className="text-xl font-bold text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
                            </div>
                         </div>
 
@@ -746,7 +746,7 @@ export default function CentralPage() {
                            <AlertCircle className="w-5 h-5 text-purple-400 shrink-0" />
                            <div>
                               <h4 className="text-[12px] font-bold text-purple-400 mb-1">Dado sincronizado</h4>
-                              <p className="text-[12px] text-[var(--text-muted)] leading-snug">
+                              <p className="text-[12px] text-gray-400 leading-snug">
                                  Este registro pertence à aba Riscos. Clique abaixo para detalhar ou realizar edições operacionais.
                               </p>
                            </div>
@@ -756,22 +756,22 @@ export default function CentralPage() {
 
                    {selectedDrawerItem.type === 'acao' && (
                      <>
-                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.titulo}</h2>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.titulo}</h2>
                         
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Status</div>
-                             <div className={`text-[13px] font-medium ${selectedDrawerItem.data.status === 'Vencida' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>{selectedDrawerItem.data.status}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                             <div className={`text-[13px] font-medium ${selectedDrawerItem.data.status === 'Vencida' ? 'text-red-400' : 'text-orange-400'}`}>{selectedDrawerItem.data.status}</div>
                            </div>
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Responsável</div>
-                             <div className="text-[13px] font-medium text-[var(--text-primary)]">{selectedDrawerItem.data.responsavel}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Responsável</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.responsavel}</div>
                            </div>
                         </div>
 
                         <div>
-                           <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Descrição da Ação</h4>
-                           <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 border border-[var(--border)] rounded-xl">
+                           <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Descrição da Ação</h4>
+                           <p className="text-[13px] text-gray-300 leading-relaxed bg-[#121826] p-4 border border-white/5 rounded-xl">
                              {selectedDrawerItem.data.description || 'Nenhuma descrição detalhada fornecida.'}
                            </p>
                         </div>
@@ -780,17 +780,17 @@ export default function CentralPage() {
 
                    {selectedDrawerItem.type === 'inspecao' && (
                      <>
-                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.nome}</h2>
-                        <div className="text-[13px] text-[var(--text-muted)] mb-6">{selectedDrawerItem.data.description || 'Inspeção de rotina agendada.'}</div>
+                        <h2 className="text-xl font-bold text-white mb-2 leading-tight">{selectedDrawerItem.data.title || selectedDrawerItem.data.nome}</h2>
+                        <div className="text-[13px] text-gray-400 mb-6">{selectedDrawerItem.data.description || 'Inspeção de rotina agendada.'}</div>
                         
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Status</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
                              <div className={`text-[13px] font-medium text-purple-400`}>{selectedDrawerItem.data.status}</div>
                            </div>
-                           <div className="p-3 bg-[var(--bg-active-group)] rounded-xl border border-[var(--border)]">
-                             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Setor Alvo</div>
-                             <div className="text-[13px] font-medium text-[var(--text-primary)]">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'Geral'}</div>
+                           <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                             <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Setor Alvo</div>
+                             <div className="text-[13px] font-medium text-white">{selectedDrawerItem.data.setor || selectedDrawerItem.data.sector_id || 'Geral'}</div>
                            </div>
                         </div>
 
@@ -807,14 +807,14 @@ export default function CentralPage() {
                    )}
                 </div>
 
-                <div className="p-6 border-t border-[var(--border)] bg-[var(--bg-card)] shrink-0">
+                <div className="p-6 border-t border-white/5 bg-[#121826] shrink-0">
                    <button 
                       onClick={() => {
-                         if (selectedDrawerItem.type === 'risco') window.location.href = '/operacao/riscos';
-                         if (selectedDrawerItem.type === 'acao') window.location.href = '/operacao/acoes';
-                         if (selectedDrawerItem.type === 'inspecao') window.location.href = '/operacao/inspecoes';
+                         if (selectedDrawerItem.type === 'risco') window.location.href = '/riscos';
+                         if (selectedDrawerItem.type === 'acao') window.location.href = '/acoes';
+                         if (selectedDrawerItem.type === 'inspecao') window.location.href = '/inspecoes';
                       }}
-                      className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-[var(--text-primary)] font-bold text-[13px] rounded-xl transition-colors flex items-center justify-center gap-2 border border-purple-500/50 shadow-[var(--shadow-glow)]"
+                      className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-[13px] rounded-xl transition-colors flex items-center justify-center gap-2 border border-purple-500/50 shadow-[0_0_15px_rgba(124,58,237,0.2)]"
                    >
                       Ver detalhes do {selectedDrawerItem.type} <ArrowRight className="w-4 h-4" />
                    </button>

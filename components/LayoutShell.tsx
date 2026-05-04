@@ -12,11 +12,11 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const isDashboard = pathname === '/';
 
   return (
-    <div className="flex h-screen bg-[var(--bg-primary)] overflow-hidden">
+    <div className="flex h-screen bg-[#0b0f19] overflow-hidden">
       {/* Mobile Top Header */}
-      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-[var(--bg-primary)] border-b border-[var(--border)] z-50 flex items-center justify-between px-4 print:hidden">
+      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-[#0b0f19] border-b border-white/5 z-50 flex items-center justify-between px-4 print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden relative shrink-0">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg bg-gradient-to-br from-[#121826] to-[#1e1a30] border border-blue-500/30 overflow-hidden relative shrink-0">
             <Image 
               src="/logo.jpg" 
               alt="ApexShield Logo" 
@@ -28,19 +28,19 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
                 e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
               }}
             />
-            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-0">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-600 dark:text-blue-400">
+            <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-[#121826] z-0">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 text-blue-400">
                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                </svg>
             </div>
           </div>
           <div>
-            <h1 className="font-bold text-[var(--text-primary)] text-base tracking-tight leading-tight">Apex Ops</h1>
+            <h1 className="font-bold text-white text-base tracking-tight leading-tight">Apex Ops</h1>
           </div>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 -mr-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] focus:outline-none"
+          className="p-2 -mr-2 text-gray-400 hover:text-white focus:outline-none"
         >
           {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -49,7 +49,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-[var(--bg-primary)] z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
