@@ -47,9 +47,17 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
   useEffect(() => {
     if (pathname.startsWith('/operacao') && !expanded['Operação']) {
-      setExpanded(prev => ({ ...prev, 'Operação': true }));
+      const timer = setTimeout(() => {
+        setExpanded(prev => {
+          if (!prev['Operação']) {
+            return { ...prev, 'Operação': true };
+          }
+          return prev;
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [pathname, expanded]);
+  }, [pathname, expanded]); // Include expanded to satisfy lint, but logic prevents infinite loop
 
   useEffect(() => {
     if (isDark) {

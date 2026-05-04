@@ -74,15 +74,18 @@ export default function Dashboard() {
   }, [lariMessages, lariIsTyping]);
 
   useEffect(() => {
-    setIsMounted(true);
-    setLariMessages([
-      {
-        id: '1',
-        sender: 'lari',
-        text: "Olá! Posso te ajudar rapidamente com riscos, inspeções e ações.",
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      }
-    ]);
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      setLariMessages([
+        {
+          id: '1',
+          sender: 'lari',
+          text: "Olá! Posso te ajudar rapidamente com riscos, inspeções e ações.",
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLariSubmit = (e: React.FormEvent) => {
@@ -518,7 +521,7 @@ export default function Dashboard() {
     });
 
     // Inspeções
-    inspecoes.filter(i => !isConcluidoStatus(i.status) && !isConcluidoStatus(i.situacao)).forEach(i => {
+    cleanInspecoes.filter(i => !isConcluidoStatus(i.status) && !isConcluidoStatus(i.situacao)).forEach(i => {
        const d = i.data || i.date || i.dataPrevista;
        if (d && d >= todayStr) {
            allUpcoming.push({
@@ -534,7 +537,7 @@ export default function Dashboard() {
     });
 
     // Checklists
-    checklists.filter((c: any) => !isConcluidoStatus(c.status) && !isConcluidoStatus(c.situacao)).forEach((c: any) => {
+    cleanChecklists.filter((c: any) => !isConcluidoStatus(c.status) && !isConcluidoStatus(c.situacao)).forEach((c: any) => {
        const d = c.proximaRevisao || c.data || c.dataPrevista;
        if (d && d >= todayStr) {
            allUpcoming.push({
@@ -569,7 +572,7 @@ export default function Dashboard() {
     let pendenciasVencemHoje = 0;
 
     // Riscos
-    for (const r of riscos) {
+    for (const r of cleanRiscos) {
        if (!checkIsConcluido(r.status)) {
           pendenciasAbertas++;
           if (!r.responsavel || r.responsavel.trim() === '') pendenciasSemResponsavel++;
@@ -579,7 +582,7 @@ export default function Dashboard() {
     }
 
     // Ações
-    for (const a of acoes) {
+    for (const a of cleanAcoes) {
        if (!checkIsConcluido(a.status)) {
           pendenciasAbertas++;
           if (!a.responsavel || a.responsavel.trim() === '') pendenciasSemResponsavel++;
@@ -589,7 +592,7 @@ export default function Dashboard() {
     }
 
     // Inspeções
-    for (const i of inspecoes) {
+    for (const i of cleanInspecoes) {
        if (!checkIsConcluido(i.status)) {
           pendenciasAbertas++;
           const resp = i.inspector || i.responsavel;
@@ -602,7 +605,7 @@ export default function Dashboard() {
     }
 
     // Checklists
-    for (const c of checklists) {
+    for (const c of cleanChecklists) {
        if (!checkIsConcluido(c.status) && c.status !== 'Ativo' && c.status !== 'Inativo') {
           pendenciasAbertas++;
           // Checklists são templates. Ignorar responsável e prazo se não existir, 
