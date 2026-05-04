@@ -57,6 +57,7 @@ export type RiskInstance = {
   non_compliant_item?: string;
   checklist_item_id?: string;
   checklistId?: string;
+  pacote?: string;
   riscoId?: string;
   inspecaoId?: string;
   perguntaId?: string;

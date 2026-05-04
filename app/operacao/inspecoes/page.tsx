@@ -40,9 +40,9 @@ type Inspecao = {
 export default function InspecoesPage() {
   const store = useAppStore();
   const router = useRouter();
-  const { checklists: customChecklists, addInspecao, updateInspecao, addRisco, addAcao, riscos, acoes } = store;
+  const { checklists: customChecklists, addInspecao, updateInspecao, addRisco, addAcao, riscos, acoes, rulePackages, organization } = store;
   const checklists = useMemo(() => getTodosChecklistsAtivos(customChecklists), [customChecklists]);
-  
+
   const [activeTab, setActiveTab] = useState<'Agendadas' | 'Realizadas' | 'Checklists'>('Agendadas');
   
   const [drawerMode, setDrawerMode] = useState<'VIEW' | 'EXECUTE' | 'ISSUES' | 'RESCHEDULE' | 'REPORT' | 'CANCEL' | 'CHECKLIST_VIEW' | 'EDIT' | 'REOPEN'>('VIEW');
@@ -94,10 +94,52 @@ export default function InspecoesPage() {
     tipoInspecao: '',
     checklistId: '',
     ondeUsar: '',
-    data: '',
+    data: new Date().toISOString().split('T')[0],
     responsavel: '',
-    observacoes: ''
+    observacoes: '',
+    prioridade: 'Normal'
   });
+
+  // Checklist Filter Logic for New Inspection Form
+  const filteredChecklistsForForm = useMemo(() => {
+    return checklists.filter(c => {
+      // RULE 4: Base SST must always appear.
+      if (c.pacote === 'Base SST') {
+        // Still apply activity check if defined
+        if (c.atividade && inspectionData.tipoInspecao) {
+          const search = inspectionData.tipoInspecao.toLowerCase();
+          const activity = c.atividade.toLowerCase();
+          if (!search.includes(activity) && !activity.includes(search)) return false;
+        }
+        return true;
+      }
+      
+      // RULE 1: Checklist package must be active.
+      const pkg = rulePackages.find(p => p.name === c.pacote);
+      if (!pkg || !pkg.isActive) return false;
+      
+      // RULE 2: Organization segment must be compatible.
+      const orgSegment = organization.segmento;
+      const isSegmentCompatible = c.segmento === 'Geral' || c.segmento === orgSegment;
+      
+      // Manual override: if pkg is active but segment not compatible, 
+      // it's likely manual (or we just follow the example).
+      if (!isSegmentCompatible && pkg.isActive) {
+        // continue
+      } else if (!isSegmentCompatible) {
+        return false;
+      }
+
+      // RULE 3: Activity compatibility if defined.
+      if (c.atividade && inspectionData.tipoInspecao) {
+        const search = inspectionData.tipoInspecao.toLowerCase();
+        const activity = c.atividade.toLowerCase();
+        if (!search.includes(activity) && !activity.includes(search)) return false;
+      }
+      
+      return true;
+    });
+  }, [checklists, rulePackages, organization.segmento, inspectionData.tipoInspecao]);
 
   const prioridadeCalculada = useMemo(() => {
     const t = inspectionData.tipoInspecao.toLowerCase();

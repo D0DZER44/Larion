@@ -92,6 +92,8 @@ export default function OrganizacaoPage() {
 }
 
 function TabVisaoGeral() {
+  const organization = useAppStore(state => state.organization);
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -103,7 +105,7 @@ function TabVisaoGeral() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-400">Nome da empresa</span>
-              <span className="text-sm font-bold text-white">Larion Indústria Ltda.</span>
+              <span className="text-sm font-bold text-white">{organization.razaoSocial}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-400">Plano atual</span>
@@ -133,8 +135,8 @@ function TabVisaoGeral() {
               <span className="text-sm font-bold text-white">8</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Integrações ativas</span>
-              <span className="text-sm font-bold text-white">6</span>
+              <span className="text-sm text-gray-400">Porte</span>
+              <span className="text-sm font-bold text-white">{organization.porte}</span>
             </div>
           </div>
         </div>
@@ -159,19 +161,19 @@ function TabVisaoGeral() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
              <span className="text-[10px] text-gray-500 uppercase font-black">Segmento</span>
-             <p className="text-sm text-white">Indústria</p>
+             <p className="text-sm text-white">{organization.segmento}</p>
           </div>
           <div className="space-y-1">
              <span className="text-[10px] text-gray-500 uppercase font-black">CNPJ</span>
-             <p className="text-sm text-white">12.345.678/0001-90</p>
+             <p className="text-sm text-white">{organization.cnpj}</p>
           </div>
           <div className="space-y-1">
-             <span className="text-[10px] text-gray-500 uppercase font-black">Telefone</span>
-             <p className="text-sm text-white">(11) 3456-7890</p>
+             <span className="text-[10px] text-gray-500 uppercase font-black">Tipo de Operação</span>
+             <p className="text-sm text-white">{organization.tipoOperacao}</p>
           </div>
           <div className="space-y-1">
              <span className="text-[10px] text-gray-500 uppercase font-black">E-mail</span>
-             <p className="text-sm text-white">contato@larion.com.br</p>
+             <p className="text-sm text-white">{organization.emailCorporativo}</p>
           </div>
         </div>
       </div>
@@ -180,6 +182,37 @@ function TabVisaoGeral() {
 }
 
 function TabDadosEmpresa() {
+   const { organization, updateOrganization } = useAppStore();
+   const [localOrg, setLocalOrg] = useState(organization);
+
+   const updateField = (field: string, value: any) => {
+      setLocalOrg(prev => ({ ...prev, [field]: value }));
+   };
+
+   const toggleAtividade = (ativ: string) => {
+      setLocalOrg(prev => {
+         const current = prev.atividadesCriticas || [];
+         if (current.includes(ativ)) {
+            return { ...prev, atividadesCriticas: current.filter(a => a !== ativ) };
+         }
+         return { ...prev, atividadesCriticas: [...current, ativ] };
+      });
+   };
+
+   const handleSave = () => {
+      updateOrganization(localOrg);
+      alert('Dados salvos com sucesso!');
+   };
+
+   const SEGMENTOS = ['Geral/Administrativo', 'Construção Civil', 'Indústria', 'Saúde/Hospitalar', 'Logística', 'Portuário', 'Energia', 'Rural', 'Outro'];
+   const ATIVIDADES = [
+      'Trabalho em altura', 'Eletricidade', 'Espaço confinado', 'Máquinas e equipamentos', 
+      'Produtos químicos', 'Risco biológico', 'Movimentação de carga', 'Ergonomia', 
+      'Escavação', 'Ruído', 'Calor', 'Ordem e limpeza', 'Sinalização', 'EPI', 'Resíduos'
+   ];
+   const PORTES = ['Pequena', 'Média', 'Grande'];
+   const TIPOS = ['Administrativa', 'Campo', 'Industrial', 'Hospitalar', 'Obra', 'Mista'];
+
    return (
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
          <div className="flex-1 space-y-6">
@@ -192,28 +225,120 @@ function TabDadosEmpresa() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Razão Social</label>
-                     <input type="text" defaultValue="Larion Indústria Ltda." className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     <input 
+                        type="text" 
+                        value={localOrg.razaoSocial} 
+                        onChange={(e) => updateField('razaoSocial', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" 
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">CNPJ</label>
-                     <input type="text" defaultValue="12.345.678/0001-90" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     <input 
+                        type="text" 
+                        value={localOrg.cnpj} 
+                        onChange={(e) => updateField('cnpj', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" 
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Telefone</label>
-                     <input type="text" defaultValue="(11) 3456-7890" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     <input 
+                        type="text" 
+                        value={localOrg.telefone} 
+                        onChange={(e) => updateField('telefone', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" 
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">E-mail Corporativo</label>
-                     <input type="email" defaultValue="contato@larion.com.br" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     <input 
+                        type="email" 
+                        value={localOrg.emailCorporativo} 
+                        onChange={(e) => updateField('emailCorporativo', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" 
+                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Endereço Completo</label>
-                     <input type="text" defaultValue="Rua das Indústrias, 123, Galpão A - São Paulo/SP" className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" />
+                     <input 
+                        type="text" 
+                        value={localOrg.endereco} 
+                        onChange={(e) => updateField('endereco', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500" 
+                     />
                   </div>
                </div>
 
-               <div className="flex justify-end pt-4 border-t border-white/5">
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+               <div className="mb-6 pt-6 border-t border-white/5">
+                  <h3 className="text-lg font-bold text-white">Perfil Operacional</h3>
+                  <p className="text-sm text-gray-400">Define como os riscos e pacotes de regras serão aplicados.</p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Segmento Principal</label>
+                     <select 
+                        value={localOrg.segmento} 
+                        onChange={(e) => updateField('segmento', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        {SEGMENTOS.map(s => <option key={s} value={s}>{s}</option>)}
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Porte da Operação</label>
+                     <select 
+                        value={localOrg.porte} 
+                        onChange={(e) => updateField('porte', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        {PORTES.map(p => <option key={p} value={p}>{p}</option>)}
+                     </select>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo de Operação</label>
+                     <select 
+                        value={localOrg.tipoOperacao} 
+                        onChange={(e) => updateField('tipoOperacao', e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                     </select>
+                  </div>
+                  
+                  <div className="space-y-3 md:col-span-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Atividades Críticas Aplicáveis</label>
+                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {ATIVIDADES.map(ativ => (
+                           <button 
+                              key={ativ}
+                              onClick={() => toggleAtividade(ativ)}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium border transition-all ${
+                                 localOrg.atividadesCriticas.includes(ativ)
+                                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                                    : 'bg-[#0b0f19] border-white/10 text-gray-500 hover:border-white/20'
+                              }`}
+                           >
+                              <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
+                                 localOrg.atividadesCriticas.includes(ativ)
+                                    ? 'bg-purple-500 border-purple-500'
+                                    : 'border-white/20'
+                              }`}>
+                                 {localOrg.atividadesCriticas.includes(ativ) && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
+                              </div>
+                              {ativ}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="flex justify-end pt-6 border-t border-white/5">
+                  <button 
+                     onClick={handleSave}
+                     className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_8px_20px_rgba(147,51,234,0.3)] hover:scale-105"
+                  >
                      Salvar dados
                   </button>
                </div>

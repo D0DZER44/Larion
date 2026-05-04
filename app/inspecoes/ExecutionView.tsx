@@ -143,10 +143,31 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
       oldItems = JSON.parse(initialItems);
     } catch(e) {}
 
+    // Motor v2: Filtering applicable rules
+    const pacotesAtivos = store.rulePackages.filter(p => p.isActive).map(p => p.name);
+    const segmentoOrg = store.organization.segmento;
+    const atividadesOrg = store.organization.atividadesCriticas;
+
+    const regrasAplicaveis = store.riskRules.filter(regra =>
+      regra.ativo &&
+      pacotesAtivos.includes(regra.pacote) &&
+      (
+        regra.pacote === "Base SST" ||
+        regra.segmentos.includes(segmentoOrg) ||
+        regra.atividades.some(a => atividadesOrg.includes(a))
+      )
+    );
+
     const calculateScore = (itemsToScore: any[]) => {
       let impactScore = 0;
       itemsToScore.forEach((i: any) => {
-        if ((i.status === 'Não' || i.status === 'Parcialmente') && i.regraFixa) {
+        // Only count impact if it matches an applicable rule OR it's a base SST item
+        const matchesRule = regrasAplicaveis.some(r => 
+          r.nrRelacionada === (i.nrRelacionada || i.nr) && 
+          (r.pacote === 'Base SST' || r.atividades.some(a => (i.atividade === a || template?.atividade === a)))
+        );
+
+        if ((i.status === 'Não' || i.status === 'Parcialmente') && (i.regraFixa || matchesRule)) {
           const sev = (i.riskMap || i.severidade || '').toLowerCase();
           let p = sev === 'crítica' ? 10 : sev === 'alta' ? 5 : sev === 'média' ? 2 : 1;
           if (i.status === 'Parcialmente') p = p / 2;
@@ -163,11 +184,23 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     const scoreDepois = calculateScore(currentItems);
 
     currentItems.forEach(item => {
-      if (item.regraFixa) {
+      // Find matching risk rule from the new structure
+      const matchingRule = regrasAplicaveis.find(r => 
+        r.nrRelacionada === (item.nrRelacionada || item.nr) && 
+        (r.pacote === 'Base SST' || r.atividades.some(a => (item.atividade === a || template?.atividade === a)))
+      );
+
+      // Package filtering: if the item's package is not active, skip
+      const itemPacote = item.pacote || template?.pacote || 'Base SST';
+      const isPackageActive = pacotesAtivos.includes(itemPacote);
+
+      if (!isPackageActive && !matchingRule) return;
+
+      if (item.regraFixa || matchingRule) {
         const oldItem = oldItems.find(i => i.id === item.id);
         if (!oldItem || oldItem.status !== item.status) {
-          const severity = (item.riskMap || item.severidade || '').toLowerCase();
-          let penalty = severity === 'crítica' ? 10 : severity === 'alta' ? 5 : severity === 'média' ? 2 : 1;
+          const severity = (matchingRule?.criticidade || item.riskMap || item.severidade || '').toLowerCase();
+          let penalty = severity === 'crítico' || severity === 'crítica' ? 10 : severity === 'alta' || severity === 'alto' ? 5 : severity === 'médio' || severity === 'média' ? 2 : 1;
           if (item.status === 'Parcialmente') penalty = penalty / 2;
           if (item.status === 'Sim' || item.status === 'N/A' || item.status === 'Pendente') penalty = 0;
 
@@ -175,8 +208,8 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
             store.addLog({
               user_id: 'system',
               empresa_id: 'default',
-              event_type: 'Score impactado por regra fixa NR',
-              description: `O score foi impactado pela regra fixa ${item.regraTitulo || ('Regra Padrão ' + (item.nrRelacionada || 'NR-01'))} vinculada à ${item.nrRelacionada || 'NR-01'}, após resposta ${item.status} no checklist.`,
+              event_type: 'Score impactado por regra ativa',
+              description: `O score foi impactado pela regra ${matchingRule?.nome || item.regraTitulo || ('Regra Padrão ' + (item.nrRelacionada || 'NR-01'))} vinculada à ${item.nrRelacionada || 'NR-01'}, após resposta ${item.status} no checklist.`,
               origin_type: 'inspecoes',
               origin_id: inspection.id,
               metadata: { 
@@ -186,12 +219,12 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
                 perguntaOrigem: item.text,
                 respostaOrigem: item.status,
                 nrRelacionada: item.nrRelacionada || 'NR-01',
-                regraId: item.regraId || 'sys',
-                regraTitulo: item.regraTitulo || ('Regra Padrão ' + (item.nrRelacionada || 'NR-01')),
+                regraId: matchingRule?.id || item.regraId || 'sys',
+                regraTitulo: matchingRule?.nome || item.regraTitulo || ('Regra Padrão ' + (item.nrRelacionada || 'NR-01')),
                 impactoScore: -penalty,
                 scoreAntes,
                 scoreDepois,
-                origem: 'Motor normativo'
+                origem: matchingRule ? 'Motor de Pacotes' : 'Motor normativo'
               }
             });
           }
@@ -202,27 +235,24 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
       const geraRiscoVar = item.geraRisco !== false;
       const geraAcaoVar = item.geraAcao !== false;
 
-      if (isDeficient) {
-        const nr = item.nr || item.nrRelacionada || 'NR-01';
+      if (isDeficient && (matchingRule || item.regraFixa)) {
+        const nr = matchingRule?.nrRelacionada || item.nr || item.nrRelacionada || 'NR-01';
         
-        // Determinar criticidade baseada na regra do usuário
-        let severity = item.riskMap || 'Média';
+        // Determinar criticidade baseada na regra combinada
+        let severity = matchingRule?.criticidade || item.riskMap || 'Médio';
         let priority = severity;
-        let deadlineDesc = 'Até 7 dias';
         
-        if (severity === 'Crítica' || severity === 'Crítico') {
-          deadlineDesc = 'Imediato';
-        } else if (severity === 'Alta') {
-          deadlineDesc = 'Até 3 dias';
-        } else if (severity === 'Média') {
-          deadlineDesc = 'Até 7 dias';
-        } else if (severity === 'Leve') {
-          deadlineDesc = 'Até 15 dias';
-        }
+        let prazoHoras = matchingRule?.prazoPadraoHoras || 168; // 7 dias default
+        if (severity === 'Crítico' || severity === 'Crítica') prazoHoras = 24;
+        else if (severity === 'Alta' || severity === 'Alto') prazoHoras = 72;
+
+        let deadlineDesc = `Até ${Math.floor(prazoHoras / 24)} dias`;
+        if (prazoHoras <= 24) deadlineDesc = 'Imediato (24h)';
 
         const existingRisk = store.riscos?.find(r => 
           r.inspection_id === inspection.id && 
-          r.checklist_item_id === item.id
+          r.checklist_item_id === item.id &&
+          (matchingRule ? r.regraId === matchingRule.id : true)
         );
 
         const activity = inspection.tipoInspecao || 'Inspeção';
@@ -233,12 +263,12 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
         if (geraRiscoVar) {
           const draftRisk: Partial<RiskInstance> = {
             id: existingRisk?.id || crypto.randomUUID(),
-            titulo: `Não Conformidade: ${item.text.substring(0, 50)}...`,
+            titulo: matchingRule ? matchingRule.nome : `Não Conformidade: ${item.text.substring(0, 50)}...`,
             atividade: activity,
             setor: sector,
             nr: nr,
             nrRelacionada: item.nrRelacionada || nr,
-            severidade: severity,
+            severidade: severity as any,
             prioridade: priority,
             prazo: deadlineDesc,
             respostaOrigem: item.status,
@@ -249,11 +279,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
             perguntaOrigem: item.text,
             checklistId: template?.id || inspection.checklist,
             origem: 'Inspeção',
-            regraId: item.regraId,
-            regraFixa: item.regraFixa,
-            regraTitulo: item.regraFixa ? `Regra Padrão ${item.nrRelacionada || nr}` : undefined,
+            regraId: matchingRule?.id || item.regraId,
+            regraFixa: item.regraFixa || !!matchingRule,
+            regraTitulo: matchingRule ? matchingRule.nome : (item.regraFixa ? `Regra Padrão ${item.nrRelacionada || nr}` : undefined),
             tipoDeRisco: item.tipoRisco || 'Segurança Ocupacional',
-            justificativa: `Desvio identificado durante inspeção: "${item.text}". Observação registrada: ${item.observacao || 'Nenhuma'}.`,
+            justificativa: matchingRule ? `Regra ${matchingRule.nome} violada: ${matchingRule.condicao}.` : `Desvio identificado durante inspeção: "${item.text}".`,
             hasEpiEpc: true,
             hasTreinamento: true,
             hasProcedimento: true,
@@ -265,9 +295,9 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
 
           const calibratedRisk = applyManualRules(draftRisk);
           
-          if (item.regraFixa || item.nrRelacionada) {
+          if (item.regraFixa || item.nrRelacionada || matchingRule) {
             const { gerarExplicacaoNormativa } = require('@/lib/risk-calculations');
-            calibratedRisk.explicacaoNormativa = gerarExplicacaoNormativa(draftRisk.nrRelacionada, draftRisk.respostaOrigem, template?.name);
+            calibratedRisk.explicacaoNormativa = matchingRule ? `${matchingRule.nome}: ${matchingRule.condicao}` : gerarExplicacaoNormativa(draftRisk.nrRelacionada, draftRisk.respostaOrigem, template?.name);
           }
 
           riskId = existingRisk?.id || calibratedRisk.id;
@@ -276,24 +306,21 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
             store.updateRisco(existingRisk.id, calibratedRisk);
           } else {
             store.addRisco(calibratedRisk);
-            if (item.regraFixa) {
-               store.addLog({
-                  user_id: 'system',
-                  empresa_id: 'default',
-                  event_type: 'Risco gerado por regra fixa NR',
-                  description: `Risco criado automaticamente a partir da regra fixa ${item.regraTitulo || 'Regra Padrão'} vinculada à ${item.nrRelacionada || nr}.`,
-                  origin_type: 'riscos',
-                  origin_id: calibratedRisk.id,
-                  metadata: { nr: item.nrRelacionada || nr, regraId: item.regraId, perguntaOrigem: item.text }
-               });
-            }
+            store.addLog({
+                user_id: 'system',
+                empresa_id: 'default',
+                event_type: 'Risco gerado por motor de regras',
+                description: `Risco criado automaticamente a partir da regra ${matchingRule?.nome || item.regraTitulo || 'Regra Padrão'} vinculada à ${nr}.`,
+                origin_type: 'riscos',
+                origin_id: calibratedRisk.id,
+                metadata: { nr: nr, regraId: matchingRule?.id || item.regraId, perguntaOrigem: item.text }
+            });
           }
         }
 
         if (geraAcaoVar && riskId) {
           // Action generation
-          const getAcaoTitulo = (text: string) => `Regularizar: ${text.substring(0, 30)}...`;
-          const actionTitle = getAcaoTitulo(item.text);
+          const actionTitle = matchingRule?.acaoSugerida || `Regularizar: ${item.text.substring(0, 30)}...`;
           const existingAcao = store.acoes?.find(a => a.riscoId === riskId || a.item_origem_id === riskId);
           const acaoId = existingAcao?.id || crypto.randomUUID();
           
@@ -305,28 +332,37 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
              }
           }
 
-          const actionPayload = {
-            id: acaoId,
-            titulo: actionTitle,
-            descricao: `Regularização obrigatória devido à não conformidade "${item.text}" detectada em inspeção.`,
-            setor: sector,
-            responsavel: inspection.responsavel || 'SST + Supervisor da área',
-            prioridade: priority,
-            status: existingAcao?.status || 'Pendente',
-            prazo: deadlineDesc,
-            origem: 'Inspeção',
-            riscoId: riskId,
-            inspecaoId: inspection.id,
-            checklistId: template?.id || inspection.checklist,
-            perguntaOrigem: item.text,
-            respostaOrigem: item.status,
-            nrRelacionada: item.nrRelacionada || nr,
-            item_origem_id: riskId, // for internal store compatibility
-            item_origem_tipo: 'risco',
-            regraId: item.regraId,
-            regraTitulo: item.regraFixa ? `Regra Padrão ${item.nrRelacionada || nr}` : undefined,
-            regraFixa: item.regraFixa,
-            explicacaoNormativa: calibratedRiskObj?.explicacaoNormativa,
+        const actionStatus = (() => {
+          if (existingAcao) return existingAcao.status;
+          const sev = (severity || '').toLowerCase();
+          if (sev === 'crítico' || sev === 'crítica') return 'Pendente crítico';
+          if (sev === 'alta' || sev === 'alto') return 'Pendente';
+          return 'Aberta';
+        })();
+
+        const actionPayload = {
+          id: acaoId,
+          titulo: actionTitle,
+          descricao: matchingRule ? matchingRule.acaoSugerida : `Regularização obrigatória devido à não conformidade "${item.text}" detectada em inspeção.`,
+          setor: sector,
+          responsavel: inspection.responsavel || 'SST + Supervisor da área',
+          prioridade: priority,
+          status: actionStatus,
+          prazo: deadlineDesc,
+          origem: 'Inspeção',
+          riscoId: riskId,
+          inspecaoId: inspection.id,
+          checklistId: template?.id || inspection.checklist,
+          perguntaOrigem: item.text,
+          respostaOrigem: item.status,
+          nrRelacionada: item.nrRelacionada || nr,
+          item_origem_id: riskId, 
+          item_origem_tipo: 'risco',
+          regraId: matchingRule?.id || item.regraId,
+          regraTitulo: matchingRule ? matchingRule.nome : (item.regraFixa ? `Regra Padrão ${item.nrRelacionada || nr}` : undefined),
+          regraFixa: item.regraFixa || !!matchingRule,
+          exigeEvidencia: matchingRule?.exigeEvidencia || false,
+          explicacaoNormativa: calibratedRiskObj?.explicacaoNormativa,
             multaEstimada: calibratedRiskObj?.multaEstimada,
             chanceIncidente: calibratedRiskObj?.chanceIncidente,
             criadoEm: existingAcao?.criadoEm || new Date().toISOString(),
@@ -334,29 +370,20 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
             historico: existingAcao?.historico || []
           };
 
-          if (!existingAcao && item.regraFixa) {
+          if (!existingAcao && (item.regraFixa || matchingRule)) {
              actionPayload.historico.push({
                id: crypto.randomUUID(),
                actionId: acaoId,
-               evento: 'Ação criada por regra fixa NR',
+               evento: 'Ação criada por motor de regras',
                origem: 'Sistema',
                usuario: 'Motor de Regras',
                dataHora: new Date().toISOString(),
                statusFinal: 'Pendente',
                camposAlterados: [],
-               justificativa: `Ação criada automaticamente a partir do risco gerado por regra fixa ${item.regraTitulo || 'Regra Padrão'}.`,
+               justificativa: `Ação criada automaticamente a partir do risco gerado por regra ${matchingRule?.nome || item.regraTitulo || 'Regra Padrão'}.`,
                hash: 'sys',
                versao: '1',
                integridade: 'ok'
-             });
-             store.addLog({
-                user_id: 'system',
-                empresa_id: 'default',
-                event_type: 'Ação criada por regra fixa NR',
-                description: `Ação criada automaticamente a partir do risco gerado por regra fixa ${item.regraTitulo || 'Regra Padrão'} vinculada à ${item.nrRelacionada || nr}.`,
-                origin_type: 'acoes',
-                origin_id: acaoId,
-                metadata: { nr: item.nrRelacionada || nr, regraId: item.regraId }
              });
           }
           

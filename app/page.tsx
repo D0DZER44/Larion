@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Bell, Download, Calendar, Activity, AlertTriangle, 
   FileText, ShieldCheck, HardHat, TrendingUp, TrendingDown, CalendarCheck,
@@ -53,8 +53,18 @@ const exposureData = [
 ];
 
 export default function Dashboard() {
-  const { riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [] } = useAppStore();
+  const { riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [], rulePackages = [], alertas = [] } = useAppStore();
   const router = useRouter();
+
+  const activePackageNames = useMemo(() => 
+    rulePackages.filter(p => p.isActive).map(p => p.name), 
+    [rulePackages]
+  );
+
+  const isPackageActive = useCallback((pkg?: string) => {
+    if (!pkg || pkg === 'Base SST') return true;
+    return activePackageNames.includes(pkg);
+  }, [activePackageNames]);
 
   const [isMounted, setIsMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -630,40 +640,40 @@ export default function Dashboard() {
     const inspTodayPending = inspTodayTotal.filter(i => !isConcluidoStatus(i.status) && !isConcluidoStatus(i.situacao));
 
     // - risco crítico aberto (Prio: 1)
-    activeRisks.filter(r => (r.nivel || r.level || '').toLowerCase() === 'crítico').forEach(r => {
+    activeRisks.filter(r => isPackageActive(r.pacote || r.package) && (r.nivel || r.level || '').toLowerCase() === 'crítico').forEach(r => {
         allAlertas.push({ id: `risk_${r.id}`, type: 'risco_critico', icon: AlertTriangle, color: 'text-red-500', title: 'Risco Crítico', desc: r.title || r.titulo || r.descricao || 'Sem título', link: '/operacao/riscos', priority: 1, dateStr: r.data_identificacao || r.created_at || '' });
     });
 
     // - ação vencendo hoje (Prio: 2)
-    pendingActions.filter(a => a.prazo && isToday(a.prazo)).forEach(a => {
+    pendingActions.filter(a => isPackageActive(a.pacote || a.package) && a.prazo && isToday(a.prazo)).forEach(a => {
         allAlertas.push({ id: `acao_vence_hoje_${a.id}`, type: 'acao_vence_hoje', icon: Clock, color: 'text-orange-500', title: 'Ação Vence Hoje', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 2, dateStr: a.prazo });
     });
 
     // - ação atrasada (Prio: 3)
-    atrasadasActions.forEach(a => {
+    atrasadasActions.filter(a => isPackageActive(a.pacote || a.package)).forEach(a => {
         allAlertas.push({ id: `acao_atrasada_${a.id}`, type: 'acao_atrasada', icon: AlertCircle, color: 'text-red-400', title: 'Ação Atrasada', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 3, dateStr: a.prazo });
     });
 
     // - inspeção vencida (Prio: 3)
-    vencidasInspections.forEach(i => {
+    vencidasInspections.filter(i => isPackageActive(i.pacote || i.package)).forEach(i => {
         allAlertas.push({ id: `insp_vencida_${i.id}`, type: 'insp_vencida', icon: ShieldAlert, color: 'text-orange-400', title: 'Inspeção Vencida', desc: i.title || i.nome || i.titulo || 'Sem título', link: '/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || '' });
     });
 
     // - checklist pendente crítico (Prio: 3)
-    inspTodayPending.forEach(i => {
+    inspTodayPending.filter(i => isPackageActive(i.pacote || i.package)).forEach(i => {
         allAlertas.push({ id: `checklist_pendente_${i.id}`, type: 'checklist_pendente', icon: ClipboardCheck, color: 'text-yellow-500', title: 'Checklist Pendente', desc: i.checklist || i.categoria || i.title || i.nome || 'Sem título', link: '/inspecoes', priority: 3, dateStr: i.data || i.date || i.dataPrevista || todayStr });
     });
 
     // - item sem responsável (Prio: 4)
-    activeRisks.filter(r => !r.responsavel || r.responsavel.trim() === '').forEach(r => {
+    activeRisks.filter(r => isPackageActive(r.pacote || r.package) && (!r.responsavel || r.responsavel.trim() === '')).forEach(r => {
         allAlertas.push({ id: `risk_sem_resp_${r.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Risco s/ Resp', desc: r.title || r.titulo || 'Sem título', link: '/riscos', priority: 4, dateStr: r.created_at || '' });
     });
-    pendingActions.filter(a => !a.responsavel || a.responsavel.trim() === '').forEach(a => {
+    pendingActions.filter(a => isPackageActive(a.pacote || a.package) && (!a.responsavel || a.responsavel.trim() === '')).forEach(a => {
         allAlertas.push({ id: `acao_sem_resp_${a.id}`, type: 'sem_resp', icon: UserX, color: 'text-purple-400', title: 'Ação s/ Resp', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 4, dateStr: a.created_at || '' });
     });
 
     // - item sem prazo (Prio: 4)
-    pendingActions.filter(a => !a.prazo || a.prazo.trim() === '').forEach(a => {
+    pendingActions.filter(a => isPackageActive(a.pacote || a.package) && (!a.prazo || a.prazo.trim() === '')).forEach(a => {
         allAlertas.push({ id: `acao_sem_prazo_${a.id}`, type: 'sem_prazo', icon: Calendar, color: 'text-gray-400', title: 'Ação s/ Prazo', desc: a.title || a.titulo || 'Sem título', link: '/acoes', priority: 4, dateStr: a.created_at || '' });
     });
 
@@ -787,7 +797,7 @@ export default function Dashboard() {
       updatePlano
     };
 
-  }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange]);
+  }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange, isPackageActive]);
 
   if (!isMounted) {
     return <div className="flex h-screen w-full items-center justify-center bg-[#03060e] text-purple-500">Carregando...</div>;
@@ -811,9 +821,12 @@ export default function Dashboard() {
             <span>Hoje</span>
           </div>
           
-          <button className="relative p-2.5 text-gray-400 hover:text-white transition-colors bg-[#0a0f1a] rounded-lg border border-white/5">
+          <button 
+            onClick={() => router.push('/notificacoes')}
+            className="relative p-2.5 text-gray-400 hover:text-white transition-colors bg-[#0a0f1a] rounded-lg border border-white/5"
+          >
             <Bell className="w-5 h-5" />
-            {metrics.alertas.length > 0 && (
+            {alertas.filter(a => isPackageActive(a.package) && a.status === 'Ativo').length > 0 && (
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0f1a]"></span>
             )}
           </button>

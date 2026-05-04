@@ -9,6 +9,7 @@ import {
   ClipboardCheck, AlertTriangle, Activity
 } from 'lucide-react';
 import Image from 'next/image';
+import { useAppStore } from '@/lib/store';
 
 const navGroups = [
   {
@@ -40,6 +41,13 @@ const navGroups = [
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const { alertas = [], rulePackages = [] } = useAppStore();
+  const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
+  const activeAlertsCount = alertas.filter(a => 
+    a.status === 'Ativo' && 
+    (!a.package || a.package === 'Base SST' || activePackageNames.includes(a.package))
+  ).length;
+
   const [isDark, setIsDark] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     'Operação': pathname.startsWith('/operacao')
@@ -66,6 +74,15 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       document.documentElement.classList.add('theme-light');
     }
   }, [isDark]);
+
+  const AlertBadge = () => {
+    if (activeAlertsCount === 0) return null;
+    return (
+      <span className="ml-auto bg-purple-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+        {activeAlertsCount}
+      </span>
+    );
+  };
 
   return (
     <aside className="w-[280px] flex-shrink-0 flex flex-col h-screen bg-[#0B0814] border-r border-white/5 top-0 sticky print:hidden">
@@ -107,7 +124,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               const isActive = pathname === item.href || (hasSubItems && pathname.startsWith('/operacao') && item.name === 'Operação');
               
               return (
-                <div key={item.name} className="flex flex-col">
+                <div key={item.name} className="flex flex-col relative">
                   <Link
                     href={hasSubItems ? '#' : item.href}
                     prefetch={true}
@@ -129,6 +146,9 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     <div className="flex items-center gap-3 w-full relative z-10">
                       <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-[#A78BFA]' : 'text-[#71717A] group-hover:text-[#F4F4F5]'}`} />
                       <span className="truncate">{item.name}</span>
+                      {item.name === 'Notificações' && (
+                        <AlertBadge />
+                      )}
                     </div>
                     {hasSubItems ? (
                       <ChevronRight className={`w-4 h-4 transition-transform duration-200 z-10 ${isExpanded ? 'rotate-90 text-white' : 'text-[#71717A]'}`} />

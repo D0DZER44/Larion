@@ -10,7 +10,7 @@ import {
   Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
   ChevronRight, ShieldCheck, FileText, AlertTriangle, 
   Plus, Search, Edit2, Trash2, GripVertical, CheckCircle2, Monitor, Phone, 
-  Mail, MapPin, Lock, Activity, Shield, X
+  Mail, MapPin, Lock, Activity, Shield, X, Package, Info, Ban, Filter, Camera
 } from 'lucide-react';
 
 const TABS = [
@@ -24,6 +24,13 @@ const TABS = [
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('geral');
+  const { alertas = [], rulePackages = [] } = useAppStore();
+
+  const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
+  const activeAlertsCount = alertas.filter(a => 
+    a.status === 'Ativo' && 
+    (!a.package || a.package === 'Base SST' || activePackageNames.includes(a.package))
+  ).length;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
@@ -40,9 +47,14 @@ export default function ConfiguracoesPage() {
               <p className="text-sm text-gray-400 mt-1">Gerencie as principais configurações e regras do sistema.</p>
             </div>
             <div>
-               <button className="relative p-2 bg-[#121826] hover:bg-white/5 text-gray-300 rounded-lg transition-colors border border-white/10">
+               <button 
+                onClick={() => setActiveTab('alertas')}
+                className="relative p-2 bg-[#121826] hover:bg-white/5 text-gray-300 rounded-lg transition-colors border border-white/10"
+               >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500"></span>
+                  {activeAlertsCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-purple-500 border border-[#121826]"></span>
+                  )}
                </button>
             </div>
           </header>
@@ -60,6 +72,11 @@ export default function ConfiguracoesPage() {
               >
                 {tab.icon}
                 {tab.label}
+                {tab.id === 'alertas' && activeAlertsCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-purple-500 text-white text-[10px] rounded-full font-bold">
+                    {activeAlertsCount}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -217,79 +234,190 @@ function TabGeral() {
 }
 
 function TabChecklists() {
-   const { checklists, addChecklist, updateChecklist, deleteChecklist } = useAppStore();
+   const { checklists, addChecklist, updateChecklist, deleteChecklist, rulePackages } = useAppStore();
    const [search, setSearch] = useState('');
+   const [filterPacote, setFilterPacote] = useState('Todos');
+   const [filterSegmento, setFilterSegmento] = useState('Todos');
+   const [filterStatus, setFilterStatus] = useState('Todos');
 
    const allChecklists = getTodosChecklistsAtivos(checklists);
-   const [selectedId, setSelectedId] = useState(allChecklists[0]?.id);
+   
+   // Filtering logic
+   const filteredChecklists = allChecklists.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || 
+                          (c.atividade || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (c.nrRelacionada || '').toLowerCase().includes(search.toLowerCase());
+      const matchPacote = filterPacote === 'Todos' || c.pacote === filterPacote;
+      const matchSegmento = filterSegmento === 'Todos' || c.segmento === filterSegmento;
+      const matchStatus = filterStatus === 'Todos' || c.status === filterStatus;
+      
+      // Check if package is active
+      const pkg = rulePackages.find(p => p.name === c.pacote);
+      const isPackageActive = pkg ? pkg.isActive : true;
 
-   const filteredChecklists = allChecklists.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
-   const activeChecklist = allChecklists.find(c => c.id === selectedId) || allChecklists[0];
+      return matchSearch && matchPacote && matchSegmento && matchStatus && isPackageActive;
+   });
+
+   const [selectedId, setSelectedId] = useState(filteredChecklists[0]?.id || allChecklists[0]?.id);
+   const activeChecklist = allChecklists.find(c => c.id === selectedId) || filteredChecklists[0] || allChecklists[0];
+
+   // Options for filters
+   const pacotes = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.pacote).filter(Boolean)))];
+   const segmentos = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.segmento).filter(Boolean)))];
 
    const handleAdd = () => {
-      addChecklist({ name: 'Novo Modelo', category: 'Segurança Geral', status: 'Rascunho', sections: [] });
+      addChecklist({ 
+         name: 'Novo Modelo', 
+         category: 'Segurança Geral', 
+         status: 'Rascunho', 
+         sections: [],
+         pacote: 'Base SST',
+         segmento: 'Geral',
+         atividade: 'Outro'
+      });
    };
 
    return (
-      <div className="flex flex-col xl:flex-row gap-6 w-full items-start h-[600px]">
+      <div className="flex flex-col xl:flex-row gap-6 w-full items-start h-[750px] overflow-hidden">
          
-         {/* Left: Templates */}
-         <div className="w-full xl:w-[280px] bg-[#121826] border border-white/5 rounded-2xl p-5 flex flex-col h-full shrink-0">
-            <h3 className="text-sm font-bold text-white mb-4">Modelos de Checklist</h3>
-            <div className="relative mb-4">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-               <input 
-                  type="text" 
-                  placeholder="Buscar modelo..." 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-[#0b0f19] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500" 
-               />
+         {/* Left: Templates & Filters */}
+         <div className="w-full xl:w-[320px] bg-[#121826] border border-white/5 rounded-2xl p-5 flex flex-col h-full shrink-0 overflow-hidden">
+            <div className="shrink-0 space-y-4 mb-4">
+               <div>
+                  <h3 className="text-sm font-bold text-white mb-1">Modelos de Checklist</h3>
+                  <p className="text-[11px] text-gray-500">Gerencie a estrutura base das inspeções.</p>
+               </div>
+               
+               <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                  <input 
+                     type="text" 
+                     placeholder="Buscar modelo..." 
+                     value={search}
+                     onChange={(e) => setSearch(e.target.value)}
+                     className="w-full bg-[#0b0f19] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500" 
+                  />
+               </div>
+
+               <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Pacote</label>
+                     <select 
+                        value={filterPacote}
+                        onChange={(e) => setFilterPacote(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-gray-300 outline-none"
+                     >
+                        {pacotes.map(p => <option key={p as string} value={p as string}>{p as string}</option>)}
+                     </select>
+                  </div>
+                  <div className="space-y-1">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Segmento</label>
+                     <select 
+                        value={filterSegmento}
+                        onChange={(e) => setFilterSegmento(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-gray-300 outline-none"
+                     >
+                        {segmentos.map(s => <option key={s as string} value={s as string}>{s as string}</option>)}
+                     </select>
+                  </div>
+                  <div className="space-y-1">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Status</label>
+                     <select 
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-gray-300 outline-none"
+                     >
+                        <option value="Todos">Todos</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Rascunho">Rascunho</option>
+                        <option value="Inativo">Inativo</option>
+                     </select>
+                  </div>
+                  <div className="space-y-1">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Atividade/NR</label>
+                     <div className="flex items-center gap-1 bg-[#0b0f19] border border-white/10 rounded-lg px-2 py-0.5">
+                        <Filter className="w-3 h-3 text-gray-500" />
+                        <span className="text-[9px] text-gray-500 italic">Use Buscar</span>
+                     </div>
+                  </div>
+               </div>
             </div>
+
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-               {filteredChecklists.map((c) => {
+               {filteredChecklists.length > 0 ? filteredChecklists.map((c) => {
                   const isActive = c.id === selectedId;
-                  let color = 'bg-gray-500';
-                  if(c.status === 'Ativo') color = 'bg-emerald-500';
-                  if(c.status === 'Rascunho') color = 'bg-orange-500';
+                  let colorClass = 'text-gray-500 bg-gray-500/10 border-gray-500/20';
+                  if(c.status === 'Ativo') colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+                  if(c.status === 'Rascunho') colorClass = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
 
                   return (
-                     <div key={c.id} onClick={() => setSelectedId(c.id)} className={`p-3 rounded-xl border transition-colors cursor-pointer ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
-                        <div className="flex justify-between items-start mb-2">
-                           <span className={`w-2 h-2 rounded-full mt-1 ${color}`}></span>
-                           <span className="text-[10px] text-gray-500 uppercase font-bold">{c.status}</span>
+                     <div 
+                        key={c.id} 
+                        onClick={() => setSelectedId(c.id)} 
+                        className={`group p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden ${isActive ? 'bg-purple-500/10 border-purple-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}
+                     >
+                        <div className="flex justify-between items-start mb-2 relative z-10">
+                           <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${colorClass}`}>{c.status}</span>
+                           <span className="text-[9px] text-gray-500 font-bold uppercase">{c.nrRelacionada || '-'}</span>
                         </div>
-                        <p className={`text-[13px] font-bold ${isActive ? 'text-white' : 'text-gray-300'}`}>{c.name}</p>
+                        <p className={`text-[13px] font-bold mb-1 relative z-10 ${isActive ? 'text-white' : 'text-gray-300'}`}>{c.name}</p>
+                        <div className="flex items-center gap-2 relative z-10">
+                           <span className="text-[10px] text-gray-500">{c.pacote}</span>
+                           <span className="w-1 h-1 rounded-full bg-white/10"></span>
+                           <span className="text-[10px] text-gray-500">{c.atividade}</span>
+                        </div>
+                        
+                        {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500"></div>}
                      </div>
                   );
-               })}
+               }) : (
+                  <div className="py-10 text-center">
+                     <p className="text-xs text-gray-500">Nenhum checklist encontrado com estes filtros.</p>
+                  </div>
+               )}
             </div>
-            <button onClick={handleAdd} className="mt-4 w-full bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 border border-white/10">
-               <Plus className="w-3.5 h-3.5" /> Novo modelo
+            
+            <button onClick={handleAdd} className="mt-4 shrink-0 w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20">
+               <Plus className="w-4 h-4" /> Novo modelo
             </button>
          </div>
 
          {/* Middle: Builder */}
          {activeChecklist ? (
-            <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full overflow-hidden shadow-lg">
+            <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full overflow-hidden shadow-2xl">
                <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-[#0b0f19]">
-                  <div>
-                     <h2 className="text-lg font-bold text-white mb-0.5">Construtor de Checklist</h2>
-                     <p className="text-xs text-gray-500">Edite perguntas e regras (Modelo: {activeChecklist.name})</p>
+                  <div className="flex items-center gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <FileText className="w-5 h-5" />
+                     </div>
+                     <div>
+                        <h2 className="text-base font-bold text-white mb-0.5">Editor de Checklist</h2>
+                        <p className="text-xs text-gray-500">Configuração de campos e metadados para o motor ApexShield</p>
+                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                      {!activeChecklist.regraFixa && (
-                        <button onClick={() => deleteChecklist(activeChecklist.id)} className="px-4 py-2 text-xs font-bold text-red-500 hover:text-red-400 transition-colors">Excluir</button>
+                        <button onClick={() => deleteChecklist(activeChecklist.id)} className="p-2.5 text-gray-400 hover:text-red-500 transition-colors bg-white/5 rounded-xl border border-white/10">
+                           <Trash2 className="w-4 h-4" />
+                        </button>
                      )}
+                     <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" /> Salvar alterações
+                     </button>
                   </div>
                </div>
 
                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[#0A0D14]">
                   
-                  <div className="max-w-3xl mx-auto space-y-6">
-                     {/* Basic Info */}
-                     <div className="bg-[#121826] border border-white/5 p-5 rounded-2xl space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                  <div className="max-w-4xl mx-auto space-y-6">
+                     {/* Metadata Panel */}
+                     <div className="bg-[#121826] border border-white/5 p-6 rounded-2xl space-y-6">
+                        <div className="flex items-center gap-2 text-purple-400 mb-2">
+                           <Info className="w-4 h-4" />
+                           <h4 className="text-xs font-bold uppercase tracking-widest">Informações e Metadados</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                            <div className="space-y-1.5">
                               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nome do checklist</label>
                               <input 
@@ -297,8 +425,21 @@ function TabChecklists() {
                                  value={activeChecklist.name} 
                                  onChange={(e) => updateChecklist(activeChecklist.id, { name: e.target.value })}
                                  disabled={activeChecklist.regraFixa}
-                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" 
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" 
                               />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Pacote de Regras</label>
+                              <select 
+                                 value={activeChecklist.pacote || ''}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { pacote: e.target.value })}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none pointer-events-auto"
+                              >
+                                 <option value="Base SST">Base SST</option>
+                                 <option value="Construção Civil">Construção Civil</option>
+                                 <option value="Indústria">Indústria</option>
+                                 <option value="Saúde/Hospitalar">Saúde/Hospitalar</option>
+                              </select>
                            </div>
                            <div className="space-y-1.5">
                               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</label>
@@ -306,22 +447,73 @@ function TabChecklists() {
                                  value={activeChecklist.status}
                                  onChange={(e) => updateChecklist(activeChecklist.id, { status: e.target.value as any })}
                                  disabled={activeChecklist.regraFixa}
-                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none disabled:opacity-50"
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none disabled:opacity-50"
                               >
                                  <option value="Ativo">Ativo</option>
                                  <option value="Rascunho">Rascunho</option>
                                  <option value="Inativo">Inativo</option>
                               </select>
                            </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Segmento</label>
+                              <select 
+                                 value={activeChecklist.segmento || ''}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { segmento: e.target.value })}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                              >
+                                 <option value="Geral">Geral</option>
+                                 <option value="Construção">Construção</option>
+                                 <option value="Indústria">Indústria</option>
+                                 <option value="Saúde">Saúde</option>
+                                 <option value="Logística">Logística</option>
+                              </select>
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Atividade Principal</label>
+                              <input 
+                                 type="text" 
+                                 value={activeChecklist.atividade || ''}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { atividade: e.target.value })}
+                                 placeholder="Ex: Trabalho em altura"
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" 
+                              />
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">NR Relacionada</label>
+                              <input 
+                                 type="text" 
+                                 value={activeChecklist.nrRelacionada || ''}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { nrRelacionada: e.target.value })}
+                                 placeholder="Ex: NR-35"
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500" 
+                              />
+                           </div>
+
+                           <div className="space-y-1.5 text-indigo-400">
+                              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Criticidade Padrão</label>
+                              <select 
+                                 value={activeChecklist.criticidade || 'Médio'}
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { criticidade: e.target.value as any })}
+                                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none font-bold"
+                              >
+                                 <option value="Baixo">Baixo</option>
+                                 <option value="Médio">Médio</option>
+                                 <option value="Alto">Alto</option>
+                                 <option value="Crítico">Crítico</option>
+                              </select>
+                           </div>
                         </div>
                      </div>
 
                      {/* Sections */}
-                     <div className="space-y-4">
+                     <div className="space-y-4 pb-20">
                         {activeChecklist.sections.map((section: any, sIndex: number) => (
-                           <div key={section.id} className="bg-[#1e1b4b]/20 border border-purple-500/20 p-1 rounded-2xl relative group/section">
+                           <div key={section.id} className="bg-white/5 border border-white/10 p-1 rounded-2xl relative group/section">
                               <div className="bg-[#121826] rounded-xl overflow-hidden border border-white/5">
-                                 <div className="p-3 bg-[#0b0f19] border-b border-white/5 flex items-center justify-between">
+                                 <div className="p-4 bg-[#0b0f19] border-b border-white/5 flex items-center justify-between">
                                     <div className="flex items-center gap-3 flex-1">
                                        <GripVertical className="w-4 h-4 text-gray-600 cursor-move" />
                                        <input 
@@ -333,25 +525,25 @@ function TabChecklists() {
                                              newSections[sIndex].title = e.target.value;
                                              updateChecklist(activeChecklist.id, { sections: newSections });
                                           }}
-                                          className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-sm font-bold text-white focus:outline-none w-full max-w-[250px] transition-colors disabled:opacity-50" 
+                                          className="bg-transparent border-b border-transparent hover:border-white/10 focus:border-purple-500 text-sm font-bold text-white focus:outline-none w-full max-w-[350px] transition-colors disabled:opacity-50" 
                                        />
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-4">
+                                       <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{section.questions.length} Questões</span>
                                        {!activeChecklist.regraFixa && (
                                           <button 
                                              onClick={() => {
                                                 const newSections = activeChecklist.sections.filter((_: any, idx: number) => idx !== sIndex);
                                                 updateChecklist(activeChecklist.id, { sections: newSections });
                                              }}
-                                             className="text-[11px] px-2 py-1 text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover/section:opacity-100"
-                                          >Excluir</button>
+                                             className="p-1.5 text-gray-500 hover:text-red-500 transition-colors"
+                                          ><Trash2 className="w-3.5 h-3.5" /></button>
                                        )}
-                                       <span className="text-[11px] text-gray-500 font-medium">{section.questions.length} perguntas</span>
                                     </div>
                                  </div>
                                  <div className="px-4 py-2 space-y-1">
                                     {section.questions.map((item: any, qIndex: number) => (
-                                       <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0 group">
+                                       <div key={item.id} className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0 group">
                                           <GripVertical className="w-3.5 h-3.5 text-gray-600 cursor-move opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                                           <input 
                                              type="text"
@@ -373,20 +565,15 @@ function TabChecklists() {
                                                    newSections[sIndex].questions[qIndex].type = e.target.value;
                                                    updateChecklist(activeChecklist.id, { sections: newSections });
                                                 }}
-                                                className="bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded px-2 py-1 text-[10px] font-medium outline-none appearance-none cursor-pointer disabled:opacity-50"
+                                                className="bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded px-2 py-1.5 text-[10px] font-bold outline-none appearance-none cursor-pointer disabled:opacity-50"
                                              >
                                                 <option value="Aprovação (Sim/Não)">Aprovação (Sim/Não)</option>
                                                 <option value="Sim / Não / Parcialmente">Sim / Não / Parcialmente</option>
                                                 <option value="Múltipla Escolha">Múltipla Escolha</option>
                                                 <option value="Texto Longo">Texto Longo</option>
-                                                <option value="Data/Hora">Data/Hora</option>
                                                 <option value="Anexo/Foto">Anexo/Foto</option>
                                              </select>
-                                             {item.nrRelacionada && (
-                                                <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2 py-1 rounded">
-                                                   {item.nrRelacionada}
-                                                </span>
-                                             )}
+                                             
                                              <select
                                                 value={item.riskMap}
                                                 disabled={activeChecklist.regraFixa || item.regraFixa}
@@ -395,15 +582,15 @@ function TabChecklists() {
                                                    newSections[sIndex].questions[qIndex].riskMap = e.target.value;
                                                    updateChecklist(activeChecklist.id, { sections: newSections });
                                                 }}
-                                                className={`w-24 px-1 py-1 text-[10px] font-medium rounded border bg-[#0b0f19] outline-none cursor-pointer disabled:opacity-50 ${item.riskMap === 'Crítico' || item.riskMap === 'Crítica' ? 'text-red-500 border-red-500/30' : item.riskMap === 'Alta' || item.riskMap === 'Médio' ? 'text-orange-500 border-orange-500/30' : item.riskMap === 'Leve' ? 'text-emerald-500 border-emerald-500/30' : 'text-gray-500 border-gray-500/30'}`}
+                                                className={`w-24 px-2 py-1.5 text-[10px] font-bold rounded border bg-[#0b0f19] outline-none cursor-pointer disabled:opacity-50 ${item.riskMap === 'Crítico' || item.riskMap === 'Crítica' ? 'text-red-500 border-red-500/30' : item.riskMap === 'Alta' || item.riskMap === 'Médio' ? 'text-orange-500 border-orange-500/30' : item.riskMap === 'Leve' ? 'text-emerald-500 border-emerald-500/30' : 'text-gray-500 border-gray-500/30'}`}
                                              >
                                                 <option value="Nenhum">Sem risco</option>
-                                                <option value="Leve">Risco Leve</option>
-                                                <option value="Médio">Risco Médio</option>
-                                                <option value="Alta">Risco Alto</option>
-                                                <option value="Crítico">Risco Crítico</option>
-                                                <option value="Crítica">Risco Crític.</option>
+                                                <option value="Leve">Baixo</option>
+                                                <option value="Médio">Médio</option>
+                                                <option value="Alta">Alto</option>
+                                                <option value="Crítico">Crítico</option>
                                              </select>
+
                                              {!activeChecklist.regraFixa && !item.regraFixa && (
                                                 <button 
                                                    onClick={() => {
@@ -413,7 +600,7 @@ function TabChecklists() {
                                                    }}
                                                    className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
-                                                   <X className="w-3.5 h-3.5" />
+                                                   <X className="w-4 h-4" />
                                                 </button>
                                              )}
                                           </div>
@@ -425,9 +612,9 @@ function TabChecklists() {
                                           newSections[sIndex].questions.push({ id: Date.now().toString(), text: 'Nova pergunta', type: 'Aprovação (Sim/Não)', riskMap: 'Nenhum' });
                                           updateChecklist(activeChecklist.id, { sections: newSections });
                                        }}
-                                       className="w-full py-2.5 text-xs text-purple-400 font-bold hover:bg-purple-500/5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2 border border-transparent hover:border-purple-500/10"
+                                       className="w-full py-3 text-xs text-purple-400 font-bold hover:bg-purple-500/10 rounded-xl transition-all flex items-center justify-center gap-2 mt-3 border border-dashed border-purple-500/30"
                                     >
-                                       <Plus className="w-3.5 h-3.5" /> Adicionar Pergunta
+                                       <Plus className="w-4 h-4" /> Adicionar Pergunta
                                     </button>
                                  </div>
                               </div>
@@ -439,32 +626,287 @@ function TabChecklists() {
                               const newSections = [...activeChecklist.sections, { id: Date.now().toString(), title: 'Nova Seção', questions: [] }];
                               updateChecklist(activeChecklist.id, { sections: newSections });
                            }}
-                           className="w-full py-4 rounded-xl border border-dashed border-white/20 hover:border-purple-500/50 hover:bg-purple-500/5 text-gray-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2 font-bold text-xs"
+                           className="w-full py-6 rounded-2xl border-2 border-dashed border-white/10 hover:border-purple-500/40 hover:bg-purple-500/5 text-gray-500 hover:text-purple-400 transition-all flex flex-col items-center justify-center gap-2 font-bold text-xs group"
                         >
-                           <Plus className="w-4 h-4" /> Nova Seção
+                           <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                           Nova Seção
                         </button>
                      </div>
                   </div>
 
                </div>
             </div>
-         ) : null}
+         ) : (
+            <div className="flex-1 bg-[#121826] border border-white/5 rounded-2xl flex flex-col items-center justify-center text-center p-10 h-full">
+               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
+                  <CheckSquare className="w-10 h-10 text-gray-600" />
+               </div>
+               <h3 className="text-xl font-bold text-white mb-2">Selecione um checklist</h3>
+               <p className="text-gray-500 max-w-sm">Escolha um modelo na lista lateral para visualizar ou editar sua estrutura e perguntas.</p>
+            </div>
+         )}
 
       </div>
    )
 }
 
 function TabRegras() {
-   const [subTab, setSubTab] = useState<'fixas' | 'personalizadas'>('fixas');
+   const [subTab, setSubTab] = useState<'fixas' | 'personalizadas' | 'pacotes' | 'base'>('pacotes');
 
    return (
       <div className="flex flex-col h-[700px]">
-         <div className="flex items-center gap-4 border-b border-white/5 mb-4 shrink-0">
-            <button onClick={() => setSubTab('fixas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors ${subTab === 'fixas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras fixas NR</button>
-            <button onClick={() => setSubTab('personalizadas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors ${subTab === 'personalizadas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras personalizadas</button>
+         <div className="flex items-center gap-4 border-b border-white/5 mb-4 shrink-0 overflow-x-auto custom-scrollbar">
+            <button onClick={() => setSubTab('pacotes')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors whitespace-nowrap ${subTab === 'pacotes' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Pacotes de Regras</button>
+            <button onClick={() => setSubTab('base')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors whitespace-nowrap ${subTab === 'base' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Base de Regras</button>
+            <button onClick={() => setSubTab('fixas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors whitespace-nowrap ${subTab === 'fixas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras fixas NR</button>
+            <button onClick={() => setSubTab('personalizadas')} className={`pb-3 text-[13px] font-bold border-b-2 transition-colors whitespace-nowrap ${subTab === 'personalizadas' ? 'border-purple-500 text-purple-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Regras personalizadas</button>
          </div>
 
-         {subTab === 'fixas' ? <SubTabRegrasFixas /> : <SubTabRegrasPersonalizadas />}
+         {subTab === 'pacotes' && <SubTabPacotesRegras />}
+         {subTab === 'base' && <SubTabBaseRegras />}
+         {subTab === 'fixas' && <SubTabRegrasFixas />}
+         {subTab === 'personalizadas' && <SubTabRegrasPersonalizadas />}
+      </div>
+   );
+}
+
+function SubTabPacotesRegras() {
+   const { rulePackages, updateRulePackage } = useAppStore();
+
+   return (
+      <div className="flex flex-col gap-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
+         <div className="bg-purple-900/10 border border-purple-500/20 p-5 rounded-2xl">
+            <div className="flex items-start gap-4">
+               <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
+                  <Package className="w-5 h-5 text-purple-400" />
+               </div>
+               <div>
+                  <h3 className="text-sm font-bold text-white mb-1">Estrutura de Pacotes de Regras</h3>
+                  <p className="text-[13px] text-gray-400 leading-relaxed">
+                     Ative pacotes específicos por segmento para expandir a inteligência do motor ApexShield. 
+                     O pacote <span className="text-purple-400 font-bold">Base SST</span> é o alicerce normativo e permanece sempre ativo.
+                  </p>
+               </div>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {rulePackages.map((pkg) => (
+               <div key={pkg.id} className={`group bg-[#121826] border rounded-2xl p-6 transition-all duration-300 relative overflow-hidden ${pkg.isActive ? 'border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.05)]' : 'border-white/5 hover:border-white/10'}`}>
+                  {/* Status Indicator */}
+                  <div className="absolute top-0 right-0 p-3">
+                     <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${pkg.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border-white/5'}`}>
+                        {pkg.isActive ? <CheckCircle2 className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
+                        {pkg.isActive ? 'ATIVO' : 'INATIVO'}
+                     </span>
+                  </div>
+
+                  <div className="flex flex-col h-full">
+                     <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                           <h4 className="text-lg font-bold text-white tracking-tight">{pkg.name}</h4>
+                           <span className="text-[10px] bg-white/5 text-gray-400 px-2 py-0.5 rounded-lg border border-white/10 font-bold uppercase tracking-wider">{pkg.segment}</span>
+                        </div>
+                        <p className="text-[13px] text-gray-400 leading-relaxed h-[40px] overflow-hidden">{pkg.description}</p>
+                     </div>
+
+                     <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Regras</span>
+                              <span className="text-sm font-bold text-white">{pkg.ruleCount} ativas</span>
+                           </div>
+                           <div className="w-px h-8 bg-white/5"></div>
+                           <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Impacto</span>
+                              <span className="text-sm font-bold text-indigo-400">Total</span>
+                           </div>
+                        </div>
+
+                        {pkg.isLocked ? (
+                           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[12px] font-bold text-gray-500">
+                              <Lock className="w-3.5 h-3.5" /> Obrigatório
+                           </div>
+                        ) : (
+                           <button 
+                              onClick={() => updateRulePackage(pkg.id, { isActive: !pkg.isActive })}
+                              className={`px-5 py-2 rounded-xl text-[12px] font-bold transition-all duration-300 ${
+                                 pkg.isActive 
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20' 
+                                    : 'bg-purple-600 text-white shadow-[0_4px_12px_rgba(147,51,234,0.3)] hover:bg-purple-500'
+                              }`}
+                           >
+                              {pkg.isActive ? 'Desativar' : 'Ativar Pacote'}
+                           </button>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* Glass highlight effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+               </div>
+            ))}
+         </div>
+      </div>
+   );
+}
+
+function SubTabBaseRegras() {
+   const { riskRules, updateRiskRule } = useAppStore();
+   const [filterPacote, setFilterPacote] = useState('Todos');
+   const [filterCriticidade, setFilterCriticidade] = useState('Todos');
+   const [filterAtividade, setFilterAtividade] = useState('Todos');
+   const [filterStatus, setFilterStatus] = useState('Todos');
+   const [searchTerm, setSearchTerm] = useState('');
+
+   const filteredRules = riskRules.filter(rule => {
+      const matchPacote = filterPacote === 'Todos' || rule.pacote === filterPacote;
+      const matchCriticidade = filterCriticidade === 'Todos' || rule.criticidade === filterCriticidade;
+      const matchAtividade = filterAtividade === 'Todos' || rule.atividades.includes(filterAtividade);
+      const matchStatus = filterStatus === 'Todos' || (filterStatus === 'Ativo' ? rule.ativo : !rule.ativo);
+      const matchSearch = rule.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          rule.nrRelacionada.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchPacote && matchCriticidade && matchAtividade && matchStatus && matchSearch;
+   });
+
+   const pacotes = ['Todos', ...new Set(riskRules.map(r => r.pacote))];
+   const criticidades = ['Todos', 'Baixo', 'Médio', 'Alta', 'Crítico'];
+   const atividades = ['Todos', ...new Set(riskRules.flatMap(r => r.atividades))];
+
+   return (
+      <div className="flex flex-col gap-4 h-full overflow-hidden">
+         <div className="flex items-center gap-4 flex-wrap bg-[#121826] p-4 rounded-xl border border-white/5">
+            <div className="flex-1 min-w-[200px] relative">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+               <input 
+                  type="text" 
+                  placeholder="Buscar por nome ou NR..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-[#0b0f19] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
+               />
+            </div>
+            
+            <select 
+               value={filterPacote} 
+               onChange={(e) => setFilterPacote(e.target.value)}
+               className="bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+            >
+               {pacotes.map(p => <option key={p} value={p}>Pacote: {p}</option>)}
+            </select>
+
+            <select 
+               value={filterAtividade} 
+               onChange={(e) => setFilterAtividade(e.target.value)}
+               className="bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+            >
+               {atividades.map(a => <option key={a} value={a}>Atividade: {a}</option>)}
+            </select>
+
+            <select 
+               value={filterCriticidade} 
+               onChange={(e) => setFilterCriticidade(e.target.value)}
+               className="bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+            >
+               {criticidades.map(c => <option key={c} value={c}>Crit.: {c}</option>)}
+            </select>
+
+            <select 
+               value={filterStatus} 
+               onChange={(e) => setFilterStatus(e.target.value)}
+               className="bg-[#0b0f19] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+            >
+               <option value="Todos">Todos Status</option>
+               <option value="Ativo">Ativo</option>
+               <option value="Inativo">Inativo</option>
+            </select>
+         </div>
+
+         <div className="flex-1 overflow-auto custom-scrollbar border border-white/5 rounded-2xl bg-[#121826]/50">
+            <table className="w-full text-left text-sm border-collapse">
+               <thead className="sticky top-0 bg-[#0b0f19] z-10 text-[11px] uppercase font-bold text-gray-500 border-b border-white/5">
+                  <tr>
+                     <th className="px-6 py-4">Regra</th>
+                     <th className="px-6 py-4">Pacote</th>
+                     <th className="px-6 py-4">NR</th>
+                     <th className="px-6 py-4">Criticidade</th>
+                     <th className="px-6 py-4 text-center">Evidência</th>
+                     <th className="px-6 py-4 text-center">Status</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-white/5">
+                  {filteredRules.map(rule => (
+                     <tr key={rule.id} className="hover:bg-white/[0.02] transition-colors group text-[13px]">
+                        <td className="px-6 py-4">
+                           <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-white group-hover:text-purple-400 transition-colors">{rule.nome}</span>
+                              <span className="text-[11px] text-gray-500 line-clamp-1 italic">{rule.condicao}</span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="text-gray-400 font-medium">{rule.pacote}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="text-indigo-400 font-bold">{rule.nrRelacionada}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              rule.criticidade === 'Crítico' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                              rule.criticidade === 'Alta' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' :
+                              rule.criticidade === 'Médio' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                              'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                           }`}>
+                              {rule.criticidade}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                           {rule.exigeEvidencia ? (
+                              <div className="flex items-center justify-center text-purple-400 gap-1">
+                                 <Camera className="w-3.5 h-3.5" />
+                                 <span className="text-[10px] font-bold">Sim</span>
+                              </div>
+                           ) : (
+                              <span className="text-gray-600 text-[10px]">-</span>
+                           )}
+                        </td>
+                        <td className="px-6 py-4">
+                           <div className="flex items-center justify-center">
+                              <button 
+                                 onClick={() => updateRiskRule(rule.id, { ativo: !rule.ativo })}
+                                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                                    rule.ativo 
+                                       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20' 
+                                       : 'bg-gray-500/10 text-gray-500 border border-white/5 hover:bg-white/5'
+                                 }`}
+                              >
+                                 {rule.ativo ? <CheckCircle2 className="w-3" /> : <Ban className="w-3" />}
+                                 {rule.ativo ? 'ATIVO' : 'INATIVO'}
+                              </button>
+                           </div>
+                        </td>
+                     </tr>
+                  ))}
+                  {filteredRules.length === 0 && (
+                     <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-sm">
+                           Nenhuma regra encontrada com os filtros selecionados.
+                        </td>
+                     </tr>
+                  )}
+               </tbody>
+            </table>
+         </div>
+         
+         <div className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between text-xs text-gray-400 italic">
+            <div className="flex items-center gap-2">
+               <Info className="w-4 h-4 text-purple-400" />
+               <span>Estas regras definem o comportamento do motor de risco. A ativação/desativação afeta futuras inspeções.</span>
+            </div>
+            <div className="flex items-center gap-4">
+               <span>Total de regras: <strong>{riskRules.length}</strong></span>
+               <span>Filtradas: <strong>{filteredRules.length}</strong></span>
+            </div>
+         </div>
       </div>
    );
 }
@@ -888,42 +1330,254 @@ function TabSlas() {
 }
 
 function TabAlertas() {
-   const { engineConfig, updateEngineConfig } = useAppStore();
+   const { engineConfig, updateEngineConfig, alertas = [], updateAlerta, deleteAlerta, rulePackages = [] } = useAppStore();
+   
+   const [filterPackage, setFilterPackage] = useState('');
+   const [filterSeverity, setFilterSeverity] = useState('');
+   const [filterStatus, setFilterStatus] = useState('');
+   const [filterOrigin, setFilterOrigin] = useState('');
+   const [filterNr, setFilterNr] = useState('');
+
+   const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
+   
+   const isPackageVisible = (pkg?: string) => {
+      if (!pkg) return true;
+      if (pkg === 'Base SST') return true;
+      return activePackageNames.includes(pkg);
+   };
+
+   const filteredAlertas = alertas.filter(alerta => {
+      if (!isPackageVisible(alerta.package)) return false;
+      if (filterPackage && alerta.package !== filterPackage) return false;
+      if (filterSeverity && alerta.severity !== filterSeverity) return false;
+      if (filterStatus && alerta.status !== filterStatus) return false;
+      if (filterOrigin && alerta.origin !== filterOrigin) return false;
+      if (filterNr && !alerta.nr?.toUpperCase().includes(filterNr.toUpperCase())) return false;
+      return true;
+   });
 
    return (
-      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
-         <div className="w-full max-w-lg bg-[#121826] border border-white/5 rounded-2xl p-6">
-            <div className="mb-6">
-               <h3 className="text-lg font-bold text-white">Central de Notificações</h3>
-               <p className="text-sm text-gray-400">Gerencie a cadência e comportamento dos alertas gerados.</p>
-            </div>
-            
-            <div className="space-y-5">
-               <div className="flex items-center justify-between p-4 bg-[#0b0f19] border border-white/5 rounded-xl">
-                  <div>
-                     <p className="text-sm font-bold text-white">Notificar Atrasos Imediatos</p>
-                     <p className="text-xs text-gray-400 mt-1">Disparar notificação assim que um SLA estourar.</p>
-                  </div>
-                  <div 
-                     onClick={() => updateEngineConfig({ alertas: { ...engineConfig.alertas, notificarAtraso: !engineConfig.alertas.notificarAtraso }})}
-                     className={`w-10 h-5 rounded-full relative cursor-pointer flex items-center px-0.5 transition-colors ${engineConfig.alertas.notificarAtraso ? 'bg-purple-600' : 'bg-white/10'}`}
-                  >
-                     <div className={`w-4 h-4 bg-white rounded-full transition-transform ${engineConfig.alertas.notificarAtraso ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                  </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 w-full items-start h-full">
+         <div className="xl:col-span-1 space-y-6 shrink-0">
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <div className="mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                     <Bell className="w-5 h-5 text-purple-400" />
+                     Central de Notificações
+                  </h3>
+                  <p className="text-sm text-gray-400 mt-1">Gerencie a cadência e comportamento dos alertas.</p>
                </div>
                
-               <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Frequência do Resumo</label>
-                  <select 
-                     value={engineConfig.alertas.frequencia}
-                     onChange={(e) => updateEngineConfig({ alertas: { ...engineConfig.alertas, frequencia: e.target.value as any }})}
-                     className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
-                  >
-                     <option value="Imediata">Imediata</option>
-                     <option value="Diária">Diária</option>
-                     <option value="Semanal">Semanal</option>
-                  </select>
+               <div className="space-y-5">
+                  <div className="flex items-center justify-between p-4 bg-[#0b0f19] border border-white/5 rounded-xl">
+                     <div>
+                        <p className="text-sm font-bold text-white">Notificar Atrasos Imediatos</p>
+                        <p className="text-xs text-gray-400 mt-1">Disparar notificação assim que um SLA estourar.</p>
+                     </div>
+                     <div 
+                        onClick={() => updateEngineConfig({ alertas: { ...engineConfig.alertas, notificarAtraso: !engineConfig.alertas.notificarAtraso }})}
+                        className={`w-10 h-5 rounded-full relative cursor-pointer flex items-center px-0.5 transition-colors ${engineConfig.alertas.notificarAtraso ? 'bg-purple-600' : 'bg-white/10'}`}
+                     >
+                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${engineConfig.alertas.notificarAtraso ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Frequência do Resumo</label>
+                     <select 
+                        value={engineConfig.alertas.frequencia}
+                        onChange={(e) => updateEngineConfig({ alertas: { ...engineConfig.alertas, frequencia: e.target.value as any }})}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        <option value="Imediata">Imediata</option>
+                        <option value="Diária">Diária</option>
+                        <option value="Semanal">Semanal</option>
+                     </select>
+                  </div>
                </div>
+            </div>
+
+            <div className="bg-[#121826] border border-white/5 rounded-2xl p-6">
+               <div className="mb-6 flex items-center justify-between">
+                  <div>
+                     <h3 className="text-lg font-bold text-white">Filtros de Visualização</h3>
+                     <p className="text-sm text-gray-400 mt-1">Refine a lista de alertas ativos.</p>
+                  </div>
+                  <button 
+                     onClick={() => {
+                        setFilterPackage(''); setFilterSeverity(''); setFilterStatus(''); setFilterOrigin(''); setFilterNr('');
+                     }}
+                     className="text-xs text-purple-400 hover:text-purple-300 font-bold uppercase tracking-wider"
+                  >
+                     Limpar
+                  </button>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="space-y-1.5">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                        <Package className="w-3 h-3" /> Pacote
+                     </label>
+                     <select 
+                        value={filterPackage}
+                        onChange={(e) => setFilterPackage(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        <option value="">Todos os Pacotes</option>
+                        {rulePackages.map(pkg => (
+                           <option key={pkg.id} value={pkg.name}>{pkg.name}</option>
+                        ))}
+                     </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                           <AlertTriangle className="w-3 h-3" /> Criticidade
+                        </label>
+                        <select 
+                           value={filterSeverity}
+                           onChange={(e) => setFilterSeverity(e.target.value)}
+                           className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                        >
+                           <option value="">Todas</option>
+                           <option value="Crítico">Crítico</option>
+                           <option value="Alto">Alto</option>
+                           <option value="Médio">Médio</option>
+                           <option value="Baixo">Baixo</option>
+                        </select>
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                           <Info className="w-3 h-3" /> Status
+                        </label>
+                        <select 
+                           value={filterStatus}
+                           onChange={(e) => setFilterStatus(e.target.value)}
+                           className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                        >
+                           <option value="">Todos</option>
+                           <option value="Ativo">Ativo</option>
+                           <option value="Lido">Lido</option>
+                           <option value="Arquivado">Arquivado</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                        <Monitor className="w-3 h-3" /> Origem
+                     </label>
+                     <select 
+                        value={filterOrigin}
+                        onChange={(e) => setFilterOrigin(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 appearance-none"
+                     >
+                        <option value="">Todas as Origens</option>
+                        <option value="Risco">Risco</option>
+                        <option value="Ação">Ação</option>
+                        <option value="Inspeção">Inspeção</option>
+                        <option value="Checklist">Checklist</option>
+                        <option value="Sistema">Sistema</option>
+                     </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                        <FileText className="w-3 h-3" /> Filtrar por NR
+                     </label>
+                     <input 
+                        type="text"
+                        placeholder="Ex: NR-35"
+                        value={filterNr}
+                        onChange={(e) => setFilterNr(e.target.value)}
+                        className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                     />
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div className="xl:col-span-2 bg-[#121826] border border-white/5 rounded-2xl flex flex-col h-full overflow-hidden">
+            <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0">
+               <h3 className="font-bold text-white">Lista de Alertas ({filteredAlertas.length})</h3>
+               <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                     <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                     {filteredAlertas.filter(a => a.status === 'Ativo').length} Pendentes
+                  </span>
+               </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
+               {filteredAlertas.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-20 text-center text-gray-500">
+                     <Bell className="w-12 h-12 mb-4 opacity-20" />
+                     <p className="text-sm font-medium">Nenhum alerta encontrado para os filtros aplicados.</p>
+                     <p className="text-xs mt-1">Experimente remover alguns filtros ou ativar pacotes de regras.</p>
+                  </div>
+               ) : (
+                  <div className="divide-y divide-white/5">
+                     {filteredAlertas.map(alerta => (
+                        <div key={alerta.id} className={`p-4 hover:bg-white/5 transition-all flex items-start gap-4 ${alerta.status === 'Ativo' ? 'bg-purple-500/5' : ''}`}>
+                           <div className={`p-2 rounded-lg shrink-0 ${
+                              alerta.severity === 'Crítico' ? 'bg-red-500/20 text-red-400' :
+                              alerta.severity === 'Alto' ? 'bg-orange-500/20 text-orange-400' :
+                              alerta.severity === 'Médio' ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-blue-500/20 text-blue-400'
+                           }`}>
+                              {alerta.severity === 'Crítico' ? <AlertTriangle className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                 <h4 className="text-sm font-bold text-white truncate pr-4">{alerta.title}</h4>
+                                 <span className="text-[10px] text-gray-500 whitespace-nowrap">{new Date(alerta.createdAt).toLocaleDateString('pt-BR')}</span>
+                              </div>
+                              <p className="text-xs text-gray-400 leading-relaxed mb-3">{alerta.description}</p>
+                              <div className="flex items-center gap-3">
+                                 {alerta.package && (
+                                    <span className="flex items-center gap-1 text-[10px] font-bold text-purple-400 uppercase tracking-wider bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                                       <Package className="w-3 h-3" /> {alerta.package}
+                                    </span>
+                                 )}
+                                 {alerta.nr && (
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                                       {alerta.nr}
+                                    </span>
+                                 )}
+                                 <span className="text-[10px] text-gray-500 italic">via {alerta.origin}</span>
+                              </div>
+                           </div>
+                           <div className="flex flex-col gap-2 shrink-0 self-center">
+                              {alerta.status === 'Ativo' ? (
+                                 <button 
+                                    onClick={() => updateAlerta(alerta.id, { status: 'Lido' })}
+                                    className="p-1.5 bg-[#0b0f19] border border-white/10 rounded hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/30 transition-all"
+                                    title="Marcar como lido"
+                                 >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                 </button>
+                              ) : (
+                                 <button 
+                                    onClick={() => updateAlerta(alerta.id, { status: 'Ativo' })}
+                                    className="p-1.5 bg-[#0b0f19] border border-white/10 rounded hover:bg-purple-500/20 hover:text-purple-400 hover:border-purple-500/30 transition-all opacity-40 hover:opacity-100"
+                                    title="Marcar como pendente"
+                                 >
+                                    <Clock className="w-4 h-4" />
+                                 </button>
+                              )}
+                              <button 
+                                 onClick={() => deleteAlerta(alerta.id)}
+                                 className="p-1.5 bg-[#0b0f19] border border-white/10 rounded hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all opacity-40 hover:opacity-100"
+                                 title="Excluir alerta"
+                              >
+                                 <Trash2 className="w-4 h-4" />
+                              </button>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               )}
             </div>
          </div>
       </div>
