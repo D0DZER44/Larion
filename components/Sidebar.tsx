@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutGrid, HardHat, Brain, BarChart3, Settings, Building2, Bell, HelpCircle, 
   Sparkles, ShieldCheck, ChevronRight, Moon, Sun, LogOut, ChevronDown, 
-  ClipboardCheck, AlertTriangle, Activity
+  ClipboardCheck, AlertTriangle, Activity, User
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
@@ -32,22 +32,14 @@ const navGroups = [
   {
     items: [
       { name: 'Organização', href: '/organizacao', icon: Building2 },
-      { name: 'Notificações', href: '/notificacoes', icon: Bell },
       { name: 'Configurações', href: '/configuracoes', icon: Settings },
-      { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
     ]
   }
 ];
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
-  const { alertas = [], rulePackages = [] } = useAppStore();
-  const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
-  const activeAlertsCount = alertas.filter(a => 
-    a.status === 'Ativo' && 
-    (!a.package || a.package === 'Base SST' || activePackageNames.includes(a.package))
-  ).length;
-
+  const { rulePackages = [] } = useAppStore();
   const [isDark, setIsDark] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     'Operação': pathname.startsWith('/operacao')
@@ -65,7 +57,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [pathname, expanded]); // Include expanded to satisfy lint, but logic prevents infinite loop
+  }, [pathname, expanded]);
 
   useEffect(() => {
     if (isDark) {
@@ -75,19 +67,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
     }
   }, [isDark]);
 
-  const AlertBadge = () => {
-    if (activeAlertsCount === 0) return null;
-    return (
-      <span className="ml-auto bg-purple-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-        {activeAlertsCount}
-      </span>
-    );
-  };
-
   return (
-    <aside className="w-[280px] flex-shrink-0 flex flex-col h-screen bg-[#0B0814] border-r border-white/5 top-0 sticky print:hidden">
+    <aside className="w-[280px] flex-shrink-0 flex flex-col h-screen bg-[#0B0814] border-r border-white/5 top-0 sticky print:hidden overflow-hidden">
       {/* Logo Area */}
-      <div className="p-6 mb-2">
+      <div className="p-6 mb-2 shrink-0">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] shadow-lg shadow-purple-500/20 relative group shrink-0">
             <ShieldCheck className="w-6 h-6 text-white" />
@@ -100,7 +83,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* Workspace Selector */}
-      <div className="mx-4 mb-6">
+      <div className="mx-4 mb-6 shrink-0">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors cursor-pointer group">
           <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
             <Building2 className="w-4 h-4 text-[#A78BFA]" />
@@ -114,7 +97,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto px-4 space-y-6 scrollbar-none pb-6">
+      <div className="flex-1 px-4 space-y-6 pb-6 overflow-hidden">
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {group.items.map((item) => {
@@ -146,9 +129,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     <div className="flex items-center gap-3 w-full relative z-10">
                       <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-[#A78BFA]' : 'text-[#71717A] group-hover:text-[#F4F4F5]'}`} />
                       <span className="truncate">{item.name}</span>
-                      {item.name === 'Notificações' && (
-                        <AlertBadge />
-                      )}
                     </div>
                     {hasSubItems ? (
                       <ChevronRight className={`w-4 h-4 transition-transform duration-200 z-10 ${isExpanded ? 'rotate-90 text-white' : 'text-[#71717A]'}`} />
@@ -186,9 +166,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             })}
           </div>
         ))}
+      </div>
 
+      {/* Footer Area: Navigation & User Profile */}
+      <div className="p-4 bg-[#0B0814] border-t border-white/5 flex flex-col gap-2 shrink-0">
         {/* Promotion Card: Lari Copiloto SST */}
-        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#7C3AED]/15 to-[#4C1D95]/10 border border-[#A78BFA]/20 relative overflow-hidden group">
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-[#7C3AED]/20 to-[#4C1D95]/10 border border-[#A78BFA]/20 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Sparkles className="w-12 h-12 text-[#A78BFA]" />
           </div>
@@ -196,7 +179,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
              <div className="w-6 h-6 rounded bg-[#A78BFA]/20 flex items-center justify-center">
                 <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
              </div>
-             <span className="text-[13px] font-bold text-white">Lari Copiloto SST</span>
+             <span className="text-[14px] font-bold text-white">Lari Copiloto SST</span>
              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#A78BFA] to-[#7C3AED] text-white font-black">NOVO</span>
           </div>
           <p className="text-[11px] text-[#A1A1AA] leading-relaxed mb-4 relative z-10">
@@ -204,55 +187,59 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           </p>
           <Link 
             href="/chat"
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#7C3AED]/15 hover:bg-[#7C3AED]/25 border border-[#A78BFA]/20 text-white text-xs font-semibold transition-all relative z-10"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#A78BFA]/10 hover:bg-[#A78BFA]/20 border border-[#A78BFA]/30 text-white text-[12px] font-bold transition-all relative z-10 active:scale-95"
           >
             Conversar com a Lari →
           </Link>
         </div>
-      </div>
 
-      {/* Footer Area: Profile & Mode Toggle */}
-      <div className="p-4 bg-[#0B0814] border-t border-white/5 space-y-4">
-        {/* User Profile */}
-        <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 transition-all cursor-pointer group">
-          <div className="relative shrink-0">
-            <Image
-              src="https://picsum.photos/seed/rafael/40/40"
-              alt="Lucas Martins"
-              width={36}
-              height={36}
-              className="rounded-xl bg-gray-800 border border-white/10"
-            />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#22C55E] border-2 border-[#0B0814]" />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-bold text-[#F4F4F5] truncate">Lucas Martins</p>
-            <p className="text-[10px] text-[#71717A] truncate font-medium">Administrador</p>
-          </div>
-          <ChevronDown className="w-4 h-4 text-[#71717A] group-hover:text-white transition-colors" />
-        </div>
+        {/* Minha conta */}
+        <Link 
+          href="/perfil" 
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[#71717A] hover:text-[#F4F4F5] hover:bg-white/5 transition-all group"
+        >
+          <User className="w-4 h-4 group-hover:text-[#A78BFA] transition-colors" />
+          <span className="font-medium">Minha conta</span>
+        </Link>
+        
+        {/* Utilities Row: Ajuda | Tema | Sair */}
+        <div className="flex items-center justify-between gap-1 px-3 py-2 bg-white/[0.02] border border-white/5 rounded-xl">
+          <Link 
+            href="/ajuda" 
+            className="flex items-center gap-2 text-[12px] text-[#71717A] hover:text-[#F4F4F5] transition-all group"
+            title="Ajuda"
+          >
+            <HelpCircle className="w-4 h-4 group-hover:text-[#A78BFA] transition-colors" />
+            <span className="font-medium hidden xl:block">Ajuda</span>
+          </Link>
 
-        {/* Logout & Theme Toggle */}
-        <div className="flex items-center gap-2">
-           <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/20 text-red-400 text-xs font-semibold transition-all flex-1">
-            <LogOut className="w-3.5 h-3.5" />
-            Sair
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-[#12121A] rounded-lg p-0.5 border border-white/10">
+              <button 
+                onClick={() => setIsDark(true)}
+                className={`p-1 rounded-md transition-all ${isDark ? 'bg-[#7C3AED]/20 text-[#A78BFA]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
+                title="Tema Escuro"
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => setIsDark(false)}
+                className={`p-1 rounded-md transition-all ${!isDark ? 'bg-white text-[#0B0814]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
+                title="Tema Claro"
+              >
+                <Sun className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <button 
+            className="flex items-center gap-2 text-[12px] text-red-500/80 hover:text-red-400 transition-all group"
+            onClick={() => {}}
+            title="Sair"
+          >
+            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span className="font-semibold hidden xl:block">Sair</span>
           </button>
-          
-          <div className="flex items-center bg-[#0B0814] rounded-xl p-1 border border-white/10 shadow-sm shrink-0">
-            <button 
-              onClick={() => setIsDark(true)}
-              className={`p-1.5 rounded-lg transition-all ${isDark ? 'bg-[#7C3AED]/20 text-[#A78BFA] border border-[#7C3AED]/30' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
-            >
-              <Moon className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setIsDark(false)}
-              className={`p-1.5 rounded-lg transition-all ${!isDark ? 'bg-white text-[#0B0814]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
-            >
-              <Sun className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
     </aside>
