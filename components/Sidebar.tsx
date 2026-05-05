@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   LayoutGrid, HardHat, Brain, BarChart3, Settings, Building2, Bell, HelpCircle, 
   Sparkles, ShieldCheck, ChevronRight, Moon, Sun, LogOut, ChevronDown, 
-  ClipboardCheck, AlertTriangle, Activity, User, Zap
+  ClipboardCheck, AlertTriangle, Activity, User, Zap, Palette, UserCircle,
+  CreditCard
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
@@ -50,6 +52,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { rulePackages = [] } = useAppStore();
   const [isDark, setIsDark] = useState(true);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     'Operação': pathname.startsWith('/operacao'),
     'Inteligência': pathname.startsWith('/central')
@@ -87,6 +91,16 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       document.documentElement.classList.add('theme-light');
     }
   }, [isDark]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <aside className="w-[280px] flex-shrink-0 flex flex-col h-screen bg-[#0B0814] border-r border-white/5 top-0 sticky print:hidden overflow-hidden">
@@ -195,7 +209,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* Footer Area: Navigation & User Profile */}
       <div className="p-4 bg-[#0B0814] border-t border-white/5 flex flex-col gap-2 shrink-0">
         {/* Promotion Card: Lari Copiloto SST */}
-        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-[#7C3AED]/20 to-[#4C1D95]/10 border border-[#A78BFA]/20 relative overflow-hidden group">
+        <div className="mb-2 p-4 rounded-2xl bg-gradient-to-br from-[#7C3AED]/20 to-[#4C1D95]/10 border border-[#A78BFA]/20 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Sparkles className="w-12 h-12 text-[#A78BFA]" />
           </div>
@@ -217,52 +231,110 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           </Link>
         </div>
 
-        {/* Minha conta */}
-        <Link 
-          href="/perfil" 
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[#71717A] hover:text-[#F4F4F5] hover:bg-white/5 transition-all group"
-        >
-          <User className="w-4 h-4 group-hover:text-[#A78BFA] transition-colors" />
-          <span className="font-medium">Minha conta</span>
-        </Link>
-        
-        {/* Utilities Row: Ajuda | Tema | Sair */}
-        <div className="flex items-center justify-between gap-1 px-3 py-2 bg-white/[0.02] border border-white/5 rounded-xl">
-          <Link 
-            href="/ajuda" 
-            className="flex items-center gap-2 text-[12px] text-[#71717A] hover:text-[#F4F4F5] transition-all group"
-            title="Ajuda"
-          >
-            <HelpCircle className="w-4 h-4 group-hover:text-[#A78BFA] transition-colors" />
-            <span className="font-medium hidden xl:block">Ajuda</span>
-          </Link>
+        {/* Minha conta Dropdown System */}
+        <div className="relative" ref={accountMenuRef}>
+          <AnimatePresence>
+            {showAccountMenu && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute bottom-full left-0 w-full mb-2 bg-[#12111A] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden py-2"
+              >
+                {/* Header User */}
+                <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      RO
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-bold text-white truncate">Rafael Oliveira</p>
+                      <p className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Plano Plus</p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-[#12121A] rounded-lg p-0.5 border border-white/10">
-              <button 
-                onClick={() => setIsDark(true)}
-                className={`p-1 rounded-md transition-all ${isDark ? 'bg-[#7C3AED]/20 text-[#A78BFA]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
-                title="Tema Escuro"
-              >
-                <Moon className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                onClick={() => setIsDark(false)}
-                className={`p-1 rounded-md transition-all ${!isDark ? 'bg-white text-[#0B0814]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
-                title="Tema Claro"
-              >
-                <Sun className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
+                <div className="py-1">
+                  <Link href="/organizacao" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                    <Zap className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">Upgrade plan</span>
+                  </Link>
+
+                  <div className="h-px bg-white/5 my-1" />
+
+                  <Link href="/configuracoes" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                    <Palette className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">Personalização</span>
+                  </Link>
+
+                  <Link href="/perfil" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                    <UserCircle className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">Perfil</span>
+                  </Link>
+
+                  <Link href="/configuracoes" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                    <Settings className="w-4 h-4 text-gray-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">Configurações</span>
+                  </Link>
+
+                  <div className="h-px bg-white/5 my-1" />
+
+                  <Link href="/ajuda" className="flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                    <div className="flex items-center gap-3">
+                      <HelpCircle className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                      <span className="font-medium">Ajuda</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 text-gray-600" />
+                  </Link>
+
+                  <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-300">
+                    <div className="flex items-center gap-3">
+                      <Palette className="w-4 h-4 text-indigo-400" />
+                      <span className="font-medium">Tema</span>
+                    </div>
+                    <div className="flex items-center bg-[#12121A] rounded-lg p-0.5 border border-white/10">
+                      <button 
+                        onClick={() => setIsDark(true)}
+                        className={`p-1 rounded-md transition-all ${isDark ? 'bg-[#7C3AED]/20 text-[#A78BFA]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
+                      >
+                        <Moon className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={() => setIsDark(false)}
+                        className={`p-1 rounded-md transition-all ${!isDark ? 'bg-white text-[#0B0814]' : 'text-[#71717A] hover:text-[#F4F4F5]'}`}
+                      >
+                        <Sun className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/5 my-1" />
+
+                  <button className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-400/5 transition-colors group w-full text-left">
+                    <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <span className="font-semibold">Sair</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button 
-            className="flex items-center gap-2 text-[12px] text-red-500/80 hover:text-red-400 transition-all group"
-            onClick={() => {}}
-            title="Sair"
+            onClick={() => setShowAccountMenu(!showAccountMenu)}
+            className={`flex items-center justify-between w-full p-3 rounded-2xl border transition-all duration-200 group ${
+              showAccountMenu 
+                ? 'bg-white/10 border-white/20 shadow-xl' 
+                : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+            }`}
           >
-            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            <span className="font-semibold hidden xl:block">Sair</span>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                RO
+              </div>
+              <span className="text-sm font-semibold text-gray-200 truncate group-hover:text-white">Minha conta</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${showAccountMenu ? 'rotate-180 text-white' : ''}`} />
           </button>
         </div>
       </div>

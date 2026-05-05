@@ -1,4 +1,3 @@
-import { NormativeEngine } from './engines';
 import { FineEngine } from './fineEngine';
 
 export type NivelRisco = 'Crítico' | 'Alto' | 'Médio' | 'Baixo';
