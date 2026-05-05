@@ -29,7 +29,8 @@ export default function MatrizNormativaPage() {
   // We can get org settings from some context or assume "Indústria" as an example based on existing mock data or let user filter
   const [selectedSegment, setSelectedSegment] = useState<string>('Indústria');
 
-  const activeRulePackages = useAppStore(state => state.rulePackages.filter(p => p.isActive).map(p => p.name));
+  const rulePackages = useAppStore(state => state.rulePackages);
+  const activeRulePackages = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const nrsAplicaveis = getNRsAplicaveis({
     segmentoOrganizacao: selectedSegment,
