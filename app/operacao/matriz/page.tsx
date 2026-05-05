@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
 import { NR_MATRIX, getNRsAplicaveis } from '@/lib/nrMatrix';
 import { fixedNrChecklists } from '@/lib/normativeChecklists';

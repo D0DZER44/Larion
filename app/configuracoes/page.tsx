@@ -1226,12 +1226,12 @@ function SubTabRegrasPersonalizadas() {
                         <Activity className="w-4 h-4 text-purple-400" /> Evento Gatilho
                      </h4>
                      <div className="grid grid-cols-2 gap-4">
-                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.checklistOrigin} onChange={(e) => updateRule(activeRule.id, { checklistOrigin: e.target.value })} />
-                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.question} onChange={(e) => updateRule(activeRule.id, { question: e.target.value })} />
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.checklistOrigin || ''} onChange={(e) => updateRule(activeRule.id, { checklistOrigin: e.target.value })} />
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" value={activeRule.question || ''} onChange={(e) => updateRule(activeRule.id, { question: e.target.value })} />
                      </div>
                      <div className="mt-3 flex items-center gap-3">
                         <span className="text-[13px] text-gray-400">Quando a resposta for exata a:</span>
-                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none max-w-[120px]" value={activeRule.condition} onChange={(e) => updateRule(activeRule.id, { condition: e.target.value })} />
+                        <input className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none max-w-[120px]" value={activeRule.condition || ''} onChange={(e) => updateRule(activeRule.id, { condition: e.target.value })} />
                      </div>
                   </div>
 
@@ -1254,7 +1254,7 @@ function SubTabRegrasPersonalizadas() {
                         <div className="w-px bg-white/10"></div>
                         <div className="space-y-1 flex-1">
                            <label className="text-[10px] text-gray-500 uppercase font-bold">Justificativa automática</label>
-                           <input type="text" value={activeRule.justification} onChange={e => updateRule(activeRule.id, { justification: e.target.value })} className="w-full bg-transparent border-none text-[13px] text-gray-300 focus:outline-none" />
+                           <input type="text" value={activeRule.justification || ''} onChange={e => updateRule(activeRule.id, { justification: e.target.value })} className="w-full bg-transparent border-none text-[13px] text-gray-300 focus:outline-none" />
                         </div>
                      </div>
                   </div>
@@ -1268,11 +1268,11 @@ function SubTabRegrasPersonalizadas() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                            <label className="text-[11px] text-gray-400 uppercase font-bold">Ação Padrão</label>
-                           <input type="text" value={activeRule.autoAction} onChange={e => updateRule(activeRule.id, { autoAction: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
+                           <input type="text" value={activeRule.autoAction || ''} onChange={e => updateRule(activeRule.id, { autoAction: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
                         </div>
                         <div className="space-y-1.5">
                            <label className="text-[11px] text-gray-400 uppercase font-bold">Atribuir para</label>
-                           <input type="text" value={activeRule.assignTo} onChange={e => updateRule(activeRule.id, { assignTo: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
+                           <input type="text" value={activeRule.assignTo || ''} onChange={e => updateRule(activeRule.id, { assignTo: e.target.value })} className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-white focus:outline-none" />
                         </div>
                      </div>
                   </div>

@@ -279,7 +279,10 @@ export default function InspecoesPage() {
         ondeUsar: item.ondeUsar || '',
         data: item.data || item.proximaInspecao || '',
         responsavel: item.responsavel || '',
-        observacoes: item.observacoes || ''
+        observacoes: item.observacoes || '',
+        prioridade: item.prioridade || 'Normal',
+        trabalhadoresExpostos: item.trabalhadoresExpostos || 0,
+        perfilExposto: item.perfilExposto || ''
       });
       setIsEditing(true);
       setIsFormDrawerOpen(true);
@@ -509,7 +512,10 @@ export default function InspecoesPage() {
                 onClick={() => {
                   setFormType('Inspecao');
                   setInspectionStep(1);
-                  setInspectionData({ tipoInspecao: '', checklistId: '', ondeUsar: '', data: '', responsavel: '', observacoes: '' });
+                  setInspectionData({ 
+                    tipoInspecao: '', checklistId: '', ondeUsar: '', data: new Date().toISOString().split('T')[0], responsavel: '', observacoes: '',
+                    prioridade: 'Normal', trabalhadoresExpostos: 0, perfilExposto: ''
+                  });
                   setChecklistItems([]);
                   setIsEditing(false);
                   setIsFormDrawerOpen(true);
