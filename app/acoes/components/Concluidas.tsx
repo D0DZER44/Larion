@@ -223,7 +223,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                   <tr>
                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prioridade</th>
                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
-                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
+                     <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Executor da Correção</th>
                      <th className="px-5 py-3.5 text-xs font-medium text-gray-400">
                         <div className="flex items-center gap-1">Concluída em <span className="text-[10px]">↓</span></div>
                      </th>
@@ -238,7 +238,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                   {list.map(acao => {
                      const pColors = PRIORITY_COLORS[acao.prioridade] || PRIORITY_COLORS['Baixa'];
                      const prioCircle = pColors.split(' ')[0].replace('text-', 'bg-');
-                     const rInitials = getInitials(acao.responsavel);
+                     const targetName = acao.executor || acao.validador || acao.responsavel; const rInitials = getInitials(targetName);
                      const avatarColors = [
                         'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
                         'bg-emerald-500/20 text-emerald-400', 'bg-orange-500/20 text-orange-400',
@@ -278,6 +278,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                               <div className="flex flex-col gap-1.5">
                                  <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
                                  <div className="flex items-center gap-2 flex-wrap">
+                                   {acao.faseExecucao === 'Validada' && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-bold uppercase">Validada</span>}
                                    {onTime && !isCritico && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">No prazo</span>}
                                    {!onTime && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com atraso</span>}
                                    {isCritico && onTime && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Risco mitigado</span>}
@@ -296,7 +297,7 @@ export default function Concluidas({ acoes, onOpen }: { acoes: ActionItem[], onO
                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                     {rInitials}
                                  </div>
-                                 <span className="text-gray-300">{acao.responsavel}</span>
+                                 <span className="text-gray-300">{targetName}</span>
                               </div>
                            </td>
                            <td className="px-5 py-4 w-32 text-gray-300">

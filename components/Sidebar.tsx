@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutGrid, HardHat, Brain, BarChart3, Settings, Building2, Bell, HelpCircle, 
   Sparkles, ShieldCheck, ChevronRight, Moon, Sun, LogOut, ChevronDown, 
-  ClipboardCheck, AlertTriangle, Activity, User
+  ClipboardCheck, AlertTriangle, Activity, User, Zap
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
@@ -23,9 +23,18 @@ const navGroups = [
           { name: 'Inspeções', href: '/operacao/inspecoes', icon: HardHat },
           { name: 'Riscos', href: '/operacao/riscos', icon: AlertTriangle },
           { name: 'Ações', href: '/operacao/acoes', icon: Activity },
+          { name: 'Matriz Normativa', href: '/operacao/matriz', icon: ClipboardCheck },
         ]
       },
-      { name: 'Inteligência', href: '/central', icon: Brain },
+      { 
+        name: 'Inteligência', 
+        href: '#', 
+        icon: Brain,
+        subItems: [
+          { name: 'Visão Geral (Central)', href: '/central', icon: BarChart3 },
+          { name: 'Motor Normativo', href: '/central/motor', icon: Zap },
+        ]
+      },
       { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
     ]
   },
@@ -42,7 +51,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const { rulePackages = [] } = useAppStore();
   const [isDark, setIsDark] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    'Operação': pathname.startsWith('/operacao')
+    'Operação': pathname.startsWith('/operacao'),
+    'Inteligência': pathname.startsWith('/central')
   });
 
   useEffect(() => {
@@ -51,6 +61,17 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         setExpanded(prev => {
           if (!prev['Operação']) {
             return { ...prev, 'Operação': true };
+          }
+          return prev;
+        });
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    if (pathname.startsWith('/central') && !expanded['Inteligência']) {
+      const timer = setTimeout(() => {
+        setExpanded(prev => {
+          if (!prev['Inteligência']) {
+            return { ...prev, 'Inteligência': true };
           }
           return prev;
         });
@@ -104,7 +125,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               const itemAny = item as any;
               const isExpanded = expanded[item.name];
               const hasSubItems = !!itemAny.subItems;
-              const isActive = pathname === item.href || (hasSubItems && pathname.startsWith('/operacao') && item.name === 'Operação');
+              const isActive = pathname === item.href || (hasSubItems && (
+                (pathname.startsWith('/operacao') && item.name === 'Operação') ||
+                (pathname.startsWith('/central') && item.name === 'Inteligência')
+              ));
               
               return (
                 <div key={item.name} className="flex flex-col relative">

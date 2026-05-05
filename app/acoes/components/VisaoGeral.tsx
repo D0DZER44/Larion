@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ActionItem } from '../types';
-import { Clock, Play, CheckCircle2, AlertTriangle, Eye, ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Package } from 'lucide-react';
+import { Clock, Play, CheckCircle2, AlertTriangle, Eye, ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Package, ShieldAlert, Zap, UserX, PlusCircle, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const PIE_COLORS: Record<string, string> = {
@@ -128,72 +128,78 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
       
       {/* 1. Cards Superiores */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Pendentes */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Vencidads */}
         <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                 <ClipboardList className="w-5 h-5 text-purple-400" />
-              </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Pendentes</h3>
-           </div>
-           <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.pendentes}</div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-orange-400 font-medium tracking-wide">12 vencem esta semana</p>
-                <div className="flex items-center gap-0.5 text-xs text-red-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 8%</div>
-              </div>
-           </div>
-        </div>
-
-        {/* Em andamento */}
-        <div className="bg-[#1a2336] border border-blue-500/20 p-5 rounded-[12px] flex flex-col justify-between shadow-[0_0_20px_rgba(59,130,246,0.05)]">
-           <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                 <Play className="w-5 h-5 fill-blue-400 text-blue-400" />
-              </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Em andamento</h3>
-           </div>
-           <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.andamento}</div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-blue-400 font-medium tracking-wide">6 responsáveis ativos</p>
-                <div className="flex items-center gap-0.5 text-xs text-blue-400 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 12%</div>
-              </div>
-           </div>
-        </div>
-
-        {/* Vencidas */}
-        <div className="bg-[#1e1318] border border-red-500/20 p-5 rounded-[12px] flex flex-col justify-between">
-           <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
                  <AlertTriangle className="w-5 h-5 text-red-500" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Vencidas</h3>
+              <h3 className="text-[14px] font-medium text-gray-300 whitespace-nowrap">Ações Vencidas</h3>
            </div>
            <div>
               <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.vencidas}</div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-red-500 font-medium tracking-wide">Exigem priorização imediata</p>
-                <div className="flex items-center gap-0.5 text-xs text-red-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 25%</div>
-              </div>
+              <p className="text-xs text-red-500 font-medium tracking-wide flex items-center gap-1">
+                <ShieldAlert className="w-3.5 h-3.5" /> Requer prioridade
+              </p>
            </div>
         </div>
 
-        {/* Concluídas */}
-        <div className="bg-[#121c17] border border-emerald-500/20 p-5 rounded-[12px] flex flex-col justify-between">
+        {/* Críticas */}
+        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between shadow-[0_0_20px_rgba(239,68,68,0.05)]">
            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                 <Zap className="w-5 h-5 text-orange-400" />
               </div>
-              <h3 className="text-[15px] font-medium text-gray-300">Concluídas</h3>
+              <h3 className="text-[14px] font-medium text-gray-300 whitespace-nowrap">Ações Críticas</h3>
            </div>
            <div>
-              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.concluidas}</div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-emerald-500 font-medium tracking-wide">84% dentro do prazo</p>
-                <div className="flex items-center gap-0.5 text-xs text-emerald-500 font-bold"><ArrowUpRight className="w-3.5 h-3.5"/> 16%</div>
+              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.criticas}</div>
+              <p className="text-xs text-orange-400 font-medium tracking-wide">Impacto imediato</p>
+           </div>
+        </div>
+
+        {/* Sem Responsável */}
+        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+           <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center">
+                 <UserX className="w-5 h-5 text-gray-400" />
               </div>
+              <h3 className="text-[14px] font-medium text-gray-300 whitespace-nowrap">Sem Responsável</h3>
+           </div>
+           <div>
+              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.semResponsavel}</div>
+              <p className="text-xs text-gray-400 font-medium tracking-wide">Aguardando atribuição</p>
+           </div>
+        </div>
+
+        {/* Sem Evidência */}
+        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+           <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                 <PlusCircle className="w-5 h-5 text-purple-400" />
+              </div>
+              <h3 className="text-[14px] font-medium text-gray-300 whitespace-nowrap">Sem Evidência</h3>
+           </div>
+           <div>
+              <div className="text-[32px] leading-tight font-bold text-white mb-1.5">{stats.semEvidencia}</div>
+              <p className="text-xs text-purple-400 font-medium tracking-wide">Evidência necessária</p>
+           </div>
+        </div>
+
+        {/* Valor Estimado */}
+        <div className="bg-[#121826] border border-white/5 p-5 rounded-[12px] flex flex-col justify-between">
+           <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                 <TrendingUp className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h3 className="text-[14px] font-medium text-gray-300 whitespace-nowrap">Valor Estimado</h3>
+           </div>
+           <div>
+              <div className="text-xl font-bold text-white mb-1.5 whitespace-nowrap">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(stats.valorEstimado)}
+              </div>
+              <p className="text-xs text-emerald-400 font-medium tracking-wide">Relacionado a riscos</p>
            </div>
         </div>
       </div>
@@ -418,7 +424,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prioridade</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Risco vinculado</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Executor da Correção</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prazo</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Status</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Origem</th>
@@ -428,7 +434,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
            <tbody className="divide-y divide-white/5">
               {topAcoes.map(acao => {
                  const pDetails = getPrazoDetails(acao.prazo, acao.status);
-                 const rInitials = getInitials(acao.responsavel);
+                 const targetName = acao.executor || acao.validador || acao.responsavel; const rInitials = getInitials(targetName);
                  
                  const avatarColors = [
                     'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
@@ -476,7 +482,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                 {rInitials}
                              </div>
-                             <span className="text-[13px] text-gray-300 truncate max-w-[120px]">{acao.responsavel}</span>
+                             <span className="text-[13px] text-gray-300 truncate max-w-[120px]">{targetName}</span>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-32">

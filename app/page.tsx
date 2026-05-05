@@ -6,11 +6,13 @@ import {
   FileText, ShieldCheck, HardHat, TrendingUp, TrendingDown, CalendarCheck,
   Info, ArrowRight, ShieldAlert, BookOpen, Users,
   Bot, MessageSquare, CheckCircle2, Clock, Zap, ClipboardCheck,
-  AlertCircle, UserX, RefreshCw, PlusCircle, Send, Sparkles, X, GraduationCap, ChevronLeft, ChevronRight, CheckSquare
+  AlertCircle, UserX, RefreshCw, PlusCircle, Send, Sparkles, X, GraduationCap, ChevronLeft, ChevronRight, CheckSquare,
+  CalendarX
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useAppStore } from '@/lib/store';
 import { EconomicImpactEngine, LariContextEngine } from '@/lib/engines';
+import { FineEngine } from '@/lib/fineEngine';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -150,6 +152,7 @@ export default function Dashboard() {
     let criticalCount = 0;
     let openRisksCount = 0;
     let riskScore = 0;
+    let totalTrabalhadoresExpostos = 0;
     
     const activeRisks = cleanRiscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
     activeRisks.forEach(r => {
@@ -158,12 +161,36 @@ export default function Dashboard() {
       if (level === 'crítico') {
         criticalCount++;
         riskScore += 10;
+        totalTrabalhadoresExpostos += r.trabalhadoresExpostos || 0;
       } else if (level === 'alto') {
         riskScore += 5;
+        totalTrabalhadoresExpostos += r.trabalhadoresExpostos || 0;
       } else if (level === 'médio') {
         riskScore += 2;
       } else {
         riskScore += 1;
+      }
+    });
+
+    // Multa Exposure Calculation
+    let estimatedExposure = 0;
+    let avoidedExposure = 0;
+    cleanRiscos.forEach(r => {
+      let multa = Number(r.multaEstimada);
+      if (isNaN(multa) || multa === 0) {
+         // Fallback calculation using engine
+         const est = FineEngine.calcularFaixaMulta({
+           nr: r.nr || 'NR-Geral',
+           criticidade: r.nivel || r.level || 'Alta',
+           numeroEmpregados: 50
+         });
+         multa = est.maximoEstimado;
+      }
+
+      if (r.status === 'Resolvido' || r.status === 'Mitigado') {
+        avoidedExposure += multa;
+      } else {
+        estimatedExposure += multa;
       }
     });
 
@@ -291,6 +318,9 @@ export default function Dashboard() {
     if (vR !== null) { validWeights += 15; totalScore += vR * 15; }
     
     const conformityRate = validWeights > 0 ? Math.round(totalScore / validWeights) : 100;
+
+    const ctxLari = LariContextEngine.getRealtimeContext({ riscos, acoes, inspecoes, checklists, logs, rulePackages, organization: useAppStore.getState().organization });
+    const lariRecommendations = ctxLari.top5Recomendacoes;
 
     // Pie chart by sector
     const sectorsMap: Record<string, { count: number; prioritySum: number }> = {};
@@ -753,11 +783,13 @@ export default function Dashboard() {
       openRisksCount,
       exposicaoOperacional: exposicaoOperacional === 'Média' ? 'Normal' : exposicaoOperacional,
       exposicaoOperacionalClass,
-      estimatedExposure: 0,
+      estimatedExposure,
+      avoidedExposure,
       exposureDiffRaw,
       conformityDiffRaw,
       criticalCount,
       criticalActionsCount: criticalActions.length,
+      actionsAwaitingValidation: pendingActions.filter(a => a.status === 'Aguardando Validação' || a.status === 'Em Análise').length,
       actionsExpiringTodayCount: actionsExpiringToday.length,
       actionsDelayedCount: atrasadasActions.length,
       actionsNoResponsibleCount: actionsNoResponsible.length,
@@ -773,6 +805,8 @@ export default function Dashboard() {
       upcomingActions,
       alertas,
       topRisks: topRisks.slice(0, 5),
+      lariRecommendations,
+      missingEvidenceCount: pendingActions.filter((a: any) => a.exigeEvidencia && (!a.evidenciaUrl && !a.evidence)).length,
       
       // Inteligencia
       focosCriticos: criticalCount,
@@ -784,6 +818,8 @@ export default function Dashboard() {
       actionsInProgress: emAndamentoActions.length,
       actionsCompleted: concluidasActions.length,
       actionsDelayed: atrasadasActions.length,
+
+      totalTrabalhadoresExpostos,
 
       checklistsTodayCats,
 
@@ -797,6 +833,7 @@ export default function Dashboard() {
       updatePlano
     };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, scoreTimeRange, isPackageActive]);
 
   if (!isMounted) {
@@ -853,140 +890,148 @@ export default function Dashboard() {
           </button>
           
           {/* KPIs SUPERIORES */}
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
-            {/* KPI 1 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-7 gap-5">
+            {/* NOVO KPI 0: Pessoas Expostas */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-red-500/20 hover:border-red-500/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                  Panorama Executivo do Risco <Activity className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+                  Pessoas em Risco <Users className="w-3.5 h-3.5 text-red-500" />
                 </span>
                 <Info className="w-4 h-4 text-gray-500 opacity-50" />
               </div>
               <div className="relative z-10 mt-auto flex flex-col pt-1">
-                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Exposição Total</span>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={`text-[2rem] font-bold tracking-tighter ${metrics.exposicaoOperacional === 'Alta' ? 'text-red-500' : metrics.exposicaoOperacional === 'Normal' ? 'text-white' : 'text-green-500'}`}>
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.totalTrabalhadoresExpostos > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {metrics.totalTrabalhadoresExpostos}
+                </div>
+                {metrics.totalTrabalhadoresExpostos > 0 ? (
+                   <div className="text-[12px] text-red-500 font-bold mb-2 uppercase tracking-wide">Trabalhadores Expostos</div>
+                ) : (
+                   <div className="text-[12px] text-green-500 font-bold mb-2 uppercase tracking-wide">Nenhuma Exposição</div>
+                )}
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+                  <span>Em riscos alto/crítico</span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 1: Riscos Críticos Abertos */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  Riscos Críticos <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
+                </span>
+                <Info className="w-4 h-4 text-gray-500 opacity-50" />
+              </div>
+              <div className="relative z-10 mt-auto flex flex-col pt-1">
+                <div className="text-[2.5rem] leading-none font-bold tracking-tighter mb-2 text-red-500">
+                  {metrics.criticalCount}
+                </div>
+                <div className="text-[12px] text-red-500 font-bold mb-2 uppercase tracking-wide">Ação Imediata</div>
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+                  <span>De {metrics.openRisksCount} riscos ativos</span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 3: Ações s/ Validação */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">s/ Validação</span>
+                <CheckSquare className={`w-4 h-4 ${metrics.actionsAwaitingValidation > 0 ? 'text-orange-500' : 'text-gray-500'}`} />
+              </div>
+              <div className="mt-auto pt-2">
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.actionsAwaitingValidation > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
+                  {metrics.actionsAwaitingValidation}
+                </div>
+                {metrics.actionsAwaitingValidation > 0 ? (
+                  <div className="text-[12px] text-orange-500 font-bold mb-2 uppercase tracking-wide">Aguardando Aval</div>
+                ) : (
+                  <div className="text-[12px] text-green-500 font-bold mb-2 uppercase tracking-wide">Fluxo Livre</div>
+                )}
+                <div className="flex flex-col gap-1 text-[11px] text-gray-400 font-medium">
+                   Ações aguardando supervisor
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 4: Evidências Pendentes */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  Evidências <FileText className="w-3.5 h-3.5 text-blue-400" />
+                </span>
+                <Info className="w-4 h-4 text-gray-500 opacity-50" />
+              </div>
+              <div className="relative z-10 mt-auto flex flex-col pt-1">
+                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.missingEvidenceCount > 0 ? 'text-blue-400' : 'text-gray-300'}`}>
+                  {metrics.missingEvidenceCount}
+                </div>
+                {metrics.missingEvidenceCount > 0 ? (
+                  <div className="text-[12px] text-blue-400 font-bold mb-2 uppercase tracking-wide">Anexo Pendente</div>
+                ) : (
+                  <div className="text-[12px] text-green-500 font-bold mb-2 uppercase tracking-wide">Tudo Anexado</div>
+                )}
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+                  <span>Itens críticos sem foto/doc</span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 5: Multas Estimadas em Aberto */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  Multas Estimadas <TrendingUp className="w-3.5 h-3.5 text-yellow-500" />
+                </span>
+                <Info className="w-4 h-4 text-gray-500 opacity-50" />
+              </div>
+              <div className="relative z-10 mt-auto flex flex-col pt-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-[1.8rem] font-bold tracking-tighter text-yellow-500 whitespace-nowrap`}>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(metrics.estimatedExposure)}
                   </span>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase shrink-0 ${metrics.exposicaoOperacionalClass}`}>
-                     {metrics.exposicaoOperacional === 'Alta' ? 'Muito alto' : metrics.exposicaoOperacional}
-                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-medium mt-1">
-                  {metrics.exposureDiffRaw !== 0 ? (
-                    <>
-                      <span className={metrics.exposureDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
-                        {metrics.exposureDiffRaw > 0 ? `+${metrics.exposureDiffRaw}%` : `${metrics.exposureDiffRaw}%`}
-                      </span>
-                      <span className="text-gray-500">vs mês anterior</span>
-                    </>
-                  ) : (
-                    <span className="text-gray-500">Histórico insuficiente</span>
-                  )}
-                </div>
-              </div>
-              <div className="absolute -bottom-2 -left-2 right-0 h-20 opacity-20 pointer-events-none">
-                <ResponsiveContainer width="105%" height="100%">
-                  <AreaChart data={exposureData}>
-                    <defs>
-                      <linearGradient id="colorExposure" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExposure)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="text-[11px] font-medium text-gray-500">Passivo atual aberto</div>
               </div>
             </div>
 
-            {/* KPI 2 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Ações Críticas</span>
-                <AlertTriangle className={`w-4 h-4 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-gray-500'}`} />
+            {/* KPI 6: Multa Evitada */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  Multa Evitada <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                </span>
+                <Info className="w-4 h-4 text-gray-500 opacity-50" />
               </div>
-              <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.criticalActionsCount > 0 ? 'text-red-500' : 'text-gray-300'}`}>
-                  {metrics.criticalActionsCount}
+              <div className="relative z-10 mt-auto flex flex-col pt-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-[1.8rem] font-bold tracking-tighter text-emerald-500 whitespace-nowrap`}>
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(metrics.avoidedExposure)}
+                  </span>
                 </div>
-                <div className="text-[12px] text-red-500 font-bold mb-2">Atenção imediata</div>
-                <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
-                   {metrics.actionsDelayedCount > 0 ? <span>{metrics.actionsDelayedCount} atrasadas</span> : null}
-                   {metrics.actionsExpiringTodayCount > 0 ? <span>{metrics.actionsExpiringTodayCount} vencem hoje</span> : null}
-                   {metrics.actionsDelayedCount === 0 && metrics.actionsExpiringTodayCount === 0 && (
-                      <span className="text-gray-500">Tudo em ordem</span>
-                   )}
-                </div>
+                <div className="text-[11px] font-medium text-gray-500">Riscos já tratados</div>
               </div>
             </div>
 
-            {/* KPI 3 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Inspeções Pendentes</span>
-                <CalendarCheck className={`w-4 h-4 ${metrics.vencidasInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
-              </div>
-              <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.pendingInspectionsCount > 0 ? 'text-blue-400' : 'text-gray-300'}`}>
-                  {metrics.pendingInspectionsCount}
-                </div>
-                <div className="text-[12px] text-blue-400 font-bold mb-2">Urgente</div>
-                <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
-                   {metrics.vencidasInspectionsCount > 0 ? <span>{metrics.vencidasInspectionsCount} atrasadas</span> : null}
-                   {metrics.inspExpiringTodayCount > 0 ? <span>{metrics.inspExpiringTodayCount} vencem hoje</span> : null}
-                   {metrics.vencidasInspectionsCount === 0 && metrics.inspExpiringTodayCount === 0 && (
-                      <span className="text-gray-500">Tudo em dia</span>
-                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* KPI 4 */}
-            <Link href="/central?view=conformity" className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#7c3aed]/50 transition-all cursor-pointer group flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Conformidade</span>
-                <ShieldCheck className="w-4 h-4 text-green-500 group-hover:scale-110 transition-transform" />
-              </div>
-              <div className="mt-auto pt-2">
-                <div className="text-[2.5rem] leading-none font-bold text-green-500 tracking-tighter mb-2">{metrics.conformityRate}%</div>
-                <div className="flex items-center gap-1.5 text-[12px] font-medium mt-1 mb-4">
-                  {metrics.conformityDiffRaw !== 0 ? (
-                    <>
-                      <span className={metrics.conformityDiffRaw > 0 ? "text-green-500" : "text-red-500"}>
-                        {metrics.conformityDiffRaw > 0 ? `+${metrics.conformityDiffRaw}pp` : `${metrics.conformityDiffRaw}pp`}
-                      </span>
-                      <span className="text-gray-400">vs mês anterior</span>
-                    </>
-                  ) : (
-                    <span className="text-gray-500">Histórico insuficiente</span>
-                  )}
-                </div>
-                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full transition-all duration-1000 ease-out" style={{ width: isMounted ? `${metrics.conformityRate}%` : '0%' }}></div>
-                </div>
-              </div>
-            </Link>
-
-            {/* KPI 5 */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">Checklists do Dia</span>
-                <CheckSquare className="w-4 h-4 text-purple-400" />
-              </div>
-              <div className="mt-auto pt-2">
-                 <div className="text-[2.5rem] leading-none font-bold text-purple-400 tracking-tighter mb-2">
-                    {metrics.checklistsTodayCats.filter(c => c.completed === c.total && c.total > 0).length}/{Math.min(5, metrics.checklistsTodayCats.length)}
-                 </div>
-                 <div className="text-[12px] text-purple-400 font-bold mb-2">Concluídos hoje</div>
-                 <div className="flex flex-col gap-1 text-[12px] text-gray-400 font-medium">
-                     {metrics.checklistsTodayCats.length === 0 ? (
-                        <span>Nenhum programado</span>
-                     ) : (
-                        <span>{metrics.checklistsTodayCats.length} tipos programados hoje</span>
-                     )}
-                 </div>
-              </div>
+            {/* KPI 7: NRs com mais Não Conformidades */}
+            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1 overflow-hidden">
+               <div className="flex items-center justify-between mb-3 shrink-0">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Top NRs Ofensoras</span>
+                  <HardHat className="w-4 h-4 text-purple-400" />
+               </div>
+               <div className="mt-auto space-y-2">
+                  {metrics.conformidadeNR.slice(0, 2).map((item) => (
+                    <div key={item.nr} className="flex flex-col gap-1">
+                      <div className="flex justify-between items-center text-[10px] font-bold">
+                        <span className="text-gray-300">{item.nr}</span>
+                        <span className="text-gray-500">{item.val}% Conf.</span>
+                      </div>
+                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.val}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+               </div>
             </div>
           </div>
 
@@ -1154,6 +1199,7 @@ export default function Dashboard() {
                       <th className="px-4 py-2 font-semibold">NR</th>
                       <th className="px-4 py-2 font-semibold">Setor</th>
                       <th className="px-4 py-2 font-semibold">Tipo</th>
+                      <th className="px-4 py-2 font-semibold text-center">Pessoas Exp.</th>
                       <th className="px-4 py-2 font-semibold text-right">Prioridade</th>
                     </tr>
                   </thead>
@@ -1181,6 +1227,11 @@ export default function Dashboard() {
                         </td>
                         <td className="px-4 py-2.5 text-gray-300 max-w-[100px]">
                            <div className="line-clamp-2 text-[11px] leading-tight break-words">{r.tipoDeRisco || r.title || r.atividade || 'Não especificado'}</div>
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                           <span className={`text-[11px] font-bold ${r.trabalhadoresExpostos > 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                             {r.trabalhadoresExpostos || 0}
+                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-right">
                            <span className={`inline-block border text-[9px] font-bold px-2 py-0.5 rounded uppercase
@@ -1359,7 +1410,7 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="p-4 space-y-4">
-              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 2).map(a => (
+              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 3).map(a => (
                 <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
                   <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
                   <div className="flex-1 min-w-0">
@@ -1373,94 +1424,67 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Card 2: Atividades Recentes */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Atividades Recentes</h3>
-              <Link href="/central">
-                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todas</span>
-              </Link>
+          {/* Card 2: Recomendações da Lari */}
+          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0 relative">
+            <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-purple-500/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div className="p-4 border-b border-white/5 flex items-center gap-2 relative z-10">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <h3 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Recomendações da L.A.R.I.</h3>
             </div>
-            <div className="p-4 space-y-4">
-              {metrics.sortedLogs.length > 0 ? metrics.sortedLogs.slice(0, 3).map(log => {
-                const isCheck = log.event_type.includes('conclui') || log.event_type.includes('resolvido');
-                const isUpdate = log.event_type.includes('atualizado');
-                const isCreate = log.event_type.includes('criad') || log.event_type.includes('registrado');
-                
-                let Icon = Activity;
-                let iconColor = 'text-blue-400';
-                
-                if (isCheck) {
-                    Icon = CheckCircle2;
-                    iconColor = 'text-green-500';
-                } else if (isUpdate) {
-                    Icon = RefreshCw;
-                    iconColor = 'text-purple-400';
-                } else if (isCreate) {
-                    Icon = PlusCircle;
-                    iconColor = 'text-blue-400';
-                }
-
-                return (
-                  <div key={log.id} className="flex gap-3 items-start relative before:absolute before:left-[7px] before:top-6 before:bottom-[-20px] before:w-px before:bg-white/10 last:before:hidden group">
-                    <Icon className={`w-4 h-4 ${iconColor} shrink-0 mt-0.5 bg-[#121826] relative z-10 transition-transform group-hover:scale-110`} />
-                    <div className="flex-1 min-w-0">
-                       <p className="text-xs text-gray-200 font-bold mb-0.5 truncate" title={log.description}>{log.description}</p>
-                       <div className="flex items-center justify-between gap-2">
-                           <p className="text-[10px] text-gray-500 font-medium">Por: {log.user_id}</p>
-                           <p className="text-[9px] text-gray-600 font-bold tracking-wider uppercase">{log.timeStr}</p>
-                       </div>
-                    </div>
-                  </div>
-                )
-              }) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Sem atividades recentes.</div>
+            <div className="p-4 space-y-3 relative z-10">
+              {metrics.lariRecommendations.length > 0 ? metrics.lariRecommendations.map((rec: string, i: number) => (
+                 <div key={i} className="flex gap-2 items-start">
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                    <p className="text-xs text-gray-300 leading-snug">{rec}</p>
+                 </div>
+              )) : (
+                 <div className="text-center py-4 text-gray-500 text-xs">Nenhuma recomendação no momento.</div>
               )}
             </div>
           </div>
 
-          {/* Card 3: Próximas Ações */}
+          {/* Card 3: Itens Sem Responsável */}
           <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Próximas Ações</h3>
-              <Link href="/operacao/acoes">
-                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todas</span>
-              </Link>
+              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Sem Responsável</h3>
             </div>
             <div className="p-4 space-y-4">
-              {metrics.upcomingActions.length > 0 ? metrics.upcomingActions.slice(0, 2).map(a => {
-                let prioColor = 'text-green-500 bg-green-500/10 border-green-500/20';
-                let prioText = a.priority;
-                const pLower = (a.priority || '').toLowerCase();
-                if (pLower === 'crítico' || pLower === 'alta') prioColor = 'text-red-500 bg-red-500/10 border-red-500/20';
-                else if (pLower === 'médio' || pLower === 'média') prioColor = 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
-                
-                return (
-                <Link href={a.link} key={a.id} className="flex flex-col p-3 rounded-lg border border-white/5 bg-[#0b0f19] hover:bg-white/5 transition-colors group cursor-pointer">
-                  <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2 max-w-[70%]">
-                         <div className="w-6 h-6 rounded bg-[#121826] border border-white/10 flex items-center justify-center shrink-0">
-                           {a.origin === 'Ação' ? <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" /> : <ClipboardCheck className="w-3.5 h-3.5 text-orange-400" />}
-                         </div>
-                         <p className="text-xs text-gray-200 font-bold truncate group-hover:text-white transition-colors" title={a.title}>{a.title}</p>
-                      </div>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase shrink-0 ${prioColor}`}>{prioText}</span>
+              {metrics.alertas.filter(a => a.type === 'sem_resp').length > 0 ? metrics.alertas.filter(a => a.type === 'sem_resp').slice(0, 3).map(a => (
+                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-center p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
+                  <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center shrink-0 border border-gray-700">
+                     <UserX className="w-3 h-3 text-gray-400" />
                   </div>
-                  <div className="flex items-center justify-between mt-auto">
-                     <div className="flex gap-2 items-center">
-                        <span className="text-[10px] text-gray-400 font-medium">{a.origin}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                        <span className="text-[10px] text-gray-500 truncate max-w-[80px]" title={a.sector}>{a.sector}</span>
-                     </div>
-                     <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded">
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        <span className="text-[10px] font-bold text-gray-300">{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
-                     </div>
+                  <div className="flex-1 min-w-0">
+                     <p className="text-xs text-gray-200 font-bold mb-0.5 truncate">{a.desc}</p>
+                     <p className="text-[10px] text-red-400">{a.title}</p>
                   </div>
                 </Link>
-                );
+              )) : (
+                 <div className="text-center py-4 text-gray-500 text-xs">Todos os itens têm responsáveis!</div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 4: Últimos Riscos e Ações */}
+          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Recentes (Riscos e Ações)</h3>
+            </div>
+            <div className="p-4 space-y-4">
+              {metrics.sortedLogs.filter((l: any) => l.event_type.includes('criad') || l.event_type.includes('registrado')).length > 0 ? 
+                 metrics.sortedLogs.filter((l: any) => l.event_type.includes('criad') || l.event_type.includes('registrado')).slice(0, 3).map((log: any) => {
+                const isRisco = log.origin_type === 'Risco';
+                return (
+                  <div key={log.id} className="flex gap-3 items-start relative group">
+                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${isRisco ? 'bg-orange-500' : 'bg-blue-400'}`}></div>
+                    <div className="flex-1 min-w-0">
+                       <p className="text-xs text-gray-200 font-medium leading-snug line-clamp-2" title={log.description}>{log.description}</p>
+                       <p className="text-[9px] text-gray-500 font-bold tracking-wider mt-1">{log.timeStr}</p>
+                    </div>
+                  </div>
+                )
               }) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Sem próximas ações agendadas.</div>
+                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum registro recente recém-criado.</div>
               )}
             </div>
           </div>

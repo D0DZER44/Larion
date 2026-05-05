@@ -205,7 +205,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
               <tr>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prioridade</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Executor da Correção</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Setor</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Progresso</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prazo</th>
@@ -216,7 +216,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
               {list.map(acao => {
                  const pColors = PRIORITY_COLORS[acao.prioridade] || PRIORITY_COLORS['Baixa'];
                  const prioCircle = pColors.split(' ')[0].replace('text-', 'bg-');
-                 const rInitials = getInitials(acao.responsavel);
+                 const targetName = acao.executor || acao.validador || acao.responsavel; const rInitials = getInitials(targetName);
                  const avatarColors = [
                     'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
                     'bg-emerald-500/20 text-emerald-400', 'bg-orange-500/20 text-orange-400',
@@ -240,6 +240,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                           <div className="flex flex-col gap-1.5">
                              <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors line-clamp-2 leading-relaxed">{acao.titulo}</h3>
                              <div className="flex items-center gap-2 flex-wrap">
+                               {acao.faseExecucao === 'Aguardando Validação' && <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Aguardando Validador</span>}
                                {acao.followUp?.precisaFollowUp && <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Requer atualização</span>}
                                {acao.followUp?.nivel === 'bloqueada' && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Com bloqueio</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
@@ -258,7 +259,7 @@ export default function EmAndamento({ acoes, onOpen }: { acoes: ActionItem[], on
                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                 {rInitials}
                              </div>
-                             <span className="text-gray-300">{acao.responsavel}</span>
+                             <span className="text-gray-300">{targetName}</span>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-32">

@@ -29,27 +29,60 @@ export default function FloatingChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'lari',
-      text: "Olá, sou a L.A.R.I — Copiloto SST, em que posso ajudar?",
-      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     setTimeout(() => {
-      setMessages(prev => {
-        const msgs = [...prev];
-        if (msgs[0]) {
-          msgs[0].quickActions = [
-            { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
-            { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
-          ];
+      const ctx = LariContextEngine.getRealtimeContext(storeState);
+      
+      let initialText = "Olá, sou a L.A.R.I — Copiloto SST, em que posso ajudar?";
+      let proativeComponent: React.ReactNode = null;
+      let qActions = [
+        { label: 'Quais ações estão atrasadas?', icon: <Activity className="w-3 h-3 text-purple-400" />, action: () => handleSend('Quais ações estão atrasadas?') },
+        { label: 'Mostre os riscos críticos agora', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('Mostre os riscos críticos agora') },
+      ];
+
+      if (ctx.alertasProativos && ctx.alertasProativos.length > 0) {
+        initialText = `Olá, L.A.R.I aqui. Analisei a operação agora e encontrei **${ctx.alertasProativos.length} alerta(s) proativo(s)** que requerem sua atenção.`;
+        
+        proativeComponent = (
+          <div className="mt-3 flex flex-col gap-3">
+            {ctx.alertasProativos.slice(0, 2).map((alerta: any, i: number) => (
+               <div key={i} className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-xl flex flex-col gap-2">
+                 <div className="flex items-center gap-2">
+                   <AlertTriangle className="w-4 h-4 text-orange-400" />
+                   <span className="text-[12px] font-bold text-orange-400">{alerta.title}</span>
+                 </div>
+                 <p className="text-[11px] text-gray-300 leading-relaxed font-medium">{alerta.context}</p>
+                 <div className="pt-2 mt-1 border-t border-orange-500/10">
+                   <p className="text-[10px] text-gray-400 mb-0.5"><strong className="text-gray-300">Impacto Humano:</strong> {alerta.humanImpact}</p>
+                   <p className="text-[10px] text-gray-400"><strong className="text-gray-300">Recomendação:</strong> {alerta.recommendedAction}</p>
+                 </div>
+               </div>
+            ))}
+          </div>
+        );
+
+        qActions = [
+          { label: 'Verificar alertas principais', icon: <AlertTriangle className="w-3 h-3 text-red-400" />, action: () => handleSend('o que devo priorizar?') },
+          ...qActions
+        ].slice(0, 3);
+      }
+
+      setMessages([
+        {
+          id: '1',
+          sender: 'lari',
+          text: (
+            <>
+              {initialText}
+              {proativeComponent}
+            </>
+          ),
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          quickActions: qActions
         }
-        return msgs;
-      });
+      ]);
     }, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

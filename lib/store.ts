@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { applyManualRules, RiskInstance } from './risk-calculations';
+import { INITIAL_CHECKLISTS } from './checklists';
+import { INITIAL_RISK_RULES } from './riskRules';
 
 export type SystemLog = {
   id: string;
@@ -65,7 +67,7 @@ export type ChecklistSection = {
 
 export type ChecklistTemplate = {
   id: string;
-  name: string;
+  titulo: string;
   category: string;
   status: 'Ativo' | 'Rascunho' | 'Inativo' | 'Revisar';
   proximaRevisao?: string;
@@ -74,7 +76,8 @@ export type ChecklistTemplate = {
   segmentos: string[];
   atividades: string[];
   nr: string;
-  criticidadePadrao?: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  criticidadePadrao?: 'Baixo' | 'Médio' | 'Alta' | 'Crítica';
+  geraRiscoSeNaoConforme?: boolean;
   ativo: boolean;
   regraFixa?: boolean;
 };
@@ -126,16 +129,20 @@ export type RulePackage = {
 
 export type RiskRule = {
   id: string;
-  nome: string;
+  titulo: string;
   pacote: string;
   segmentos: string[];
   atividades: string[];
   nrRelacionada: string;
+  itemNormativoOpcional?: string;
+  gatilhosTexto?: string[];
   criticidade: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
   condicao: string;
   acaoSugerida: string;
   prazoPadraoHoras: number;
   exigeEvidencia: boolean;
+  geraMultaEstimativa?: boolean;
+  faixaMultaPadrao?: string;
   ativo: boolean;
 };
 
@@ -501,10 +508,10 @@ export const useAppStore = create<AppStore>()(
       deleteWorkHours: (id) => set((state) => ({ work_hours: state.work_hours.filter((r) => r.id !== id) })),
 
       rulePackages: [
-        { id: 'pkg-base', name: 'Base SST', description: 'Regras essenciais aplicáveis à maioria das operações.', isActive: true, segment: 'Geral', ruleCount: 24, isLocked: true },
-        { id: 'pkg-const', name: 'Construção Civil', description: 'Regras para obras, altura, andaimes, escavações, máquinas e sinalização de obra.', isActive: false, segment: 'Construção', ruleCount: 15 },
-        { id: 'pkg-ind', name: 'Indústria', description: 'Regras para máquinas, manutenção, energia, produtos químicos, ruído, calor e ergonomia operacional.', isActive: false, segment: 'Indústria', ruleCount: 18 },
-        { id: 'pkg-saude', name: 'Saúde/Hospitalar', description: 'Regras para risco biológico, perfurocortantes, resíduos de saúde, higienização e EPIs específicos.', isActive: false, segment: 'Saúde', ruleCount: 12 },
+        { id: 'pkg-base', name: 'Base SST', description: 'Regras essenciais aplicáveis à maioria das operações.', isActive: true, segment: 'Geral', ruleCount: 14, isLocked: true },
+        { id: 'pkg-const', name: 'Construção Civil', description: 'Regras para obras, altura, andaimes, escavações, máquinas e sinalização de obra.', isActive: false, segment: 'Construção', ruleCount: 9 },
+        { id: 'pkg-ind', name: 'Indústria', description: 'Regras para máquinas, manutenção, energia, produtos químicos, ruído, calor e ergonomia operacional.', isActive: false, segment: 'Indústria', ruleCount: 6 },
+        { id: 'pkg-saude', name: 'Saúde/Hospitalar', description: 'Regras para risco biológico, perfurocortantes, resíduos de saúde, higienização e EPIs específicos.', isActive: false, segment: 'Saúde', ruleCount: 4 },
       ],
       updateRulePackage: (id, data) => set((state) => ({
         rulePackages: state.rulePackages.map(pkg => pkg.id === id ? { ...pkg, ...data } : pkg)
@@ -553,13 +560,62 @@ export const useAppStore = create<AppStore>()(
          set((state) => ({ rules: state.rules.filter((r) => r.id !== id) }))
       },
 
-      acoes: [],
+      acoes: [
+        {
+          id: 'act-1',
+          titulo: 'Instalar linha de vida provisória',
+          descricao: 'Instalar linha de vida e travas de queda no galpão A antes da pintura.',
+          prioridade: 'Alta',
+          status: 'Em andamento',
+          setor: 'Administrativo',
+          responsavel: 'João Silva', // Area owner
+          prazo: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          progresso: 20,
+          origem: 'Inspeção',
+          riscoId: 'r1',
+          trabalhadoresExpostos: 2,
+          perfilExposto: 'Pintor Predial',
+          impactoHumano: 'Queda de nível (risco de morte)',
+          executor: 'Equipe Especializada NR-35',
+          validador: 'Rafael Oliveira (Eng. Seg.)',
+          criadoEm: new Date().toISOString(),
+          atualizadoEm: new Date().toISOString(),
+          iniciadoEm: new Date().toISOString(),
+          concluidoEm: null,
+          evidencia: [],
+          historico: []
+        },
+        {
+          id: 'act-2',
+          titulo: 'Isolamento de painel elétrico aberto',
+          descricao: 'Isolar painel e adequar fechos no quadro principal.',
+          prioridade: 'Crítica',
+          status: 'Pendente',
+          setor: 'Manutenção',
+          responsavel: 'Marcos Antônio',
+          prazo: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          progresso: 0,
+          origem: 'Inspeção',
+          riscoId: 'r2',
+          trabalhadoresExpostos: 1,
+          perfilExposto: 'Eletricista Nível II',
+          impactoHumano: 'Eletrocussão',
+          executor: 'Contratada Elétrica',
+          validador: 'João Silva (Sup. Manut.)',
+          criadoEm: new Date().toISOString(),
+          atualizadoEm: new Date().toISOString(),
+          iniciadoEm: null,
+          concluidoEm: null,
+          evidencia: [],
+          historico: []
+        }
+      ],
       riscos: [
-        applyManualRules({ id: 'r1', atividade: 'Trabalho em altura', setor: 'Operacional', nr: 'NR-35', hasEpiEpc: false, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
-        applyManualRules({ id: 'r2', atividade: 'Manutenção elétrica', setor: 'Manutenção', nr: 'NR-10', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em análise' }),
-        applyManualRules({ id: 'r3', atividade: 'Operação de máquinas', setor: 'Produção', nr: 'NR-12', hasEpiEpc: false, hasProcedimento: true, hasTreinamento: true, status: 'Aberto' }),
+        applyManualRules({ id: 'r1', atividade: 'Trabalho em altura', setor: 'Operacional', nr: 'NR-35', hasEpiEpc: false, hasProcedimento: false, hasTreinamento: true, status: 'Aberto', trabalhadoresExpostos: 2, perfilExposto: 'Pintor Predial', impactoHumano: 'Queda de nível (fraturas graves ou óbito)', executorCorrecao: 'Equipe Especializada NR-35', validadorCorrecao: 'Rafael Oliveira (Eng. Seg.)' }),
+        applyManualRules({ id: 'r2', atividade: 'Manutenção elétrica', setor: 'Manutenção', nr: 'NR-10', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em análise', trabalhadoresExpostos: 1, perfilExposto: 'Eletricista Nível II', impactoHumano: 'Choque elétrico (queimaduras ou parada cardíaca)', executorCorrecao: 'Contratada Elétrica', validadorCorrecao: 'João Silva (Sup. Manut.)' }),
+        applyManualRules({ id: 'r3', atividade: 'Operação de máquinas', setor: 'Produção', nr: 'NR-12', hasEpiEpc: false, hasProcedimento: true, hasTreinamento: true, status: 'Aberto', trabalhadoresExpostos: 5, perfilExposto: 'Operador de Prensa', impactoHumano: 'Prensagem de membros (amputação)', executorCorrecao: 'Equipe de Manutenção Mecânica', validadorCorrecao: 'Marcos Antônio (Téc. SST)' }),
         applyManualRules({ id: 'r4', atividade: 'Trabalho em altura', setor: 'Logística', nr: 'NR-35', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
-        applyManualRules({ id: 'r5', atividade: 'Espaço confinado', setor: 'Manutenção', nr: 'NR-33', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: false, status: 'Aberto' }),
+        applyManualRules({ id: 'r5', atividade: 'Espaço confinado', setor: 'Manutenção', nr: 'NR-33', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: false, status: 'Aberto', trabalhadoresExpostos: 3, perfilExposto: 'Limpador de Tanques', impactoHumano: 'Asfixia e intoxicação (óbito rápido)', executorCorrecao: 'Equipe de Resgate e Limpeza', validadorCorrecao: 'Rafael Oliveira (Eng. Seg.)' }),
         applyManualRules({ id: 'r6', atividade: 'Movimentação de cargas', setor: 'Logística', nr: 'NR-11', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Aberto' }),
         applyManualRules({ id: 'r7', atividade: 'Trabalho a quente', setor: 'Manutenção', nr: 'NR-34', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em análise' }),
         applyManualRules({ id: 'r8', atividade: 'Trabalho em altura', setor: 'Administrativo', nr: 'NR-35', hasEpiEpc: true, hasProcedimento: true, hasTreinamento: true, status: 'Em análise' }),
@@ -577,6 +633,8 @@ export const useAppStore = create<AppStore>()(
           prioridade: 'Alta',
           situacao: 'Agendada',
           status: 'Agendada',
+          trabalhadoresExpostos: 5,
+          perfilExposto: 'Montadores de Estrutura',
           items: []
         },
         {
@@ -591,6 +649,8 @@ export const useAppStore = create<AppStore>()(
           prioridade: 'Média',
           situacao: 'Em andamento',
           status: 'Em andamento',
+          trabalhadoresExpostos: 12,
+          perfilExposto: 'Operadores de Máquina / Setor de Ensacagem',
           items: [
             { id: 'q1', status: 'Sim', text: 'O ambiente está limpo e organizado?', riskMap: 'Baixo', pacote: 'Base SST' },
             { id: 'q2', status: 'Não', text: 'Rotas de fuga desobstruídas?', riskMap: 'Crítico', pacote: 'Base SST' },
@@ -608,6 +668,8 @@ export const useAppStore = create<AppStore>()(
           prioridade: 'Alta',
           situacao: 'Atrasada',
           status: 'Atrasada',
+          trabalhadoresExpostos: 2,
+          perfilExposto: 'Eletricistas de Manutenção',
           items: []
         }
       ],
@@ -809,72 +871,12 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({ inspecoes: state.inspecoes.filter((v) => v.id !== id) }));
       },
 
-      checklists: [
-        // Base SST
-        { id: 'c-bst-1', name: 'Inspeção geral de ambiente', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Ordem e limpeza'], nr: 'NR-01', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-bst-2', name: 'Uso básico de EPI', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['EPI'], nr: 'NR-06', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-bst-3', name: 'Organização e limpeza', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Ordem e limpeza'], nr: 'NR-01', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-bst-4', name: 'Sinalização básica', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Sinalização'], nr: 'NR-26', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-bst-5', name: 'Evidências obrigatórias', category: 'Base SST', pacote: 'Base SST', segmentos: ['Geral', 'Indústria', 'Construção', 'Saúde'], atividades: ['Gestão SST'], nr: 'Gestão SST', status: 'Ativo', ativo: true, sections: [] },
-
-        // Construção Civil
-        { id: 'c-con-1', name: 'Trabalho em altura', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-35', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-2', name: 'Andaimes', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-3', name: 'Escadas', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-4', name: 'Escavações', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Escavação'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-5', name: 'Sinalização de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Sinalização'], nr: 'NR-18', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-6', name: 'Máquinas de obra', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Máquinas e equipamentos'], nr: 'NR-12', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-con-7', name: 'Eletricidade temporária', category: 'Construção Civil', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Eletricidade'], nr: 'NR-10', status: 'Ativo', ativo: true, sections: [] },
-
-        // Indústria
-        { id: 'c-ind-1', name: 'Máquinas e proteções', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Máquinas e equipamentos'], nr: 'NR-12', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-2', name: 'Bloqueio e etiquetagem', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Eletricidade', 'Energias Perigosas'], nr: 'NR-10', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-3', name: 'Produtos químicos', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria', 'Geral'], atividades: ['Produtos químicos'], nr: 'NR-26', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-4', name: 'Ruído', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Ruído', 'Higiene Ocupacional'], nr: 'NR-15', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-5', name: 'Calor', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Calor', 'Higiene Ocupacional'], nr: 'NR-15', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-6', name: 'Empilhadeiras', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria', 'Logística'], atividades: ['Movimentação de carga'], nr: 'NR-11', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-7', name: 'Manutenção', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Gestão SST'], nr: 'Geral', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-ind-8', name: 'Ergonomia operacional', category: 'Indústria', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Ergonomia'], nr: 'NR-17', status: 'Ativo', ativo: true, sections: [] },
-
-        // Saúde
-        { id: 'c-sau-1', name: 'Risco biológico', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-2', name: 'Perfurocortantes', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico', 'Gestão de Resíduos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-3', name: 'Resíduos de saúde', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Resíduos', 'Gestão de Resíduos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-4', name: 'Higienização', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Controle de Infecção'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-5', name: 'EPIs específicos', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['EPI'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-6', name: 'Produtos químicos hospitalares', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Produtos químicos'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-        { id: 'c-sau-7', name: 'Áreas contaminadas', category: 'Saúde/Hospitalar', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico', 'Controle de Infecção'], nr: 'NR-32', status: 'Ativo', ativo: true, sections: [] },
-      ],
+      checklists: INITIAL_CHECKLISTS,
       addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, { ...checklist, id: crypto.randomUUID() }] })),
       updateChecklist: (id, checklist) => set((state) => ({ checklists: state.checklists.map((c) => c.id === id ? { ...c, ...checklist } : c) })),
       deleteChecklist: (id) => set((state) => ({ checklists: state.checklists.filter((c) => c.id !== id) })),
       
-      riskRules: [
-        // BASE SST
-        { id: 'rr-sst-1', nome: 'EPI obrigatório ausente', pacote: 'Base SST', segmentos: ['Geral'], atividades: ['EPI'], nrRelacionada: 'NR-06', criticidade: 'Alta', condicao: 'EPI não encontrado ou não utilizado', acaoSugerida: 'Regularizar fornecimento/uso de EPI e anexar evidência.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-sst-2', nome: 'Área sem sinalização adequada', pacote: 'Base SST', segmentos: ['Geral'], atividades: ['Sinalização'], nrRelacionada: 'NR-26', criticidade: 'Médio', condicao: 'Sinalização ausente ou ilegível', acaoSugerida: 'Instalar ou corrigir sinalização de segurança.', prazoPadraoHoras: 72, exigeEvidencia: false, ativo: true },
-        { id: 'rr-sst-3', nome: 'Ambiente com organização e limpeza inadequadas', pacote: 'Base SST', segmentos: ['Geral'], atividades: ['Ordem e limpeza'], nrRelacionada: 'Base SST', criticidade: 'Médio', condicao: 'Desorganização ou sujeira excessiva', acaoSugerida: 'Realizar limpeza, organização e registrar evidência.', prazoPadraoHoras: 48, exigeEvidencia: true, ativo: true },
-        { id: 'rr-sst-4', nome: 'Não conformidade sem responsável', pacote: 'Base SST', segmentos: ['Geral'], atividades: ['Gestão SST'], nrRelacionada: 'Gestão SST', criticidade: 'Alta', condicao: 'Campo de responsável vazio', acaoSugerida: 'Definir responsável pela tratativa.', prazoPadraoHoras: 24, exigeEvidencia: false, ativo: true },
-        { id: 'rr-sst-5', nome: 'Ação corretiva vencida', pacote: 'Base SST', segmentos: ['Geral'], atividades: ['Gestão SST'], nrRelacionada: 'Gestão SST', criticidade: 'Alta', condicao: 'Data de prazo expirada sem conclusão', acaoSugerida: 'Atualizar prazo, justificar atraso e concluir tratativa.', prazoPadraoHoras: 24, exigeEvidencia: false, ativo: true },
-
-        // CONSTRUÇÃO CIVIL
-        { id: 'rr-con-1', nome: 'Trabalho em altura sem treinamento válido', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nrRelacionada: 'NR-35', criticidade: 'Crítico', condicao: 'Certificando vencido ou inexistente', acaoSugerida: 'Regularizar treinamento e bloquear atividade até evidência.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-con-2', nome: 'Andaime sem proteção coletiva adequada', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Trabalho em altura'], nrRelacionada: 'NR-18', criticidade: 'Crítico', condicao: 'Ausência de guarda-corpo ou rodapé', acaoSugerida: 'Corrigir proteção coletiva antes da continuidade da atividade.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-con-3', nome: 'Escavação sem isolamento/sinalização', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Escavação'], nrRelacionada: 'NR-18', criticidade: 'Alta', condicao: 'Borda de escavação desprotegida', acaoSugerida: 'Isolar e sinalizar área de escavação.', prazoPadraoHoras: 24, exigeEvidencia: false, ativo: true },
-        { id: 'rr-con-4', nome: 'Eletricidade temporária irregular', pacote: 'Construção Civil', segmentos: ['Construção'], atividades: ['Eletricidade'], nrRelacionada: 'NR-10', criticidade: 'Crítico', condicao: 'Fiação exposta ou quadro sem proteção', acaoSugerida: 'Corrigir instalação elétrica temporária com responsável habilitado.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-
-        // INDÚSTRIA
-        { id: 'rr-ind-1', nome: 'Máquina sem proteção adequada', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Máquinas e equipamentos'], nrRelacionada: 'NR-12', criticidade: 'Crítico', condicao: 'Ponto de agarramento exposto', acaoSugerida: 'Regularizar proteção da máquina antes da operação.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-ind-2', nome: 'Manutenção sem bloqueio e etiquetagem', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Energias Perigosas'], nrRelacionada: 'NR-10/NR-12', criticidade: 'Crítico', condicao: 'Ausência de cadeado ou etiqueta LOTO', acaoSugerida: 'Aplicar bloqueio, etiquetagem e autorização formal.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-ind-3', nome: 'Produto químico sem identificação adequada', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Produtos químicos'], nrRelacionada: 'NR-26', criticidade: 'Alta', condicao: 'Embalagem sem rótulo ou FISPQ', acaoSugerida: 'Identificar produto e disponibilizar informação de segurança.', prazoPadraoHoras: 48, exigeEvidencia: false, ativo: true },
-        { id: 'rr-ind-4', nome: 'Exposição a ruído sem controle registrado', pacote: 'Indústria', segmentos: ['Indústria'], atividades: ['Higiene Ocupacional'], nrRelacionada: 'NR-15', criticidade: 'Médio', condicao: 'Nível elevado sem avaliação de dosimetria', acaoSugerida: 'Registrar avaliação e aplicar medidas de controle.', prazoPadraoHoras: 72, exigeEvidencia: false, ativo: true },
-
-        // SAÚDE/HOSPITALAR
-        { id: 'rr-sau-1', nome: 'Perfurocortante descartado inadequadamente', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Gestão de Resíduos'], nrRelacionada: 'NR-32', criticidade: 'Crítico', condicao: 'Agulha em lixo comum ou coletor superlotado', acaoSugerida: 'Regularizar descarte em coletor adequado e orientar equipe.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-sau-2', nome: 'Risco biológico sem EPI adequado', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Risco biológico'], nrRelacionada: 'NR-32', criticidade: 'Crítico', condicao: 'Exposição sem máscara, luva ou avental', acaoSugerida: 'Regularizar EPI e restringir atividade até correção.', prazoPadraoHoras: 24, exigeEvidencia: true, ativo: true },
-        { id: 'rr-sau-3', nome: 'Resíduo de saúde armazenado incorretamente', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Gestão de Resíduos'], nrRelacionada: 'NR-32', criticidade: 'Alta', condicao: 'Sacos fora do abrigo ou sem identificação', acaoSugerida: 'Corrigir armazenamento e fluxo de descarte.', prazoPadraoHoras: 48, exigeEvidencia: true, ativo: true },
-        { id: 'rr-sau-4', nome: 'Área contaminada sem sinalização', pacote: 'Saúde/Hospitalar', segmentos: ['Saúde'], atividades: ['Controle de Infecção'], nrRelacionada: 'NR-32/NR-26', criticidade: 'Alta', condicao: 'Ausência de placa de advertência biológica', acaoSugerida: 'Sinalizar área e controlar acesso.', prazoPadraoHoras: 24, exigeEvidencia: false, ativo: true },
-      ],
+      riskRules: INITIAL_RISK_RULES,
       addRiskRule: (rule) => set((state) => ({ riskRules: [...state.riskRules, { ...rule, id: crypto.randomUUID() }] })),
       updateRiskRule: (id, rule) => set((state) => ({ riskRules: state.riskRules.map((r) => r.id === id ? { ...r, ...rule } : r) })),
       deleteRiskRule: (id) => set((state) => ({ riskRules: state.riskRules.filter((r) => r.id !== id) })),

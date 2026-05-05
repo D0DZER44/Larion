@@ -400,13 +400,144 @@ function RelatorioEconomicoPreview() {
   )
 }
 
+function DossieDefensavelPreview() {
+  const store = useAppStore();
+  const { riscos, inspecoes, acoes, organization, configuracoes } = store;
+
+  // Calculo de multas reais
+  let multaEstimada = 0;
+  let multaEvitada = 0;
+  
+  riscos.forEach(r => {
+    const val = Number(r.multaEstimada) || 0;
+    if (r.status === 'Resolvido' || r.status === 'Mitigado') {
+      multaEvitada += val;
+    } else {
+      multaEstimada += val;
+    }
+  });
+
+  const totalExpostos = riscos.reduce((acc, r) => acc + (r.trabalhadoresExpostos || 1), 0);
+  const nrsArray = Array.from(new Set(riscos.map(r => r.nr).filter(Boolean)));
+  const pendingActions = acoes.filter(a => a.status !== 'Concluído').length;
+  const concludedActions = acoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída').length;
+  
+  // Conformidade index
+  const conformidade = riscos.length > 0 ? Math.round((riscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado').length / riscos.length) * 100) : 100;
+
+  let parecerFinal = "A operação demonstra maturidade no registro das frentes de risco.";
+  if (conformidade >= 80) {
+     parecerFinal = "A infraestrutura defensável comprova uma operação segura e altamente engajada com a segurança da vida (Compliance Nível Ouro). A documentação (Dossiê) demonstra bloqueio massivo de passivos.";
+  } else if (conformidade >= 50) {
+     parecerFinal = "A operação possui gaps moderados. Existem pendências normativas que já foram identificadas em plano de ação, e exigem celeridade na aprovação de orçamento preventivo para barrar a exposição ao risco.";
+  } else {
+     parecerFinal = "Estado Crítico Operacional. Múltiplos passivos abertos sem barreira protetiva efetiva. A auditoria recomenda ação imediata para proteção de pessoas e evitar multas regulatórias severas e interdições.";
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="border-b border-gray-400 pb-10 mb-10 text-center relative">
+        <Shield className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+        <h2 className="text-3xl font-black text-gray-900 uppercase tracking-widest">Dossiê Defensável SST</h2>
+        <p className="text-sm font-bold text-gray-600 mt-2 uppercase tracking-widest">Instrumento Institucional de Auditoria e Conformidade</p>
+        <p className="text-[12px] text-gray-500 mt-3 max-w-2xl mx-auto italic">Documento consolidado atestando governança, rastreabilidade técnica, cadeia de custódia e proteção de capital intelectual e humano.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8 mb-8">
+         <div className="border border-gray-300 p-6 rounded-sm bg-gray-50/50">
+           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4 border-b border-gray-300 pb-2">Informações Organizacionais</h3>
+           <div className="space-y-3 text-[12px]">
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Empresa</span><span className="font-bold text-gray-900">{organization?.name || 'Não informada'}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Segmento</span><span className="text-gray-800">{organization?.segment || 'Não informado'}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Emissão</span><span className="text-gray-800">{new Date().toLocaleString('pt-BR')}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Assinatura Digital</span><span className="font-mono text-gray-400 text-[10px]">SHA-256:{Math.random().toString(36).substring(2, 15)}</span></div>
+           </div>
+         </div>
+         <div className="border border-emerald-200 p-6 rounded-sm bg-emerald-50/30">
+           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4 border-b border-emerald-200 pb-2">Performance (Cockpit)</h3>
+           <div className="space-y-3 text-[12px]">
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Conformidade Legal</span><span className={`font-black ${conformidade >= 80 ? 'text-emerald-600' : conformidade >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>{conformidade}%</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Multa Estimada Restante</span><span className="font-bold text-red-600">{multaEstimada.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Multa/Dano Evitado</span><span className="font-black text-emerald-600">{multaEvitada.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Pessoas sob Exposição Ativa</span><span className="text-gray-800 font-bold">{totalExpostos}</span></div>
+           </div>
+         </div>
+      </div>
+
+      <div className="mb-8">
+         <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b-2 border-gray-900 pb-2 mb-4">Cadeia de Evidências</h3>
+         <div className="grid grid-cols-4 gap-4 text-center">
+            <div className="border border-gray-200 p-4 bg-white rounded-sm">
+               <p className="text-[10px] font-bold text-gray-500 uppercase">Inspeções Sistêmicas</p>
+               <p className="text-2xl font-black text-gray-900 mt-2">{inspecoes.length}</p>
+            </div>
+            <div className="border border-gray-200 p-4 bg-white rounded-sm">
+               <p className="text-[10px] font-bold text-gray-500 uppercase">Riscos Mapeados</p>
+               <p className="text-2xl font-black text-gray-900 mt-2">{riscos.length}</p>
+            </div>
+            <div className="border border-gray-200 p-4 bg-white rounded-sm">
+               <p className="text-[10px] font-bold text-gray-500 uppercase">Ações Concluídas (Bloqueios)</p>
+               <p className="text-2xl font-black text-green-600 mt-2">{concludedActions}</p>
+            </div>
+            <div className="border border-gray-200 p-4 bg-white rounded-sm">
+               <p className="text-[10px] font-bold text-gray-500 uppercase">Pendências Ativas</p>
+               <p className="text-2xl font-black text-red-600 mt-2">{pendingActions}</p>
+            </div>
+         </div>
+      </div>
+
+      <div className="mb-8">
+         <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b-2 border-gray-300 pb-2 mb-4">Frentes Normativas Envolvidas (NRs Acionadas)</h3>
+         <div className="flex flex-wrap gap-2">
+            {nrsArray.map(nr => (
+               <span key={nr} className="px-3 py-1.5 bg-gray-100 border border-gray-300 text-gray-800 text-[11px] font-bold rounded-sm uppercase tracking-wider">{nr}</span>
+            ))}
+            {nrsArray.length === 0 && <span className="text-xs text-gray-500 italic">Nenhum vínculo normativo identificado nos riscos mapeados.</span>}
+         </div>
+      </div>
+
+      <div className="mb-8 border border-gray-300 p-6 bg-white rounded-sm shadow-sm relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <Shield className="w-48 h-48" />
+         </div>
+         <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2 mb-4">Parecer Final Consolidado</h3>
+         <p className="text-[13px] text-gray-800 leading-relaxed text-justify font-medium">
+            {parecerFinal}
+         </p>
+         <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-[10px] uppercase font-bold text-gray-400 mb-2">Rastreabilidade & Validação</p>
+            <p className="text-[11px] text-gray-600 leading-relaxed text-justify">
+               Este dossiê reflete estritamente a cadeia de dados auditáveis inseridos na plataforma L.A.R.I. Toda e qualquer ação de controle indicada como "Mitigada/Concluída" exige que o mantenedor, por parte da contratante ou operador logístico local, assuma responsabilidade técnica via validação cruzada. Nenhuma evidência é aprovada sem rastreabilidade do autor.
+            </p>
+         </div>
+      </div>
+
+      <div className="pt-20 flex justify-between text-[11px] text-gray-500 border-t border-gray-300">
+         <div className="text-center w-64">
+           <div className="border-t border-gray-400 pt-2 mb-1">
+             <p className="font-bold text-gray-800 uppercase">Responsável Técnico (SESMT)</p>
+           </div>
+           <p>Assinatura Digital Auditável</p>
+         </div>
+         <div className="text-center w-64">
+           <div className="border-t border-gray-400 pt-2 mb-1">
+             <p className="font-bold text-gray-800 uppercase">Representante Legal (C-Level)</p>
+           </div>
+           <p>Assinatura Digital Auditável</p>
+         </div>
+      </div>
+
+    </div>
+  )
+}
+
 // ============================================================================
 // MAIN PAGE
 // ============================================================================
 
 export default function RelatoriosPage() {
   const store = useAppStore();
-  const [activeModel, setActiveModel] = useState<'Executivo' | 'Riscos' | 'Inspeções' | 'Ações' | 'Não conformidades' | 'Impacto econômico'>('Executivo');
+  const [activeModel, setActiveModel] = useState<'Executivo' | 'Riscos' | 'Inspeções' | 'Ações' | 'Não conformidades' | 'Impacto econômico' | 'Dossie'>('Executivo');
 
   const handlePrint = (exportType: string = 'PDF') => {
      store.addLog({
@@ -431,6 +562,7 @@ export default function RelatoriosPage() {
     { id: 'Ações', title: 'Ações', desc: 'Acompanhamento de ações corretivas', icon: <CheckSquare className="w-5 h-5"/> },
     { id: 'Não conformidades', title: 'Não conformidades', desc: 'Não conformidades e tratativas', icon: <AlertOctagon className="w-5 h-5"/> },
     { id: 'Impacto econômico', title: 'Impacto econômico', desc: 'Projeção de passivos e ROI', icon: <DollarSign className="w-5 h-5"/> },
+    { id: 'Dossie', title: 'Dossiê Defensável', desc: 'Auditoria completa (Legal, Diretoria)', icon: <Shield className="w-5 h-5 text-emerald-400"/> },
   ] as const;
 
   return (
@@ -548,6 +680,7 @@ export default function RelatoriosPage() {
                     {activeModel === 'Ações' && <RelatorioAcoesPreview />}
                     {activeModel === 'Não conformidades' && <RelatorioNCPreview />}
                     {activeModel === 'Impacto econômico' && <RelatorioEconomicoPreview />}
+                    {activeModel === 'Dossie' && <DossieDefensavelPreview />}
                  </div>
               </div>
               

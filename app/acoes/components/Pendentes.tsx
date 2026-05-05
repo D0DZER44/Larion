@@ -205,20 +205,21 @@ export default function Pendentes({ acoes, onOpen }: { acoes: ActionItem[], onOp
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Ação</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Risco vinculado</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Setor</th>
-                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Responsável</th>
+                 <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Executor da Correção</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Prazo</th>
                  <th className="px-5 py-3.5 text-xs font-medium text-gray-400">Status</th>
               </tr>
            </thead>
            <tbody className="divide-y divide-white/5">
               {pendentesList.map(acao => {
-                 const rInitials = getInitials(acao.responsavel);
+                 const targetName = acao.executor || acao.validador || acao.responsavel;
+                 const rInitials = getInitials(targetName);
                  const avatarColors = [
                     'bg-purple-500/20 text-purple-400', 'bg-blue-500/20 text-blue-400', 
                     'bg-emerald-500/20 text-emerald-400', 'bg-orange-500/20 text-orange-400',
                     'bg-indigo-500/20 text-indigo-400', 'bg-pink-500/20 text-pink-400'
                  ];
-                 const charCode = (acao.responsavel || "").charCodeAt(0) || 0;
+                 const charCode = (targetName || "").charCodeAt(0) || 0;
                  const avatarColor = avatarColors[charCode % avatarColors.length];
 
                  return (
@@ -236,7 +237,7 @@ export default function Pendentes({ acoes, onOpen }: { acoes: ActionItem[], onOp
                                {acao.followUp?.nivel === 'atenção' && <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded">Vence hoje</span>}
                                {acao.status === 'Vencida' && <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded">Vencida</span>}
                                {acao.followUp?.escalado && <span className="text-[9px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">Escalonada</span>}
-                               {(!acao.responsavel || acao.responsavel === 'Não definido' || acao.responsavel.toLowerCase().includes('não informad')) && <span className="text-[9px] bg-gray-500/10 text-gray-400 border border-gray-500/20 px-1.5 py-0.5 rounded">Sem responsável</span>}
+                               {(!targetName || targetName === 'Não definido' || targetName.toLowerCase().includes('não informad')) && <span className="text-[9px] bg-gray-500/10 text-gray-400 border border-gray-500/20 px-1.5 py-0.5 rounded">Sem executor</span>}
                                {(acao as any).pacote && (acao as any).pacote !== 'Base SST' && !activePackageNames.includes((acao as any).pacote) && (
                                  <span className="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
                                    <Package className="w-2.5 h-2.5" />
@@ -257,7 +258,7 @@ export default function Pendentes({ acoes, onOpen }: { acoes: ActionItem[], onOp
                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarColor}`}>
                                 {rInitials}
                              </div>
-                             <span className="text-[13px] text-gray-300 truncate max-w-[120px]">{acao.responsavel}</span>
+                             <span className="text-[13px] text-gray-300 truncate max-w-[120px]">{targetName}</span>
                           </div>
                        </td>
                        <td className="px-5 py-4 w-32">

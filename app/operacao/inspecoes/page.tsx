@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
+import { getNRsAplicaveis } from '@/lib/nrMatrix';
 import { NormativeEngine } from '@/lib/engines';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, 
@@ -13,7 +14,8 @@ import {
   ShieldAlert, User, ChevronLeft, ChevronRight, X,
   Trash2, Filter, Calendar, Activity, Power, Play, MoreVertical,
   Zap, LayoutGrid, CheckSquare, Info, ShieldCheck, ListTodo, HardHat, Smartphone,
-  TrendingUp, ChevronUp, CheckCircle2, ListChecks, XCircle, ClipboardList, ExternalLink, Share2, MapPin, RefreshCcw
+  TrendingUp, ChevronUp, CheckCircle2, ListChecks, XCircle, ClipboardList, ExternalLink, Share2, MapPin, RefreshCcw,
+  PlusCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +37,10 @@ type Inspecao = {
   data?: string;
   tipoInspecao?: string;
   observacoes?: string;
+
+  // PESSOA NO CENTRO
+  trabalhadoresExpostos?: number;
+  perfilExposto?: string;
 };
 
 export default function InspecoesPage() {
@@ -97,25 +103,26 @@ export default function InspecoesPage() {
     data: new Date().toISOString().split('T')[0],
     responsavel: '',
     observacoes: '',
-    prioridade: 'Normal'
+    prioridade: 'Normal',
+    trabalhadoresExpostos: 0,
+    perfilExposto: ''
   });
 
   // Checklist Filter Logic for New Inspection Form
   const filteredChecklistsForForm = useMemo(() => {
     const pacotesAtivos = rulePackages.filter(p => p.isActive).map(p => p.name);
-    const segmentoOrganizacao = organization.segmento;
-    const atividadesOrganizacao = organization.atividadesCriticas || [];
+    
+    const nrsAplicaveis = getNRsAplicaveis({
+      segmentoOrganizacao: organization.segmento,
+      atividadesCriticas: organization.atividadesCriticas,
+      pacotesAtivos: pacotesAtivos
+    });
+    const nrsAplicaveisIds = nrsAplicaveis.map(nr => nr.id);
 
     return checklists.filter(checklist =>
-      checklist.ativo &&
-      (
-        checklist.pacote === "Base SST" ||
-        pacotesAtivos.includes(checklist.pacote)
-      ) &&
-      (
-        checklist.pacote === "Base SST" ||
-        (checklist.segmentos && checklist.segmentos.includes(segmentoOrganizacao)) ||
-        (checklist.atividades && checklist.atividades.some(a => atividadesOrganizacao.includes(a)))
+      checklist.ativo && (
+        checklist.pacote === "Base SST" || 
+        (nrsAplicaveisIds.includes(checklist.nr) && pacotesAtivos.includes(checklist.pacote))
       )
     );
   }, [checklists, rulePackages, organization.segmento, organization.atividadesCriticas]);
@@ -200,11 +207,11 @@ export default function InspecoesPage() {
     return checklists.map((c: any) => ({
       ...c,
       tipo: c.regraFixa ? 'Padrão do motor' : 'Personalizado',
-      atividade: c.name.includes('Altura') ? 'Atividades Críticas' : 'Operação Fabril',
-      nr: c.regraFixa ? (c.sections[0]?.questions[0]?.nrRelacionada || 'NR-01') : (c.name.includes('Altura') ? 'NR-35' : (c.name.includes('Máquinas') ? 'NR-12' : (c.name.includes('Elétrica') ? 'NR-10' : 'NR-01'))),
+      atividade: c.titulo.includes('Altura') ? 'Atividades Críticas' : 'Operação Fabril',
+      nr: c.regraFixa ? (c.sections[0]?.questions[0]?.nrRelacionada || 'NR-01') : (c.titulo.includes('Altura') ? 'NR-35' : (c.titulo.includes('Máquinas') ? 'NR-12' : (c.titulo.includes('Elétrica') ? 'NR-10' : 'NR-01'))),
       riscoAuto: true,
       acaoAuto: true,
-      impactoScore: c.name.includes('Altura') ? 15 : 8,
+      impactoScore: c.titulo.includes('Altura') ? 15 : 8,
       perguntasCriticas: c.sections.reduce((acc: any, sec: any) => acc + sec.questions.filter((q: any) => q.riskMap === 'Crítico' || q.riskMap === 'Alta' || q.riskMap === 'Crítica').length, 0),
       totalPerguntas: c.sections.reduce((acc: any, sec: any) => acc + sec.questions.length, 0),
     }));
@@ -262,7 +269,7 @@ export default function InspecoesPage() {
     if (mode === 'EDIT') {
       setInspectionData({
         tipoInspecao: item.tipoInspecao || item.checklist || '',
-        checklistId: checklists.find(c => c.name === item.checklist)?.id || '',
+        checklistId: checklists.find(c => c.titulo === item.checklist)?.id || '',
         ondeUsar: item.ondeUsar || '',
         data: item.data || item.proximaInspecao || '',
         responsavel: item.responsavel || '',
@@ -288,7 +295,7 @@ export default function InspecoesPage() {
         setChecklistItems(item.items);
       } else {
         const tempChecklistItems: any[] = [];
-        const foundC = checklists.find(c => c.name === item.checklist);
+        const foundC = checklists.find(c => c.titulo === item.checklist);
         if (foundC) {
           foundC.sections.forEach((sec: any) => {
             sec.questions.forEach((q: any) => {
@@ -333,7 +340,7 @@ export default function InspecoesPage() {
       return;
     }
 
-    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.name || 'Inspeção';
+    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
     const dataHoje = new Date().toISOString().split('T')[0];
 
     if (isEditing && selectedInspecao) {
@@ -345,7 +352,9 @@ export default function InspecoesPage() {
         responsavel: inspectionData.responsavel,
         prioridade: prioridadeCalculada,
         data: inspectionData.data,
-        observacoes: inspectionData.observacoes
+        observacoes: inspectionData.observacoes,
+        trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
+        perfilExposto: inspectionData.perfilExposto
       };
       updateInspecao(selectedInspecao.id, updatedData);
       setSelectedInspecao({ ...selectedInspecao, ...updatedData });
@@ -367,6 +376,8 @@ export default function InspecoesPage() {
         status: statusInicial,
         data: inspectionData.data,
         observacoes: inspectionData.observacoes,
+        trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
+        perfilExposto: inspectionData.perfilExposto,
         items: []
       };
       
@@ -384,7 +395,7 @@ export default function InspecoesPage() {
 
   const handleSalvarRascunho = () => {
     const inspecaoId = Date.now().toString();
-    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.name || 'Inspeção';
+    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
     
     addInspecao({
       id: inspecaoId,
@@ -398,6 +409,8 @@ export default function InspecoesPage() {
       status: 'Rascunho',
       data: inspectionData.data || new Date().toISOString().split('T')[0],
       observacoes: inspectionData.observacoes,
+      trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
+      perfilExposto: inspectionData.perfilExposto,
       items: []
     });
     
@@ -422,6 +435,33 @@ export default function InspecoesPage() {
       default: return 'text-gray-400 border-gray-500/30 bg-transparent';
     }
   };
+
+  const activeTabMetrics = useMemo(() => {
+    const totalInspecoes = store.inspecoes.length;
+    let totalNConformidades = 0;
+    
+    store.inspecoes.forEach(i => {
+       if (i.items) {
+          i.items.forEach((item: any) => {
+             if (item.status === 'Não' || item.status === 'Parcialmente') {
+                totalNConformidades++;
+             }
+          });
+       }
+    });
+
+    const riscosInspecão = store.riscos.filter(r => r.origem === 'Inspeção / Checklist').length;
+    const acoesPendentes = store.acoes.filter(a => a.status === 'Em aberto' || a.status === 'Pendente').length;
+    const evidenciasAusentes = store.acoes.filter(a => a.exigeEvidencia && !a.evidenciaUrl).length;
+
+    return {
+       totalInspecoes,
+       totalNConformidades,
+       ncQueGeraramRisco: riscosInspecão,
+       acoesPendentes,
+       evidenciasAusentes
+    };
+  }, [store.inspecoes, store.riscos, store.acoes]);
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#03060e]">
@@ -474,6 +514,73 @@ export default function InspecoesPage() {
             </div>
           </header>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shrink-0 mb-6">
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Inspeções do período</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.inspecoesPeriodo}</div>
+                    <span className="text-[11px] text-blue-400 font-medium">Global</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                      <ShieldAlert className="w-4 h-4 text-red-500" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Não conformidades</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.totalNConformidades}</div>
+                    <span className="text-[11px] text-red-400 font-medium whitespace-nowrap">Itens reprovados</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por inspeção</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.ncQueGeraramRisco}</div>
+                    <span className="text-[11px] text-orange-400 font-medium uppercase tracking-tight">Auto-gerados</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                      <ClipboardList className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Ações pendentes</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.acoesPendentes}</div>
+                    <span className="text-[11px] text-purple-400 font-medium">Corretivas</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center">
+                      <PlusCircle className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Evidências ausentes</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.evidenciasAusentes}</div>
+                    <span className="text-[11px] text-gray-400 font-medium">Em falta</span>
+                </div>
+            </div>
+          </div>
+
           <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
              {[
                { id: 'Agendadas', label: 'Agendadas', icon: <Calendar className="w-4 h-4" /> },
@@ -495,191 +602,18 @@ export default function InspecoesPage() {
              ))}
           </div>
 
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0 space-y-6">
-            
-            {activeTab === 'Checklists' && (
-              <div className="bg-blue-500/5 border border-blue-500/20 p-3 px-4 rounded-xl flex items-center gap-3 shrink-0">
-                <Info className="w-4 h-4 text-blue-400 shrink-0" />
-                <p className="text-[12px] text-blue-200">
-                  <span className="font-bold">Os checklists são gerenciados em Configurações.</span> Checklists padrão do motor são essenciais e não podem ser removidos.
-                </p>
-              </div>
-            )}
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0 space-y-6">
+              
+              {activeTab === 'Checklists' && (
+                <div className="bg-blue-500/5 border border-blue-500/20 p-3 px-4 rounded-xl flex items-center gap-3 shrink-0">
+                  <Info className="w-4 h-4 text-blue-400 shrink-0" />
+                  <p className="text-[12px] text-blue-200">
+                    <span className="font-bold">Os checklists são gerenciados em Configurações.</span> Checklists padrão do motor são essenciais e não podem ser removidos.
+                  </p>
+                </div>
+              )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
-               {activeTab === 'Checklists' ? (
-                 <>
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Checklists ativos</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{checklistsStats.ativos}</div>
-                         <span className="text-[12px] text-emerald-400 font-medium">Em uso</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-blue-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Padrão do motor</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{checklistsStats.padraoMotor}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Auto-gerenciados</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                            <ListTodo className="w-5 h-5 text-purple-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Perguntas cadastradas</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{checklistsStats.totalPerguntas}</div>
-                         <span className="text-[12px] text-purple-400 font-medium">Banco total</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                            <HardHat className="w-5 h-5 text-orange-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">NRs vinculadas</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{checklistsStats.nrsVinculadas}</div>
-                         <span className="text-[12px] text-orange-400 font-medium">Conformidade Legal</span>
-                      </div>
-                   </div>
-                 </>
-               ) : activeTab === 'Realizadas' ? (
-                 <>
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                            <CheckSquare className="w-5 h-5 text-emerald-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Inspeções realizadas</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{realizadas.length}</div>
-                         <span className="text-[12px] text-emerald-400 font-medium">Total concluído</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                            <ShieldAlert className="w-5 h-5 text-red-500" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Não conformidades</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{totalNConformidades}</div>
-                         <span className="text-[12px] text-red-500 font-medium">Itens reprovados</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5 text-orange-500" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Riscos gerados</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{totalRiscosRealizadas}</div>
-                         <span className="text-[12px] text-orange-500 font-medium">Mapeados</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-blue-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Ações abertas</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{totalAcoesRealizadas}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Em andamento</span>
-                      </div>
-                   </div>
-                 </>
-               ) : (
-                 <>
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-blue-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Inspeções hoje</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{pendentesHoje}</div>
-                         <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
-                           <Activity className="w-3 h-3" /> 3 vs ontem
-                         </span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <Power className="w-5 h-5 text-blue-400" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Em andamento</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{activeExecutions}</div>
-                         <span className="text-[12px] text-blue-400 font-medium">Execuções ativas</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                      <div className="flex items-center gap-3 mb-4">
-                         <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
-                         </div>
-                         <h3 className="text-[13px] font-medium text-gray-400">Atrasadas</h3>
-                      </div>
-                      <div className="flex items-end justify-between mt-2">
-                         <div className="text-3xl font-bold text-white tracking-tight">{emAtraso}</div>
-                         <span className="text-[12px] text-red-500 font-medium">Requerem atenção</span>
-                      </div>
-                   </div>
-
-                   <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group border-purple-500/20">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none"></div>
-                      <div className="flex items-start justify-between gap-3 mb-2 relative z-10">
-                         <div className="flex items-center gap-3">
-                           <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                              <Activity className="w-5 h-5 text-purple-400" />
-                           </div>
-                           <h3 className="text-[13px] font-medium text-purple-200/70">Próxima inspeção crítica</h3>
-                         </div>
-                      </div>
-                      <div className="mt-3 relative z-10">
-                         <div className="text-lg font-bold text-white leading-tight mb-1">Trabalho em altura</div>
-                         <div className="text-[11px] text-gray-400 flex items-center gap-1.5 font-medium">
-                           24/05/2025 <span className="opacity-50">•</span> 08:30 <span className="opacity-50">•</span> NR-35
-                         </div>
-                      </div>
-                   </div>
-                 </>
-               )}
-            </div>
-
-            {/* Table */}
+              {/* Table */}
             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl flex-1 flex flex-col min-h-0 overflow-hidden relative">
               <div className="flex-1 overflow-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
@@ -731,7 +665,7 @@ export default function InspecoesPage() {
                           <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
                             <td className="px-5 py-4">
                               <div className="flex flex-col">
-                                <span className="text-[13px] font-bold text-gray-200">{item.name}</span>
+                                <span className="text-[13px] font-bold text-gray-200">{item.titulo}</span>
                                 <span className="text-[10px] text-gray-500 uppercase tracking-tight">{item.category}</span>
                               </div>
                             </td>
@@ -998,7 +932,7 @@ export default function InspecoesPage() {
                   <div>
                     <h3 className="text-sm font-bold text-white mb-2 tracking-tight">Detalhes do Checklist</h3>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${selectedChecklist.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>{selectedChecklist.tipo}</span>
-                    <h2 className="text-xl font-bold text-white leading-snug mt-3">{selectedChecklist.name}</h2>
+                    <h2 className="text-xl font-bold text-white leading-snug mt-3">{selectedChecklist.titulo}</h2>
                     <p className="text-[11px] font-bold text-gray-500 mt-1 uppercase tracking-widest">{selectedChecklist.nr} • {selectedChecklist.atividade}</p>
                   </div>
                   <button onClick={() => { setIsDrawerOpen(false); setSelectedChecklist(null); }} className="text-gray-500 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors border border-transparent hover:border-white/10">
@@ -1107,9 +1041,16 @@ export default function InspecoesPage() {
                                  <span className="text-[13px] font-semibold text-white">{selectedInspecao.ondeUsar}</span>
                               </div>
                               <div className="flex justify-between items-center">
-                                 <span className="text-[13px] text-gray-400">Responsável</span>
+                                 <span className="text-[13px] text-gray-400">Responsável local</span>
                                  <span className="text-[13px] font-semibold text-white">{selectedInspecao.responsavel}</span>
                               </div>
+                               <div className="flex justify-between items-center bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                                  <span className="text-[13px] font-bold text-blue-400 flex items-center gap-2"><User className="w-4 h-4"/> Pessoas expostas</span>
+                                  <div className="text-right">
+                                     <p className="text-[14px] font-bold text-white">{selectedInspecao.trabalhadoresExpostos || 0} vidas</p>
+                                     <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'Não especificado'}</p>
+                                  </div>
+                               </div>
                               <div className="flex justify-between items-center">
                                  <span className="text-[13px] text-gray-400">Resultado do checklist</span>
                                  <span className="text-[15px] font-bold text-gray-200">
@@ -1314,8 +1255,15 @@ export default function InspecoesPage() {
                               <span className="text-[13px] font-medium text-white">{selectedInspecao.ondeUsar}</span>
                            </div>
                            <div className="flex justify-between items-center">
-                              <span className="text-[13px] text-gray-400">Responsável</span>
+                              <span className="text-[13px] text-gray-400">Responsável local</span>
                               <span className="text-[13px] font-medium text-white">{selectedInspecao.responsavel}</span>
+                           </div>
+                           <div className="flex justify-between items-center bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                              <span className="text-[13px] font-bold text-blue-400 flex items-center gap-2"><User className="w-4 h-4"/> Pessoas expostas</span>
+                              <div className="text-right">
+                                 <p className="text-[14px] font-bold text-white">{selectedInspecao.trabalhadoresExpostos || 0} vidas</p>
+                                 <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'Não especificado'}</p>
+                              </div>
                            </div>
                            <div className="flex justify-between items-center">
                               <span className="text-[13px] text-gray-400">Prioridade operacional</span>
@@ -1493,7 +1441,7 @@ export default function InspecoesPage() {
                            let newChecklistId = inspectionData.checklistId;
                            if (val.trim().length > 3) {
                              const search = val.toLowerCase();
-                             const match = checklists.find(c => c.name.toLowerCase().includes(search) || search.includes(c.name.toLowerCase().replace('checklist', '').trim()));
+                             const match = checklists.find(c => c.titulo.toLowerCase().includes(search) || search.includes(c.titulo.toLowerCase().replace('checklist', '').trim()));
                              if (match) newChecklistId = match.id;
                            }
                            setInspectionData({...inspectionData, tipoInspecao: val, checklistId: newChecklistId});
@@ -1509,7 +1457,7 @@ export default function InspecoesPage() {
                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
                        >
                          <option value="">Selecione um modelo</option>
-                         {checklists.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                         {checklists.map(c => <option key={c.id} value={c.id}>{c.titulo}</option>)}
                        </select>
                      </div>
                    </div>
@@ -1554,6 +1502,28 @@ export default function InspecoesPage() {
                           {prioridadeCalculada === 'Alta' && <AlertTriangle className="w-4 h-4 text-red-500" />}
                        </div>
                        <p className="text-[10px] text-gray-500 ml-1 mt-1">Preenchimento automático via regras de negócio.</p>
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                       <label className="text-[13px] font-bold text-gray-300">Qtd. Trabalhadores Expostos Na Área</label>
+                       <input 
+                         type="number" min="0" placeholder="0" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                         value={inspectionData.trabalhadoresExpostos} 
+                         onChange={(e) => setInspectionData({...inspectionData, trabalhadoresExpostos: parseInt(e.target.value) || 0})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-blue-500 transition-colors placeholder:text-gray-600"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <label className="text-[13px] font-bold text-gray-300">Perfil Exposto (Função/Cargo)</label>
+                       <input 
+                         type="text" 
+                         placeholder="Ex: Eletricistas, Montadores" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                         value={inspectionData.perfilExposto} 
+                         onChange={(e) => setInspectionData({...inspectionData, perfilExposto: e.target.value})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-blue-500 transition-colors placeholder:text-gray-600"
+                       />
                      </div>
                    </div>
 

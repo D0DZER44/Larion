@@ -194,6 +194,8 @@ function AcoesContent() {
             iniciarAcao={iniciarAcao}
             atualizarProgresso={atualizarProgresso}
             concluirAcao={concluirAcao}
+            enviarParaValidacao={enviarParaValidacao}
+            rejeitarValidacao={rejeitarValidacao}
             reatribuirAcao={reatribuirAcao}
             cancelarAcao={cancelarAcao}
             reabrirAcao={reabrirAcao}

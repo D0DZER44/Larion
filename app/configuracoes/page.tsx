@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodasRegrasAtivas, fixedNrRules } from '@/lib/normativeRules';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
+import { getNRsAplicaveis } from '@/lib/nrMatrix';
 import AcaoRecomendadaCard from '@/components/AcaoRecomendadaCard';
 import { 
   Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
@@ -244,26 +245,29 @@ function TabChecklists() {
    
    // Filtering logic
    const filteredChecklists = allChecklists.filter(checklist => {
-      const matchSearch = checklist.name.toLowerCase().includes(search.toLowerCase()) || 
+      const nrsAplicaveis = getNRsAplicaveis({
+         segmentoOrganizacao: organization.segmento,
+         atividadesCriticas: organization.atividadesCriticas,
+         pacotesAtivos: rulePackages.filter(p => p.isActive).map(p => p.name)
+      });
+      const nrsAplicaveisIds = nrsAplicaveis.map(nr => nr.id);
+      
+      const isBaseSST = checklist.pacote === "Base SST";
+      const isAplicavelPelaNR = checklist.nr && nrsAplicaveisIds.includes(checklist.nr);
+      
+      // Regra: Base SST sempre aparece. Outros dependem de pacotes ativos e NRs aplicáveis.
+      const matchPacoteEEAplicabilidade = isBaseSST || isAplicavelPelaNR;
+
+      const matchSearch = checklist.titulo.toLowerCase().includes(search.toLowerCase()) || 
                           (checklist.atividade || '').toLowerCase().includes(search.toLowerCase()) ||
                           (checklist.nrRelacionada || '').toLowerCase().includes(search.toLowerCase()) ||
                           (checklist.nr || '').toLowerCase().includes(search.toLowerCase());
-      
-      const pacotesAtivos = rulePackages.filter(p => p.isActive).map(p => p.name);
-      
-      const matchPacote = (checklist.pacote === "Base SST" || pacotesAtivos.includes(checklist.pacote));
-      
-      const matchOrganization = (
-        checklist.pacote === "Base SST" ||
-        (checklist.segmentos && checklist.segmentos.includes(organization.segmento)) ||
-        (checklist.atividades && checklist.atividades.some(a => (organization.atividadesCriticas || []).includes(a)))
-      );
 
       const matchFiltroPacote = filterPacote === 'Todos' || checklist.pacote === filterPacote;
       const matchFiltroSegmento = filterSegmento === 'Todos' || (checklist.segmentos && checklist.segmentos.includes(filterSegmento));
       const matchStatus = filterStatus === 'Todos' || (checklist.status === filterStatus || (filterStatus === 'Ativo' && checklist.ativo));
 
-      return matchSearch && matchPacote && matchOrganization && matchFiltroPacote && matchFiltroSegmento && matchStatus;
+      return matchSearch && matchPacoteEEAplicabilidade && matchFiltroPacote && matchFiltroSegmento && matchStatus;
    });
 
    const [selectedId, setSelectedId] = useState(filteredChecklists[0]?.id || allChecklists[0]?.id);
@@ -275,7 +279,7 @@ function TabChecklists() {
 
    const handleAdd = () => {
       addChecklist({ 
-         name: 'Novo Modelo', 
+         titulo: 'Novo Modelo', 
          category: 'Segurança Geral', 
          status: 'Rascunho', 
          sections: [],
@@ -370,7 +374,7 @@ function TabChecklists() {
                            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${colorClass}`}>{c.status}</span>
                            <span className="text-[9px] text-gray-500 font-bold uppercase">{c.nrRelacionada || '-'}</span>
                         </div>
-                        <p className={`text-[13px] font-bold mb-1 relative z-10 ${isActive ? 'text-white' : 'text-gray-300'}`}>{c.name}</p>
+                        <p className={`text-[13px] font-bold mb-1 relative z-10 ${isActive ? 'text-white' : 'text-gray-300'}`}>{c.titulo}</p>
                         <div className="flex items-center gap-2 relative z-10">
                            <span className="text-[10px] text-gray-500">{c.pacote}</span>
                            <span className="w-1 h-1 rounded-full bg-white/10"></span>
@@ -432,8 +436,8 @@ function TabChecklists() {
                               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Nome do checklist</label>
                               <input 
                                  type="text" 
-                                 value={activeChecklist.name} 
-                                 onChange={(e) => updateChecklist(activeChecklist.id, { name: e.target.value })}
+                                 value={activeChecklist.titulo} 
+                                 onChange={(e) => updateChecklist(activeChecklist.id, { titulo: e.target.value })}
                                  disabled={activeChecklist.regraFixa}
                                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50" 
                               />
@@ -799,7 +803,7 @@ function SubTabBaseRegras() {
       const matchCriticidade = filterCriticidade === 'Todos' || rule.criticidade === filterCriticidade;
       const matchAtividade = filterAtividade === 'Todos' || rule.atividades.includes(filterAtividade);
       const matchStatus = filterStatus === 'Todos' || (filterStatus === 'Ativo' ? rule.ativo : !rule.ativo);
-      const matchSearch = rule.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      const matchSearch = rule.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           rule.nrRelacionada.toLowerCase().includes(searchTerm.toLowerCase());
       return matchPacote && matchCriticidade && matchAtividade && matchStatus && matchSearch;
    });
@@ -815,7 +819,7 @@ function SubTabBaseRegras() {
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                <input 
                   type="text" 
-                  placeholder="Buscar por nome ou NR..." 
+                  placeholder="Buscar por título ou NR..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-[#0b0f19] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
@@ -874,7 +878,7 @@ function SubTabBaseRegras() {
                      <tr key={rule.id} className="hover:bg-white/[0.02] transition-colors group text-[13px]">
                         <td className="px-6 py-4">
                            <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-white group-hover:text-purple-400 transition-colors">{rule.nome}</span>
+                              <span className="font-bold text-white group-hover:text-purple-400 transition-colors">{rule.titulo}</span>
                               <span className="text-[11px] text-gray-500 line-clamp-1 italic">{rule.condicao}</span>
                            </div>
                         </td>

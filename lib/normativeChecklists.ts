@@ -4,7 +4,7 @@ import { ChecklistTemplate } from './store';
 export const fixedNrChecklists: any[] = [
   {
     id: 'fixo-nr-01',
-    name: 'Checklist Geral de Gerenciamento de Riscos — NR-01',
+    titulo: 'Checklist Geral de Gerenciamento de Riscos — NR-01',
     category: 'Gerenciamento de Riscos',
     status: 'Ativo',
     regraFixa: true,
@@ -106,7 +106,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-06',
-    name: 'Checklist de EPI — NR-06',
+    titulo: 'Checklist de EPI — NR-06',
     category: 'EPI',
     status: 'Ativo',
     regraFixa: true,
@@ -208,7 +208,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-07',
-    name: 'Checklist de Saúde Ocupacional / ASO — NR-07',
+    titulo: 'Checklist de Saúde Ocupacional / ASO — NR-07',
     category: 'Saúde Ocupacional',
     status: 'Ativo',
     regraFixa: true,
@@ -310,7 +310,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-10',
-    name: 'Checklist de Serviços Elétricos — NR-10',
+    titulo: 'Checklist de Serviços Elétricos — NR-10',
     category: 'Elétrica',
     status: 'Ativo',
     regraFixa: true,
@@ -412,7 +412,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-11',
-    name: 'Checklist de Movimentação de Materiais — NR-11',
+    titulo: 'Checklist de Movimentação de Materiais — NR-11',
     category: 'Movimentação e Cargas',
     status: 'Ativo',
     regraFixa: true,
@@ -514,7 +514,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-12',
-    name: 'Checklist de Máquinas e Equipamentos — NR-12',
+    titulo: 'Checklist de Máquinas e Equipamentos — NR-12',
     category: 'Máquinas e Equipamentos',
     status: 'Ativo',
     regraFixa: true,
@@ -616,7 +616,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-17',
-    name: 'Checklist de Ergonomia — NR-17',
+    titulo: 'Checklist de Ergonomia — NR-17',
     category: 'Ergonomia',
     status: 'Ativo',
     regraFixa: true,
@@ -718,7 +718,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-18',
-    name: 'Checklist de Construção / Canteiro — NR-18',
+    titulo: 'Checklist de Construção / Canteiro — NR-18',
     category: 'Construção Civil',
     status: 'Ativo',
     regraFixa: true,
@@ -820,7 +820,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-20',
-    name: 'Checklist de Inflamáveis e Combustíveis — NR-20',
+    titulo: 'Checklist de Inflamáveis e Combustíveis — NR-20',
     category: 'Inflamáveis',
     status: 'Ativo',
     regraFixa: true,
@@ -922,7 +922,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-23',
-    name: 'Checklist de Incêndio e Emergência — NR-23',
+    titulo: 'Checklist de Incêndio e Emergência — NR-23',
     category: 'Emergência',
     status: 'Ativo',
     regraFixa: true,
@@ -1024,7 +1024,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-26',
-    name: 'Checklist de Produtos Químicos e Sinalização — NR-26',
+    titulo: 'Checklist de Produtos Químicos e Sinalização — NR-26',
     category: 'Produtos Químicos',
     status: 'Ativo',
     regraFixa: true,
@@ -1126,7 +1126,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-33',
-    name: 'Checklist de Espaço Confinado — NR-33',
+    titulo: 'Checklist de Espaço Confinado — NR-33',
     category: 'Espaço Confinado',
     status: 'Ativo',
     regraFixa: true,
@@ -1245,7 +1245,7 @@ export const fixedNrChecklists: any[] = [
   },
   {
     id: 'fixo-nr-35',
-    name: 'Checklist de Trabalho em Altura — NR-35',
+    titulo: 'Checklist de Trabalho em Altura — NR-35',
     category: 'Segurança',
     status: 'Ativo',
     regraFixa: true,

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Play, AlertTriangle, CheckCircle2, Factory, User, ShieldAlert, ClipboardCheck, ListChecks, CalendarClock, DollarSign, ExternalLink, UserPlus, RefreshCw, Circle, BookOpen, FileText, ArrowRight, Eye, Clock, Info } from 'lucide-react';
+import { X, Play, AlertTriangle, CheckCircle2, Factory, User, ShieldAlert, ClipboardCheck, ListChecks, CalendarClock, DollarSign, ExternalLink, UserPlus, RefreshCw, Circle, BookOpen, FileText, ArrowRight, Eye, Clock, Info, ShieldCheck, Bot } from 'lucide-react';
 import Image from 'next/image';
 import { ActionItem } from '../types';
 
@@ -11,7 +11,9 @@ interface Props {
   onClose: () => void;
   iniciarAcao: (id: string) => void;
   atualizarProgresso: (id: string, novoProgresso: number, comentario?: string) => void;
-  concluirAcao: (id: string, observacaoFinal?: string) => void;
+  concluirAcao: (id: string, observacaoFinal?: string, validacaoPayload?: any, evidenciaPayloads?: any[]) => void;
+  enviarParaValidacao?: (id: string, observacao?: string, evidenciaPayloads?: any[]) => void;
+  rejeitarValidacao?: (id: string, motivo: string) => void;
   reatribuirAcao?: (id: string, novoResponsavel: string, justificativa: string) => void;
   cancelarAcao?: (id: string, justificativa: string) => void;
   reabrirAcao?: (id: string, justificativa: string) => void;
@@ -41,7 +43,7 @@ function getPrazoInfo(prazoStr: string) {
   return { diffDays, label: `${diffDays} dias restantes` };
 }
 
-export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgresso, concluirAcao, reatribuirAcao, cancelarAcao, reabrirAcao, forcarFollowUp }: Props) {
+export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgresso, concluirAcao, enviarParaValidacao, rejeitarValidacao, reatribuirAcao, cancelarAcao, reabrirAcao, forcarFollowUp }: Props) {
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [progressoLocal, setProgressoLocal] = useState(acao?.progresso || 0);
@@ -177,44 +179,120 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
               )}
             </div>
 
-            {/* Origem normativa e vínculo */}
-            {(acao.regraFixa !== undefined || acao.nrRelacionada || (acao as any).nr) && (
-               <div className="space-y-2 pb-2">
-                  <div className="bg-[#1e1a30]/50 p-4 rounded-xl border border-blue-500/20 space-y-3">
-                     <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-blue-400" />
-                        <h4 className="text-xs font-bold text-blue-200 uppercase tracking-wider">Origem Normativa e Vínculo</h4>
-                     </div>
-                     <div className="space-y-1.5 text-[12px] text-gray-300">
-                        {(acao.nrRelacionada || (acao as any).nr) && <p><span className="font-bold text-gray-500">NR Relacionada:</span> {acao.nrRelacionada || (acao as any).nr}</p>}
-                        {acao.regraTitulo && <p><span className="font-bold text-gray-500">Regra:</span> {acao.regraTitulo}</p>}
-                        {acao.regraId && <p><span className="font-bold text-gray-500">Regra ID:</span> {acao.regraId}</p>}
-                        
-                        {acao.regraFixa === true ? (
-                           <p><span className="font-bold text-gray-500">Regra Fixa:</span> Sim</p>
-                        ) : acao.regraFixa === false ? (
-                           <p><span className="font-bold text-gray-500">Regra Fixa:</span> Não</p>
-                        ) : (
-                           <p><span className="font-bold text-gray-500">Regra Fixa:</span> Regra normativa não vinculada</p>
-                        )}
+            {/* RASTREABILIDADE TOTAL - LINHAGEM DA AÇÃO */}
+            <div className="mt-8 pt-2 border-t border-white/5 space-y-4">
+               <h3 className="text-sm font-bold text-blue-400 mb-6 flex items-center gap-2">
+                  <ArrowRight className="w-4 h-4" /> Rastreabilidade e Vínculos
+               </h3>
 
-                        {acao.riscoVinculado && <p><span className="font-bold text-gray-500">Risco vinculado:</span> {acao.riscoVinculado || acao.riscoId}</p>}
-                        {acao.inspecaoId && <p><span className="font-bold text-gray-500">Inspeção:</span> {acao.inspecaoId.substring(0,8).toUpperCase()}</p>}
-                        {acao.perguntaOrigem && <p><span className="font-bold text-gray-500">Pergunta:</span> {acao.perguntaOrigem}</p>}
-                        {acao.respostaOrigem && <p><span className="font-bold text-gray-500">Resposta:</span> {acao.respostaOrigem}</p>}
-                        {acao.multaEstimada && <p><span className="font-bold text-gray-500">Multa / Impacto potencial:</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acao.multaEstimada)}</p>}
-                        {acao.chanceIncidente && <p><span className="font-bold text-gray-500">Chance de incidente:</span> {acao.chanceIncidente}%</p>}
+               <div className="relative border-l-2 border-white/10 ml-3 pl-6 space-y-6">
+                  {/* Passo 1: Inspeção/Origem */}
+                  <div className="relative">
+                     <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-emerald-500 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                      </div>
-                     {acao.explicacaoNormativa && (
-                        <div className="mt-3 pt-3 border-t border-blue-500/20">
-                           <p className="text-[12px] text-blue-200/80 leading-relaxed italic border-l-2 border-blue-500/50 pl-3">
-                              {acao.explicacaoNormativa}
-                           </p>
+                     <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Origem / Fundamentação Legal</p>
+                     <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
+                        {acao.inspecaoId ? (
+                           <>
+                              <div className="flex justify-between items-center">
+                                 <div className="flex items-center gap-2 text-emerald-400 font-medium text-[13px]">
+                                    <ShieldCheck className="w-4 h-4" /> Inspeção de Rota
+                                 </div>
+                                 <button onClick={() => window.location.href='/inspecoes'} className="text-[11px] bg-white/5 hover:bg-white/10 px-2 py-1 rounded border border-white/10 text-white transition-colors flex items-center gap-1">
+                                    <ExternalLink className="w-3 h-3" /> Ver Inspeção
+                                 </button>
+                              </div>
+                              <p className="text-[13px] text-gray-200">
+                                 <span className="text-gray-400">ID Inspeção:</span> {acao.inspecaoId.substring(0,8).toUpperCase()}
+                              </p>
+                           </>
+                        ) : (
+                           <div className="flex items-center gap-2 text-blue-400 font-medium text-[13px]">
+                              <Bot className="w-4 h-4" /> Criação Direta / Motor de Risco
+                           </div>
+                        )}
+                        
+                        {(acao.nrRelacionada || (acao as any).nr) && (
+                           <div className="pt-2 border-t border-white/5 mt-2">
+                              <p className="text-[13px] text-gray-200">
+                                 <span className="text-gray-400">Norma:</span> {acao.nrRelacionada || (acao as any).nr}
+                              </p>
+                              {acao.explicacaoNormativa && (
+                                 <p className="text-[12px] text-gray-400 italic mt-1 leading-relaxed border-l-2 border-white/20 pl-2">
+                                    &quot;{acao.explicacaoNormativa}&quot;
+                                 </p>
+                              )}
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* Passo 2: Risco Associado */}
+                  <div className="relative">
+                     <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-orange-500 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                     </div>
+                     <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Cenário de Risco (Problema)</p>
+                     <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                        <div className="flex justify-between items-start mb-2">
+                           <div className="flex items-center gap-2 text-orange-400 font-medium text-[13px]">
+                              <AlertTriangle className="w-4 h-4" /> Risco Vinculado
+                           </div>
+                           {acao.riscoId && (
+                              <button onClick={() => window.location.href='/operacao/riscos'} className="text-[11px] bg-white/5 hover:bg-white/10 px-2 py-1 rounded border border-white/10 text-white transition-colors flex items-center gap-1">
+                                 <ExternalLink className="w-3 h-3" /> Ver Risco
+                              </button>
+                           )}
                         </div>
-                     )}
+                        <p className="text-[13px] text-gray-200 leading-relaxed">
+                           {acao.riscoVinculado || 'Risco em atividade não declarada'}
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
+                           <div>
+                              <p className="text-[11px] text-gray-500">Perfil Exposto</p>
+                              <p className="text-[12px] font-medium text-gray-200">{acao.perfilExposto || 'Não informado'} ({acao.trabalhadoresExpostos || 0} p.)</p>
+                           </div>
+                           <div>
+                              <p className="text-[11px] text-gray-500">Dano Físico Potencial</p>
+                              <p className="text-[12px] font-medium text-red-400 leading-tight">{acao.impactoHumano || 'Dano à integridade física'}</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Passo 3: Atuação de Pessoas */}
+                  <div className="relative">
+                     <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-blue-500 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                     </div>
+                     <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Cenário de Atuação (Solução)</p>
+                     <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div>
+                              <p className="text-[11px] text-gray-500 mb-1">Ação designada a (Executor)</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                 <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                                    {acao.executor?.charAt(0) || 'E'}
+                                 </div>
+                                 <span className="text-[13px] text-gray-300 truncate">{acao.executor || 'A definir'}</span>
+                              </div>
+                           </div>
+                           <div>
+                              <p className="text-[11px] text-gray-500 mb-1">Responsável pela Validação</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                 <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 font-bold text-[10px]">
+                                    {acao.validador?.charAt(0) || 'V'}
+                                 </div>
+                                 <span className="text-[13px] text-gray-300 truncate">{acao.validador || 'SST'}</span>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
                   </div>
                </div>
-            )}
+            </div>
 
             {/* Content for Concluída */}
             {isConcluida && (
@@ -553,6 +631,21 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                   </div>
                )}
 
+               {acao.validacao && (
+                  <div className="flex items-start py-3 border-b border-emerald-500/20 bg-emerald-500/5 px-3 rounded-lg mt-3">
+                     <div className="flex gap-2.5 w-1/3 text-emerald-400 mt-0.5">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="font-medium text-[13px]">Validação</span>
+                     </div>
+                     <div className="w-2/3 space-y-1 text-[13px]">
+                        <p><span className="text-gray-400">Validador:</span> <span className="font-medium text-emerald-300">{acao.validacao.validador}</span></p>
+                        <p><span className="text-gray-400">Base documentada:</span> <span className="text-gray-200">{acao.validacao.baseadoEm}</span></p>
+                        <p><span className="text-gray-400">Data:</span> <span className="text-gray-200">{new Date(acao.validacao.data).toLocaleString('pt-BR')}</span></p>
+                        {acao.validacao.comentarios && <p className="italic text-gray-400 mt-1">&quot;{acao.validacao.comentarios}&quot;</p>}
+                     </div>
+                  </div>
+               )}
+
                {isAndamento && (
                   <div className="flex items-start justify-between py-3 border-b border-white/5">
                      <div className="flex items-center gap-2.5 text-gray-400 mt-0.5">
@@ -720,27 +813,53 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
              {/* Em andamento */}
              {isAndamento && !acao.followUp?.escalado && (
                 <div className="flex flex-col gap-2.5">
-                   {acao.followUp?.precisaFollowUp ? (
-                     <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-[13px]">
-                       Registrar atualização
-                     </button>
-                   ) : (
-                     <div className="flex items-center gap-2.5">
-                        <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-[13px]">Atualizar progresso</button>
-                        <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-3 rounded-lg font-medium transition-colors border border-emerald-500/20 flex items-center justify-center gap-2 text-[13px]">Concluir</button>
+                   {acao.faseExecucao === 'Aguardando Validação' ? (
+                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4 space-y-3 relative overflow-hidden">
+                        {(acao.executor && acao.validador && acao.executor === acao.validador) && (
+                           <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[10px] uppercase font-bold px-3 py-1 rounded-bl-lg border-b border-l border-yellow-500/30">
+                              Conflito: Executor = Validador
+                           </div>
+                        )}
+                        <div className="flex items-center gap-2 mb-2 text-emerald-400 mt-2">
+                           <CheckCircle2 className="w-4 h-4" />
+                           <h4 className="text-[13px] font-bold">Ação em Validação</h4>
+                        </div>
+                        <p className="text-[12px] text-gray-400">A evidência foi enviada. O validador ({acao.validador || 'SST'}) precisa aprovar antes do fechamento definitivo.</p>
+                        
+                        {(acao.executor && acao.validador && acao.executor === acao.validador) && (
+                           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-[11px] text-yellow-500/90 leading-tight">
+                              <AlertTriangle className="w-3 h-3 inline mb-0.5 mr-1" />
+                              <strong>Alerta de Compliance:</strong> O sistema detectou que a mesma pessoa que executou tenta validar. Isso reduz a confiabilidade da ação.
+                           </div>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-emerald-500/20">
+                           <button onClick={() => { rejeitarValidacao && rejeitarValidacao(acao.id, "Evidência insuficiente"); onClose(); }} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded text-[12px] font-medium transition-colors border border-white/10">Rejeitar</button>
+                           <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 py-2 rounded font-medium transition-colors border border-emerald-500/30 text-[12px]">Validar Agora</button>
+                        </div>
                      </div>
+                   ) : (
+                     <>
+                        {acao.followUp?.precisaFollowUp ? (
+                          <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-[13px]">
+                            Registrar atualização
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                             <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-[13px]">Atualizar progresso</button>
+                             {['Crítica', 'Alta', 'Média'].includes(acao.prioridade) ? (
+                                <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-3 rounded-lg font-medium transition-colors border border-emerald-500/20 flex items-center justify-center gap-2 text-[13px]">Enviar Evidência</button>
+                             ) : (
+                                <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-3 rounded-lg font-medium transition-colors border border-emerald-500/20 flex items-center justify-center gap-2 text-[13px]">Concluir</button>
+                             )}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2.5 mt-2">
+                           <button className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10 flex items-center justify-center gap-2"><UserPlus className="w-4 h-4"/> Colaborar</button>
+                           <button className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10">Registrar bloqueio</button>
+                        </div>
+                     </>
                    )}
-                   <div className="flex items-center gap-2.5">
-                      {acao.followUp?.precisaFollowUp && (
-                         <>
-                           <button onClick={() => { setProgressoLocal(acao.progresso || 0); setShowUpdateModal(true); }} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10">Atualizar</button>
-                           <button onClick={() => setShowConfirmClose(true)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10">Concluir</button>
-                         </>
-                      )}
-                      {!acao.followUp?.precisaFollowUp && (
-                        <button className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-lg text-[13px] font-medium transition-colors border border-white/10">Registrar bloqueio</button>
-                      )}
-                   </div>
                    {renderIntegrationButtons()}
                 </div>
              )}
@@ -762,7 +881,7 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
         </div>
       </motion.div>
 
-      {/* Confirmação de Conclusão */}
+      {/* Confirmação de Conclusão / Envio para Validação */}
       <AnimatePresence>
         {showConfirmClose && (
            <motion.div 
@@ -778,23 +897,60 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5 mx-auto">
                     <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                  </div>
-                 <h2 className="text-lg font-medium text-white text-center mb-2">Confirmar conclusão da ação</h2>
-                 <p className="text-[13px] text-gray-400 text-center mb-6">Tem certeza que esta ação foi concluída?</p>
+                 <h2 className="text-lg font-medium text-white text-center mb-2">
+                    {acao.faseExecucao === 'Aguardando Validação' ? 'Validar e Concluir Ação' : 
+                     ['Crítica', 'Alta', 'Média'].includes(acao.prioridade) ? 'Enviar para Validação' : 
+                     'Concluir Ação'}
+                 </h2>
+                 <p className="text-[13px] text-gray-400 text-center mb-6">
+                    {acao.faseExecucao === 'Aguardando Validação' ? 'Assine e forneça a base da validação de segurança.' : 
+                     ['Crítica', 'Alta', 'Média'].includes(acao.prioridade) ? 'Faça o upload das evidências da resolução para revisão.' : 
+                     'Tem certeza que deseja concluir esta ação?'}
+                 </p>
                  
-                 <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-3">
-                    <div className="flex justify-between text-[13px]">
-                       <span className="text-gray-400">Ação:</span>
-                       <span className="text-white font-medium text-right max-w-[200px] truncate">{acao.titulo}</span>
+                 {acao.faseExecucao === 'Aguardando Validação' && (
+                    <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-3">
+                       <div className="flex justify-between text-[13px]">
+                          <span className="text-gray-400">Ação:</span>
+                          <span className="text-white font-medium text-right max-w-[200px] truncate">{acao.titulo}</span>
+                       </div>
+                       <div className="flex justify-between text-[13px]">
+                          <span className="text-gray-400">Risco mitigado:</span>
+                          <span className="text-white text-right max-w-[200px] truncate">{acao.riscoVinculado || '-'}</span>
+                       </div>
+                       <div className="flex justify-between text-[13px]">
+                          <span className="text-gray-400">Validador Oficial:</span>
+                          <span className="text-emerald-400 font-bold">{acao.validador || 'Usuário Atual'}</span>
+                       </div>
                     </div>
-                    <div className="flex justify-between text-[13px]">
-                       <span className="text-gray-400">Responsável:</span>
-                       <span className="text-white">{acao.responsavel}</span>
+                 )}
+
+                 {acao.faseExecucao !== 'Aguardando Validação' && ['Crítica', 'Alta', 'Média'].includes(acao.prioridade) && (
+                    <div className="mb-4">
+                        <label className="text-[13px] text-gray-400 block mb-2 font-medium">
+                           Upload de Evidência <span className="text-red-400">*</span>
+                        </label>
+                        <div className="border border-dashed border-white/20 rounded-lg p-6 flex flex-col items-center justify-center bg-white/5">
+                           <FileText className="w-8 h-8 text-gray-500 mb-2" />
+                           <span className="text-[12px] text-gray-400">Clique ou arraste um arquivo para envio.</span>
+                           <span className="text-[10px] text-gray-500 mt-1">Obrigatório para riscos Média+</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-[13px]">
-                       <span className="text-gray-400">Risco:</span>
-                       <span className="text-white">{acao.riscoVinculado || '-'}</span>
+                 )}
+
+                 {acao.faseExecucao === 'Aguardando Validação' && (
+                    <div className="mb-4">
+                        <label className="text-[13px] text-gray-400 block mb-2 font-medium">
+                           O que comprova que o risco foi de fato eliminado/mitigado? <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                           type="text"
+                           id="baseadoEmInput"
+                           className="w-full bg-[#0c1018] border border-white/10 rounded-lg p-3 text-[13px] text-white focus:outline-none focus:border-emerald-500"
+                           placeholder="Ex: Foto da proteção instalada e ART assinada"
+                        />
                     </div>
-                 </div>
+                 )}
 
                  <div className="mb-6">
                      <label className="text-[13px] text-gray-400 block mb-2">
@@ -803,8 +959,8 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                      <textarea
                         value={comentarioLocal}
                         onChange={e => setComentarioLocal(e.target.value)}
-                        className="w-full bg-[#0c1018] border border-white/10 rounded-lg p-3 text-[13px] text-white focus:outline-none focus:border-emerald-500 min-h-[80px]"
-                        placeholder="Deixe um comentário sobre a conclusão..."
+                        className="w-full bg-[#0c1018] border border-white/10 rounded-lg p-3 text-[13px] text-white focus:outline-none focus:border-emerald-500 min-h-[60px]"
+                        placeholder={acao.faseExecucao === 'Aguardando Validação' ? "Justificativa da validação..." : "Diga o que foi feito..."}
                      />
                  </div>
 
@@ -817,14 +973,31 @@ export default function DrawerAcao({ acao, onClose, iniciarAcao, atualizarProgre
                     </button>
                     <button 
                        onClick={() => {
-                          concluirAcao(acao.id, comentarioLocal);
+                          if (acao.faseExecucao === 'Aguardando Validação') {
+                             const baseadoEmEl = document.getElementById('baseadoEmInput') as HTMLInputElement;
+                             const baseadoEmValue = baseadoEmEl && baseadoEmEl.value.trim() !== '' ? baseadoEmEl.value : 'Aprovação Direta';
+                             
+                             concluirAcao(acao.id, comentarioLocal, {
+                                validador: acao.validador || 'Usuário Atual',
+                                decisao: 'Aprovado',
+                                baseadoEm: baseadoEmValue,
+                                comentarios: comentarioLocal
+                             }, []);
+                          } else if (['Crítica', 'Alta', 'Média'].includes(acao.prioridade)) {
+                             enviarParaValidacao && enviarParaValidacao(acao.id, comentarioLocal, [{ url: 'mocked-evidence.jpg', tipo: 'Foto' }]);
+                          } else {
+                             concluirAcao(acao.id, comentarioLocal);
+                          }
+
                           setShowConfirmClose(false);
                           setComentarioLocal('');
                           onClose();
                        }}
-                       className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-[13px] font-medium transition-colors"
+                       className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-[13px] font-bold transition-colors"
                     >
-                       Sim, concluir ação
+                       {acao.faseExecucao === 'Aguardando Validação' ? 'Validar a Ação' : 
+                        ['Crítica', 'Alta', 'Média'].includes(acao.prioridade) ? 'Enviar Evidência' : 
+                        'Concluir a Ação'}
                     </button>
                  </div>
               </motion.div>

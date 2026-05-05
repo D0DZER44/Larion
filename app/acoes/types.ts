@@ -30,23 +30,48 @@ export type ActionFollowUp = {
   escaladoEm: string | null;
 };
 
+export type ActionEvidencia = {
+  id: string;
+  url: string;
+  tipo: 'Foto' | 'Documento' | 'Assinatura';
+  descricao: string;
+  dataUpload: string;
+  enviadoPor: string;
+  acaoId: string;
+  riscoId?: string;
+  inspecaoId?: string;
+  contexto?: string; // ex: 'Antes', 'Depois'
+};
+
+export type ActionValidacao = {
+  validador: string;
+  data: string;
+  decisao: 'Aprovado' | 'Recusado' | 'Requer Nova Evidencia';
+  baseadoEm: string;
+  comentarios?: string;
+};
+
 export type ActionItem = {
   id: string;
   titulo: string;
   descricao: string;
   prioridade: AcaoPrioridade;
   status: AcaoStatus;
+  faseExecucao?: 'Em Execução' | 'Aguardando Evidência' | 'Aguardando Validação' | 'Rejeitada' | 'Validada';
   setor: string;
   responsavel: string;
   prazo: string; // YYYY-MM-DD ou DD/MM/YYYY
   progresso: number;
-  origem: string;
+  origem: string; // ex: "Inspeção", "Manual", "Checklist"
+
+  // RASTREABILIDADE TOTAL (Origem)
   riscoId?: string;
   riscoVinculado?: string;
   riscoStatus?: string;
   riscoSeveridade?: string;
   inspecaoId?: string;
   checklistId?: string;
+  checklist_item_id?: string;
   perguntaOrigem?: string;
   respostaOrigem?: string;
   nrRelacionada?: string;
@@ -56,13 +81,26 @@ export type ActionItem = {
   explicacaoNormativa?: string;
   multaEstimada?: number;
   chanceIncidente?: string | number;
+  
   criadoEm: string;
   atualizadoEm: string;
   iniciadoEm: string | null;
   concluidoEm: string | null;
   canceladoEm?: string | null;
   comentarios?: string[];
-  evidencia: any[];
+  
+  // EVIDENCIA E VALIDAÇÃO (Destino final do rastreio)
+  exigeEvidencia?: boolean;
+  evidencia: ActionEvidencia[];
+  validacao?: ActionValidacao;
+
   historico: ActionHistoricoEvent[];
   followUp?: ActionFollowUp;
+
+  // PESSOA NO CENTRO
+  trabalhadoresExpostos?: number;
+  perfilExposto?: string;
+  impactoHumano?: string;
+  executor?: string;      // Quem vai executar a ação fisicamente
+  validador?: string;     // Quem assina embaixo da segurança da execução
 };

@@ -252,6 +252,31 @@ export function useAcoes() {
     };
 
     updateAcao(id, modified);
+
+    // Cascata de Status para o Risco
+    if (modified.riscoId) {
+       const riskId = modified.riscoId;
+       const relatedActions = useAppStore.getState().acoes.filter(a => a.riscoId === riskId && a.id !== id).concat([modified as any]);
+       
+       const criticalActions = relatedActions.filter(a => ['Crítica', 'Alta'].includes(a.prioridade));
+       // If risk has critical actions, require ALL critical actions to be validated for the risk to consider mitigated
+       
+       const relevantActions = criticalActions.length > 0 ? criticalActions : relatedActions;
+       
+       if (relevantActions.length > 0) {
+          const allValidated = relevantActions.every(a => a.faseExecucao === 'Validada' || a.status === 'Cancelada');
+          const allCompleted = relevantActions.every(a => ['Concluída', 'Cancelada'].includes(a.status));
+          
+          if (allValidated && allCompleted) {
+             useAppStore.getState().updateRisco(riskId, { status: 'Mitigado', atualizadoEm: dataHora, justificativa: 'Risco mitigado automaticamente pois todas as ações relevantes foram validadas.' });
+          } else if (modified.faseExecucao === 'Aguardando Validação' || modified.status === 'Concluída') {
+             // Let's ensure it stays open/reviewing
+             useAppStore.getState().updateRisco(riskId, { status: 'Em análise', atualizadoEm: dataHora, justificativa: 'Aguardando validação de ações pendentes.' });
+          } else {
+             useAppStore.getState().updateRisco(riskId, { status: 'Aberto', atualizadoEm: dataHora, justificativa: 'Risco reaberto ou em andamento.' });
+          }
+       }
+    }
   }, [acoes, updateAcao]);
 
   const executarFollowUps = useCallback(() => {
@@ -506,12 +531,13 @@ export function useAcoes() {
     updateActionStatus(id, updates, 'Atualização de progresso');
   };
 
-  const concluirAcao = (id: string, observacaoFinal?: string) => {
+  const concluirAcao = (id: string, observacaoFinal?: string, validacaoPayload?: any, evidenciaPayloads?: any[]) => {
     const acaoObj = acoes.find(a => a.id === id);
     if (!acaoObj) return;
 
     const updates: Partial<ActionItem> = {
       status: 'Concluída',
+      faseExecucao: 'Validada',
       progresso: 100,
       concluidoEm: new Date().toISOString()
     };
@@ -520,12 +546,70 @@ export function useAcoes() {
       if (!updates.comentarios) updates.comentarios = [];
       updates.comentarios = [...(acaoObj.comentarios || []), observacaoFinal];
     }
+    
+    if (evidenciaPayloads && evidenciaPayloads.length > 0) {
+       updates.evidencia = [...(acaoObj.evidencia || []), ...evidenciaPayloads];
+    }
+    
+    if (validacaoPayload) {
+       updates.validacao = {
+          validador: validacaoPayload.validador || 'Validador não identificado',
+          data: new Date().toISOString(),
+          decisao: validacaoPayload.decisao || 'Aprovado',
+          baseadoEm: validacaoPayload.baseadoEm || 'Evidências anexadas',
+          comentarios: validacaoPayload.comentarios
+       };
+    }
 
     const justificativa = acaoObj.riscoId
       ? 'Ação concluída. Risco vinculado deve ser revisado para avaliação de mitigação.'
       : observacaoFinal;
 
     updateActionStatus(id, updates, 'Conclusão', justificativa);
+  };
+
+  const enviarParaValidacao = (id: string, observacao?: string, evidenciaPayloads?: any[]) => {
+    const acaoObj = acoes.find(a => a.id === id);
+    if (!acaoObj) return;
+
+    const updates: Partial<ActionItem> = {
+      faseExecucao: 'Aguardando Validação',
+      progresso: 99,
+    };
+
+    if (observacao) {
+      if (!updates.comentarios) updates.comentarios = [];
+      updates.comentarios = [...(acaoObj.comentarios || []), observacao];
+    }
+    
+    if (evidenciaPayloads && evidenciaPayloads.length > 0) {
+       updates.evidencia = [...(acaoObj.evidencia || []), ...evidenciaPayloads];
+    }
+
+    updateActionStatus(id, updates, 'Evidências enviadas para validação');
+  };
+
+  const rejeitarValidacao = (id: string, motivo: string) => {
+    const acaoObj = acoes.find(a => a.id === id);
+    if (!acaoObj) return;
+
+    const updates: Partial<ActionItem> = {
+      faseExecucao: 'Rejeitada',
+      progresso: parseInt(((acaoObj.progresso || 100) * 0.8).toString(), 10),
+    };
+
+    if (!updates.comentarios) updates.comentarios = [];
+    updates.comentarios = [...(acaoObj.comentarios || []), `Rejeição de validação: ${motivo}`];
+
+    updates.validacao = {
+       validador: 'Sistema/Regulador',
+       data: new Date().toISOString(),
+       decisao: 'Recusado',
+       baseadoEm: motivo,
+       comentarios: motivo
+    };
+
+    updateActionStatus(id, updates, 'Validação rejeitada. Retornou para execução.');
   };
 
   const reatribuirAcao = (id: string, novoResponsavel: string, justificativa: string) => {
@@ -569,6 +653,8 @@ export function useAcoes() {
     iniciarAcao,
     atualizarProgresso,
     concluirAcao,
+    enviarParaValidacao,
+    rejeitarValidacao,
     reatribuirAcao,
     cancelarAcao,
     reabrirAcao,

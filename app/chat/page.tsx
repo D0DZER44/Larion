@@ -96,11 +96,39 @@ export default function ChatPage() {
             </div>
          </div>
          
-         <div className="text-sm bg-purple-900/10 border border-purple-500/20 p-4 rounded-xl flex flex-col gap-2">
+         <div className="text-sm bg-purple-900/10 border border-purple-500/20 p-4 rounded-xl flex flex-col gap-2 mb-6">
             <p><span className="text-purple-400 font-bold mr-1">• Setor Crítico:</span> {ctx.topSector}</p>
             <p><span className="text-purple-400 font-bold mr-1">• Conformidade:</span> {ctx.conformidade}%</p>
             <p><span className="text-purple-400 font-bold mr-1">• Checklists do Dia:</span> {ctx.checklistsHoje}</p>
          </div>
+
+         {ctx.alertasProativos && ctx.alertasProativos.length > 0 && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <h3 className="font-bold text-red-400 uppercase tracking-wider text-sm">Alertas Proativos L.A.R.I.</h3>
+                </div>
+                <div className="flex flex-col gap-4">
+                  {ctx.alertasProativos.map((alerta: any, i: number) => (
+                    <div key={i} className="flex flex-col gap-1 pb-4 border-b border-red-500/10 last:border-0 last:pb-0">
+                      <p className="font-bold text-gray-200 text-sm">{alerta.title}</p>
+                      <p className="text-[13px] text-gray-400">{alerta.context}</p>
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px] bg-black/20 p-3 rounded-lg">
+                        <div>
+                           <span className="text-gray-500 font-bold block mb-0.5">Impacto Humano</span>
+                           <span className="text-gray-300 leading-relaxed">{alerta.humanImpact}</span>
+                        </div>
+                        <div>
+                           <span className="text-gray-500 font-bold block mb-0.5">Ação Recomendada</span>
+                           <span className="text-purple-400 leading-relaxed">{alerta.recommendedAction}</span>
+                           <button onClick={(e) => { e.preventDefault(); window.location.href=alerta.link; }} className="block mt-1 text-purple-300 hover:text-white underline">Acessar Módulo →</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            </div>
+         )}
       </div>
 
       <div className="w-full max-w-3xl pt-2 mx-auto">

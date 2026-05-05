@@ -8,7 +8,7 @@ import {
   Plus, AlertTriangle, X, ChevronRight,
   Shield, Activity, Settings, Settings2, Clock, CheckCircle2,
   UserPlus, ShieldAlert,
-  TrendingUp, TrendingDown, Waves, FlaskConical, Users, BarChart2, Trash2, Filter, Zap, BadgeInfo, ArrowRight, ShieldCheck,
+  TrendingUp, TrendingDown, Waves, FlaskConical, Users, BarChart2, Trash2, Filter, Zap, BadgeInfo, ArrowRight, ShieldCheck, RefreshCw, HardHat,
   DollarSign, ArrowDownRight, PieChart as PieChartIcon,
   Factory, Wrench, Truck, Package, User, Info, FileText, Bot, Calendar, Eye, File, CalendarDays
 } from 'lucide-react';
@@ -183,7 +183,11 @@ export default function RiscosPage() {
     hasEpiEpc: true,
     hasProcedimento: true,
     hasTreinamento: true,
-    status: 'Aberto'
+    status: 'Aberto',
+    trabalhadoresExpostos: 0,
+    perfilExposto: '',
+    executorCorrecao: '',
+    validadorCorrecao: ''
   });
   
   const [selectedAction, setSelectedAction] = useState<RiskInstance | null>(null);
@@ -255,6 +259,21 @@ export default function RiscosPage() {
     useAppStore.getState().deleteRisco(id);
     setIsDrawerOpen(false);
   };
+
+  const riscosReincidentes = useMemo(() => {
+     return storeRiscos.filter((r: any) => r.reincidente || r.isRecurring).length;
+  }, [storeRiscos]);
+
+  const riscosPorFiltroGlobal = useMemo(() => {
+    return {
+      critico: storeRiscos.filter((r: any) => r.nivel === 'Crítico' || r.criticidade === 'Muito Alta').length,
+      totalAbertos: storeRiscos.filter((r: any) => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado').length,
+      totalMulta: storeRiscos.filter((r: any) => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado')
+                      .reduce((acc: number, r: any) => acc + (r.multaEstimada || 0), 0),
+      reincidentes: riscosReincidentes,
+      nrsCount: Array.from(new Set(storeRiscos.map((r: any) => r.nr).filter(Boolean))).length
+    };
+  }, [storeRiscos, riscosReincidentes]);
 
   const storeAddRisco = useAppStore(state => state.addRisco);
   const storeUpdateRisco = useAppStore(state => state.updateRisco);
@@ -561,6 +580,75 @@ export default function RiscosPage() {
               </button>
             </div>
           </header>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shrink-0 mb-6">
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                      <ShieldAlert className="w-4 h-4 text-red-500" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos Críticos</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{riscosPorFiltroGlobal.critico}</div>
+                    <span className="text-[11px] text-red-400 font-medium whitespace-nowrap">Ação Imediata</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                      <HardHat className="w-4 h-4 text-orange-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por NR</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{riscosPorFiltroGlobal.nrsCount}</div>
+                    <span className="text-[11px] text-orange-400 font-medium">Normas ativas</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por Pacote</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activePackageNames.length}</div>
+                    <span className="text-[11px] text-purple-400 font-medium uppercase tracking-tight">Pacotes instalados</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Multa Estimada Total</h3>
+                </div>
+                <div className="flex flex-col items-start mt-1">
+                    <div className="text-xl font-bold text-white tracking-tight leading-none mb-1">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(riscosPorFiltroGlobal.totalMulta)}
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-tighter">Impacto Consolidado</span>
+                </div>
+            </div>
+
+            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center">
+                      <RefreshCw className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos Reincidentes</h3>
+                </div>
+                <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{riscosPorFiltroGlobal.reincidentes}</div>
+                    <span className="text-[11px] text-gray-400 font-medium">Reincidência</span>
+                </div>
+            </div>
           </div>
 
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -1615,60 +1703,113 @@ export default function RiscosPage() {
                      </div>
                    </div>
 
-                   <div className="space-y-4">
-                     {selectedAction.inspection_name && (
-                       <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                          <span className="text-[13px] text-gray-500 shrink-0">Inspeção de origem</span>
-                          <span className="text-[13px] text-purple-400 font-bold text-right">
-                             {selectedAction.inspection_name}
-                          </span>
-                       </div>
-                     )}
-                     {(selectedAction as any).checklistId && (
-                       <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                          <span className="text-[13px] text-gray-500 shrink-0">Checklist vinculado</span>
-                          <span className="text-[13px] text-gray-200 text-right">
-                             {selectedAction.atividade || 'Checklist de Inspeção'}
-                          </span>
-                       </div>
-                     )}
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Justificativa</span>
-                        <span className="text-[13px] text-gray-200 text-right">
-                           {(selectedAction as any).justificativa || (selectedAction as any).justificativaMulta || 'Risco identificado durante auditoria.'}
-                        </span>
-                     </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Pergunta origem</span>
-                        <span className="text-[13px] text-gray-200 text-right">
-                           {(selectedAction as any).perguntaOrigem || 'A atividade envolve entrada em espaços confinados ou locais com ventilação limitada?'}
-                        </span>
-                     </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Resposta origem</span>
-                        <span className="text-[13px] text-gray-200 text-right">{(selectedAction as any).respostaOrigem || 'Sim'}</span>
-                     </div>
-                     <div className="flex justify-between items-start gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Multa estimada</span>
-                        <span className="text-[13px] font-mono text-gray-200 text-right">
-                           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(selectedAction.multaEstimada || 40000)}
-                        </span>
-                     </div>
-                     <div className="flex justify-between items-center gap-6 border-b border-white/5 pb-4">
-                        <span className="text-[13px] text-gray-500 shrink-0">Chance de incidente</span>
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border flex items-center gap-1 min-w-0 ${((selectedAction.chanceIncidente || 0) >= 60) ? 'text-red-400 border-red-500/20 bg-red-500/10' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'text-orange-400 border-orange-500/20 bg-orange-500/10' : 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'}`}>
-                           <span className={`w-1.5 h-1.5 rounded-full ${((selectedAction.chanceIncidente || 0) >= 60) ? 'bg-red-500' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
-                           {((selectedAction.chanceIncidente || 0) >= 60) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35) ? 'Média' : 'Baixa'}
-                        </span>
-                     </div>
-                     <div className="flex justify-between items-center gap-6 pt-2">
-                        <span className="text-[13px] text-gray-500 shrink-0">Responsável atual</span>
-                        <div className="flex items-center gap-2 text-[13px] text-gray-200">
-                           <div className="w-5 h-5 rounded-full bg-gray-500/20 flex items-center justify-center border border-white/10 overflow-hidden">
-                              <User className="w-3.5 h-3.5 text-gray-400" />
+                   {/* RASTREABILIDADE TOTAL - LINHAGEM DO RISCO */}
+                   <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+                     <h3 className="text-sm font-bold text-blue-400 mb-6 flex items-center gap-2">
+                        <ArrowRight className="w-4 h-4" /> Rastreabilidade (Linhagem do Risco)
+                     </h3>
+
+                     <div className="relative border-l-2 border-white/10 ml-3 pl-6 space-y-6">
+                        {/* Passo 1: Inspeção/Origem */}
+                        <div className="relative">
+                           <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-emerald-500 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                            </div>
-                           <span className="font-medium">SST <span className="text-gray-500 font-normal">• Supervisor da área</span></span>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Origem da Identificação</p>
+                           <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                              {(selectedAction.origem || '').toLowerCase().includes('inspe') ? (
+                                 <>
+                                    <div className="flex items-center gap-2 text-emerald-400 font-medium text-[13px] mb-1">
+                                       <ShieldCheck className="w-4 h-4" /> Inspeção de Segurança
+                                    </div>
+                                    <p className="text-[13px] text-gray-200">
+                                       <span className="text-gray-400">Inspeção:</span> {selectedAction.inspection_name || 'Auditoria Interna'}
+                                    </p>
+                                    <p className="text-[13px] text-gray-200">
+                                       <span className="text-gray-400">Checklist/Item:</span> {selectedAction.atividade || 'Checklist de rotina'}
+                                    </p>
+                                    {(selectedAction as any).perguntaOrigem && (
+                                       <div className="mt-2 text-[12px] bg-black/20 p-2 rounded">
+                                          <p className="text-gray-400 italic">&quot;{((selectedAction as any).perguntaOrigem)}&quot;</p>
+                                          <p className="text-red-400 font-medium mt-1">Resposta Inconforme: {(selectedAction as any).respostaOrigem || 'Não'}</p>
+                                       </div>
+                                    )}
+                                 </>
+                              ) : (
+                                 <>
+                                    <div className="flex items-center gap-2 text-blue-400 font-medium text-[13px] mb-1">
+                                       <Bot className="w-4 h-4" /> Motor de Riscos (Sistema)
+                                    </div>
+                                    <p className="text-[13px] text-gray-400">Gerado automaticamente via parâmetros da organização e histórico.</p>
+                                 </>
+                              )}
+                           </div>
                         </div>
+
+                        {/* Passo 2: Fundamentação Legal */}
+                        <div className="relative">
+                           <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-purple-500 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                           </div>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Fundamentação Normativa</p>
+                           <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                              <div className="flex items-center gap-2 text-purple-400 font-medium text-[13px] mb-1">
+                                 <FileText className="w-4 h-4" /> {selectedAction.nr || selectedAction.nrRelacionada || 'Norma não especificada'}
+                              </div>
+                              <p className="text-[13px] text-gray-200">
+                                 <span className="text-gray-400">Regra associada:</span> {selectedAction.regraTitulo || selectedAction.titulo || 'Regra não declarada'}
+                              </p>
+                              {(selectedAction.multaEstimada || selectedAction.chanceIncidente) ? (
+                                <div className="mt-2 flex gap-4 text-[12px]">
+                                   {selectedAction.multaEstimada && <span className="text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">Multa potencial: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(selectedAction.multaEstimada)}</span>}
+                                   {selectedAction.chanceIncidente && <span className="text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">Modulador (Incidente): {selectedAction.chanceIncidente}%</span>}
+                                </div>
+                              ) : null}
+                           </div>
+                        </div>
+
+                        {/* Passo 3: Pessoas/Dano Potencial */}
+                        <div className="relative">
+                           <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-orange-500 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                           </div>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Impacto Humano</p>
+                           <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                              <div className="flex items-center justify-between">
+                                 <div>
+                                    <div className="flex items-center gap-2 text-orange-400 font-medium text-[13px] mb-1">
+                                       <Users className="w-4 h-4" /> {selectedAction.trabalhadoresExpostos || 0} Trabalhadores Expostos
+                                    </div>
+                                    <p className="text-[13px] text-gray-200">
+                                       <span className="text-gray-400">Perfil:</span> {selectedAction.perfilExposto || 'Não informado'}
+                                    </p>
+                                 </div>
+                                 <div className="text-right">
+                                    <p className="text-[11px] text-gray-500 mb-1">Dano Potencial Evitado</p>
+                                    <p className="text-[12px] font-bold text-red-400 max-w-[150px]">{selectedAction.impactoHumano || 'Dano físico'}</p>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Passo 4: Próximo passo -> Ação (Se existir) */}
+                        <div className="relative">
+                           <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-gray-600 flex items-center justify-center">
+                              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+                           </div>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Resolução (Ação/Mitigação)</p>
+                           <div className="bg-white/5 border border-white/5 border-dashed rounded-lg p-3 flex justify-between items-center">
+                              <div className="text-[13px]">
+                                 <p className="text-gray-300 font-medium mb-0.5">Execução & Validação</p>
+                                 <p className="text-gray-500 text-[12px]">Quem resolve: {selectedAction.executorCorrecao || 'Não definido'}</p>
+                                 <p className="text-gray-500 text-[12px]">Quem assina: {selectedAction.validadorCorrecao || 'SST'}</p>
+                              </div>
+                              <button onClick={() => window.location.href='/operacao/acoes'} className="text-[12px] bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded border border-white/10 transition-colors">
+                                 Ver Ações
+                              </button>
+                           </div>
+                        </div>
+
                      </div>
                    </div>
 
@@ -1742,6 +1883,52 @@ export default function RiscosPage() {
                       <p className="text-[13px] text-gray-400 leading-relaxed">
                          Atividade com alto potencial de incidentes em {selectedAction.setor?.toLowerCase()} relacionados aos riscos: {(selectedAction as any).riscosNomes?.join(', ') || selectedAction.tipoDeRisco || 'N/A'}. Requer acompanhamento de fatores agravantes para manter compliance. 
                       </p>
+                   </div>
+
+                   {/* PESSOA NO CENTRO */}
+                   <div className="bg-[#1a2332]/50 p-4 rounded-xl border border-white/5 space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                         <h4 className="text-xs font-bold text-gray-200 uppercase tracking-wider">Trabalhadores Expostos</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[11px] text-gray-500 mb-0.5">Perfil Expôsto</p>
+                          <p className="text-[13px] font-medium text-gray-200">{selectedAction.perfilExposto || 'Não informado'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-gray-500 mb-0.5">Qtd. Pessoas</p>
+                          <p className="text-[13px] font-medium text-gray-200">{selectedAction.trabalhadoresExpostos || 0} expostos</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-[11px] text-gray-500 mb-0.5">Impacto Humano Estimado</p>
+                          <p className="text-[13px] font-medium text-red-400">{selectedAction.impactoHumano || 'Dano à integridade física'}</p>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-white/5 w-full my-1"></div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                         <div>
+                            <p className="text-[11px] text-gray-500 mb-0.5">Executor da Correção</p>
+                            <div className="flex items-center gap-2 mt-1">
+                               <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                                  {selectedAction.executorCorrecao?.charAt(0) || 'E'}
+                               </div>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.executorCorrecao || 'A definir'}</span>
+                            </div>
+                         </div>
+                         <div>
+                            <p className="text-[11px] text-gray-500 mb-0.5">Validador (Responsável)</p>
+                            <div className="flex items-center gap-2 mt-1">
+                               <div className="w-5 h-5 rounded-full bg-[#121826] border border-white/10 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                                  {selectedAction.validadorCorrecao?.charAt(0) || 'V'}
+                               </div>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.validadorCorrecao || 'A definir'}</span>
+                            </div>
+                         </div>
+                      </div>
                    </div>
 
                    {(selectedAction.regraFixa !== undefined || selectedAction.nrRelacionada || selectedAction.nr) && (
@@ -2152,6 +2339,63 @@ export default function RiscosPage() {
                       {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
                     </select>
                   </div>
+                </div>
+
+                <div className="space-y-4 border-b border-white/5 pb-5">
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                         Qtd. Pessoas Expostas
+                       </label>
+                       <input 
+                         type="number" min="0" 
+                         value={formData.trabalhadoresExpostos || 0} 
+                         onChange={e => setFormData({...formData, trabalhadoresExpostos: parseInt(e.target.value) || 0})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-blue-500 transition-colors"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                         Perfil Exposto (Função)
+                       </label>
+                       <input 
+                         type="text" 
+                         value={formData.perfilExposto || ''} 
+                         onChange={e => setFormData({...formData, perfilExposto: e.target.value})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-blue-500 transition-colors placeholder:text-gray-600"
+                         placeholder="Ex: Soldadores"
+                       />
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider text-indigo-400 flex items-center gap-1">
+                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                         Executor da Ação
+                       </label>
+                       <input 
+                         type="text" 
+                         value={formData.executorCorrecao || ''} 
+                         onChange={e => setFormData({...formData, executorCorrecao: e.target.value})}
+                         className="w-full bg-black/40 border border-indigo-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-gray-600"
+                         placeholder="Iniciais/Nome"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                         Validador / Responsável
+                       </label>
+                       <input 
+                         type="text" 
+                         value={formData.validadorCorrecao || ''} 
+                         onChange={e => setFormData({...formData, validadorCorrecao: e.target.value})}
+                         className="w-full bg-black/40 border border-emerald-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-gray-600"
+                         placeholder="Quem assina a baixa"
+                       />
+                     </div>
+                   </div>
                 </div>
 
                 <div className="space-y-5">

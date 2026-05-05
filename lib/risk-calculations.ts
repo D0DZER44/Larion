@@ -1,4 +1,5 @@
 import { NormativeEngine } from './engines';
+import { FineEngine } from './fineEngine';
 
 export type NivelRisco = 'Crítico' | 'Alto' | 'Médio' | 'Baixo';
 
@@ -63,6 +64,23 @@ export type RiskInstance = {
   perguntaId?: string;
   item_origem_id?: string;
   item_origem_tipo?: string;
+
+  // PESSOA NO CENTRO
+  trabalhadoresExpostos?: number;
+  perfilExposto?: string; // e.g. "Equipe de Manutenção", "Operador de Empilhadeira"
+  impactoHumano?: string; // Descrição do dano à pessoa
+  executorCorrecao?: string; // Quem coloca a mão na massa
+  validadorCorrecao?: string; // Quem atesta que ficou seguro
+
+  // RASTREABILIDADE TOTAL E VALIDAÇÃO (Destino final)
+  evidenciasVinculadas?: { id: string; url: string; tipo: string; contexto: string }[];
+  decisaoFinal?: {
+    validador: string;
+    data: string;
+    resultado: 'Risco Mitigado' | 'Risco Aceito' | 'Risco Transferido' | 'Necessita Nova Avaliação';
+    baseadoEm: string; // Ex: "Ação #act-123 concluída" ou "Evidências Fotográficas"
+    assinatura?: string;
+  };
 };
 
 export function gerarExplicacaoNormativa(nrRelacionada: string | undefined, respostaOrigem: string | undefined, checklistName: string | undefined): string {
@@ -240,6 +258,16 @@ export function applyManualRules(payload: Partial<RiskInstance>): RiskInstance {
   const prazo = calcularPrazo(prioridade, payload.severidade || '');
   
   const tempRisco = { ...payload, prioridade, nivel };
+  
+  // Use FineEngine for estimated range
+  const nrName = payload.nr || 'NR-01';
+  const fineEstimate = FineEngine.calcularFaixaMulta({
+    nr: nrName,
+    criticidade: nivel,
+    numeroEmpregados: 50, // Default for manual application
+    tipoInfracao: nrName.includes('NR-07') || nrName.includes('NR-09') || nrName.includes('NR-32') ? 'Medicina' : 'Segurança'
+  });
+
   const { multaEstimada, faixaMulta } = calcularMultaEstimada(tempRisco);
   const chanceIncidente = calcularChanceIncidente(tempRisco);
   const impactoOperacional = calcularImpactoOperacional(tempRisco, chanceIncidente, multaEstimada);
@@ -268,12 +296,17 @@ export function applyManualRules(payload: Partial<RiskInstance>): RiskInstance {
     criadoEm: payload.criadoEm || new Date().toISOString(),
     multaEstimada,
     faixaMulta,
+    multaEstimativaMin: fineEstimate.minimoEstimado,
+    multaEstimativaMax: fineEstimate.maximoEstimado,
+    faixaMultaLabel: fineEstimate.faixaLabel,
+    baseMulta: fineEstimate.baseLegal,
+    disclaimerMulta: fineEstimate.disclaimer,
     chanceIncidente,
     impactoOperacional,
     nivelConformidade,
-    justificativaMulta: "Cálculo baseado em análise da NR, prioridade do risco, histórico e itens de segurança (EPIs/EPCs) no ambiente.",
+    justificativaMulta: "Cálculo baseado em análise da NR, prioridade do risco, histórico e itens de segurança (EPIs/EPCs) no ambiente. " + fineEstimate.disclaimer,
     justificativaIncidente: "Estimativa baseada em tipo de atividade, severidade, falta de proteção individual/coletiva e histórico de resolução.",
-    fatoresDeCalculo: ["Criticidade da NR", "Falta de EPI/EPC", "Severidade " + (payload.severidade || 'Média')]
+    fatoresDeCalculo: ["Criticidade da NR", "Falta de EPI/EPC", "Severidade " + (payload.severidade || 'Média'), "Porte estimado (50 emp.)"]
   } as RiskInstance;
 }
 

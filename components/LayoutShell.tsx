@@ -11,9 +11,15 @@ import Link from 'next/link';
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { alertas = [], rulePackages = [] } = useAppStore();
   
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setMounted(true);
+  }, []);
+
   const activePackageNames = useMemo(() => 
     rulePackages.filter(p => p.isActive).map(p => p.name), 
   [rulePackages]);
@@ -85,7 +91,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[12px] text-gray-400">
                <Calendar className="w-3.5 h-3.5 text-purple-400" />
-               <span>{new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date())}</span>
+               <span>{mounted ? new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date()) : ''}</span>
             </div>
 
             <div className="h-4 w-px bg-white/10 mx-2" />

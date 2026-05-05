@@ -130,6 +130,7 @@ export default function CentralPage() {
   
   const multaEmAberto = useMemo(() => openRisks.reduce((acc, r) => acc + getMultaEstimada(r), 0), [openRisks]);
   const avgChance = useMemo(() => openRisks.length > 0 ? openRisks.reduce((acc, r) => acc + getChanceIncidente(r), 0) / openRisks.length : 0, [openRisks]);
+  const trabalhadoresExpostos = useMemo(() => openRisks.reduce((acc, r) => acc + (r.trabalhadoresExpostos || 0), 0), [openRisks]);
 
   // Metric Computations Let's structure the 12 KPI cards data
   const KPIs = useMemo(() => {
@@ -162,7 +163,8 @@ export default function CentralPage() {
       { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
       { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
       
-      { id: 'c5', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c5', label: 'Pessoas em risco', val: trabalhadoresExpostos, sub: 'Expostos a riscos abertos', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c5b', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →' },
       { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
       { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/inspecoes', navLabel: 'Ver origem →' },
       { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
@@ -170,14 +172,14 @@ export default function CentralPage() {
       { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
       { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
       { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →' },
-      { id: 'c12', label: 'Regras do motor', val: rules.length || 8, sub: 'Automações ativas', icon: Settings, color: 'text-gray-400', bg: 'bg-white/5', border: 'border-white/10', navTo: '/configuracoes', navLabel: 'Gerenciar no Motor →' },
     ];
-  }, [riscos, inspecoes, acoes, rules, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [riscos, inspecoes, acoes, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen, trabalhadoresExpostos]);
 
   // Main 4 Top Cards (from Figma design)
   const topCards = [
     KPIs.find(k => k.id === 'c9'), // Total de riscos
-    KPIs.find(k => k.id === 'c5'), // Críticos em aberto
+    KPIs.find(k => k.id === 'c5'), // Pessoas em Risco
     KPIs.find(k => k.id === 'c10'), // Multa estimada
     KPIs.find(k => k.id === 'c11'), // Chance média
   ];
