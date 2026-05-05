@@ -30,13 +30,20 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
 
   // Initialize questions if empty
   const checklistsAtivos = useMemo(() => getTodosChecklistsAtivos(store.checklists || []), [store.checklists]);
-  const template = checklistsAtivos.find(c => c.name === inspection?.checklist || c.id === inspection?.checklistId);
+  const template = checklistsAtivos.find(c => c.name === inspection?.checklist || c.titulo === inspection?.checklist || c.title === inspection?.checklist || c.id === inspection?.checklistId);
   
   const [items, setItems] = useState<any[]>(() => {
-     if (inspection?.items && inspection.items.length > 0) return JSON.parse(JSON.stringify(inspection.items));
+     if (inspection?.items && inspection.items.length > 0) {
+        return JSON.parse(JSON.stringify(inspection.items)).map((item: any, idx: number) => ({
+             ...item,
+             id: item.id || `legacy-${idx}-${crypto.randomUUID()}`,
+             status: item.status === 'Conforme' ? 'Sim' : item.status === 'Não Conforme' || item.status === 'Não-Conforme' ? 'Não' : item.status
+        }));
+     }
      if (template) {
-        return template.sections.flatMap((s: any) => s.questions.map((q: any) => ({
+        return template.sections.flatMap((s: any) => s.questions.map((q: any, i: number) => ({
              ...q,
+             id: q.id || `temp-${s.id}-${i}-${crypto.randomUUID()}`,
              status: 'Pendente',
              observacao: '',
              sectionId: s.id,

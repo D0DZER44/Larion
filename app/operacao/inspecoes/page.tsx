@@ -925,7 +925,7 @@ export default function InspecoesPage() {
       {/* Drawer */}
       <AnimatePresence mode="wait">
         {isDrawerOpen && selectedInspecao && drawerMode === 'EXECUTE' ? (
-          <ExecutionView key="execute" inspectionId={selectedInspecao.id} onClose={() => setIsDrawerOpen(false)} />
+          <ExecutionView key={`execute-${selectedInspecao.id}`} inspectionId={selectedInspecao.id} onClose={() => setIsDrawerOpen(false)} />
         ) : isDrawerOpen && drawerMode === 'CHECKLIST_VIEW' && selectedChecklist ? (
           <>
            <motion.div 
