@@ -275,7 +275,7 @@ export function applyManualRules(payload: Partial<RiskInstance>): RiskInstance {
 
   return {
     ...payload,
-    id: payload.id || Math.random().toString(36).substr(2, 9),
+    id: payload.id || crypto.randomUUID(),
     titulo: payload.titulo || 'Risco não especificado',
     atividade: payload.atividade || 'Não especificada',
     setor: payload.setor || 'Não especificado',

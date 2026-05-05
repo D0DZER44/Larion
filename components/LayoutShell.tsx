@@ -16,8 +16,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const { alertas = [], rulePackages = [] } = useAppStore();
   
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const activePackageNames = useMemo(() => 

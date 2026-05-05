@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { NR_MATRIX, getNRsAplicaveis } from '@/lib/nrMatrix';
 import { fixedNrChecklists } from '@/lib/normativeChecklists';
@@ -19,6 +19,12 @@ import {
 export default function MatrizNormativaPage() {
   const [activeTab, setActiveTab] = useState<'Matriz' | 'Checklists'>('Matriz');
   const storeChecklists = useAppStore(state => state.checklists);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   // We can get org settings from some context or assume "Indústria" as an example based on existing mock data or let user filter
   const [selectedSegment, setSelectedSegment] = useState<string>('Indústria');
@@ -32,6 +38,8 @@ export default function MatrizNormativaPage() {
   });
 
   const allNrs = Array.from(new Set(NR_MATRIX.map(nr => nr.pacote)));
+
+  if (!mounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0b0f19]">

@@ -103,7 +103,7 @@ export default function FloatingChat() {
     isTypingRef.current = true;
 
     const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    setMessages(prev => [...prev, { id: Math.random().toString(), sender: 'user', text, time }]);
+    setMessages(prev => [...prev, { id: crypto.randomUUID(), sender: 'user', text, time }]);
     setInputVal('');
     setIsTyping(true);
 
@@ -230,7 +230,7 @@ export default function FloatingChat() {
       }
 
       setMessages(prev => [...prev, {
-        id: Math.random().toString(),
+        id: crypto.randomUUID(),
         sender: 'lari',
         text: (
            <>

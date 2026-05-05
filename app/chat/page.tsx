@@ -325,6 +325,14 @@ export default function ChatPage() {
     }, 1500);
   };
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">
       <main className="flex-1 flex flex-col h-full overflow-hidden">

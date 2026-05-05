@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodasRegrasAtivas, fixedNrRules } from '@/lib/normativeRules';
@@ -26,12 +26,20 @@ const TABS = [
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('geral');
   const { alertas = [], rulePackages = [] } = useAppStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
   const activeAlertsCount = alertas.filter(a => 
     a.status === 'Ativo' && 
     (!a.package || a.package === 'Base SST' || activePackageNames.includes(a.package))
   ).length;
+
+  if (!mounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0A0D14] text-white font-sans">

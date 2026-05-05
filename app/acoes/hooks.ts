@@ -381,7 +381,7 @@ export function useAcoes() {
   const createAction = (newAction: Omit<ActionItem, 'id' | 'criadoEm' | 'atualizadoEm' | 'historico'>) => {
     const actionToStore = {
       ...newAction,
-      id: `AC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      id: `AC-${crypto.randomUUID().split('-')[0].toUpperCase()}`,
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
       historico: [{
@@ -443,7 +443,7 @@ export function useAcoes() {
     Resposta da Inspeção: ${checklistResposta?.texto ? checklistResposta.texto : (checklistResposta?.resposta || '-')}`;
 
     const dataHora = new Date().toISOString();
-    const idAcao = `AC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    const idAcao = `AC-${crypto.randomUUID().split('-')[0].toUpperCase()}`;
 
     const historicoEvent = {
         id: crypto.randomUUID(),

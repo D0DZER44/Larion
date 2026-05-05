@@ -449,8 +449,8 @@ function DossieDefensavelPreview() {
            <div className="space-y-3 text-[12px]">
               <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Empresa</span><span className="font-bold text-gray-900">{organization?.name || 'Não informada'}</span></div>
               <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Segmento</span><span className="text-gray-800">{organization?.segment || 'Não informado'}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Emissão</span><span className="text-gray-800">{new Date().toLocaleString('pt-BR')}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Assinatura Digital</span><span className="font-mono text-gray-400 text-[10px]">SHA-256:{Math.random().toString(36).substring(2, 15)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Emissão</span><span className="text-gray-800">Emissão em Tempo Real</span></div>
+              <div className="flex justify-between"><span className="text-gray-500 font-bold uppercase">Assinatura Digital</span><span className="font-mono text-gray-400 text-[10px]">SHA-256:Auditável</span></div>
            </div>
          </div>
          <div className="border border-emerald-200 p-6 rounded-sm bg-emerald-50/30">
@@ -507,7 +507,7 @@ function DossieDefensavelPreview() {
          <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-[10px] uppercase font-bold text-gray-400 mb-2">Rastreabilidade & Validação</p>
             <p className="text-[11px] text-gray-600 leading-relaxed text-justify">
-               Este dossiê reflete estritamente a cadeia de dados auditáveis inseridos na plataforma L.A.R.I. Toda e qualquer ação de controle indicada como "Mitigada/Concluída" exige que o mantenedor, por parte da contratante ou operador logístico local, assuma responsabilidade técnica via validação cruzada. Nenhuma evidência é aprovada sem rastreabilidade do autor.
+               Este dossiê reflete estritamente a cadeia de dados auditáveis inseridos na plataforma L.A.R.I. Toda e qualquer ação de controle indicada como &quot;Mitigada/Concluída&quot; exige que o mantenedor, por parte da contratante ou operador logístico local, assuma responsabilidade técnica via validação cruzada. Nenhuma evidência é aprovada sem rastreabilidade do autor.
             </p>
          </div>
       </div>

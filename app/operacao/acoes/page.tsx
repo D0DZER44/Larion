@@ -54,7 +54,9 @@ function AcoesContent() {
     updateActionStatus, 
     iniciarAcao, 
     atualizarProgresso, 
-    concluirAcao, 
+    concluirAcao,
+    enviarParaValidacao,
+    rejeitarValidacao,
     reatribuirAcao, 
     cancelarAcao, 
     reabrirAcao, 
@@ -95,6 +97,8 @@ function AcoesContent() {
     setIsDrawerOpen(false);
     setTimeout(() => setSelectedAction(null), 300);
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#03060e] text-white">

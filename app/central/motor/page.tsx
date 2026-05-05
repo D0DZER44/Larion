@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'motion/react';
 import { getTodasRegrasAtivas } from '@/lib/normativeRules';
@@ -75,6 +75,14 @@ export default function MotorNormativoPage() {
      if (expandedNR === nr) setExpandedNR(null);
      else setExpandedNR(nr);
   };
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0b0f19]">

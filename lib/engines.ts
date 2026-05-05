@@ -693,7 +693,7 @@ export const PriorityEngine = {
         const isHigh = nivel.toLowerCase() === 'alto';
         
         queue.push({
-          id: r.id || `risk-${Math.random()}`,
+          id: r.id || `risk-${crypto.randomUUID()}`,
           prio: isCrit ? 'P1' : (isHigh ? 'P2' : 'P3'),
           title: `Mitigar Risco: ${r.atividade || r.title || r.setor || 'Não especificado'}`,
           origem: r.source || 'Riscos',
@@ -715,7 +715,7 @@ export const PriorityEngine = {
       currentState.inspecoes.forEach((i: any) => {
         if (i.status === 'Atrasada' || i.relativeDate === 'Atrasada') {
           queue.push({
-            id: i.id || `insp-${Math.random()}`,
+            id: i.id || `insp-${crypto.randomUUID()}`,
             prio: 'P1',
             title: `Regularizar Inspeção: ${i.nome || i.titulo || i.title || 'Pendente'}`,
             origem: 'Inspeções',

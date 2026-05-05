@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodasRegrasAtivas } from '@/lib/normativeRules';
@@ -251,6 +251,14 @@ export default function CentralPage() {
   const listRiscos = topRisksByChance.length > 0 ? openRisks.filter(r => getRiskSeverityLevel(r) === 'Crítico').slice(0,5) : topFallbackRisks.map((fr, idx) => ({ ...fr, id: String(idx) }));
   
   const latestInspections = [...inspecoes].sort((a:any,b:any) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime()).slice(0, 5);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-[#03060e] text-white font-sans overflow-x-hidden flex flex-col">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import TimelineHistory from '@/components/TimelineHistory';
@@ -515,6 +515,14 @@ export default function RiscosPage() {
   const totalMultaAbertoActivity = sortedActivities.reduce((sum, a) => sum + a.multaTotal, 0);
 
   const getPercentage = (val: number, total: number) => total > 0 ? Math.round((val / total) * 100) : 0;
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#0b0f19]">

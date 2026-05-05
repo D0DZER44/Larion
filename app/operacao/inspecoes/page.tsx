@@ -45,6 +45,12 @@ type Inspecao = {
 
 export default function InspecoesPage() {
   const store = useAppStore();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
   const router = useRouter();
   const { checklists: customChecklists, addInspecao, updateInspecao, addRisco, addAcao, riscos, acoes, rulePackages, organization } = store;
   const checklists = useMemo(() => getTodosChecklistsAtivos(customChecklists), [customChecklists]);
@@ -462,6 +468,8 @@ export default function InspecoesPage() {
        evidenciasAusentes
     };
   }, [store.inspecoes, store.riscos, store.acoes]);
+
+  if (!mounted) return null;
 
   return (
     <div className="flex w-full h-full overflow-hidden bg-[#03060e]">
