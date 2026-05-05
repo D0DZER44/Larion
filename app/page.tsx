@@ -890,9 +890,9 @@ export default function Dashboard() {
           </button>
           
           {/* KPIs SUPERIORES */}
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-7 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
             {/* NOVO KPI 0: Pessoas Expostas */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-red-500/20 hover:border-red-500/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[rgba(46,24,88,0.38)] p-4 rounded-[16px] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   Pessoas em Risco <Users className="w-3.5 h-3.5 text-red-500" />
@@ -915,7 +915,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 1: Riscos Críticos Abertos */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
+            <div className="bg-[rgba(46,24,88,0.38)] p-4 rounded-[16px] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] flex flex-col justify-between group relative flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   Riscos Críticos <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
@@ -933,52 +933,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* KPI 3: Ações s/ Validação */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-300 transition-colors">s/ Validação</span>
-                <CheckSquare className={`w-4 h-4 ${metrics.actionsAwaitingValidation > 0 ? 'text-orange-500' : 'text-gray-500'}`} />
-              </div>
-              <div className="mt-auto pt-2">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.actionsAwaitingValidation > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
-                  {metrics.actionsAwaitingValidation}
-                </div>
-                {metrics.actionsAwaitingValidation > 0 ? (
-                  <div className="text-[12px] text-orange-500 font-bold mb-2 uppercase tracking-wide">Aguardando Aval</div>
-                ) : (
-                  <div className="text-[12px] text-green-500 font-bold mb-2 uppercase tracking-wide">Fluxo Livre</div>
-                )}
-                <div className="flex flex-col gap-1 text-[11px] text-gray-400 font-medium">
-                   Ações aguardando supervisor
-                </div>
-              </div>
-            </div>
-
-            {/* KPI 4: Evidências Pendentes */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1">
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                  Evidências <FileText className="w-3.5 h-3.5 text-blue-400" />
-                </span>
-                <Info className="w-4 h-4 text-gray-500 opacity-50" />
-              </div>
-              <div className="relative z-10 mt-auto flex flex-col pt-1">
-                <div className={`text-[2.5rem] leading-none font-bold tracking-tighter mb-2 ${metrics.missingEvidenceCount > 0 ? 'text-blue-400' : 'text-gray-300'}`}>
-                  {metrics.missingEvidenceCount}
-                </div>
-                {metrics.missingEvidenceCount > 0 ? (
-                  <div className="text-[12px] text-blue-400 font-bold mb-2 uppercase tracking-wide">Anexo Pendente</div>
-                ) : (
-                  <div className="text-[12px] text-green-500 font-bold mb-2 uppercase tracking-wide">Tudo Anexado</div>
-                )}
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
-                  <span>Itens críticos sem foto/doc</span>
-                </div>
-              </div>
-            </div>
-
             {/* KPI 5: Multas Estimadas em Aberto */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+            <div className="bg-[rgba(46,24,88,0.38)] p-4 rounded-[16px] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] relative overflow-hidden flex flex-col justify-between group flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   Multas Estimadas <TrendingUp className="w-3.5 h-3.5 text-yellow-500" />
@@ -996,7 +952,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 6: Multa Evitada */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group flex-1">
+            <div className="bg-[rgba(46,24,88,0.38)] p-4 rounded-[16px] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] relative overflow-hidden flex flex-col justify-between group flex-1">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   Multa Evitada <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -1014,7 +970,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI 7: NRs com mais Não Conformidades */}
-            <div className="bg-[#0a0f1a] p-4 rounded-xl border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 flex flex-col justify-between group relative flex-1 overflow-hidden">
+            <div className="bg-[rgba(46,24,88,0.38)] p-4 rounded-[16px] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] flex flex-col justify-between group relative flex-1 overflow-hidden">
                <div className="flex items-center justify-between mb-3 shrink-0">
                   <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Top NRs Ofensoras</span>
                   <HardHat className="w-4 h-4 text-purple-400" />
@@ -1036,7 +992,7 @@ export default function Dashboard() {
           </div>
 
           {/* INTELIGÊNCIA OPERACIONAL (CARD PRINCIPAL) */}
-          <div className="bg-gradient-to-br from-[#120b29] to-[#0a0514] border border-[#7c3aed]/40 p-6 sm:p-8 rounded-xl relative overflow-hidden shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] p-6 sm:p-8 rounded-[16px] relative overflow-hidden shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)]">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#7c3aed]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             
             <div className="relative z-10 mb-8 border-b border-white/10 pb-8">
@@ -1185,8 +1141,8 @@ export default function Dashboard() {
           {/* LINHA ABAIXO DO CARD PRINCIPAL */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1.7fr] gap-5">
             {/* 1. Riscos que exigem ação */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+            <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden">
+              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]/30 h-[55px]">
                 <h3 className="text-[11px] font-bold text-[#b48bf8] uppercase tracking-wider">Riscos que exigem ação</h3>
                 <Link href="/riscos">
                   <span className="text-[11px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
@@ -1252,8 +1208,8 @@ export default function Dashboard() {
             </div>
 
             {/* 2. Risco por Setor */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-               <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex flex-col justify-center bg-[#0b0f19] h-[55px]">
+            <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden">
+               <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex flex-col justify-center bg-[#0b0f19]/30 h-[55px]">
                 <h3 className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">Risco por Setor</h3>
               </div>
               <div className="p-4 sm:px-5 sm:py-3 flex-1 flex flex-col items-center justify-center gap-4">
@@ -1315,8 +1271,8 @@ export default function Dashboard() {
             </div>
 
             {/* 3. Evolução da Segurança */}
-            <div className="bg-[#0a0f1a] border border-white/10 hover:border-[#7c3aed]/50 transition-all duration-300 rounded-xl flex flex-col overflow-hidden">
-              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19] h-[55px]">
+            <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden">
+              <div className="px-4 sm:px-5 py-0 border-b border-white/5 flex items-center justify-between bg-[#0b0f19]/30 h-[55px]">
                 <div className="flex items-center gap-3">
                   <div className="bg-[#7c3aed]/20 p-1.5 rounded-lg border border-[#7c3aed]/30">
                     <ShieldCheck className="w-4 h-4 text-[#7c3aed]" />
@@ -1373,7 +1329,7 @@ export default function Dashboard() {
 
                 {/* Right Side (Card) */}
                 <div className="shrink-0 w-full sm:w-[130px] flex flex-col justify-center">
-                  <div className="bg-[#121826] border border-white/5 rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
+                  <div className="bg-[rgba(46,24,88,0.2)] border border-[#7c3aed]/20 rounded-xl p-4 flex flex-col items-start w-full h-full justify-center">
                     <span className="text-[10px] text-gray-400 font-medium mb-1">Risco atual</span>
                     <div className="text-3xl font-bold text-[#b48bf8] leading-none mb-1">{metrics.operationalScore}</div>
                     <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
@@ -1388,21 +1344,21 @@ export default function Dashboard() {
                            <span className="text-[9px] text-gray-500">vs. período anterior</span>
                          </>
                        ) : (
-                         <span className="text-[10px] text-gray-500 mt-2">Sem variação no período</span>
-                       )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                          <span className="text-[10px] text-gray-500 mt-2">Sem variação no período</span>
+                        )}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
 
-        {/* Right Sidebar */}
+         {/* Right Sidebar */}
         <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
           {/* Card 1: Alertas Críticos */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
               <Link href="/riscos">
@@ -1425,14 +1381,21 @@ export default function Dashboard() {
           </div>
 
           {/* Card 2: Recomendações da Lari */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0 relative">
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0 relative">
             <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-purple-500/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-            <div className="p-4 border-b border-white/5 flex items-center gap-2 relative z-10">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <h3 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Recomendações da L.A.R.I.</h3>
+            <div className="p-4 border-b border-white/5 flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <h3 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Recomendações da L.A.R.I.</h3>
+              </div>
+              {metrics.lariRecommendations.length > 4 && (
+                <Link href="/central">
+                  <span className="text-[9px] text-[#7c3aed] font-bold hover:underline cursor-pointer uppercase">Ver todas</span>
+                </Link>
+              )}
             </div>
             <div className="p-4 space-y-3 relative z-10">
-              {metrics.lariRecommendations.length > 0 ? metrics.lariRecommendations.map((rec: string, i: number) => (
+              {metrics.lariRecommendations.length > 0 ? metrics.lariRecommendations.slice(0, 4).map((rec: string, i: number) => (
                  <div key={i} className="flex gap-2 items-start">
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
                     <p className="text-xs text-gray-300 leading-snug">{rec}</p>
@@ -1444,7 +1407,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 3: Itens Sem Responsável */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Sem Responsável</h3>
             </div>
@@ -1466,7 +1429,7 @@ export default function Dashboard() {
           </div>
 
           {/* Card 4: Últimos Riscos e Ações */}
-          <div className="bg-[#121826] border border-white/5 rounded-xl flex flex-col overflow-hidden shrink-0">
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Recentes (Riscos e Ações)</h3>
             </div>
@@ -1475,7 +1438,7 @@ export default function Dashboard() {
                  metrics.sortedLogs.filter((l: any) => l.event_type.includes('criad') || l.event_type.includes('registrado')).slice(0, 3).map((log: any) => {
                 const isRisco = log.origin_type === 'Risco';
                 return (
-                  <div key={log.id} className="flex gap-3 items-start relative group">
+                   <div key={log.id} className="flex gap-3 items-start relative group">
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${isRisco ? 'bg-orange-500' : 'bg-blue-400'}`}></div>
                     <div className="flex-1 min-w-0">
                        <p className="text-xs text-gray-200 font-medium leading-snug line-clamp-2" title={log.description}>{log.description}</p>
@@ -1488,33 +1451,7 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-
-          {/* Card 4: L.A.R.I */}
-          <div className="bg-[#0b0f19] border border-white/5 rounded-xl p-5 flex flex-col items-center text-center mt-auto shrink-0 relative">
-            <div className="flex items-center gap-3 w-full mb-3">
-              <div className="w-12 h-12 rounded-full bg-[#1e1145] flex items-center justify-center shrink-0">
-                <Bot className="w-6 h-6 text-[#a78bfa]" />
-              </div>
-              <div className="flex flex-col items-start px-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-white tracking-widest">L.A.R.I.</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">BETA</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-400 font-medium mb-6 text-left w-full px-1">
-              Seu assistente IA para segurança do trabalho.
-            </p>
-            <Link href="/chat" className="w-full">
-              <button className="w-full bg-[#1e1145] hover:bg-[#2d1b6e] text-purple-100 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors border border-purple-500/20">
-                <MessageSquare className="w-5 h-5 opacity-70" />
-                Abrir chat
-              </button>
-            </Link>
-          </div>
-
         </div>
-
       </div>
     </div>
   );
