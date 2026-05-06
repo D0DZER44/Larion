@@ -1357,7 +1357,30 @@ export default function Dashboard() {
          {/* Right Sidebar */}
         <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
-          {/* Card 1: Recomendações da Lari */}
+          {/* Card 1: Alertas Críticos */}
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
+              <Link href="/riscos">
+                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
+              </Link>
+            </div>
+            <div className="p-4 space-y-4">
+              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 3).map(a => (
+                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
+                  <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
+                  <div className="flex-1 min-w-0">
+                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
+                     <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
+                  </div>
+                </Link>
+              )) : (
+                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum alerta crítico no momento.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 2: Recomendações da Lari */}
           <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0 relative">
             <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-purple-500/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="p-4 border-b border-white/5 flex items-center justify-between relative z-10">
@@ -1379,29 +1402,6 @@ export default function Dashboard() {
                  </div>
               )) : (
                  <div className="text-center py-4 text-gray-500 text-xs">Nenhuma recomendação no momento.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Alertas Críticos */}
-          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
-              <Link href="/riscos">
-                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
-              </Link>
-            </div>
-            <div className="p-4 space-y-4">
-              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 3).map(a => (
-                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
-                  <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
-                  <div className="flex-1 min-w-0">
-                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
-                     <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
-                  </div>
-                </Link>
-              )) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum alerta crítico no momento.</div>
               )}
             </div>
           </div>
