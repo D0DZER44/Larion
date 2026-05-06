@@ -1,4 +1,4 @@
-import { RiskRule } from './store';
+import { RiskRule } from './types';
 
 export const INITIAL_RISK_RULES: RiskRule[] = [
   // --- BASE SST ---

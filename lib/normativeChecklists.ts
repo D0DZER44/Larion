@@ -1,5 +1,5 @@
 // Auto-generated normative checklists
-import { ChecklistTemplate } from './store';
+import { ChecklistTemplate } from './types';
 
 export const fixedNrChecklists: any[] = [
   {
