@@ -282,8 +282,8 @@ function TabChecklists() {
    const activeChecklist = allChecklists.find(c => c.id === selectedId) || filteredChecklists[0] || allChecklists[0];
 
    // Options for filters
-   const pacotes = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.pacote).filter(Boolean)))];
-   const segmentos = ['Todos', ...Array.from(new Set(allChecklists.flatMap(c => c.segmentos || []).filter(Boolean)))];
+   const pacotes = ['Todos', ...Array.from(new Set(allChecklists.map(c => c.pacote).filter(p => p && p !== 'Todos')))];
+   const segmentos = ['Todos', ...Array.from(new Set(allChecklists.flatMap(c => c.segmentos || []).filter(s => s && s !== 'Todos')))];
 
    const handleAdd = () => {
       addChecklist({ 
@@ -816,9 +816,9 @@ function SubTabBaseRegras() {
       return matchPacote && matchCriticidade && matchAtividade && matchStatus && matchSearch;
    });
 
-   const pacotes = ['Todos', ...new Set(riskRules.map(r => r.pacote))];
+   const pacotes = ['Todos', ...Array.from(new Set(riskRules.map(r => r.pacote).filter(p => p && p !== 'Todos')))];
    const criticidades = ['Todos', 'Baixo', 'Médio', 'Alta', 'Crítico'];
-   const atividades = ['Todos', ...new Set(riskRules.flatMap(r => r.atividades))];
+   const atividades = ['Todos', ...Array.from(new Set(riskRules.flatMap(r => r.atividades).filter(a => a && a !== 'Todos')))];
 
    return (
       <div className="flex flex-col gap-4 h-full overflow-hidden">
