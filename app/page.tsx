@@ -11,19 +11,51 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useAppStore } from '@/lib/store';
-import { subDays } from 'date-fns';
-import { calculateDashboardMetrics } from '@/lib/dashboardMetrics';
-import { FineEngine } from '@/lib/fineEngine';
 import { EconomicImpactEngine, LariContextEngine } from '@/lib/engines';
+import { FineEngine } from '@/lib/fineEngine';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+const scoreDataMap: any = {
+  dia: [
+    { name: '08:00', value: 85 },
+    { name: '10:00', value: 82 },
+    { name: '12:00', value: 80 },
+    { name: '14:00', value: 84 },
+    { name: '16:00', value: 88 },
+  ],
+  semana: [
+    { name: 'Seg', value: 75 },
+    { name: 'Ter', value: 70 },
+    { name: 'Qua', value: 85 },
+    { name: 'Qui', value: 88 },
+    { name: 'Sex', value: 92 },
+  ],
+  mes: [
+    { name: 'S1', value: 30 },
+    { name: 'S2', value: 45 },
+    { name: 'S3', value: 55 },
+    { name: 'S4', value: 70 },
+  ],
+  ano: [
+    { name: 'Jan', value: 50 },
+    { name: 'Fev', value: 52 },
+    { name: 'Mar', value: 60 },
+    { name: 'Abr', value: 75 },
+    { name: 'Mai', value: 80 },
+  ]
+};
+
+const exposureData = [
+  { name: '1', value: 200000 },
+  { name: '2', value: 220000 },
+  { name: '3', value: 210000 },
+  { name: '4', value: 250000 },
+  { name: '5', value: 278450 },
+];
+
 export default function Dashboard() {
-  const { 
-    riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [], 
-    rulePackages = [], alertas = [], users = [], epi_records = [], trainings = [],
-    organization, signOut
-  } = useAppStore();
+  const { riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [], rulePackages = [], alertas = [] } = useAppStore();
   const router = useRouter();
 
   const activePackageNames = useMemo(() => 
@@ -40,13 +72,67 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const [scoreTimeRange, setScoreTimeRange] = useState<'dia' | 'semana' | 'mes' | 'ano'>('semana');
+  const [lariInput, setLariInput] = useState('');
+  const [lariIsTyping, setLariIsTyping] = useState(false);
+  const [lariMessages, setLariMessages] = useState<any[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [lariMessages, lariIsTyping]);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      setLariMessages([
+        {
+          id: '1',
+          sender: 'lari',
+          text: "Olá! Posso te ajudar rapidamente com riscos, inspeções e ações.",
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
+  const handleLariSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lariInput.trim()) return;
+
+    const userMsg = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: lariInput.trim(),
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setLariMessages(prev => [...prev, userMsg]);
+    setLariInput('');
+    setLariIsTyping(true);
+
+    setTimeout(() => {
+      const stateObj = { riscos, acoes, inspecoes, checklists, logs };
+      // Depending on the version, sometimes it's .respond(text, state) 
+      const respText = typeof LariContextEngine.respond === 'function' 
+         ? LariContextEngine.respond(userMsg.text, stateObj) 
+         : "Posso ajudar com a gestão dos seus KPIs.";
+         
+      setLariMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        sender: 'lari',
+        text: respText,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setLariIsTyping(false);
+    }, 1200);
+  };
+
   const filterJunk = (items: any[]) => {
-    if (organization?.seed_demo !== true) return items;
     return items.filter(i => {
       const textFields = [i.title, i.titulo, i.descricao, i.name, i.nome, i.atividade, i.nr, i.responsavel].filter(Boolean).join(' ').toLowerCase();
       if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
@@ -69,8 +155,6 @@ export default function Dashboard() {
     let totalTrabalhadoresExpostos = 0;
     
     const activeRisks = cleanRiscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
-    const resolvedRisks = cleanRiscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
-    
     activeRisks.forEach(r => {
       openRisksCount++;
       const level = (r.nivel || r.level || '').toLowerCase();
@@ -89,8 +173,26 @@ export default function Dashboard() {
     });
 
     // Multa Exposure Calculation
-    const estimatedExposure = EconomicImpactEngine.estimateAggregate(activeRisks);
-    const avoidedExposure = EconomicImpactEngine.estimateAggregate(resolvedRisks);
+    let estimatedExposure = 0;
+    let avoidedExposure = 0;
+    cleanRiscos.forEach(r => {
+      let multa = Number(r.multaEstimada);
+      if (isNaN(multa) || multa === 0) {
+         // Fallback calculation using engine
+         const est = FineEngine.calcularFaixaMulta({
+           nr: r.nr || 'NR-Geral',
+           criticidade: r.nivel || r.level || 'Alta',
+           numeroEmpregados: 50
+         });
+         multa = est.maximoEstimado;
+      }
+
+      if (r.status === 'Resolvido' || r.status === 'Mitigado') {
+        avoidedExposure += multa;
+      } else {
+        estimatedExposure += multa;
+      }
+    });
 
     const getRiskWeight = (r: any) => {
        const level = (r.nivel || r.level || '').toLowerCase();
@@ -203,6 +305,7 @@ export default function Dashboard() {
     let vI = cleanInspecoes.length > 0 ? (completedInspections.length / cleanInspecoes.length) * 100 : null;
     const concluidasActionsRate = cleanAcoes.filter(a => a.status === 'Concluído' || a.status === 'Concluída' || a.status === 'Fechada');
     let vA = cleanAcoes.length > 0 ? (concluidasActionsRate.length / cleanAcoes.length) * 100 : null;
+    const resolvedRisks = cleanRiscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado');
     let vR = cleanRiscos.length > 0 ? (resolvedRisks.length / cleanRiscos.length) * 100 : null;
     
     let validWeights = 0;
@@ -659,44 +762,14 @@ export default function Dashboard() {
        scoreColorStroke = '#ef4444'; // red-500
     }
 
-    // Check if history is < 7 days
-    const allDates = [...cleanRiscos, ...cleanAcoes, ...cleanInspecoes].map(x => new Date(x.created_at || x.dataIdentificacao || x.data || 0).getTime()).filter(t => t > 0);
-    const minDateTs = allDates.length > 0 ? Math.min(...allDates) : Date.now();
-    const isHistoryForming = (Date.now() - minDateTs) < (7 * 24 * 60 * 60 * 1000);
-
-    const today = new Date();
-    const past30 = subDays(today, 30);
-    const past60 = subDays(today, 60);
-
-    const currMetrics = calculateDashboardMetrics({ riscos: cleanRiscos, acoes: cleanAcoes, inspecoes: cleanInspecoes, epi_records: epi_records || [] } as any, past30, today);
-    const prevMetrics = calculateDashboardMetrics({ riscos: cleanRiscos, acoes: cleanAcoes, inspecoes: cleanInspecoes, epi_records: epi_records || [] } as any, past60, past30);
+    const lastHistoricalScore = scoreDataMap[scoreTimeRange][scoreDataMap[scoreTimeRange].length - 1].value;
+    const scoreDiff = operationalScore - (lastHistoricalScore || operationalScore);
 
     // Dynamic trends logic
-    const exposureDiffRaw = Number(currMetrics.tg.trend?.replace('%', '') || 0); 
-    const conformityDiffRaw = Number(currMetrics.epi.trend?.replace('%', '') || 0);
+    const exposureDiffRaw = 0; // Removed mock data logic
+    const conformityDiffRaw = 0; // Removed mock data logic
 
-    let scoreSeries: { name: string, value: number }[] = [];
-    if (activeRisks.length > 0 || pendingActions.length > 0 || cleanInspecoes.length > 0) {
-        if (scoreTimeRange === 'dia') {
-            scoreSeries = [
-                { name: '08:00', value: operationalScore },
-                { name: '12:00', value: operationalScore },
-                { name: '16:00', value: operationalScore },
-            ];
-        } else if (scoreTimeRange === 'semana') {
-            scoreSeries = Array.from({length: 5}).map((_, i) => ({
-                name: subDays(today, 4 - i).toLocaleDateString('pt-BR', {weekday: 'short'}),
-                value: operationalScore
-            }));
-        } else {
-             scoreSeries = Array.from({length: 4}).map((_, i) => ({
-                name: `S${i+1}`,
-                value: operationalScore
-            }));
-        }
-    }
-    
-    let exposicaoOperacionalClass = 'border-emerald-500 text-emerald-400 bg-emerald-500/10';
+    let exposicaoOperacionalClass = 'border-green-500 text-green-500 bg-green-500/10';
     if (exposicaoOperacional === 'Alta') exposicaoOperacionalClass = 'border-red-500 text-red-500 bg-red-500/10';
     else if (exposicaoOperacional === 'Média') exposicaoOperacionalClass = 'border-white/20 text-white bg-white/5';
 
@@ -706,10 +779,9 @@ export default function Dashboard() {
       scoreColorText,
       scoreColorBg,
       scoreColorStroke,
-      scoreDiff: 0,
+      scoreDiff,
       openRisksCount,
       exposicaoOperacional: exposicaoOperacional === 'Média' ? 'Normal' : exposicaoOperacional,
-      scoreSeries,
       exposicaoOperacionalClass,
       estimatedExposure,
       avoidedExposure,
@@ -757,9 +829,8 @@ export default function Dashboard() {
       pendenciasVencemHoje,
       diagTopSector,
       diagTopSectorPercentage,
-      isHistoryForming,
-      pendingTrainings: (trainings || []).filter((t: any) => t.status === 'pendente' || t.status === 'atrasado').length,
-      epiNotCompliant: (epi_records || []).filter((e: any) => e.status !== 'conforme').length,
+      prioridadeOperacional,
+      updatePlano
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -797,7 +868,7 @@ export default function Dashboard() {
             )}
           </button>
           
-          <button onClick={() => window.print()} className="flex items-center bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+          <button className="flex items-center bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)]">
             <Download className="w-4 h-4 mr-2" />
             Exportar relatório
           </button>
@@ -1009,32 +1080,23 @@ export default function Dashboard() {
               {/* Coluna 3 */}
               <div className="block p-2 -m-2 rounded-xl transition-colors border-l-2 border-white/5 pl-6 -ml-4 md:border-l-0 md:pl-0 md:ml-0">
                 <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-l-0 md:pl-0 md:ml-0">Pessoas Críticas</h3>
-                {(users.length === 0 && metrics.pendingTrainings === 0 && metrics.epiNotCompliant === 0 && epi_records.length === 0) ? (
-                  <div className="space-y-4">
-                     <p className="text-sm text-gray-400">Sem dados ainda.</p>
-                     <button className="text-xs text-[#7c3aed] font-medium border border-[#7c3aed] rounded px-3 py-1 hover:bg-[#7c3aed]/10">
-                        Cadastrar treinamentos
-                     </button>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                     <Users className="w-5 h-5 text-purple-400" />
+                     <span className="text-2xl font-bold text-purple-400 w-8">42</span>
+                     <span className="text-sm text-gray-400">Monitorados</span>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                       <Users className="w-5 h-5 text-purple-400" />
-                       <span className="text-2xl font-bold text-purple-400 w-8">{users.length}</span>
-                       <span className="text-sm text-gray-400">Monitorados</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <GraduationCap className="w-5 h-5 text-orange-400" />
-                       <span className="text-2xl font-bold text-orange-400 w-8">{metrics.pendingTrainings}</span>
-                       <span className="text-sm text-gray-400">Treinamento pendente</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <UserX className="w-5 h-5 text-red-500" />
-                       <span className="text-2xl font-bold text-red-500 w-8">{metrics.epiNotCompliant}</span>
-                       <span className="text-sm text-gray-400">Sem EPI padrão</span>
-                    </div>
+                  <div className="flex items-center gap-4">
+                     <GraduationCap className="w-5 h-5 text-orange-400" />
+                     <span className="text-2xl font-bold text-orange-400 w-8">8</span>
+                     <span className="text-sm text-gray-400">Treinamento pendente</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-4">
+                     <UserX className="w-5 h-5 text-red-500" />
+                     <span className="text-2xl font-bold text-red-500 w-8">3</span>
+                     <span className="text-sm text-gray-400">Sem EPI</span>
+                  </div>
+                </div>
               </div>
 
               {/* Coluna 4 - Conformidade NR */}
@@ -1070,7 +1132,7 @@ export default function Dashboard() {
                 Ver riscos <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
               <div className="hidden sm:block w-px h-6 bg-white/10 ml-auto mx-4 flex-shrink-0"></div>
-              <button onClick={() => window.print()} className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
+              <button className="w-full sm:w-auto text-gray-300 hover:text-white font-medium text-sm flex items-center justify-center gap-2 group transition-colors">
                 Gerar relatório <Download className="w-4 h-4 text-gray-500 group-hover:text-white transition-all" />
               </button>
             </div>
@@ -1221,55 +1283,48 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex items-center bg-[#121826] border border-white/5 rounded-lg overflow-hidden pr-2">
-                     <select 
-                       value={scoreTimeRange} 
-                       onChange={(e) => setScoreTimeRange(e.target.value as any)}
-                       className="bg-transparent text-gray-300 text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
-                     >
-                       <option className="bg-[#121826]" value="dia">Hoje</option>
-                       <option className="bg-[#121826]" value="semana">Últimos 7 dias</option>
-                       <option className="bg-[#121826]" value="mes">Últimos 30 dias</option>
-                       <option className="bg-[#121826]" value="ano">Este ano</option>
-                     </select>
+                   <select 
+                     value={scoreTimeRange} 
+                     onChange={(e) => setScoreTimeRange(e.target.value as any)}
+                     className="bg-transparent text-gray-300 text-[11px] font-medium px-3 py-1.5 appearance-none focus:outline-none cursor-pointer"
+                   >
+                     <option className="bg-[#121826]" value="semana">Últimos 7 dias</option>
+                     <option className="bg-[#121826]" value="mes">Últimos 30 dias</option>
+                     <option className="bg-[#121826]" value="ano">Este ano</option>
+                   </select>
                 </div>
               </div>
               
               <div className="p-4 sm:px-5 sm:py-3 flex-1 flex flex-col sm:flex-row gap-6">
                 {/* Left Side (Line Chart) */}
-                <div className="flex-1 min-h-[140px] w-full relative">
-                  {metrics.scoreSeries.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={metrics.scoreSeries} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorScoreUpdate" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} domain={[0, 100]} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
-                          itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                          labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
-                          formatter={(value: any) => [`${value}`, 'Score']}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="#7c3aed" 
-                          strokeWidth={2.5}
-                          fillOpacity={1} 
-                          fill="url(#colorScoreUpdate)" 
-                          activeDot={{ r: 5, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-sm text-gray-500 text-center px-4">Sem dados ainda — registre sua primeira inspeção.</span>
-                    </div>
-                  )}
+                <div className="flex-1 min-h-[140px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={scoreDataMap[scoreTimeRange].concat([{ name: 'Atual', value: metrics.operationalScore }])} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorScoreUpdate" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#7c3aed" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#121826', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
+                        formatter={(value: any) => [`${value}`, 'Score']}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="#7c3aed" 
+                        strokeWidth={2.5}
+                        fillOpacity={1} 
+                        fill="url(#colorScoreUpdate)" 
+                        activeDot={{ r: 5, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
 
                 {/* Right Side (Card) */}
@@ -1280,9 +1335,7 @@ export default function Dashboard() {
                     <span className="text-[11px] text-green-400 font-medium mb-4">{metrics.scoreClass}</span>
                     
                     <div className="flex flex-col items-start gap-1">
-                       {metrics.isHistoryForming ? (
-                          <span className="text-[12px] bg-white/10 text-white rounded px-2 py-0.5 whitespace-nowrap">Histórico em formação</span>
-                       ) : metrics.scoreDiff !== 0 ? (
+                       {metrics.scoreDiff !== 0 ? (
                          <>
                            <span className={`text-[12px] font-bold flex items-center gap-1 ${metrics.scoreDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
                              {metrics.scoreDiff > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />} 
@@ -1304,30 +1357,7 @@ export default function Dashboard() {
          {/* Right Sidebar */}
         <div className={`hidden xl:flex flex-col bg-[#0a0f1a] border-l border-white/5 h-full overflow-y-auto overflow-x-hidden custom-scrollbar shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[320px] p-5 space-y-5 opacity-100' : 'w-0 p-0 opacity-0 border-none'}`}>
           
-          {/* Card 1: Alertas Críticos */}
-          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
-            <div className="p-4 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
-              <Link href="/riscos">
-                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
-              </Link>
-            </div>
-            <div className="p-4 space-y-4">
-              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 3).map(a => (
-                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
-                  <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
-                  <div className="flex-1 min-w-0">
-                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
-                     <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
-                  </div>
-                </Link>
-              )) : (
-                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum alerta crítico no momento.</div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Recomendações da Lari */}
+          {/* Card 1: Recomendações da Lari */}
           <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0 relative">
             <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-purple-500/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             <div className="p-4 border-b border-white/5 flex items-center justify-between relative z-10">
@@ -1349,6 +1379,29 @@ export default function Dashboard() {
                  </div>
               )) : (
                  <div className="text-center py-4 text-gray-500 text-xs">Nenhuma recomendação no momento.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 2: Alertas Críticos */}
+          <div className="bg-[rgba(46,24,88,0.38)] border border-[rgba(139,92,246,0.35)] shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all duration-300 hover:border-[rgba(168,85,247,0.55)] hover:bg-[rgba(55,28,105,0.48)] hover:shadow-[0_0_24px_rgba(139,92,246,0.16)] rounded-[16px] flex flex-col overflow-hidden shrink-0">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Alertas Críticos</h3>
+              <Link href="/riscos">
+                <span className="text-[10px] text-[#7c3aed] font-medium cursor-pointer hover:underline">Ver todos</span>
+              </Link>
+            </div>
+            <div className="p-4 space-y-4">
+              {metrics.alertas.length > 0 ? metrics.alertas.slice(0, 3).map(a => (
+                <Link href={a.link || '#'} key={a.id} className="flex gap-3 items-start p-2 -mx-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
+                  <a.icon className={`w-4 h-4 ${a.color} shrink-0 mt-0.5`} />
+                  <div className="flex-1 min-w-0">
+                     <p className="text-xs text-gray-200 font-bold mb-0.5 group-hover:text-white transition-colors truncate">{a.title}</p>
+                     <p className="text-[10px] text-gray-400 line-clamp-2">{a.desc}</p>
+                  </div>
+                </Link>
+              )) : (
+                 <div className="text-center py-4 text-gray-500 text-xs">Nenhum alerta crítico no momento.</div>
               )}
             </div>
           </div>

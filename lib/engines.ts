@@ -518,14 +518,6 @@ export const EconomicImpactEngine = {
     return `Ao mitigar este risco, estimamos uma proteção econômica entre ${this.formatCurrency(estimate.min)} e ${this.formatCurrency(estimate.max)}.\n${estimate.disclaimer}`;
   },
 
-  estimateAggregate(activeRisks: any[]) {
-    return activeRisks.reduce((total, risk) => {
-      const multa = Number(risk.multaEstimada || risk.multaEstimativaMax || 0);
-      const chance = Number(risk.chanceIncidente || 50) / 100;
-      return total + (multa * chance);
-    }, 0);
-  },
-
   formatCurrency(value: number) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }

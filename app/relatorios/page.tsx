@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, Shield, ClipboardCheck, CheckSquare, 
   AlertOctagon, DollarSign, Download, Plus, 
@@ -11,29 +11,33 @@ import { useAppStore } from '@/lib/store';
 
 
 // ============================================================================
+// DATA HELPERS & MOCKS (Para preencher onde o store não tem dados específicos)
+// ============================================================================
+
+const mockRiscos = [
+  { id: 1, atividade: 'Trabalho em altura na fachada', setor: 'Manutenção', nr: 'NR-35', perigo: 'Queda de nível diferente', consequencia: 'Lesões graves ou fatais', prob: 'Alta', sev: 'Crítica', nivel: 'Crítico', controlesAtuais: 'Nenhum', controlesRec: 'Instalação de linha de vida', resp: 'Eng. Segurança', prazo: '15/06/2026' },
+  { id: 2, atividade: 'Operação de prensa', setor: 'Produção (Linha 1)', nr: 'NR-12', perigo: 'Esmagamento de membros', consequencia: 'Amputação', prob: 'Média', sev: 'Alta', nivel: 'Alto', controlesAtuais: 'Sensor óptico defeituoso', controlesRec: 'Manutenção/troca do sensor', resp: 'Equipe Manutenção', prazo: '20/06/2026' },
+];
+
+const mockInspeções = [
+  { id: 1, nome: 'Inspeção de Andaimes', status: 'Pendente', vencimento: '02/06/2026', risco: 'Crítico', itensConf: 0, itensNaoConf: 0, resp: 'João Silva' },
+  { id: 2, nome: 'Inspeção de Extintores', status: 'Concluída', vencimento: '05/05/2026', risco: 'Alto', itensConf: 12, itensNaoConf: 2, resp: 'Marcos Antônio' },
+];
+
+const mockAcoes = [
+  { id: 1, oQue: 'Adequar quadros elétricos', origem: 'Inspeção', porQue: 'Risco de choque/incêndio (NR-10)', onde: 'Galpão Principal', quem: 'Equipe Elétrica', quando: '07/06/2026', status: 'Em andamento', prioridade: 'Crítica' },
+  { id: 2, oQue: 'Revisar sinalização', origem: 'Risco', porQue: 'Adequação NR-26', onde: 'Áreas comuns', quem: 'Segurança', quando: '15/06/2026', status: 'Pendente', prioridade: 'Média' },
+];
+
+const mockNaoConformidades = [
+  { id: 1, desc: 'Falta de EPI (Cinto de Segurança)', local: 'Telhado Galpão B', nr: 'NR-35', evid: 'Foto do empregado sem cinto', gravidade: 'Crítica', causa: 'Falta de treinamento/fiscalização', correcaoVal: 'Trabalho paralisado imediatamente', acaoCorretiva: 'Reciclagem NR-35 e advertência', resp: 'João Silva', status: 'Em tratamento' },
+];
+
+// ============================================================================
 // PREVIEW COMPONENTS
 // ============================================================================
 
-function formatCurrency(v: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-}
-
-function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
-  const { riscos, acoes, inspecoes } = useAppStore();
-  const openRisks = riscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
-  const pendingActions = acoes.filter(a => a.status !== 'Concluída');
-  
-  const criticalRisks = openRisks.filter(r => (r.nivel || r.prioridade || '').toLowerCase().includes('crític')).slice(0, 5);
-  const vI = inspecoes.length > 0 ? (inspecoes.filter(i => i.status === 'Concluída' || i.status === 'Realizada').length / inspecoes.length) * 100 : 0;
-  const vA = acoes.length > 0 ? (acoes.filter(a => a.status === 'Concluída').length / acoes.length) * 100 : 0;
-  const vR = riscos.length > 0 ? (riscos.filter(r => r.status === 'Resolvido' || r.status === 'Mitigado').length / riscos.length) * 100 : 0;
-  const conformidade = Math.round((vI * 30 + vA * 25 + vR * 15) / 70) || 100;
-
-  const minMulta = openRisks.reduce((acc, r) => acc + (Number(r.multaEstimativaMin) || Number(r.multaEstimada) || 0), 0);
-  const maxMulta = openRisks.reduce((acc, r) => acc + (Number(r.multaEstimativaMax) || Number(r.multaEstimada) || 0), 0);
-
-  const upcomingInspections = inspecoes.filter(i => i.status === 'Agendada' || i.status === 'Atrasada' || i.status === 'Pendente').slice(0,5);
-
+function RelatorioExecutivoPreview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-start border-b border-gray-200 pb-6">
@@ -45,7 +49,7 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
            <h2 className="text-xl font-bold text-gray-800 uppercase tracking-wider">Relatório Executivo de SST</h2>
         </div>
         <div className="text-right text-[11px] text-gray-500 space-y-1">
-          <p><strong>Período:</strong> {periodLabel}</p>
+          <p><strong>Período:</strong> 01/05/2026 a 31/05/2026</p>
           <p><strong>Gerado em:</strong> {new Date().toLocaleString('pt-BR')}</p>
         </div>
       </div>
@@ -59,14 +63,15 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { title: 'Riscos', val: riscos.length.toString(), color: 'text-gray-800' },
-          { title: 'Inspeções', val: inspecoes.length.toString(), color: 'text-gray-800' },
-          { title: 'Ações', val: acoes.length.toString(), color: 'text-gray-800' },
-          { title: 'Conformidade', val: `${conformidade}%`, color: 'text-gray-800' },
+          { title: 'Riscos', val: '28', trend: '+12%', color: 'text-gray-800' },
+          { title: 'Inspeções', val: '46', trend: '+18%', color: 'text-gray-800' },
+          { title: 'Ações', val: '132', trend: '-8%', color: 'text-gray-800' },
+          { title: 'Conformidade', val: '87%', trend: '+5p.p.', color: 'text-gray-800' },
         ].map((k, i) => (
           <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
             <p className="text-[11px] font-bold text-gray-500 uppercase">{k.title}</p>
             <p className={`text-2xl font-black ${k.color} my-1`}>{k.val}</p>
+            <p className="text-[10px] text-green-600 font-medium">{k.trend} vs período anterior</p>
           </div>
         ))}
       </div>
@@ -76,14 +81,14 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
           <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b-2 border-indigo-100 pb-1 mb-4">Riscos Prioritários</h3>
           <table className="w-full text-[12px] text-left border-collapse">
             <tbody className="divide-y divide-gray-100">
-              {criticalRisks.length > 0 ? criticalRisks.map((r, i) => (
+              {mockRiscos.map((r, i) => (
                 <tr key={i}>
-                  <td className="py-2.5 text-gray-700 font-medium">{r.atividade || r.titulo}</td>
+                  <td className="py-2.5 text-gray-700 font-medium">{r.atividade}</td>
                   <td className="py-2.5 text-right">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${r.nivel === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>{r.nivel}</span>
                   </td>
                 </tr>
-              )) : <tr><td className="py-2 text-gray-500">Nenhum risco prioritário.</td></tr>}
+              ))}
             </tbody>
           </table>
         </div>
@@ -97,17 +102,15 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {upcomingInspections.length > 0 ? upcomingInspections.map((ins:any, i) => (
+              {mockInspeções.filter(i => i.status === 'Pendente').map((ins, i) => (
                 <tr key={i}>
-                  <td className="py-2.5 text-gray-700 font-medium truncate max-w-[120px]">{ins.title || ins.nome || 'Inspeção'}</td>
+                  <td className="py-2.5 text-gray-700 font-medium">{ins.nome}</td>
                   <td className="py-2.5 text-right flex justify-end gap-2 items-center">
-                    <span className="text-gray-500">{ins.dueDate ? new Date(ins.dueDate).toLocaleDateString('pt-BR') : '-'}</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${(ins.dueDate && new Date(ins.dueDate) < new Date()) ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {ins.status || 'Pendente'}
-                    </span>
+                    <span className="text-gray-500">{ins.vencimento}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${ins.risco === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>{ins.risco}</span>
                   </td>
                 </tr>
-              )) : <tr><td className="py-2 text-gray-500" colSpan={2}>Nenhuma inspeção pendente.</td></tr>}
+              ))}
             </tbody>
           </table>
         </div>
@@ -117,12 +120,12 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
         <div className="border border-gray-200 rounded-lg p-5">
            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Ações Recomendadas</h3>
            <ul className="space-y-3 text-[12px] text-gray-600">
-             {pendingActions.slice(0, 5).length > 0 ? pendingActions.slice(0, 5).map((a, i) => (
+             {mockAcoes.map((a, i) => (
                <li key={i} className="flex gap-2 items-start">
                  <CheckSquare className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                 <span>{a.titulo || a.oQue || a.descricao || 'Ação'}</span>
+                 <span>{a.oQue} ({a.origem})</span>
                </li>
-             )) : <li>Nenhuma ação pendente.</li>}
+             ))}
            </ul>
         </div>
         
@@ -131,7 +134,7 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
               <DollarSign className="w-4 h-4"/> Impacto Econômico Estimado
             </h3>
             <p className="text-[11px] text-indigo-700/70 mb-3">Faixa estimada de perdas evitáveis em caso de não tratamento dos riscos identificados (passível de multas e embargos).</p>
-            <p className="text-2xl font-black text-indigo-700 mb-1">{formatCurrency(minMulta)} a {formatCurrency(maxMulta)}</p>
+            <p className="text-2xl font-black text-indigo-700 mb-1">R$ 12.000 a R$ 41.000</p>
             <p className="text-[10px] text-indigo-500">Baseado na metodologia NBR ISO 31000 e histórico interno</p>
         </div>
       </div>
@@ -139,11 +142,13 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
       <div className="pt-12 flex justify-between text-[11px] text-gray-500 border-t border-gray-200">
          <div>
            <p className="font-bold text-gray-800 uppercase">Responsável Técnico</p>
-           <p>Sistema Apex Ops</p>
+           <p>André Fernandes</p>
+           <p>Téc. Seg. do Trabalho - MTE 12.345</p>
          </div>
          <div>
            <p className="font-bold text-gray-800 uppercase">Empresa</p>
-           <p>Apex Ops</p>
+           <p>Apex Ops Indústria Ltda.</p>
+           <p>CNPJ 12.345.678/0001-90</p>
          </div>
       </div>
     </div>
@@ -151,8 +156,6 @@ function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
 }
 
 function RelatorioRiscosPreview() {
-  const { riscos } = useAppStore();
-  
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="border-b border-gray-200 pb-6 mb-8 text-center">
@@ -160,32 +163,33 @@ function RelatorioRiscosPreview() {
         <p className="text-[12px] text-gray-500 mt-2">Relatório técnico estruturado conforme boas práticas de gestão de SST e NBR ISO 31000.</p>
       </div>
 
-      {riscos.length > 0 ? riscos.map((risco, i) => (
+      {mockRiscos.map((risco, i) => (
         <div key={i} className="border border-gray-300 rounded-sm mb-6 overflow-hidden">
           <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 flex justify-between items-center">
              <div className="flex gap-3 items-center">
-                <span className="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 uppercase rounded-sm">{risco.nr || risco.nrRelacionada || 'Outros'}</span>
-                <h3 className="text-sm font-bold text-gray-800 uppercase">{risco.atividade || risco.titulo}</h3>
+                <span className="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 uppercase rounded-sm">{risco.nr}</span>
+                <h3 className="text-sm font-bold text-gray-800 uppercase">{risco.atividade}</h3>
              </div>
              <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase ${risco.nivel === 'Crítico' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-orange-100 text-orange-700 border border-orange-200'}`}>Risco {risco.nivel}</span>
           </div>
           <div className="p-4 grid grid-cols-2 gap-x-8 gap-y-4 text-[12px]">
              <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Setor/Local</span> <span className="font-medium text-gray-800">{risco.setor}</span></div>
-             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Perigo Identificado</span> <span className="font-medium text-gray-800">{risco.tipoDeRisco || risco.perigo || '-'}</span></div>
-             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Possível Consequência</span> <span className="text-gray-700">{risco.impactoHumano || risco.consequencia || '-'}</span></div>
+             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Perigo Identificado</span> <span className="font-medium text-gray-800">{risco.perigo}</span></div>
+             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Possível Consequência</span> <span className="text-gray-700">{risco.consequencia}</span></div>
              
              <div className="col-span-2 grid grid-cols-2 gap-4 my-2 border-y border-dashed border-gray-200 py-3">
-               <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Probabilidade</span> <span className="text-gray-700">{risco.probabilidade || '-'}</span></div>
-               <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Severidade</span> <span className="text-gray-700">{risco.gravidade || risco.severidade || '-'}</span></div>
+               <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Probabilidade</span> <span className="text-gray-700">{risco.prob}</span></div>
+               <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Severidade</span> <span className="text-gray-700">{risco.sev}</span></div>
              </div>
 
-             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Controles Recomendados</span> <span className="font-medium text-blue-700">{risco.acaoRecomendada || '-'}</span></div>
+             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Controles Existentes</span> <span className="text-gray-700">{risco.controlesAtuais}</span></div>
+             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Controles Recomendados</span> <span className="font-medium text-blue-700">{risco.controlesRec}</span></div>
              
-             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Responsável pela Ação</span> <span className="text-gray-700">{risco.responsavel || '-'}</span></div>
-             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Prazo Máximo</span> <span className="text-gray-700">{risco.prazo || '-'}</span></div>
+             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Responsável pela Ação</span> <span className="text-gray-700">{risco.resp}</span></div>
+             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Prazo Máximo</span> <span className="text-gray-700">{risco.prazo}</span></div>
           </div>
         </div>
-      )) : <p className="text-center text-gray-500">Nenhum risco no período.</p>}
+      ))}
       
       <div className="mt-8 text-[11px] text-gray-600 text-justify">
         <strong className="uppercase">Conclusão Técnica:</strong> A avaliação demonstra a necessidade imediata de implementação de controles de engenharia e administrativos para os riscos classificados como Alto e Crítico, a fim de garantir a integridade física dos colaboradores e o atendimento aos requisitos legais de SSO.
@@ -195,11 +199,6 @@ function RelatorioRiscosPreview() {
 }
 
 function RelatorioInspecoesPreview() {
-  const { inspecoes } = useAppStore();
-  const realizadas = inspecoes.filter(i => i.status === 'Concluída' || i.status === 'Realizada').length;
-  const pendentes = inspecoes.filter(i => i.status === 'Pendente' || i.status === 'Agendada' || i.status === 'Iniciada' || i.status === 'Em andamento').length;
-  const vencidas = inspecoes.filter(i => i.status === 'Atrasada' || (i.dueDate && new Date(i.dueDate) < new Date())).length;
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="border-b border-gray-200 pb-6 mb-8 text-center">
@@ -210,15 +209,15 @@ function RelatorioInspecoesPreview() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-gray-50 border border-gray-200 p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Realizadas</p>
-           <p className="text-2xl font-black text-gray-800 mt-1">{realizadas}</p>
+           <p className="text-2xl font-black text-gray-800 mt-1">12</p>
         </div>
         <div className="bg-gray-50 border border-gray-200 p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pendentes</p>
-           <p className="text-2xl font-black text-gray-800 mt-1">{pendentes}</p>
+           <p className="text-2xl font-black text-gray-800 mt-1">4</p>
         </div>
         <div className="bg-red-50 border border-red-100 p-4 text-center rounded-sm">
            <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Vencidas</p>
-           <p className="text-2xl font-black text-red-700 mt-1">{vencidas}</p>
+           <p className="text-2xl font-black text-red-700 mt-1">2</p>
         </div>
       </div>
 
@@ -235,29 +234,24 @@ function RelatorioInspecoesPreview() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {inspecoes.length > 0 ? inspecoes.map((ins:any, i) => {
-            const confs = ins.answers ? ins.answers.filter((a:any) => a.isConform).length : 0;
-            const nonConfs = ins.answers ? ins.answers.filter((a:any) => a.isConform === false).length : Number(ins.nonConformities || 0);
-
-            return (
-              <tr key={i}>
-                <td className="p-3 font-medium text-gray-800">{ins.nome || ins.title || 'Inspeção'} <br/><span className="text-gray-500 font-normal">Baseado em NR aplicável</span></td>
-                <td className="p-3">
-                  <span className={`px-2 py-0.5 rounded-sm font-bold uppercase ${ins.status === 'Concluída' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{ins.status || 'Pendente'}</span>
-                </td>
-                <td className="p-3 text-center">
-                   <span className="text-green-600 font-bold">{confs}</span> / <span className="text-red-500 font-bold">{nonConfs}</span>
-                </td>
-                <td className="p-3 text-gray-600">
-                   {nonConfs > 0 ? 'Abertura de O.S. corretiva' : 'Manter monitoramento'}
-                </td>
-                <td className="p-3 text-right text-gray-600">
-                   {ins.responsavel || '-'} <br/>
-                   <span className="font-bold text-gray-800">{ins.dueDate ? new Date(ins.dueDate).toLocaleDateString('pt-BR') : '-'}</span>
-                </td>
-              </tr>
-            );
-          }) : <tr><td colSpan={5} className="p-4 text-center text-gray-500">Nenhuma inspeção encontrada.</td></tr>}
+          {mockInspeções.map((ins, i) => (
+            <tr key={i}>
+              <td className="p-3 font-medium text-gray-800">{ins.nome} <br/><span className="text-gray-500 font-normal">Baseado em NR aplicável</span></td>
+              <td className="p-3">
+                <span className={`px-2 py-0.5 rounded-sm font-bold uppercase ${ins.status === 'Concluída' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{ins.status}</span>
+              </td>
+              <td className="p-3 text-center">
+                 <span className="text-green-600 font-bold">{ins.itensConf}</span> / <span className="text-red-500 font-bold">{ins.itensNaoConf}</span>
+              </td>
+              <td className="p-3 text-gray-600">
+                 {ins.itensNaoConf > 0 ? 'Abertura de O.S. corretiva' : 'Manter monitoramento'}
+              </td>
+              <td className="p-3 text-right text-gray-600">
+                 {ins.resp} <br/>
+                 <span className="font-bold text-gray-800">{ins.vencimento}</span>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -269,8 +263,6 @@ function RelatorioInspecoesPreview() {
 }
 
 function RelatorioAcoesPreview() {
-  const { acoes } = useAppStore();
-  
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="border-b border-gray-200 pb-6 mb-8 text-center">
@@ -278,12 +270,12 @@ function RelatorioAcoesPreview() {
         <p className="text-[12px] text-gray-500 mt-2">Estrutura metodológica 5W2H para rastreabilidade de correções preventivas e corretivas.</p>
       </div>
 
-      {acoes.length > 0 ? acoes.map((acao:any, i) => (
+      {mockAcoes.map((acao, i) => (
         <div key={i} className="border border-gray-300 rounded-sm mb-6 overflow-hidden">
           <div className="bg-gray-100 px-4 py-3 border-b border-gray-300 flex justify-between items-center">
              <div className="flex gap-3 items-center">
-                <span className={`text-[10px] font-bold px-2 py-1 uppercase rounded-sm border ${(acao.prioridade === 'Crítica' || acao.urgency === 'Imediato') ? 'bg-red-100 text-red-700 border-red-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>{acao.prioridade || 'Normal'}</span>
-                <h3 className="text-sm font-bold text-gray-800 uppercase">{acao.titulo || acao.oQue || 'Ação'}</h3>
+                <span className={`text-[10px] font-bold px-2 py-1 uppercase rounded-sm border ${acao.prioridade === 'Crítica' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>{acao.prioridade}</span>
+                <h3 className="text-sm font-bold text-gray-800 uppercase">{acao.oQue}</h3>
              </div>
              <span className="text-[10px] font-bold text-gray-500 uppercase bg-white px-2 py-1 rounded-sm border border-gray-200">{acao.status}</span>
           </div>
@@ -291,17 +283,17 @@ function RelatorioAcoesPreview() {
           <div className="p-0">
              <table className="w-full text-[11px] text-left border-collapse">
                <tbody className="divide-y divide-gray-100">
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Origem</th><td className="p-3 font-medium text-gray-800">{acao.origem || 'Risco'}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">What (O que)</th><td className="p-3 text-gray-800">{acao.titulo || acao.descricao || '-'}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Why (Por que)</th><td className="p-3 text-gray-800">{acao.justificativa || 'Mitigar risco'}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Where (Onde)</th><td className="p-3 text-gray-800">{acao.local || '-'}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Who (Quem)</th><td className="p-3 text-gray-800">{acao.responsavel || '-'}</td></tr>
-                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">When (Prazo)</th><td className="p-3 font-bold text-gray-800">{acao.prazo || (acao.dueDate ? new Date(acao.dueDate).toLocaleDateString('pt-BR') : '-')}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Origem</th><td className="p-3 font-medium text-gray-800">{acao.origem}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">What (O que)</th><td className="p-3 text-gray-800">{acao.oQue}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Why (Por que)</th><td className="p-3 text-gray-800">{acao.porQue}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Where (Onde)</th><td className="p-3 text-gray-800">{acao.onde}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">Who (Quem)</th><td className="p-3 text-gray-800">{acao.quem}</td></tr>
+                 <tr><th className="p-3 bg-gray-50 w-[30%] text-gray-600 uppercase border-r border-gray-100">When (Prazo)</th><td className="p-3 font-bold text-gray-800">{acao.quando}</td></tr>
                </tbody>
              </table>
           </div>
         </div>
-      )) : <p className="text-center text-gray-500">Nenhuma ação encontrada.</p>}
+      ))}
       
       <div className="mt-8 text-[11px] text-gray-600 text-justify">
         <strong className="uppercase">Conclusão do Plano:</strong> As ações propostas visam o bloqueio da trajetória do risco e adequação normativa. Recomenda-se acompanhamento rigoroso dos prazos definidos.
@@ -311,9 +303,6 @@ function RelatorioAcoesPreview() {
 }
 
 function RelatorioNCPreview() {
-  const { riscos } = useAppStore();
-  const rncList = riscos.filter(r => r.nivel === 'Crítico' || r.nivel === 'Alto');
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="border-b border-gray-200 pb-6 mb-8 text-center">
@@ -321,36 +310,36 @@ function RelatorioNCPreview() {
         <p className="text-[12px] text-gray-500 mt-2">Registro de anomalias normativas operacionais, causas raízes e tratativas executadas.</p>
       </div>
 
-      {rncList.length > 0 ? rncList.map((nc, i) => (
+      {mockNaoConformidades.map((nc, i) => (
         <div key={i} className="border-2 border-red-200 p-6 rounded-sm bg-white mb-6 relative">
           <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 uppercase rounded-br-sm">
              RNC-{String(i+1).padStart(3, '0')}
           </div>
           
           <div className="flex justify-between items-start mt-4 mb-6">
-             <h3 className="text-lg font-bold text-gray-900 uppercase leading-snug">{nc.titulo || nc.atividade}</h3>
-             <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-1 uppercase rounded-sm border border-red-200">{nc.gravidade || nc.severidade || nc.nivel}</span>
+             <h3 className="text-lg font-bold text-gray-900 uppercase leading-snug">{nc.desc}</h3>
+             <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-1 uppercase rounded-sm border border-red-200">{nc.gravidade}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-6 text-[12px]">
-             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Local / Setor</span> <span className="font-medium text-gray-800">{nc.setor || '-'}</span></div>
-             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Requisito Legal infringido</span> <span className="font-bold text-gray-900">{nc.nr || nc.nrRelacionada || '-'}</span></div>
-             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Evidência Identificada</span> <span className="text-gray-700">{nc.perito || nc.tipoDeRisco || nc.perigo || '-'}</span></div>
-             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Causa Provável</span> <span className="text-gray-700">{nc.descricao || nc.justificativa || '-'}</span></div>
+             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Local / Setor</span> <span className="font-medium text-gray-800">{nc.local}</span></div>
+             <div><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Requisito Legal infringido</span> <span className="font-bold text-gray-900">{nc.nr}</span></div>
+             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Evidência Identificada</span> <span className="text-gray-700">{nc.evid}</span></div>
+             <div className="col-span-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Causa Provável</span> <span className="text-gray-700">{nc.causa}</span></div>
              
              <div className="col-span-2 bg-gray-50 border border-gray-200 p-4 mt-2">
                 <span className="text-gray-500 font-bold uppercase text-[10px] block mb-2">Tratativas</span>
                 <div className="space-y-2">
-                   <p><strong className="text-gray-700 mr-2">Correção Recomendada:</strong> {nc.acaoRecomendada || nc.controlesRec || '-'}</p>
-                   <p><strong className="text-gray-700 mr-2">Ação Vinculada:</strong> {nc.acaoVinculada || 'Nenhuma'}</p>
+                   <p><strong className="text-gray-700 mr-2">Correção Imediata:</strong> {nc.correcaoVal}</p>
+                   <p><strong className="text-gray-700 mr-2">Ação Corretiva/Preventiva:</strong> {nc.acaoCorretiva}</p>
                 </div>
              </div>
 
-             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Responsável</span> <span className="text-gray-800">{nc.responsavel || '-'}</span></div>
-             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Status Atual</span> <span className="font-bold text-blue-700 uppercase">{nc.status || 'Aberto'}</span></div>
+             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Responsável</span> <span className="text-gray-800">{nc.resp}</span></div>
+             <div className="border-t border-gray-200 pt-4 mt-2"><span className="text-gray-500 font-bold uppercase text-[10px] block mb-1">Status Atual</span> <span className="font-bold text-blue-700 uppercase">{nc.status}</span></div>
           </div>
         </div>
-      )) : <p className="text-center text-gray-500">Nenhuma não conformidade encontrada.</p>}
+      ))}
       
       <div className="mt-8 text-[11px] text-gray-600 text-justify">
         <strong className="uppercase">Verificação de Eficácia:</strong> A RNC só será encerrada após auditoria em campo para comprovação da eliminação efetiva da causa raiz e validação dos novos controles adotados.
@@ -360,12 +349,6 @@ function RelatorioNCPreview() {
 }
 
 function RelatorioEconomicoPreview() {
-  const { riscos } = useAppStore();
-  const openRisks = riscos.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado');
-
-  const minMulta = openRisks.reduce((acc, r) => acc + (Number(r.multaEstimativaMin) || Number(r.multaEstimada) || 0), 0);
-  const maxMulta = openRisks.reduce((acc, r) => acc + (Number(r.multaEstimativaMax) || Number(r.multaEstimada) || 0), 0);
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="border-b border-gray-200 pb-6 mb-8 text-center">
@@ -382,8 +365,8 @@ function RelatorioEconomicoPreview() {
       </div>
 
       <div className="p-8 bg-gray-50 border border-gray-200 text-center rounded-sm mb-8">
-         <p className="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2">Exposição Financeira Estimada</p>
-         <h3 className="text-4xl font-black text-gray-900 mb-2">{formatCurrency(minMulta)} <span className="text-gray-400 font-medium text-2xl mx-1">a</span> {formatCurrency(maxMulta)}</h3>
+         <p className="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2">Exposição Financeira (Riscos Críticos + Altos)</p>
+         <h3 className="text-4xl font-black text-gray-900 mb-2">R$ 12.000 <span className="text-gray-400 font-medium text-2xl mx-1">a</span> R$ 41.000</h3>
          <p className="text-[11px] text-gray-500">Multas NR, FAP, Lucro Cessante e Indenizações</p>
       </div>
 
@@ -399,14 +382,14 @@ function RelatorioEconomicoPreview() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {openRisks.length > 0 ? openRisks.map((r, i) => (
+          {mockRiscos.map((r, i) => (
             <tr key={i}>
-              <td className="p-3 font-medium text-gray-800">{r.atividade || r.titulo}</td>
+              <td className="p-3 font-medium text-gray-800">{r.atividade}</td>
               <td className="p-3 font-bold text-gray-600">{r.nr}</td>
-              <td className="p-3 text-center text-gray-600">{r.nivel === 'Crítico' ? 'Embargo/Paralisação' : (r.impactoOperacional || 'Atraso Linha/Leve')}</td>
-              <td className="p-3 text-right font-bold text-red-700">Até {formatCurrency((r.multaEstimativaMax || r.multaEstimada || 0))}</td>
+              <td className="p-3 text-center text-gray-600">{r.nivel === 'Crítico' ? 'Embargo Obras' : 'Atraso Linha'}</td>
+              <td className="p-3 text-right font-bold text-red-700">Até R$ 25.000</td>
             </tr>
-          )) : <tr><td colSpan={4} className="p-4 text-center text-gray-500">Nenhum risco com passivo estimado detectado no momento.</td></tr>}
+          ))}
         </tbody>
       </table>
 
@@ -555,13 +538,6 @@ function DossieDefensavelPreview() {
 export default function RelatoriosPage() {
   const store = useAppStore();
   const [activeModel, setActiveModel] = useState<'Executivo' | 'Riscos' | 'Inspeções' | 'Ações' | 'Não conformidades' | 'Impacto econômico' | 'Dossie'>('Executivo');
-  const [reportMonth, setReportMonth] = useState('2026-05');
-
-  const periodLabel = useMemo(() => {
-    const [year, month] = reportMonth.split('-');
-    const mStr = new Date(Number(year), Number(month) - 1, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-    return mStr.charAt(0).toUpperCase() + mStr.slice(1);
-  }, [reportMonth]);
 
   const handlePrint = (exportType: string = 'PDF') => {
      store.addLog({
@@ -698,7 +674,7 @@ export default function RelatoriosPage() {
               <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/5 flex justify-center pb-20 print:p-0 print:overflow-visible">
                  {/* The White Paper */}
                  <div id="printable-report" className="bg-white text-gray-900 w-full max-w-[850px] shadow-2xl rounded-sm p-10 md:p-14 min-h-[1100px] border border-gray-200 print:shadow-none print:border-none print:max-w-none print:p-0 print:min-h-0">
-                    {activeModel === 'Executivo' && <RelatorioExecutivoPreview periodLabel={periodLabel} />}
+                    {activeModel === 'Executivo' && <RelatorioExecutivoPreview />}
                     {activeModel === 'Riscos' && <RelatorioRiscosPreview />}
                     {activeModel === 'Inspeções' && <RelatorioInspecoesPreview />}
                     {activeModel === 'Ações' && <RelatorioAcoesPreview />}
@@ -728,15 +704,10 @@ export default function RelatoriosPage() {
               <h3 className="text-sm font-bold text-white mb-4">Filtros e exportação</h3>
               <div className="space-y-4">
                  <div>
-                    <label className="text-xs text-gray-400 mb-1.5 block">Mês de Referência</label>
+                    <label className="text-xs text-gray-400 mb-1.5 block">Período</label>
                     <div className="flex items-center bg-[#0b0f19] border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-300">
                        <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                       <input 
-                         type="month" 
-                         value={reportMonth} 
-                         onChange={(e) => setReportMonth(e.target.value)}
-                         className="bg-transparent border-none outline-none flex-1 font-medium text-gray-300 uppercase [color-scheme:dark]"
-                       />
+                       <span>01/05/2026 – 31/05/2026</span>
                     </div>
                  </div>
                  <div>

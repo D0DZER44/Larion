@@ -156,7 +156,6 @@ export type OrganizationProfile = {
   telefone: string;
   emailCorporativo: string;
   endereco: string;
-  seed_demo?: boolean;
 };
 
 type AppStore = {
@@ -196,10 +195,6 @@ type AppStore = {
   // EPIs
   epi_records: any[];
   addEpiRecord: (record: any) => void;
-
-  // Trainings
-  trainings: any[];
-  addTraining: (record: any) => void;
 
   // Rules
   rules: Rule[];
@@ -242,8 +237,6 @@ type AppStore = {
   // Config
   engineConfig: EngineConfig;
   updateEngineConfig: (config: Partial<EngineConfig>) => void;
-
-  signOut: () => void;
 };
 
 // Helper to map NR to Package
@@ -531,9 +524,6 @@ export const useAppStore = create<AppStore>()(
 
       epi_records: [],
       addEpiRecord: (record) => set((state) => ({ epi_records: [...state.epi_records, { ...record, id: crypto.randomUUID() }] })),
-
-      trainings: [],
-      addTraining: (record) => set((state) => ({ trainings: [...state.trainings, { ...record, id: crypto.randomUUID() }] })),
 
       rules: [
         {
@@ -910,26 +900,6 @@ export const useAppStore = create<AppStore>()(
         }
       },
       updateEngineConfig: (config) => set((state) => ({ engineConfig: { ...state.engineConfig, ...config } })),
-      signOut: () => {
-         set({
-            users: [],
-            acoes: [],
-            riscos: [],
-            inspecoes: [],
-            alertas: [],
-            logs: [],
-            epi_records: [],
-            trainings: [],
-            accidents: [],
-            incidents: [],
-            checklists: [],
-            riskRules: [],
-            rules: [],
-            work_hours: [],
-            sectors: [],
-         });
-         if (typeof window !== 'undefined') window.location.href = '/';
-      }
     }),
     {
       name: 'app-storage',
