@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
@@ -43,11 +42,10 @@ export default function Dashboard() {
   const [scoreTimeRange, setScoreTimeRange] = useState<'dia' | 'semana' | 'mes' | 'ano'>('semana');
 
   useEffect(() => {
-    const t = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(t);
+    setIsMounted(true);
   }, []);
 
-  const filterJunk = useCallback((items: any[]) => {
+  const filterJunk = (items: any[]) => {
     if (organization?.seed_demo !== true) return items;
     return items.filter(i => {
       const textFields = [i.title, i.titulo, i.descricao, i.name, i.nome, i.atividade, i.nr, i.responsavel].filter(Boolean).join(' ').toLowerCase();
@@ -55,12 +53,12 @@ export default function Dashboard() {
       if (!i.title && !i.titulo && !i.atividade && !i.nome && !i.name && !i.descricao) return false;
       return true;
     });
-  }, [organization?.seed_demo]);
+  };
 
-  const cleanRiscos = useMemo(() => filterJunk(riscos || []), [riscos, filterJunk]);
-  const cleanAcoes = useMemo(() => filterJunk(acoes || []), [acoes, filterJunk]);
-  const cleanInspecoes = useMemo(() => filterJunk(inspecoes || []), [inspecoes, filterJunk]);
-  const cleanChecklists = useMemo(() => filterJunk(checklists || []), [checklists, filterJunk]);
+  const cleanRiscos = useMemo(() => filterJunk(riscos || []), [riscos]);
+  const cleanAcoes = useMemo(() => filterJunk(acoes || []), [acoes]);
+  const cleanInspecoes = useMemo(() => filterJunk(inspecoes || []), [inspecoes]);
+  const cleanChecklists = useMemo(() => filterJunk(checklists || []), [checklists]);
   const cleanLogs = useMemo(() => (logs || []), [logs]);
 
   const metrics = useMemo(() => {
@@ -663,10 +661,8 @@ export default function Dashboard() {
 
     // Check if history is < 7 days
     const allDates = [...cleanRiscos, ...cleanAcoes, ...cleanInspecoes].map(x => new Date(x.created_at || x.dataIdentificacao || x.data || 0).getTime()).filter(t => t > 0);
-    // eslint-disable-next-line react-hooks/purity
-    const nowTs = Date.now();
-    const minDateTs = allDates.length > 0 ? Math.min(...allDates) : nowTs;
-    const isHistoryForming = (nowTs - minDateTs) < (7 * 24 * 60 * 60 * 1000);
+    const minDateTs = allDates.length > 0 ? Math.min(...allDates) : Date.now();
+    const isHistoryForming = (Date.now() - minDateTs) < (7 * 24 * 60 * 60 * 1000);
 
     const today = new Date();
     const past30 = subDays(today, 30);
@@ -949,12 +945,12 @@ export default function Dashboard() {
                   </span>
                 </div>
                 <div className="flex items-center gap-4 sm:px-6 py-4 sm:py-0 w-full">
-                  <ShieldCheck className={`w-8 h-8 shrink-0 ${(metrics as any).prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-400'}`} />
-                  <span className="text-sm text-gray-200 leading-tight">Prioridade:<br/><span className="text-lg text-gray-300">{(metrics as any).prioridadeOperacional}</span></span>
+                  <ShieldCheck className={`w-8 h-8 shrink-0 ${metrics.prioridadeOperacional === 'Focos Críticos' ? 'text-red-500' : 'text-blue-400'}`} />
+                  <span className="text-sm text-gray-200 leading-tight">Prioridade:<br/><span className="text-lg text-gray-300">{metrics.prioridadeOperacional}</span></span>
                 </div>
                 <div className="flex items-center gap-4 sm:pl-6 py-4 sm:py-0 w-full">
-                  <TrendingUp className={`w-8 h-8 shrink-0 ${(metrics as any).updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`} />
-                  <span className="text-sm text-gray-200 leading-tight"><strong className={`text-lg ${(metrics as any).updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`}>{(metrics as any).updatePlano}</strong><br/>ações direcionadas</span>
+                  <TrendingUp className={`w-8 h-8 shrink-0 ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`} />
+                  <span className="text-sm text-gray-200 leading-tight"><strong className={`text-lg ${metrics.updatePlano === 'Plano em dia' ? 'text-green-500' : 'text-purple-400'}`}>{metrics.updatePlano}</strong><br/>ações direcionadas</span>
                 </div>
               </div>
             </div>

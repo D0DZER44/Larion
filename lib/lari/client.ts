@@ -1,3 +1,5 @@
+import { GoogleGenAI } from '@google/genai';
+
 export interface LariContext {
   summary: string;
   criticalRisks: number;
@@ -19,6 +21,8 @@ export interface LariMessage {
 }
 
 export async function askLari(message: string, context: LariContext): Promise<LariMessage> {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
   const fallbackResponse: LariMessage = {
     id: crypto.randomUUID(),
     role: 'lari',
@@ -26,23 +30,47 @@ export async function askLari(message: string, context: LariContext): Promise<La
     isOffline: true
   };
 
+  if (!apiKey) {
+    return fallbackResponse;
+  }
+
   try {
-    const response = await fetch('/api/lari', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message, context })
+    const ai = new GoogleGenAI({ apiKey });
+    const systemPrompt = `Você é a L.A.R.I, a Inteligência Artificial e copiloto de SST da plataforma Apex Ops.
+Você responde de forma profissional, direta, e ajuda na gestão de riscos e Segurança do Trabalho.
+
+DADOS REAIS EM TEMPO REAL:
+${context.summary}
+- Riscos Críticos: ${context.criticalRisks}
+- Ações Atrasadas: ${context.acoesAtrasadas} 
+- Inspeções Pendentes: ${context.inspecoesPendentes}
+- Score Operacional: ${context.operationalScore}
+- Setor mais crítico: ${context.topSector}
+- Conformidade: ${context.conformidade}%
+- Checklists do Dia: ${context.checklistsHoje}
+
+Responda à requisição do usuário com base nesses dados operacionais. Se for uma pergunta sobre segurança, normativas (NRs) ou SST, pode responder. Se não tiver nada a ver com SST ou o contexto acima, seja educada mas foque em seu domínio de operação. Formate em Markdown.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: message,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.3
+      }
     });
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
+    if (!response.text) throw new Error('No text returned');
 
-    const data = await response.json();
-    return data;
+    return {
+      id: crypto.randomUUID(),
+      role: 'lari',
+      text: response.text,
+      isOffline: false
+    };
+
   } catch (error) {
-    console.error("Erro na consulta à L.A.R.I API:", error);
+    console.error("Erro na API L.A.R.I:", error);
     return fallbackResponse;
   }
 }

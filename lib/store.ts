@@ -1,10 +1,49 @@
-// @ts-nocheck
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { applyManualRules, RiskInstance } from './risk-calculations';
 import { INITIAL_CHECKLISTS } from './checklists';
 import { INITIAL_RISK_RULES } from './riskRules';
-import { NivelRisco, Prioridade, StatusRisco, StatusAcao, StatusInspecao, Pacote, Risco, Acao, Inspecao, Alerta, LogEntry, User, Sector, Organization, RulePackage, RiskRule, ChecklistTemplate, ChecklistSection } from '@/lib/types';
+
+export type SystemLog = {
+  id: string;
+  empresa_id: string;
+  user_id: string;
+  event_type: string;
+  description: string;
+  origin_type?: string;
+  origin_id?: string;
+  created_at: string;
+  metadata?: any;
+};
+
+export type User = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  status: string;
+  avatar: string;
+};
+
+export type Alerta = {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  status: 'Ativo' | 'Lido' | 'Arquivado';
+  severity: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  origin: 'Risco' | 'Ação' | 'Inspeção' | 'Checklist' | 'Sistema';
+  originId?: string;
+  package?: string;
+  nr?: string;
+  createdAt: string;
+  link?: string;
+};
+
+export type Sector = {
+  id: string;
+  name: string;
+};
 
 export type Rule = {
   id: string;
@@ -18,6 +57,29 @@ export type Rule = {
   deadline: string;
   justification: string;
   isActive: boolean;
+};
+
+export type ChecklistSection = {
+  id: string;
+  title: string;
+  questions: { id: string, text: string, type: string, riskMap: string }[];
+};
+
+export type ChecklistTemplate = {
+  id: string;
+  titulo: string;
+  category: string;
+  status: 'Ativo' | 'Rascunho' | 'Inativo' | 'Revisar';
+  proximaRevisao?: string;
+  sections: ChecklistSection[];
+  pacote: string;
+  segmentos: string[];
+  atividades: string[];
+  nr: string;
+  criticidadePadrao?: 'Baixo' | 'Médio' | 'Alta' | 'Crítica';
+  geraRiscoSeNaoConforme?: boolean;
+  ativo: boolean;
+  regraFixa?: boolean;
 };
 
 export type EngineConfig = {
@@ -55,10 +117,52 @@ export type WorkHours = {
   updated_at: string;
 };
 
+export type RulePackage = {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  segment: string;
+  ruleCount: number;
+  isLocked?: boolean;
+};
+
+export type RiskRule = {
+  id: string;
+  titulo: string;
+  pacote: string;
+  segmentos: string[];
+  atividades: string[];
+  nrRelacionada: string;
+  itemNormativoOpcional?: string;
+  gatilhosTexto?: string[];
+  criticidade: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  condicao: string;
+  acaoSugerida: string;
+  prazoPadraoHoras: number;
+  exigeEvidencia: boolean;
+  geraMultaEstimativa?: boolean;
+  faixaMultaPadrao?: string;
+  ativo: boolean;
+};
+
+export type OrganizationProfile = {
+  segmento: string;
+  atividadesCriticas: string[];
+  porte: string;
+  tipoOperacao: string;
+  razaoSocial: string;
+  cnpj: string;
+  telefone: string;
+  emailCorporativo: string;
+  endereco: string;
+  seed_demo?: boolean;
+};
+
 type AppStore = {
   // Organization
-  organization: Organization;
-  updateOrganization: (data: Partial<Organization>) => void;
+  organization: OrganizationProfile;
+  updateOrganization: (data: Partial<OrganizationProfile>) => void;
 
   // Users
   users: User[];
@@ -104,12 +208,12 @@ type AppStore = {
   deleteRule: (id: string) => void;
 
   // System Core Data
-  acoes: Acao[];
-  riscos: Risco[];
-  inspecoes: Inspecao[];
+  acoes: any[];
+  riscos: any[];
+  inspecoes: any[];
   alertas: Alerta[];
-  logs: LogEntry[];
-  addLog: (log: Omit<LogEntry, 'id' | 'created_at'>) => void;
+  logs: SystemLog[];
+  addLog: (log: Omit<SystemLog, 'id' | 'created_at'>) => void;
   addAlerta: (alerta: Omit<Alerta, 'id' | 'createdAt'>) => void;
   updateAlerta: (id: string, alerta: Partial<Alerta>) => void;
   deleteAlerta: (id: string) => void;
@@ -297,7 +401,7 @@ const processAutoActions = () => {
       }
 
       // Condition: failed inspection or inspection with critical non-conformity
-      const isCritical = (i.status as any) === 'Reprovada' || i.resultado === 'Reprovada' || i.nonConformities > 0 || i.status === 'Atrasada';
+      const isCritical = i.status === 'Reprovada' || i.resultado === 'Reprovada' || i.nonConformities > 0 || i.status === 'Atrasada';
       if (isCritical) {
         const existingAcao = acoes.find(a => a.item_origem_id === i.id && a.item_origem_tipo === 'inspecao');
         if (!existingAcao && !i.autoActionCreated) {

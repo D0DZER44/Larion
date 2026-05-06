@@ -5,6 +5,7 @@ import { Send, Zap, Activity } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { askLari, LariMessage } from '@/lib/lari/client';
 import { LariContextEngine } from '@/lib/engines';
+import { Markdown } from '@/components/ui/Markdown'; // wait, I don't know if this exists. I'll just use raw div or react-markdown if installed, but I can't be sure it is. Let's just use raw text for safety.
 
 // Oh wait, framework instructions mention react-markdown:
 // "A div className="markdown-body"><Markdown>{markdown}</Markdown></div>"

@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -461,7 +460,7 @@ export default function InspecoesPage() {
     });
 
     const riscosInspecão = store.riscos.filter(r => r.origem === 'Inspeção / Checklist').length;
-    const acoesPendentes = store.acoes.filter(a => a.status === 'Pendente' || a.status === 'Em andamento').length;
+    const acoesPendentes = store.acoes.filter(a => a.status === 'Em aberto' || a.status === 'Pendente').length;
     const evidenciasAusentes = store.acoes.filter(a => a.exigeEvidencia && !a.evidenciaUrl).length;
 
     return {

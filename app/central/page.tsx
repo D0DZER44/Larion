@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -22,8 +21,6 @@ import {
 import { subDays } from 'date-fns';
 import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 
-import Sparkline from '@/components/Sparkline';
-
 function formatCurrency(value: number) {
   if (value >= 1000000) {
     return `R$ ${(value / 1000000).toFixed(2)}M`;
@@ -42,6 +39,38 @@ const SPARK_COLORS = {
   yellow: '#eab308'
 };
 
+const Sparkline = ({ data, color }: { data: number[], color: string }) => {
+  if (!data || data.length === 0) return null;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const height = 40;
+  const width = 100;
+  
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((d - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const areaPoints = `0,${height} ${points} ${width},${height}`;
+  const gradientId = `gradient-${color.replace('#', '')}`;
+  const endY = height - ((data[data.length - 1] - min) / range) * height;
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 -5 ${width} ${height + 15}`} preserveAspectRatio="none" className="overflow-visible">
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${gradientId})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={width} cy={endY} fill="#ffffff" stroke={color} strokeWidth="2" r="3" />
+    </svg>
+  );
+};
 
 const PIE_COLORS = {
   Crítico: '#ef4444',
@@ -155,6 +184,7 @@ export default function CentralPage() {
       { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: trendValuesMulta, sparkColor: SPARK_COLORS.yellow },
       { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →', trend: trendValuesChance, sparkColor: SPARK_COLORS.emerald },
     ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riscos, inspecoes, acoes, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen, trabalhadoresExpostos]);
 
   // Main 4 Top Cards (from Figma design)
@@ -200,7 +230,7 @@ export default function CentralPage() {
   const multaByNRMap: Record<string, number> = {};
   openRisks.forEach(r => {
     const nr = r.nr || 'NR-Geral';
-    multaByNRMap[nr] = (multaByNRMap[nr] || 0) + calcularMultaEstimada(r).multaEstimada;
+    multaByNRMap[nr] = (multaByNRMap[nr] || 0) + calcularMultaEstimada(r);
   });
   let nrBarData = Object.entries(multaByNRMap).map(([name, total]) => ({ name, Total: total })).sort((a,b) => b.Total - a.Total).slice(0, 6);
   if (nrBarData.length === 0) {
@@ -487,14 +517,14 @@ export default function CentralPage() {
                               {i+1}
                            </div>
                            <div className="flex-1 min-w-0">
-                              <h4 className="text-[13px] font-medium text-gray-200 truncate group-hover:text-white transition-colors">{(r as any).titulo || (r as any).atividade}</h4>
+                              <h4 className="text-[13px] font-medium text-gray-200 truncate group-hover:text-white transition-colors">{r.titulo || r.atividade}</h4>
                            </div>
                            <div className="text-[12px] text-gray-400 truncate text-right">
-                              {(r as any).setor || (r as any).sector_id}
+                              {r.setor || r.sector_id}
                            </div>
                            <div className="w-8 flex justify-end">
                               <span className="text-[11px] font-bold text-red-500 flex items-center justify-center w-6 h-6 rounded-full border border-red-500/30 bg-red-500/10">
-                                {(r as any).chance || (r as any).chanceIncidente || 85}
+                                {r.chance || r.chanceIncidente || 85}
                               </span>
                            </div>
                         </div>
@@ -725,7 +755,7 @@ export default function CentralPage() {
                         <div className="space-y-4">
                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Multa Estimada</h4>
-                              <div className="text-xl font-bold text-yellow-500">{formatCurrency(calcularMultaEstimada(selectedDrawerItem.data as any).multaEstimada)}</div>
+                              <div className="text-xl font-bold text-yellow-500">{formatCurrency(calcularMultaEstimada(selectedDrawerItem.data))}</div>
                            </div>
                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Chance de Incidente</h4>

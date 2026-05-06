@@ -1,4 +1,4 @@
-import { ChecklistTemplate } from './types';
+import { ChecklistTemplate } from './store';
 
 export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
   // --- BASE SST ---
@@ -20,8 +20,8 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         questions: [
           { id: 'q1', text: 'O trabalhador utiliza o EPI obrigatório para a função?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' },
           { id: 'q2', text: 'O EPI possui CA (Certificado de Aprovação) válido?', type: 'Sim / Não / Parcialmente', riskMap: 'Crítica' },
-          { id: 'q3', text: 'O EPI está em bom estado de conservação?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
-          { id: 'q4', text: 'Existe registro de entrega assinado pelo trabalhador?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' }
+          { id: 'q3', text: 'O EPI está em bom estado de conservação?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
+          { id: 'q4', text: 'Existe registro de entrega assinado pelo trabalhador?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' }
         ]
       }
     ]
@@ -35,7 +35,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Todos'],
     atividades: ['Geral', 'Administrativo'],
     nr: 'NR-17',
-    criticidadePadrao: 'Médio',
+    criticidadePadrao: 'Média',
     ativo: true,
     sections: [
       {
@@ -43,7 +43,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         title: 'Posto de Trabalho',
         questions: [
           { id: 'q1', text: 'A altura do monitor está adequada ao nível dos olhos?', type: 'Sim / Não / Parcialmente', riskMap: 'Baixo' },
-          { id: 'q2', text: 'A cadeira permite ajuste de altura e encosto?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
+          { id: 'q2', text: 'A cadeira permite ajuste de altura e encosto?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
           { id: 'q3', text: 'Existe suporte para os pés se necessário?', type: 'Sim / Não / Parcialmente', riskMap: 'Baixo' }
         ]
       }
@@ -67,7 +67,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         questions: [
           { id: 'q1', text: 'Os extintores estão dentro do prazo de validade?', type: 'Sim / Não / Parcialmente', riskMap: 'Critica' },
           { id: 'q2', text: 'O acesso aos extintores está desobstruído?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' },
-          { id: 'q3', text: 'A sinalização de emergência está visível?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' }
+          { id: 'q3', text: 'A sinalização de emergência está visível?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' }
         ]
       }
     ]
@@ -81,15 +81,15 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Todos'],
     atividades: ['Geral'],
     nr: 'NR-24',
-    criticidadePadrao: 'Médio',
+    criticidadePadrao: 'Média',
     ativo: true,
     sections: [
       {
         id: 'sec-1',
         title: 'Instalações',
         questions: [
-          { id: 'q1', text: 'Os sanitários estão em condições adequadas de higiene?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
-          { id: 'q2', text: 'Existe local adequado para refeições?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' }
+          { id: 'q1', text: 'Os sanitários estão em condições adequadas de higiene?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
+          { id: 'q2', text: 'Existe local adequado para refeições?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' }
         ]
       }
     ]
@@ -103,7 +103,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Todos'],
     atividades: ['Geral'],
     nr: 'NR-26',
-    criticidadePadrao: 'Baixo',
+    criticidadePadrao: 'Baixa',
     ativo: true,
     sections: [
       {
@@ -313,7 +313,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         id: 'sec-1',
         title: 'Equipamentos de Movimentação',
         questions: [
-          { id: 'q1', text: 'A empilhadeira possui alarme de ré e giroflex?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
+          { id: 'q1', text: 'A empilhadeira possui alarme de ré e giroflex?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
           { id: 'q2', text: 'Cintas e correntes de içamento foram inspecionadas?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' }
         ]
       }
@@ -357,7 +357,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         id: 'sec-1',
         title: 'Higiene Ocupacional',
         questions: [
-          { id: 'q1', text: 'Os limites de ruído estão sendo respeitados?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
+          { id: 'q1', text: 'Os limites de ruído estão sendo respeitados?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
           { id: 'q2', text: 'A ventilação no local é adequada para os contaminantes?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' }
         ]
       }
@@ -402,7 +402,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         title: 'Identificação Química',
         questions: [
           { id: 'q1', text: 'As embalagens possuem rótulo conforme padrão internacional?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' },
-          { id: 'q2', text: 'As FISPQ estão acessíveis aos trabalhadores?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' }
+          { id: 'q2', text: 'As FISPQ estão acessíveis aos trabalhadores?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' }
         ]
       }
     ]
@@ -484,15 +484,15 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Saúde', 'Hospitalar'],
     atividades: ['Atendimento em Saúde'],
     nr: 'NR-17',
-    criticidadePadrao: 'Médio',
+    criticidadePadrao: 'Média',
     ativo: true,
     sections: [
       {
         id: 'sec-1',
         title: 'Ergonomia em Saúde',
         questions: [
-          { id: 'q1', text: 'Existem dispositivos auxiliares para transporte de pacientes?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
-          { id: 'q2', text: 'O posto de enfermagem possui ergonomia adequada?', type: 'Sim / Não / Parcialmente', riskMap: 'Baixo' }
+          { id: 'q1', text: 'Existem dispositivos auxiliares para transporte de pacientes?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
+          { id: 'q2', text: 'O posto de enfermagem possui ergonomia adequada?', type: 'Sim / Não / Parcialmente', riskMap: 'Baixa' }
         ]
       }
     ]
@@ -506,7 +506,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Saúde', 'Hospitalar'],
     atividades: ['Atendimento em Saúde'],
     nr: 'NR-24',
-    criticidadePadrao: 'Médio',
+    criticidadePadrao: 'Média',
     ativo: true,
     sections: [
       {
@@ -514,7 +514,7 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
         title: 'Conforto Higiênico',
         questions: [
           { id: 'q1', text: 'Os vestiários são separados por gênero e higienizados?', type: 'Sim / Não / Parcialmente', riskMap: 'Baixo' },
-          { id: 'q2', text: 'A água para consumo humano é potável e acessível?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' }
+          { id: 'q2', text: 'A água para consumo humano é potável e acessível?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' }
         ]
       }
     ]
@@ -528,14 +528,14 @@ export const INITIAL_CHECKLISTS: ChecklistTemplate[] = [
     segmentos: ['Saúde', 'Hospitalar'],
     atividades: ['Atendimento em Saúde'],
     nr: 'NR-26',
-    criticidadePadrao: 'Médio',
+    criticidadePadrao: 'Média',
     ativo: true,
     sections: [
       {
         id: 'sec-1',
         title: 'Sinalização em Saúde',
         questions: [
-          { id: 'q1', text: 'Existe identificação clara de áreas de risco biológico?', type: 'Sim / Não / Parcialmente', riskMap: 'Médio' },
+          { id: 'q1', text: 'Existe identificação clara de áreas de risco biológico?', type: 'Sim / Não / Parcialmente', riskMap: 'Média' },
           { id: 'q2', text: 'Os recipientes de resíduos estão identificados por tipo?', type: 'Sim / Não / Parcialmente', riskMap: 'Alta' }
         ]
       }
