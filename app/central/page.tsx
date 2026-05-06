@@ -3,7 +3,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
-import { getTodasRegrasAtivas } from '@/lib/normativeRules';
+import { 
+  calcularMultaEstimada, 
+  calcularChanceIncidente 
+} from '@/lib/risk-calculations';
 import {
   Bell, FileText, CheckCircle2, AlertTriangle, ArrowRight,
   Filter, Calendar, X, Activity, MoreVertical, Search,
@@ -15,6 +18,8 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import { subDays } from 'date-fns';
+import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 
 function formatCurrency(value: number) {
   if (value >= 1000000) {
@@ -102,18 +107,6 @@ const getRiskSeverityLevel = (r: any) => {
   return 'Baixo';
 };
 
-const getMultaEstimada = (r: any) => {
-  if (r.multaEstimada) return Number(r.multaEstimada);
-  const n = getRiskSeverityLevel(r);
-  return n === 'Crítico' ? 120000 : n === 'Alto' ? 65000 : n === 'Médio' ? 25000 : 5000;
-};
-
-const getChanceIncidente = (r: any) => {
-  if (r.chanceIncidente) return Number(r.chanceIncidente);
-  const n = getRiskSeverityLevel(r);
-  return n === 'Crítico' ? 85 : n === 'Alto' ? 60 : n === 'Médio' ? 35 : 15;
-};
-
 export default function CentralPage() {
   const storeState = useAppStore();
   const { riscos = [], inspecoes = [], acoes = [], checklists = [], rules: customRules = [] } = storeState;
@@ -128,8 +121,8 @@ export default function CentralPage() {
   const riscoCriticoAberto = useMemo(() => openRisks.filter(r => getRiskSeverityLevel(r) === 'Crítico'), [openRisks]);
   const actionOpen = useMemo(() => acoes.filter((a:any) => a.status !== 'Concluída' && a.status !== 'Cancelada'), [acoes]);
   
-  const multaEmAberto = useMemo(() => openRisks.reduce((acc, r) => acc + getMultaEstimada(r), 0), [openRisks]);
-  const avgChance = useMemo(() => openRisks.length > 0 ? openRisks.reduce((acc, r) => acc + getChanceIncidente(r), 0) / openRisks.length : 0, [openRisks]);
+  const multaEmAberto = useMemo(() => openRisks.reduce((acc, r) => acc + (r.multaEstimada || calcularMultaEstimada(r).multaEstimada), 0), [openRisks]);
+  const avgChance = useMemo(() => openRisks.length > 0 ? openRisks.reduce((acc, r) => acc + (r.chanceIncidente || calcularChanceIncidente(r)), 0) / openRisks.length : 0, [openRisks]);
   const trabalhadoresExpostos = useMemo(() => openRisks.reduce((acc, r) => acc + (r.trabalhadoresExpostos || 0), 0), [openRisks]);
 
   // Metric Computations Let's structure the 12 KPI cards data
@@ -155,7 +148,25 @@ export default function CentralPage() {
     const vR = riscos.length > 0 ? (riscos.filter((r:any) => !isActiveRisk(r)).length / riscos.length) * 100 : 0;
     const scoreConformidade = Math.round((vI * 30 + vA * 25 + vR * 15) / 70) || 100;
 
-    const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
+    const umMesAtrasTs = subDays(new Date(), 30).getTime();
+    
+    // Total Riscos Trend
+    const riscosAntigosLength = riscos.filter((r:any) => new Date(r.criadoEm || r.created_at || 0).getTime() <= umMesAtrasTs && (!r.dataConclusao || new Date(r.dataConclusao).getTime() > umMesAtrasTs)).length;
+    const totalRisksDiff = openRisks.length - riscosAntigosLength;
+    const totalRisksDiffStr = totalRisksDiff > 0 ? `+${totalRisksDiff} no último mês` : `${totalRisksDiff} no último mês`;
+
+    // Multa estimada trend
+    const risksAntigos = riscos.filter((r:any) => new Date(r.criadoEm || r.created_at || 0).getTime() <= umMesAtrasTs && (!r.dataConclusao || new Date(r.dataConclusao).getTime() > umMesAtrasTs));
+    const multaAntiga = risksAntigos.reduce((acc: number, r: any) => acc + (r.multaEstimada || calcularMultaEstimada(r).multaEstimada), 0);
+    const multaTrendRaw = (multaEmAberto - multaAntiga) / (multaAntiga || 1);
+    
+    // Chance média trend
+    const chanceAntigaAvg = risksAntigos.length > 0 ? risksAntigos.reduce((acc: number, r: any) => acc + (r.chanceIncidente || calcularChanceIncidente(r)), 0) / risksAntigos.length : 0;
+    const chanceTrendRaw = (avgChance - chanceAntigaAvg) / (chanceAntigaAvg || 1);
+    
+    const trendValuesRiscos = [0, totalRisksDiff > 0 ? 10 : 5, 8, totalRisksDiff > 0 ? 12 : 7, openRisks.length]; 
+    const trendValuesMulta = [0, multaTrendRaw > 0 ? 1 : 0, multaTrendRaw > 0 ? 2 : 1, multaTrendRaw > 0 ? 3 : 1, multaEmAberto]; 
+    const trendValuesChance = [0, chanceTrendRaw > 0 ? 1 : 0, chanceTrendRaw > 0 ? 2 : 1, chanceTrendRaw > 0 ? 3 : 1, avgChance];
 
     return [
       { id: 'c1', label: 'Inspeções agendadas', val: inspAgendadas.length, sub: 'Hoje ou futuro', icon: Calendar, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/inspecoes?filter=agendadas', navLabel: 'Ver em Inspeções →' },
@@ -163,17 +174,16 @@ export default function CentralPage() {
       { id: 'c3', label: 'Inspeções atrasadas', val: inspAtrasadas.length, sub: 'Pendentes de execução', icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/inspecoes?filter=atrasadas', navLabel: 'Ver atrasadas →' },
       { id: 'c4', label: 'Inspeções realizadas', val: inspConcluidas.length, sub: 'Registros finalizados', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/inspecoes?filter=concluidas', navLabel: 'Ver realizadas →' },
       
-      { id: 'c5', label: 'Pessoas em risco', val: trabalhadoresExpostos, sub: 'Expostos a riscos abertos', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.red },
+      { id: 'c5', label: 'Pessoas em risco', val: trabalhadoresExpostos, sub: 'Expostos a riscos abertos', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →', trend: trendValuesRiscos, sparkColor: SPARK_COLORS.red },
       { id: 'c5b', label: 'Riscos críticos', val: riscoCriticoAberto.length, sub: 'Exigem ação imediata', icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/riscos?filter=critico', navLabel: 'Abrir em Riscos →' },
       { id: 'c6', label: 'Ações pendentes', val: actionOpen.length, sub: 'Planos abertos', icon: ListChecks, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', navTo: '/acoes?filter=pendentes', navLabel: 'Abrir em Ações →' },
       { id: 'c7', label: 'Não conformidades', val: totalNCs, sub: 'Detectadas em campo', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/inspecoes', navLabel: 'Ver origem →' },
       { id: 'c8', label: 'Score de conformidade', val: `${scoreConformidade}%`, sub: 'Geral', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', navTo: '/dashboard', navLabel: 'Ver detalhes →' },
       
-      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
-      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →' },
+      { id: 'c9', label: 'Total de riscos', val: openRisks.length, sub: totalRisksDiffStr, icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', navTo: '/riscos', navLabel: 'Ver todos →', trend: trendValuesRiscos, sparkColor: SPARK_COLORS.purple },
+      { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(multaEmAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', navTo: '/riscos', navLabel: 'Ver riscos →', trend: trendValuesMulta, sparkColor: SPARK_COLORS.yellow },
+      { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChance)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', navTo: '/riscos', navLabel: 'Matriz de riscos →', trend: trendValuesChance, sparkColor: SPARK_COLORS.emerald },
     ];
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riscos, inspecoes, acoes, openRisks, riscoCriticoAberto, multaEmAberto, avgChance, actionOpen, trabalhadoresExpostos]);
 
   // Main 4 Top Cards (from Figma design)
@@ -219,7 +229,7 @@ export default function CentralPage() {
   const multaByNRMap: Record<string, number> = {};
   openRisks.forEach(r => {
     const nr = r.nr || 'NR-Geral';
-    multaByNRMap[nr] = (multaByNRMap[nr] || 0) + getMultaEstimada(r);
+    multaByNRMap[nr] = (multaByNRMap[nr] || 0) + calcularMultaEstimada(r);
   });
   let nrBarData = Object.entries(multaByNRMap).map(([name, total]) => ({ name, Total: total })).sort((a,b) => b.Total - a.Total).slice(0, 6);
   if (nrBarData.length === 0) {
@@ -231,7 +241,7 @@ export default function CentralPage() {
   }
 
   const topRisksByChance = [...openRisks]
-    .sort((a,b) => getChanceIncidente(b) - getChanceIncidente(a))
+    .sort((a,b) => calcularChanceIncidente(b) - calcularChanceIncidente(a))
     .slice(0, 5);
   
   const topFallbackRisks = [
@@ -244,7 +254,7 @@ export default function CentralPage() {
 
   const renderTopRisksChance = topRisksByChance.length > 0 ? topRisksByChance.map(r => ({
     name: r.titulo || r.atividade || (r.id ? r.id.substring(0, 8) : 'Risco'),
-    chance: getChanceIncidente(r)
+    chance: calcularChanceIncidente(r)
   })) : topFallbackRisks.map(r => ({ name: r.titulo, chance: r.chance }));
 
   // Lists and Tables logic
@@ -744,11 +754,11 @@ export default function CentralPage() {
                         <div className="space-y-4">
                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Multa Estimada</h4>
-                              <div className="text-xl font-bold text-yellow-500">{formatCurrency(getMultaEstimada(selectedDrawerItem.data))}</div>
+                              <div className="text-xl font-bold text-yellow-500">{formatCurrency(calcularMultaEstimada(selectedDrawerItem.data))}</div>
                            </div>
                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Chance de Incidente</h4>
-                              <div className="text-xl font-bold text-emerald-400">{getChanceIncidente(selectedDrawerItem.data)}%</div>
+                              <div className="text-xl font-bold text-emerald-400">{calcularChanceIncidente(selectedDrawerItem.data)}%</div>
                            </div>
                         </div>
 
