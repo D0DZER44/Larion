@@ -102,6 +102,53 @@ function toStringList(value: unknown) {
   return [];
 }
 
+function buildActionPayloadFromRisk(risk: any) {
+  const nowIso = new Date().toISOString();
+  const riskId = risk?.id || crypto.randomUUID();
+  const activityLabel = safeText(risk?.atividade, 'Atividade operacional');
+  const riskTitle = safeText(risk?.titulo || risk?.tipoDeRisco, `Risco em ${activityLabel}`);
+  const responsible =
+    safeText(risk?.responsavel) ||
+    safeText(risk?.validadorCorrecao) ||
+    safeText(risk?.executorCorrecao) ||
+    'Não definido';
+
+  return {
+    id: crypto.randomUUID(),
+    titulo: safeText(risk?.acaoRecomendada || risk?.recommendedAction, `Mitigar ${riskTitle}`),
+    title: safeText(risk?.acaoRecomendada || risk?.recommendedAction, `Mitigar ${riskTitle}`),
+    descricao: safeText(
+      risk?.descricao,
+      `Ação corretiva vinculada ao risco ${riskTitle} no setor ${safeText(risk?.setor, 'não informado')}.`,
+    ),
+    status: 'Pendente',
+    prioridade: risk?.prioridade || 'Alta',
+    prazo: risk?.prazo || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    responsavel: responsible,
+    riscoId: riskId,
+    risk_id: riskId,
+    setor: safeText(risk?.setor, 'Não definido'),
+    atividade: activityLabel,
+    origem: 'Risco',
+    item_origem_tipo: 'risco',
+    item_origem_id: riskId,
+    inspection_id: risk?.inspection_id || risk?.inspecaoId || undefined,
+    inspecaoId: risk?.inspecaoId || risk?.inspection_id || undefined,
+    nr: risk?.nr || '',
+    nrRelacionada: risk?.nr || '',
+    pacote: risk?.pacote || risk?.package || 'Base SST',
+    progresso: 0,
+    faseExecucao: 'Pendente',
+    evidencia: [],
+    historico: [],
+    comentarios: [],
+    criadoEm: nowIso,
+    atualizadoEm: nowIso,
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+}
+
 function getActionActivityLabel(action: any) {
   return safeText(action?.atividade, safeText(action?.tipoDeRisco, 'atividade'));
 }
@@ -467,6 +514,7 @@ export default function RiscosPage() {
 
   const storeAddRisco = useAppStore(state => state.addRisco);
   const storeUpdateRisco = useAppStore(state => state.updateRisco);
+  const storeAddAcao = useAppStore(state => state.addAcao);
 
   const handleSaveForm = () => {
     if (!formData.atividade || !formData.setor) {
@@ -488,7 +536,14 @@ export default function RiscosPage() {
     if (editingItem) {
       storeUpdateRisco(editingItem.id, evaluated);
     } else {
-      storeAddRisco(evaluated);
+      const riskId = crypto.randomUUID();
+      const riskPayload = {
+        ...evaluated,
+        id: riskId,
+        riscoId: riskId,
+      };
+      storeAddRisco(riskPayload);
+      storeAddAcao(buildActionPayloadFromRisk(riskPayload));
     }
     setIsDrawerOpen(false);
   };

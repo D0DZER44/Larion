@@ -65,6 +65,83 @@ function getChecklistQuestions(checklist: any) {
   );
 }
 
+function buildChecklistIdFallback(checklist: any, index = 0) {
+  const seed = getChecklistTitle(checklist)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .toLowerCase();
+  return checklist?.id || `checklist-${seed || index}-${index}`;
+}
+
+function normalizeChecklistQuestion(question: any, sectionId: string, index: number) {
+  return {
+    ...question,
+    id: question?.id || `${sectionId}-question-${index}`,
+    text: question?.text || question?.titulo || question?.label || `Pergunta ${index + 1}`,
+    type: question?.type || 'boolean',
+  };
+}
+
+function normalizeChecklistSectionsForUi(checklist: any) {
+  const sourceSections = Array.isArray(checklist?.sections)
+    ? checklist.sections
+    : Array.isArray(checklist?.perguntas)
+      ? [{ id: `${buildChecklistIdFallback(checklist)}-section-0`, title: 'Itens de verificação', questions: checklist.perguntas }]
+      : [];
+
+  return sourceSections.map((section: any, index: number) => {
+    const sectionId = section?.id || `${buildChecklistIdFallback(checklist)}-section-${index}`;
+    const questions = Array.isArray(section?.questions)
+      ? section.questions
+      : Array.isArray(section?.itens)
+        ? section.itens
+        : [];
+
+    return {
+      ...section,
+      id: sectionId,
+      title: section?.title || section?.titulo || `Seção ${index + 1}`,
+      questions: questions.map((question: any, questionIndex: number) =>
+        normalizeChecklistQuestion(question, sectionId, questionIndex),
+      ),
+    };
+  });
+}
+
+function normalizeChecklistForUi(checklist: any, index: number) {
+  const normalizedSections = normalizeChecklistSectionsForUi(checklist);
+  return {
+    ...checklist,
+    id: buildChecklistIdFallback(checklist, index),
+    titulo: getChecklistTitle(checklist),
+    title: checklist?.title || getChecklistTitle(checklist),
+    name: checklist?.name || getChecklistTitle(checklist),
+    status: checklist?.status || (checklist?.ativo === false ? 'Inativo' : 'Ativo'),
+    ativo: checklist?.ativo !== false,
+    category: checklist?.category || getChecklistNr(checklist) || 'Base SST',
+    atividade: checklist?.atividade || getChecklistActivityLabel(checklist),
+    pacote: checklist?.pacote || checklist?.package || getChecklistPackage(checklist),
+    sections: normalizedSections,
+  };
+}
+
+function buildChecklistExecutionItems(checklist: any, getAcaoSugerida: (question: string) => string) {
+  return getChecklistSections(checklist).flatMap((section: any) =>
+    (section?.questions || []).map((question: any) => ({
+      id: question.id,
+      sectionId: section.id,
+      sectionTitle: section.title,
+      text: question.text,
+      status: 'Conforme',
+      gravidade: 'Baixo',
+      observacao: '',
+      acaoCorretiva: getAcaoSugerida(question.text),
+      evidencia: '',
+    })),
+  );
+}
+
 function getChecklistPackage(checklist: any) {
   return checklist?.pacote || checklist?.package || checklist?.group || 'Base SST';
 }
@@ -159,7 +236,10 @@ export default function InspecoesPage() {
 
   const router = useRouter();
   const { checklists: customChecklists, addInspecao, updateInspecao, addRisco, addAcao, riscos, acoes, rulePackages, organization } = store;
-  const checklists = useMemo(() => getTodosChecklistsAtivos(customChecklists), [customChecklists]);
+  const checklists = useMemo(
+    () => getTodosChecklistsAtivos(customChecklists).map((checklist: any, index: number) => normalizeChecklistForUi(checklist, index)),
+    [customChecklists],
+  );
 
   const [activeTab, setActiveTab] = useState<'Agendadas' | 'Realizadas' | 'Checklists'>('Agendadas');
   
@@ -383,7 +463,7 @@ export default function InspecoesPage() {
     if (mode === 'EDIT') {
       setInspectionData({
         tipoInspecao: item.tipoInspecao || item.checklist || '',
-        checklistId: checklists.find(c => getChecklistTitle(c) === item.checklist)?.id || '',
+        checklistId: item.checklistId || checklists.find(c => getChecklistTitle(c) === item.checklist)?.id || '',
         ondeUsar: item.ondeUsar || '',
         data: item.data || item.proximaInspecao || '',
         responsavel: item.responsavel || '',
@@ -412,23 +492,9 @@ export default function InspecoesPage() {
         setChecklistItems(item.items);
       } else {
         const tempChecklistItems: any[] = [];
-        const foundC = checklists.find(c => getChecklistTitle(c) === item.checklist);
-        if (foundC) {
-          getChecklistSections(foundC).forEach((sec: any) => {
-            (sec?.questions || []).forEach((q: any) => {
-              tempChecklistItems.push({
-                id: q.id,
-                sectionId: sec.id,
-                sectionTitle: sec.title,
-                text: q.text,
-                status: 'Conforme',
-                gravidade: 'Baixo',
-                observacao: '',
-                acaoCorretiva: getAcaoSugerida(q.text),
-                evidencia: ''
-              });
-            });
-          });
+      const foundC = checklists.find(c => c.id === item.checklistId) || checklists.find(c => getChecklistTitle(c) === item.checklist);
+      if (foundC) {
+          tempChecklistItems.push(...buildChecklistExecutionItems(foundC, getAcaoSugerida));
         }
         setChecklistItems(tempChecklistItems);
       }
@@ -440,12 +506,11 @@ export default function InspecoesPage() {
     if (formType === 'Inspecao') {
       const selectedModel = checklists.find(c => c.id === (inspectionData.checklistId || checklists[0]?.id));
       if (!selectedModel) return;
-      const newItems: any[] = [];
-      getChecklistSections(selectedModel).forEach((sec: any) => {
-        (sec?.questions || []).forEach((q: any) => {
-          newItems.push({ id: q.id, sectionId: sec.id, sectionTitle: sec.title, text: q.text, status: 'Conforme', gravidade: 'Baixo', observacao: '', acaoCorretiva: getAcaoSugerida(q.text), evidencia: '' });
-        });
-      });
+      const newItems = buildChecklistExecutionItems(selectedModel, getAcaoSugerida);
+      if (newItems.length === 0) {
+        alert('O checklist selecionado ainda não possui perguntas válidas para execução. Revise o modelo em Configurações.');
+        return;
+      }
       setChecklistItems(newItems);
       setInspectionStep(2);
     }
@@ -457,7 +522,13 @@ export default function InspecoesPage() {
       return;
     }
 
-    const modelo = getChecklistTitle(checklists.find(c => c.id === inspectionData.checklistId)) || 'Inspeção';
+    const selectedChecklistModel = checklists.find(c => c.id === inspectionData.checklistId);
+    if (!selectedChecklistModel) {
+      alert('O checklist selecionado não foi encontrado. Atualize a página e tente novamente.');
+      return;
+    }
+
+    const modelo = getChecklistTitle(selectedChecklistModel) || 'Inspeção';
     const dataHoje = new Date().toISOString().split('T')[0];
     const adaptedInspection = adaptTargetInspectionPayload(
       {
@@ -478,6 +549,7 @@ export default function InspecoesPage() {
       const updatedData = {
         ...adaptedInspection,
         tipoInspecao: adaptedInspection.tipoInspecao,
+        checklistId: selectedChecklistModel.id,
         checklist: modelo,
         ondeUsar: adaptedInspection.ondeUsar,
         proximaInspecao: adaptedInspection.proximaInspecao,
@@ -511,6 +583,7 @@ export default function InspecoesPage() {
         observacoes: inspectionData.observacoes,
         trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
         perfilExposto: inspectionData.perfilExposto,
+        checklistId: selectedChecklistModel.id,
         items: []
       };
       
@@ -528,7 +601,8 @@ export default function InspecoesPage() {
 
   const handleSalvarRascunho = () => {
     const inspecaoId = Date.now().toString();
-    const modelo = getChecklistTitle(checklists.find(c => c.id === inspectionData.checklistId)) || 'Inspeção';
+    const selectedChecklistModel = checklists.find(c => c.id === inspectionData.checklistId);
+    const modelo = getChecklistTitle(selectedChecklistModel) || 'Inspeção';
     const adaptedInspection = adaptTargetInspectionPayload(
       {
         titulo: modelo,
@@ -559,6 +633,7 @@ export default function InspecoesPage() {
       observacoes: inspectionData.observacoes,
       trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
       perfilExposto: inspectionData.perfilExposto,
+      checklistId: selectedChecklistModel?.id || '',
       items: []
     });
     
