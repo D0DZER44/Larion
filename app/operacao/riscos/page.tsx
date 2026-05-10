@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -42,9 +42,9 @@ const SPARK_COLORS = {
 
 
 const PIE_COLORS = {
-  Crítico: '#ef4444',
+  'Crítico': '#ef4444',
   Alto: '#f97316',
-  Médio: '#eab308',
+  'Médio': '#eab308',
   Baixo: '#10b981'
 };
 
@@ -111,7 +111,7 @@ function buildActionPayloadFromRisk(risk: any) {
     safeText(risk?.responsavel) ||
     safeText(risk?.validadorCorrecao) ||
     safeText(risk?.executorCorrecao) ||
-    'Não definido';
+    'NÃ£o definido';
 
   return {
     id: crypto.randomUUID(),
@@ -119,7 +119,7 @@ function buildActionPayloadFromRisk(risk: any) {
     title: safeText(risk?.acaoRecomendada || risk?.recommendedAction, `Mitigar ${riskTitle}`),
     descricao: safeText(
       risk?.descricao,
-      `Ação corretiva vinculada ao risco ${riskTitle} no setor ${safeText(risk?.setor, 'não informado')}.`,
+      `AÃ§Ã£o corretiva vinculada ao risco ${riskTitle} no setor ${safeText(risk?.setor, 'nÃ£o informado')}.`,
     ),
     status: 'Pendente',
     prioridade: risk?.prioridade || 'Alta',
@@ -127,7 +127,7 @@ function buildActionPayloadFromRisk(risk: any) {
     responsavel: responsible,
     riscoId: riskId,
     risk_id: riskId,
-    setor: safeText(risk?.setor, 'Não definido'),
+    setor: safeText(risk?.setor, 'NÃ£o definido'),
     atividade: activityLabel,
     origem: 'Risco',
     item_origem_tipo: 'risco',
@@ -205,11 +205,11 @@ function buildRiskMetricTrend(items: any[], valueResolver: (item: any) => number
 }
 
 function getTrendDeltaLabel(series: number[], suffix = '') {
-  if (series.length < 2) return 'Sem histórico';
+  if (series.length < 2) return 'Sem histÃ³rico';
   const current = series[series.length - 1] || 0;
   const previous = series[series.length - 2] || 0;
   const delta = current - previous;
-  if (delta === 0) return `Estável${suffix}`;
+  if (delta === 0) return `EstÃ¡vel${suffix}`;
   return `${delta > 0 ? '+' : ''}${delta}${suffix}`;
 }
 
@@ -224,7 +224,7 @@ function getRiskRelatedInspection(inspections: any[], risk: any) {
 
 function getInspectionProgressMetrics(inspection: any) {
   if (!inspection) {
-    return { percent: 0, label: 'Sem vínculo de checklist', detail: '0/0' };
+    return { percent: 0, label: 'Sem vÃ­nculo de checklist', detail: '0/0' };
   }
 
   const items = Array.isArray(inspection?.items)
@@ -261,24 +261,28 @@ function getRiskDrawerId(risk: any) {
   return safeText(risk?.id || risk?.riskId || risk?.inspection_id || risk?.item_origem_id || 'SEM-ID');
 }
 
-const ATIVIDADES_OPCOES = [
-  'Trabalho em altura',
-  'Manutenção elétrica',
-  'Operação de máquinas',
-  'Espaço confinado',
-  'Trabalho a quente',
-  'Movimentação de cargas',
-  'Outras atividades'
-];
+function getChecklistActivities(checklist: any) {
+  const listedActivities = Array.isArray(checklist?.atividades) ? checklist.atividades : [];
+  const fallbackValues = [checklist?.atividade, checklist?.ondeUsar, checklist?.segmento, checklist?.category];
+  return Array.from(new Set([...listedActivities, ...fallbackValues].map((value) => safeText(value).trim()).filter(Boolean)));
+}
+
+function toPriorityFromCriticality(value: unknown) {
+  const token = toNormalizedToken(value);
+  if (token.includes('crit')) return 'P1';
+  if (token.includes('alt')) return 'P2';
+  if (token.includes('med')) return 'P3';
+  return 'P4';
+}
 
 
 
-const SUB_TABS = ['Visão Geral', 'Atividade', 'Setor', 'Tipo', 'Histórico'] as const;
+const SUB_TABS = ['VisÃ£o Geral', 'Atividade', 'Setor', 'Tipo', 'HistÃ³rico'] as const;
 type TabType = typeof SUB_TABS[number];
 
 export default function RiscosPage() {
   const store = useAppStore();
-  const { sectors, users, inspecoes, riscos: rawRiscos = [], acoes: rawAcoes = [], rulePackages } = store;
+  const { sectors, users, inspecoes, riscos: rawRiscos = [], acoes: rawAcoes = [], rulePackages, riskRules = [], checklists = [] } = store;
   const SETORES_OPCOES = sectors.map(s => s.name);
   const RESPONSAVEIS_OPCOES = (users || []).filter((user: any) => user?.status !== 'Inativo').map((user: any) => user.name).filter(Boolean);
 
@@ -291,7 +295,57 @@ export default function RiscosPage() {
     });
   };
 
-  const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
+  const activePackageNames = useMemo(() => {
+    const names = (rulePackages || []).filter((p: any) => p.isActive).map((p: any) => p.name);
+    return Array.from(new Set(['Base SST', ...names]));
+  }, [rulePackages]);
+  const operationalActivityCatalog = useMemo(() => {
+    const catalog = new Map<string, any>();
+
+    (riskRules || [])
+      .filter((rule: any) => rule?.ativo !== false)
+      .filter((rule: any) => activePackageNames.includes(rule?.pacote || 'Base SST'))
+      .forEach((rule: any) => {
+        (Array.isArray(rule?.atividades) ? rule.atividades : []).forEach((activity: string) => {
+          const token = toNormalizedToken(activity);
+          if (!token || catalog.has(token)) return;
+          const priority = toPriorityFromCriticality(rule?.criticidade);
+          catalog.set(token, {
+            activity,
+            pacote: rule?.pacote || 'Base SST',
+            nr: rule?.nrRelacionada || '',
+            tipoDeRisco: rule?.titulo || 'Risco operacional',
+            prioridade: priority,
+            prazo: calcularPrazo(priority, rule?.criticidade || priority),
+            criticidade: rule?.criticidade || 'MÃ©dio',
+            recommendedAction: rule?.acaoSugerida || '',
+          });
+        });
+      });
+
+    (checklists || [])
+      .filter((checklist: any) => checklist?.ativo !== false && checklist?.status !== 'Inativo')
+      .filter((checklist: any) => activePackageNames.includes(checklist?.pacote || checklist?.package || 'Base SST'))
+      .forEach((checklist: any) => {
+        getChecklistActivities(checklist).forEach((activity) => {
+          const token = toNormalizedToken(activity);
+          if (!token || catalog.has(token)) return;
+          const priority = toPriorityFromCriticality(checklist?.criticidadePadrao);
+          catalog.set(token, {
+            activity,
+            pacote: checklist?.pacote || checklist?.package || 'Base SST',
+            nr: checklist?.nr || checklist?.nrRelacionada || '',
+            tipoDeRisco: checklist?.titulo || 'Risco operacional',
+            prioridade: priority,
+            prazo: calcularPrazo(priority, checklist?.criticidadePadrao || priority),
+            criticidade: checklist?.criticidadePadrao || 'MÃ©dio',
+            recommendedAction: '',
+          });
+        });
+      });
+
+    return Array.from(catalog.values()).sort((left, right) => left.activity.localeCompare(right.activity, 'pt-BR'));
+  }, [riskRules, checklists, activePackageNames]);
   
   const [showInactivePackages, setShowInactivePackages] = useState(false);
 
@@ -312,7 +366,7 @@ export default function RiscosPage() {
   const storeRiscos = useMemo(() => risksViewModel.risks || [], [risksViewModel]);
   const storeAcoes = useMemo(() => filterJunk(rawAcoes || []), [rawAcoes]);
 
-  const [activeTab, setActiveTab] = useState<TabType>('Visão Geral');
+  const [activeTab, setActiveTab] = useState<TabType>('VisÃ£o Geral');
   const [tipoFilter, setTipoFilter] = useState<'Todos' | NivelRisco>('Todos');
 
   const combinedData = useMemo(() => {
@@ -351,6 +405,29 @@ export default function RiscosPage() {
     executorCorrecao: '',
     validadorCorrecao: ''
   });
+  const buildRiskFormFromActivity = (
+    activity: string,
+    baseState?: Partial<RiskInstance>,
+  ): Partial<RiskInstance> => {
+    const preset =
+      operationalActivityCatalog.find((item: any) => item.activity === activity) ||
+      operationalActivityCatalog.find((item: any) => toNormalizedToken(item.activity) === toNormalizedToken(activity)) ||
+      null;
+
+    const fallbackState = baseState || formData;
+
+    return {
+      ...fallbackState,
+      atividade: preset?.activity || activity,
+      prioridade: preset?.prioridade || fallbackState.prioridade || '',
+      prazo: preset?.prazo || fallbackState.prazo || '',
+      nr: preset?.nr || fallbackState.nr || '',
+      pacote: preset?.pacote || fallbackState.pacote || activePackageNames[0] || 'Base SST',
+      tipoDeRisco: preset?.tipoDeRisco || fallbackState.tipoDeRisco || '',
+      acaoRecomendada: preset?.recommendedAction || fallbackState.acaoRecomendada || '',
+      severidade: preset?.criticidade || fallbackState.severidade || 'MÃ©dio',
+    };
+  };
 
   const normativeDetection = useMemo(() => {
     const atividade = safeText(formData.atividade).trim();
@@ -407,13 +484,13 @@ export default function RiscosPage() {
         matchedRisk?.acaoRecomendada ||
           matchedRisk?.recommendedAction ||
           matchedRisk?.planoAcao,
-        'Sem ação recomendada consolidada até o momento.',
+        'Sem aÃ§Ã£o recomendada consolidada atÃ© o momento.',
       ),
       documents: Array.from(new Set(documents)),
       ppe: Array.from(new Set(ppe)),
     };
   }, [combinedData, formData.atividade, formData.setor]);
-  
+
   const [selectedAction, setSelectedAction] = useState<RiskInstance | null>(null);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
 
@@ -435,9 +512,9 @@ export default function RiscosPage() {
 
   const getNivelColor = (nivel?: NivelRisco) => {
     switch(nivel) {
-      case 'Crítico': return 'text-red-500 bg-red-500/10 border-red-500/30';
+      case 'CrÃ­tico': return 'text-red-500 bg-red-500/10 border-red-500/30';
       case 'Alto': return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
-      case 'Médio': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/30';
+      case 'MÃ©dio': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/30';
       case 'Baixo': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
       default: return 'text-gray-500 bg-gray-500/10 border-gray-500/30';
     }
@@ -446,28 +523,28 @@ export default function RiscosPage() {
   const getRiskTypeIcon = (tipo?: string) => {
     const term = safeLowerText(tipo);
     if (term.includes('queda')) return <TrendingDown className="w-5 h-5 text-purple-400" />;
-    if (term.includes('choque') || term.includes('elétric')) return <Zap className="w-5 h-5 text-yellow-400" />;
+    if (term.includes('choque') || term.includes('elÃ©tric')) return <Zap className="w-5 h-5 text-yellow-400" />;
     if (term.includes('asfixia') || term.includes('afogamento')) return <Waves className="w-5 h-5 text-blue-400" />;
-    if (term.includes('químic')) return <FlaskConical className="w-5 h-5 text-emerald-400" />;
-    if (term.includes('máquina') || term.includes('prensamento') || term.includes('corte')) return <Settings className="w-5 h-5 text-orange-400" />;
-    if (term.includes('ergonômico') || term.includes('físico') || term.includes('esforço')) return <Activity className="w-5 h-5 text-indigo-400" />;
-    if (term.includes('incêndio') || term.includes('explosão')) return <AlertTriangle className="w-5 h-5 text-red-400" />;
+    if (term.includes('quÃ­mic')) return <FlaskConical className="w-5 h-5 text-emerald-400" />;
+    if (term.includes('mÃ¡quina') || term.includes('prensamento') || term.includes('corte')) return <Settings className="w-5 h-5 text-orange-400" />;
+    if (term.includes('ergonÃ´mico') || term.includes('fÃ­sico') || term.includes('esforÃ§o')) return <Activity className="w-5 h-5 text-indigo-400" />;
+    if (term.includes('incÃªndio') || term.includes('explosÃ£o')) return <AlertTriangle className="w-5 h-5 text-red-400" />;
     return <AlertTriangle className="w-5 h-5 text-gray-400" />;
   };
 
   const getRiskOrigem = (tipo?: string) => {
     const term = safeLowerText(tipo);
-    if (term.includes('queda') || term.includes('choque') || term.includes('elétric') || term.includes('máquina') || term.includes('prensamento') || term.includes('corte') || term.includes('incêndio') || term.includes('explosão') || term.includes('atropelamento') || term.includes('impacto') || term.includes('esmagamento')) return 'Acidentes (Mecânicos)';
-    if (term.includes('químic') || term.includes('asfixia') || term.includes('afogamento') || term.includes('gases')) return 'Químicos';
-    if (term.includes('ergonômic') || term.includes('esforço') || term.includes('repetit')) return 'Ergonômicos';
-    if (term.includes('biológic') || term.includes('vírus') || term.includes('bactéri')) return 'Biológicos';
-    return 'Físicos';
+    if (term.includes('queda') || term.includes('choque') || term.includes('elÃ©tric') || term.includes('mÃ¡quina') || term.includes('prensamento') || term.includes('corte') || term.includes('incÃªndio') || term.includes('explosÃ£o') || term.includes('atropelamento') || term.includes('impacto') || term.includes('esmagamento')) return 'Acidentes (MecÃ¢nicos)';
+    if (term.includes('quÃ­mic') || term.includes('asfixia') || term.includes('afogamento') || term.includes('gases')) return 'QuÃ­micos';
+    if (term.includes('ergonÃ´mic') || term.includes('esforÃ§o') || term.includes('repetit')) return 'ErgonÃ´micos';
+    if (term.includes('biolÃ³gic') || term.includes('vÃ­rus') || term.includes('bactÃ©ri')) return 'BiolÃ³gicos';
+    return 'FÃ­sicos';
   };
 
   const getStatusColor = (status?: string) => {
     switch(status) {
       case 'Aberto': return 'text-red-400 border-red-500/20';
-      case 'Em análise': return 'text-orange-400 border-orange-500/20';
+      case 'Em anÃ¡lise': return 'text-orange-400 border-orange-500/20';
       case 'Mitigado': return 'text-yellow-400 border-yellow-500/20';
       case 'Resolvido': return 'text-emerald-400 border-emerald-500/20';
       default: return 'text-gray-400 border-gray-500/20';
@@ -477,17 +554,17 @@ export default function RiscosPage() {
   const getActivityIcon = (atividade?: string) => {
     const term = safeLowerText(atividade);
     switch(term) {
-      case 'produção': return <Factory className="w-5 h-5 text-gray-400" />;
-      case 'manutenção': return <Wrench className="w-5 h-5 text-gray-400" />;
+      case 'produÃ§Ã£o': return <Factory className="w-5 h-5 text-gray-400" />;
+      case 'manutenÃ§Ã£o': return <Wrench className="w-5 h-5 text-gray-400" />;
       case 'operacional': return <Shield className="w-5 h-5 text-gray-400" />;
-      case 'logística': return <Truck className="w-5 h-5 text-gray-400" />;
+      case 'logÃ­stica': return <Truck className="w-5 h-5 text-gray-400" />;
       case 'almoxarifado': return <Package className="w-5 h-5 text-gray-400" />;
       case 'administrativo': return <User className="w-5 h-5 text-gray-400" />;
       case 'trabalho em altura': return <Activity className="w-5 h-5 text-purple-400" />;
-      case 'manutenção elétrica': return <Settings2 className="w-5 h-5 text-blue-400" />;
-      case 'operação de máquinas': return <Settings className="w-5 h-5 text-orange-400" />;
-      case 'espaço confinado': return <ShieldAlert className="w-5 h-5 text-red-400" />;
-      case 'movimentação de cargas': return <Truck className="w-5 h-5 text-yellow-400" />;
+      case 'manutenÃ§Ã£o elÃ©trica': return <Settings2 className="w-5 h-5 text-blue-400" />;
+      case 'operaÃ§Ã£o de mÃ¡quinas': return <Settings className="w-5 h-5 text-orange-400" />;
+      case 'espaÃ§o confinado': return <ShieldAlert className="w-5 h-5 text-red-400" />;
+      case 'movimentaÃ§Ã£o de cargas': return <Truck className="w-5 h-5 text-yellow-400" />;
       default: return <Activity className="w-5 h-5 text-gray-400" />;
     }
   };
@@ -504,7 +581,7 @@ export default function RiscosPage() {
 
   const riscosPorFiltroGlobal = useMemo(() => {
     return {
-      critico: storeRiscos.filter((r: any) => r.nivel === 'Crítico' || r.criticidade === 'Muito Alta').length,
+      critico: storeRiscos.filter((r: any) => r.nivel === 'CrÃ­tico' || r.criticidade === 'Muito Alta').length,
       totalAbertos: storeRiscos.filter((r: any) => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado').length,
       totalMulta: storeRiscos.filter((r: any) => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado')
                       .reduce((acc: number, r: any) => acc + (r.multaEstimada || 0), 0),
@@ -519,7 +596,7 @@ export default function RiscosPage() {
 
   const handleSaveForm = () => {
     if (!formData.atividade || !formData.setor || !formData.validadorCorrecao) {
-      alert('Selecione a atividade, o setor e o responsável validador antes de salvar o risco.');
+      alert('Selecione a atividade, o setor e o responsÃ¡vel validador antes de salvar o risco.');
       return;
     }
 
@@ -558,12 +635,12 @@ export default function RiscosPage() {
     return result.sort((a,b) => a.prioridade > b.prioridade ? 1 : -1);
   }, [combinedData, activeTab, tipoFilter]);
   
-  const criticosCount = combinedData.filter(d => d.nivel === 'Crítico').length;
+  const criticosCount = combinedData.filter(d => d.nivel === 'CrÃ­tico').length;
   const altosCount = combinedData.filter(d => d.nivel === 'Alto').length;
-  const mediosCount = combinedData.filter(d => d.nivel === 'Médio').length;
+  const mediosCount = combinedData.filter(d => d.nivel === 'MÃ©dio').length;
   const baixosCount = combinedData.filter(d => d.nivel === 'Baixo').length;
   
-  const abertosCount = combinedData.filter(d => d.status === 'Aberto' || d.status === 'Em análise' || d.status === 'Em andamento').length;
+  const abertosCount = combinedData.filter(d => d.status === 'Aberto' || d.status === 'Em anÃ¡lise' || d.status === 'Em andamento').length;
   const resolvidosCount = combinedData.filter(d => d.status === 'Resolvido' || d.status === 'Mitigado').length;
   
   // Setor com mais riscos
@@ -599,9 +676,9 @@ export default function RiscosPage() {
         }
         const obj = groups[s];
         obj.count++;
-        if (r.nivel === 'Crítico') obj.crits++;
+        if (r.nivel === 'CrÃ­tico') obj.crits++;
         else if (r.nivel === 'Alto') obj.altos++;
-        else if (r.nivel === 'Médio') obj.medios++;
+        else if (r.nivel === 'MÃ©dio') obj.medios++;
         else obj.baixos++;
 
         obj.multaTotal += r.multaEstimada || 0;
@@ -671,9 +748,9 @@ export default function RiscosPage() {
   })).sort((a,b) => b.value - a.value).slice(0, 5);
 
   const pieDataNivel = [
-    { name: 'Crítico', value: criticosCount, color: '#ef4444' },
+    { name: 'CrÃ­tico', value: criticosCount, color: '#ef4444' },
     { name: 'Alto', value: altosCount, color: '#f97316' },
-    { name: 'Médio', value: mediosCount, color: '#eab308' },
+    { name: 'MÃ©dio', value: mediosCount, color: '#eab308' },
     { name: 'Baixo', value: baixosCount, color: '#10b981' }
   ].filter(d => d.value > 0);
 
@@ -684,7 +761,7 @@ export default function RiscosPage() {
   const criticalRiskTrend = useMemo(
     () =>
       buildRiskMetricTrend(
-        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado' && risk.nivel === 'Crítico') as any[],
+        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado' && risk.nivel === 'CrÃ­tico') as any[],
         () => 1,
       ),
     [combinedData],
@@ -700,15 +777,15 @@ export default function RiscosPage() {
 
   const topCards = [
     { id: 'c9', label: 'Total de riscos', val: combinedData.length, sub: getTrendDeltaLabel(totalRiskTrend, ' risco(s)'), icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', trend: totalRiskTrend, sparkColor: SPARK_COLORS.purple },
-    { id: 'c5', label: 'Críticos em aberto', val: criticosCount, sub: getTrendDeltaLabel(criticalRiskTrend, ' crítico(s)'), icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: criticalRiskTrend, sparkColor: SPARK_COLORS.red },
+    { id: 'c5', label: 'CrÃ­ticos em aberto', val: criticosCount, sub: getTrendDeltaLabel(criticalRiskTrend, ' crÃ­tico(s)'), icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: criticalRiskTrend, sparkColor: SPARK_COLORS.red },
     { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(totalMultaAberto), sub: getTrendDeltaLabel(multaTrend), icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', trend: multaTrend, sparkColor: SPARK_COLORS.yellow },
-    { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { id: 'c11', label: 'Chance mÃ©dia de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
   const nrMetrics = useMemo(() => getNrMetrics({ inspections: inspecoes || [], risks: combinedData, actions: storeAcoes }), [inspecoes, combinedData, storeAcoes]);
 
   let nrBarData = nrMetrics.map(m => ({ name: m.nr, Total: m.multaEstimada })).sort((a,b) => b.Total - a.Total).slice(0, 6);
-  let nrRiscosData = nrMetrics.map(m => ({ name: m.nr, Total: m.totalRiscos, Críticos: m.riscosCriticos })).sort((a,b) => b.Total - a.Total).slice(0, 6);
+  let nrRiscosData = nrMetrics.map(m => ({ name: m.nr, Total: m.totalRiscos, 'Críticos': m.riscosCriticos })).sort((a,b) => b.Total - a.Total).slice(0, 6);
   let avgChanceData = nrMetrics.map(m => ({ name: m.nr, Chance: m.chanceMediaIncidente })).sort((a,b) => b.Chance - a.Chance).slice(0, 6);
 
   const origemCounts: Record<string, number> = {};
@@ -728,7 +805,7 @@ export default function RiscosPage() {
     chance: r.chanceIncidente || 0
   }));
 
-  const listRiscos = topRisksByChance.length > 0 ? combinedData.filter(r => r.nivel === 'Crítico').slice(0,5) : [];
+  const listRiscos = topRisksByChance.length > 0 ? combinedData.filter(r => r.nivel === 'CrÃ­tico').slice(0,5) : [];
 
   const activityGroups: Record<string, {
     count: number;
@@ -747,7 +824,7 @@ export default function RiscosPage() {
     representativeRisk: RiskInstance | null;
   }> = {};
 
-  const nivelToValue = { 'Crítico': 4, 'Alto': 3, 'Médio': 2, 'Baixo': 1 };
+  const nivelToValue = { 'CrÃ­tico': 4, 'Alto': 3, 'MÃ©dio': 2, 'Baixo': 1 };
   
   combinedData.filter(r => r.status !== 'Resolvido' && r.status !== 'Mitigado').forEach(r => {
     const act = r.atividade || 'Diversos';
@@ -796,7 +873,7 @@ export default function RiscosPage() {
   const sortedActivities = Object.values(activityGroups).sort((a,b) => b.maxNivelValue - a.maxNivelValue || b.multaTotal - a.multaTotal);
 
   const totalAtividades = Object.keys(activityGroups).length;
-  const atividadesCriticas = Object.values(activityGroups).filter(a => a.maxNivelName === 'Crítico').length;
+  const atividadesCriticas = Object.values(activityGroups).filter(a => a.maxNivelName === 'CrÃ­tico').length;
   const maiorAtividade = sortedActivities[0]?.atividade || 'N/A';
   const totalMultaAbertoActivity = sortedActivities.reduce((sum, a) => sum + a.multaTotal, 0);
 
@@ -817,7 +894,7 @@ export default function RiscosPage() {
           
           <div className="flex flex-col gap-2 shrink-0 mb-6 mt-2">
              <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
-                 <span>Operação</span>
+                 <span>OperaÃ§Ã£o</span>
                  <span>&gt;</span>
                  <span className="text-gray-300">Riscos</span>
                  <span>&gt;</span>
@@ -840,11 +917,11 @@ export default function RiscosPage() {
                       : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  {tab === 'Visão Geral' && <BarChart2 className="w-4 h-4" />}
+                  {tab === 'VisÃ£o Geral' && <BarChart2 className="w-4 h-4" />}
                   {tab === 'Atividade' && <Activity className="w-4 h-4" />}
                   {tab === 'Setor' && <Users className="w-4 h-4" />}
                   {tab === 'Tipo' && <ShieldAlert className="w-4 h-4" />}
-                  {tab === 'Histórico' && <Clock className="w-4 h-4" />}
+                  {tab === 'HistÃ³rico' && <Clock className="w-4 h-4" />}
                   {tab}
                 </button>
               ))}
@@ -852,20 +929,29 @@ export default function RiscosPage() {
 
             <div className="flex gap-3">
                <button onClick={() => {
-                 setFormData({ 
-                   titulo: '',
-                   atividade: '',
-                   setor: '', 
-                   justificativa: '',
-                   evidencias: '',
-                   acaoVinculada: '',
-                   responsavel: '',
-                   severidade: 'Média',
-                   status: 'Aberto',
-                   hasEpiEpc: false, 
-                   hasProcedimento: false, 
-                   hasTreinamento: false 
-                 });
+                 const firstActivity = operationalActivityCatalog[0];
+                 setFormData(
+                   buildRiskFormFromActivity(firstActivity?.activity || '', {
+                     titulo: '',
+                     atividade: '',
+                     setor: '',
+                     justificativa: '',
+                     evidencias: '',
+                     acaoVinculada: '',
+                     responsavel: '',
+                     prioridade: '',
+                     prazo: '',
+                     nr: '',
+                     pacote: activePackageNames[0] || 'Base SST',
+                     tipoDeRisco: '',
+                     acaoRecomendada: '',
+                     severidade: 'Médio',
+                     status: 'Aberto',
+                     hasEpiEpc: false,
+                     hasProcedimento: false,
+                     hasTreinamento: false,
+                   }),
+                 );
                  setEditingItem(null);
                  setIsDrawerOpen(true);
                }} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50">
@@ -882,11 +968,11 @@ export default function RiscosPage() {
                     <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                       <ShieldAlert className="w-4 h-4 text-red-500" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Riscos Críticos</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos CrÃ­ticos</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{riscosPorFiltroGlobal.critico}</div>
-                    <span className="text-[11px] text-red-400 font-medium whitespace-nowrap">Ação Imediata</span>
+                    <span className="text-[11px] text-red-400 font-medium whitespace-nowrap">AÃ§Ã£o Imediata</span>
                 </div>
             </div>
 
@@ -940,7 +1026,7 @@ export default function RiscosPage() {
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{riscosPorFiltroGlobal.reincidentes}</div>
-                    <span className="text-[11px] text-gray-400 font-medium">Reincidência</span>
+                    <span className="text-[11px] text-gray-400 font-medium">ReincidÃªncia</span>
                 </div>
             </div>
           </div>
@@ -949,21 +1035,21 @@ export default function RiscosPage() {
             <div className="flex items-center justify-between mb-4 mt-2 shrink-0">
                <div>
                  <h2 className="text-lg font-bold text-white tracking-wide uppercase">
-                    {activeTab === 'Visão Geral' && 'Visão Geral de Riscos'}
+                    {activeTab === 'VisÃ£o Geral' && 'VisÃ£o Geral de Riscos'}
                     {activeTab === 'Atividade' && 'Riscos por Atividade'}
                     {activeTab === 'Setor' && 'Riscos por Setor'}
-                    {activeTab === 'Tipo' && 'Filtro por Tipo/Nível'}
-                    {activeTab === 'Histórico' && 'Histórico de Riscos'}
+                    {activeTab === 'Tipo' && 'Filtro por Tipo/NÃ­vel'}
+                    {activeTab === 'HistÃ³rico' && 'HistÃ³rico de Riscos'}
                  </h2>
                  <p className="text-xs text-gray-400 mt-1">
-                    {activeTab === 'Visão Geral' && "Mapeamento analítico e distribuição da criticidade de toda a operação."}
-                    {activeTab === 'Atividade' && "Rastreabilidade de risco diretamente ligada às tarefas executadas em campo."}
-                    {activeTab === 'Setor' && "Panorama de segurança verticalizado por departamentos e áreas físicas das unidades."}
-                    {activeTab === 'Tipo' && "Classificação dos riscos por nível crítico, alto, médio e baixo."}
-                    {activeTab === 'Histórico' && "Trilha de auditoria imutável de todos os riscos da plataforma."}
+                    {activeTab === 'VisÃ£o Geral' && "Mapeamento analÃ­tico e distribuiÃ§Ã£o da criticidade de toda a operaÃ§Ã£o."}
+                    {activeTab === 'Atividade' && "Rastreabilidade de risco diretamente ligada Ã s tarefas executadas em campo."}
+                    {activeTab === 'Setor' && "Panorama de seguranÃ§a verticalizado por departamentos e Ã¡reas fÃ­sicas das unidades."}
+                    {activeTab === 'Tipo' && "ClassificaÃ§Ã£o dos riscos por nÃ­vel crÃ­tico, alto, mÃ©dio e baixo."}
+                    {activeTab === 'HistÃ³rico' && "Trilha de auditoria imutÃ¡vel de todos os riscos da plataforma."}
                  </p>
                </div>
-               {(activeTab === 'Tipo' || activeTab === 'Histórico' || activeTab === 'Atividade') && (
+               {(activeTab === 'Tipo' || activeTab === 'HistÃ³rico' || activeTab === 'Atividade') && (
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={() => setShowInactivePackages(!showInactivePackages)}
@@ -984,10 +1070,10 @@ export default function RiscosPage() {
                           onChange={(e) => { setTipoFilter(e.target.value as any); setCurrentPage(1); }}
                           className="bg-transparent text-sm text-white focus:outline-none px-2"
                         >
-                          <option value="Todos">Todos os níveis</option>
-                          <option value="Crítico">Crítico</option>
+                          <option value="Todos">Todos os nÃ­veis</option>
+                          <option value="CrÃ­tico">CrÃ­tico</option>
                           <option value="Alto">Alto</option>
-                          <option value="Médio">Médio</option>
+                          <option value="MÃ©dio">MÃ©dio</option>
                           <option value="Baixo">Baixo</option>
                         </select>
                       </div>
@@ -1002,7 +1088,7 @@ export default function RiscosPage() {
             </div>
 
             {/* Sub Tabs Contet Below */}
-            {activeTab === 'Visão Geral' && (
+            {activeTab === 'VisÃ£o Geral' && (
               <div className="flex flex-col gap-6 shrink-0 custom-scrollbar overflow-y-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 shrink-0">
                   {topCards.map((card, i) => {
@@ -1044,7 +1130,7 @@ export default function RiscosPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
                   <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Distribuição por nível</h3>
+                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">DistribuiÃ§Ã£o por nÃ­vel</h3>
                     <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8">
                       <div className="w-[180px] h-[180px] relative">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1141,7 +1227,7 @@ export default function RiscosPage() {
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
                           <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                           <Bar dataKey="Total" fill="#3b82f6" radius={[2, 2, 0, 0]} barSize={24} />
-                          <Bar dataKey="Críticos" fill="#ef4444" radius={[2, 2, 0, 0]} barSize={24} />
+                          <Bar dataKey="CrÃ­ticos" fill="#ef4444" radius={[2, 2, 0, 0]} barSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -1175,7 +1261,7 @@ export default function RiscosPage() {
                   </div>
 
                   <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col">
-                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Chance Média de Incidente por NR (%)</h3>
+                    <h3 className="text-[15px] font-medium text-white mb-6 font-sans">Chance MÃ©dia de Incidente por NR (%)</h3>
                     <div className="flex-1 min-h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={avgChanceData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
@@ -1203,7 +1289,7 @@ export default function RiscosPage() {
                               <ShieldAlert className="w-4 h-4 text-red-400" />
                             </div>
                             <div>
-                               <p className="text-[13px] font-medium text-gray-200">{criticosCount} riscos críticos em aberto exigem ação imediata.</p>
+                               <p className="text-[13px] font-medium text-gray-200">{criticosCount} riscos crÃ­ticos em aberto exigem aÃ§Ã£o imediata.</p>
                                <p className="text-[12px] text-gray-500 mt-1">Impacto potencial alto em SST e conformidade.</p>
                             </div>
                          </div>
@@ -1213,7 +1299,7 @@ export default function RiscosPage() {
                             </div>
                             <div>
                                <p className="text-[13px] font-medium text-gray-200">{nrBarData[0]?.name || 'NR'} concentra {Math.round(((nrBarData[0]?.Total || 0) / (totalMultaAberto||1)) * 100) || 0}% da multa.</p>
-                               <p className="text-[12px] text-gray-500 mt-1">Priorize adequações e controles para evitar infrações pesadas.</p>
+                               <p className="text-[12px] text-gray-500 mt-1">Priorize adequaÃ§Ãµes e controles para evitar infraÃ§Ãµes pesadas.</p>
                             </div>
                          </div>
                          <div className="flex gap-4">
@@ -1222,7 +1308,7 @@ export default function RiscosPage() {
                             </div>
                             <div>
                                <p className="text-[13px] font-medium text-gray-200">{listRiscos[0]?.titulo || 'Sem riscos'} lidera as chances de incidente.</p>
-                               <p className="text-[12px] text-gray-500 mt-1">Reforce treinamentos e inspeções nas áreas operacionais.</p>
+                               <p className="text-[12px] text-gray-500 mt-1">Reforce treinamentos e inspeÃ§Ãµes nas Ã¡reas operacionais.</p>
                             </div>
                          </div>
                       </div>
@@ -1231,7 +1317,7 @@ export default function RiscosPage() {
                    <div className="bg-[#0e1322] border border-white/10 rounded-xl p-6 flex flex-col font-sans">
                       <div className="flex items-center gap-2 mb-6">
                         <AlertTriangle className="w-5 h-5 text-red-500" />
-                        <h3 className="text-[15px] font-medium text-white">Top riscos críticos</h3>
+                        <h3 className="text-[15px] font-medium text-white">Top riscos crÃ­ticos</h3>
                       </div>
                       <div className="flex-1 space-y-3">
                          {listRiscos.map((r, i) => (
@@ -1252,7 +1338,7 @@ export default function RiscosPage() {
                             </div>
                          ))}
                          {listRiscos.length === 0 && (
-                            <div className="text-sm text-gray-500 italic mt-4 text-center">Nenhum risco crítico encontrado.</div>
+                            <div className="text-sm text-gray-500 italic mt-4 text-center">Nenhum risco crÃ­tico encontrado.</div>
                          )}
                       </div>
                    </div>
@@ -1264,7 +1350,7 @@ export default function RiscosPage() {
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-2 space-y-5">
                          {renderTopRisksChance.map((r, i) => (
-                            <div key={i} className="cursor-pointer group" onClick={() => { setActiveTab('Visão Geral'); setIsDrawerActionOpen(false); setSelectedSectorItem(null); setTimeout(() => setSelectedAction(null), 300); }}>
+                            <div key={i} className="cursor-pointer group" onClick={() => { setActiveTab('VisÃ£o Geral'); setIsDrawerActionOpen(false); setSelectedSectorItem(null); setTimeout(() => setSelectedAction(null), 300); }}>
                                <div className="flex items-center justify-between mb-2">
                                   <h4 className="text-[13px] font-medium text-gray-300 truncate pr-4 group-hover:text-white transition-colors">{r.name}</h4>
                                   <span className="text-[13px] font-bold text-gray-200">{r.chance}%</span>
@@ -1313,10 +1399,10 @@ export default function RiscosPage() {
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-red-400 mb-1">Setor mais crítico</h3>
+                        <h3 className="text-xs font-bold text-red-400 mb-1">Setor mais crÃ­tico</h3>
                         <p className="text-2xl font-bold text-white tracking-tight leading-snug mb-2 truncate">{maxCritSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-400">{maxCritSector?.crits || 0} riscos críticos</span>
+                           <span className="text-xs text-gray-400">{maxCritSector?.crits || 0} riscos crÃ­ticos</span>
                         </div>
                         <button onClick={() => {}} className="mt-3 text-xs font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1.5 pt-3 border-t border-white/5 w-full text-left">
                            Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
@@ -1332,7 +1418,7 @@ export default function RiscosPage() {
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-orange-400 mb-1">Maior concentração de risco</h3>
+                        <h3 className="text-xs font-bold text-orange-400 mb-1">Maior concentraÃ§Ã£o de risco</h3>
                         <p className="text-2xl font-bold text-white tracking-tight leading-snug mb-2 truncate">{maxConcSector?.setor || 'N/A'}</p>
                         <div className="flex items-center gap-2">
                            <span className="text-xs text-gray-400">{totalRiscosSetores > 0 ? Math.round((maxConcSector?.count || 0) / totalRiscosSetores * 100) : 0}% do total de riscos</span>
@@ -1351,7 +1437,7 @@ export default function RiscosPage() {
                         </div>
                      </div>
                      <div className="relative z-10">
-                        <h3 className="text-xs font-bold text-emerald-400 mb-1">Exposição financeira por setor</h3>
+                        <h3 className="text-xs font-bold text-emerald-400 mb-1">ExposiÃ§Ã£o financeira por setor</h3>
                         <p className="text-2xl font-bold text-white font-mono tracking-tight mb-2">
                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalMultaSetores)}
                         </p>
@@ -1368,9 +1454,9 @@ export default function RiscosPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {sectorGroups.slice(0, 6).map((group) => {
                      const pct = totalRiscosSetores > 0 ? Math.round((group.count / totalRiscosSetores) * 100) : 0;
-                     const sectorLevel = group.crits > 0 ? 'Crítico' : group.altos > 0 ? 'Alto' : group.medios > 0 ? 'Médio' : 'Baixo';
-                     const colorClass = sectorLevel === 'Crítico' ? 'text-red-500 border-red-500' : sectorLevel === 'Alto' ? 'text-orange-500 border-orange-500' : sectorLevel === 'Médio' ? 'text-yellow-500 border-yellow-500' : 'text-emerald-500 border-emerald-500';
-                     const bgCircle = sectorLevel === 'Crítico' ? 'text-red-500' : sectorLevel === 'Alto' ? 'text-orange-500' : sectorLevel === 'Médio' ? 'text-yellow-500' : 'text-emerald-500';
+                     const sectorLevel = group.crits > 0 ? 'CrÃ­tico' : group.altos > 0 ? 'Alto' : group.medios > 0 ? 'MÃ©dio' : 'Baixo';
+                     const colorClass = sectorLevel === 'CrÃ­tico' ? 'text-red-500 border-red-500' : sectorLevel === 'Alto' ? 'text-orange-500 border-orange-500' : sectorLevel === 'MÃ©dio' ? 'text-yellow-500 border-yellow-500' : 'text-emerald-500 border-emerald-500';
+                     const bgCircle = sectorLevel === 'CrÃ­tico' ? 'text-red-500' : sectorLevel === 'Alto' ? 'text-orange-500' : sectorLevel === 'MÃ©dio' ? 'text-yellow-500' : 'text-emerald-500';
                      
                      const isSelected = selectedSectorItem?.setor === group.setor;
 
@@ -1403,7 +1489,7 @@ export default function RiscosPage() {
                           </div>
                           
                           <div className="mt-auto">
-                             <span className={`text-[10px] font-medium block truncate ${bgCircle}`}>Nível de risco: {sectorLevel}</span>
+                             <span className={`text-[10px] font-medium block truncate ${bgCircle}`}>NÃ­vel de risco: {sectorLevel}</span>
                              <span className="text-[11px] text-gray-400">{group.count} riscos</span>
                           </div>
                        </div>
@@ -1418,13 +1504,13 @@ export default function RiscosPage() {
                           <tr>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Setor</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Total de Riscos</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-red-500/80 uppercase tracking-wider text-center">Críticos</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-red-500/80 uppercase tracking-wider text-center">CrÃ­ticos</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-orange-500/80 uppercase tracking-wider text-center">Altos</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-yellow-500/80 uppercase tracking-wider text-center">Médios</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-yellow-500/80 uppercase tracking-wider text-center">MÃ©dios</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider text-center">Baixos</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Multa Estimada</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Chance Média de Incidente</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Último Registro</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Chance MÃ©dia de Incidente</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Ãšltimo Registro</th>
                              <th className="px-5 py-4 w-10"></th>
                           </tr>
                         </thead>
@@ -1432,7 +1518,7 @@ export default function RiscosPage() {
                            {sectorGroups.map((group, idx) => {
                              const isSelected = selectedSectorItem?.setor === group.setor;
                              const avgChance = group.count > 0 ? Math.round(group.chanceSum / group.count) : 0;
-                             const chanceLabel = avgChance >= 60 ? 'Alta' : avgChance >= 35 ? 'Média' : 'Baixa';
+                             const chanceLabel = avgChance >= 60 ? 'Alta' : avgChance >= 35 ? 'MÃ©dia' : 'Baixa';
                              const chanceColor = avgChance >= 60 ? 'text-red-400 bg-red-500/10 border border-red-500/20' : avgChance >= 35 ? 'text-orange-400 bg-orange-500/10 border border-orange-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20';
 
                              return (
@@ -1520,8 +1606,8 @@ export default function RiscosPage() {
                      </div>
                      <div className="z-10 relative">
                         <h3 className="text-xs font-bold text-orange-400 mb-0.5">Maior criticidade</h3>
-                        <p className="text-lg font-bold text-white mb-0.5 leading-tight">Crítico</p>
-                        <p className="text-[11px] text-gray-400">{combinedData.filter((c: any) => c.nivel === 'Crítico').length} tipos classificados como críticos</p>
+                        <p className="text-lg font-bold text-white mb-0.5 leading-tight">CrÃ­tico</p>
+                        <p className="text-[11px] text-gray-400">{combinedData.filter((c: any) => c.nivel === 'CrÃ­tico').length} tipos classificados como crÃ­ticos</p>
                      </div>
                   </div>
                   <div className="bg-[#121826] p-4 border border-emerald-500/30 rounded-xl relative overflow-hidden flex items-center gap-4 bg-gradient-to-br from-emerald-500/5 to-transparent">
@@ -1531,7 +1617,7 @@ export default function RiscosPage() {
                      <div className="z-10 relative">
                         <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Risco financeiro por tipo</h3>
                         <p className="text-lg font-bold text-white mb-0.5 leading-tight">{formatCurrency(totalMultaAberto)}</p>
-                        <p className="text-[11px] text-gray-400">Exposição total estimada</p>
+                        <p className="text-[11px] text-gray-400">ExposiÃ§Ã£o total estimada</p>
                      </div>
                   </div>
                 </div>
@@ -1542,7 +1628,7 @@ export default function RiscosPage() {
                         <thead className="bg-[#0b0f19]">
                           <tr>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Tipo de Risco</th>
-                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Nível</th>
+                             <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">NÃ­vel</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Setor Princip.</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Atividade Princip.</th>
                              <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Origem</th>
@@ -1595,14 +1681,14 @@ export default function RiscosPage() {
                                  <td className="px-5 py-4 align-middle">
                                     <div className="flex items-center gap-1.5">
                                        <span className={`text-[13px] font-bold ${((item.chanceIncidente || 0) >= 60) ? 'text-red-500' : ((item.chanceIncidente || 0) >= 35) ? 'text-orange-500' : 'text-emerald-500'}`}>
-                                          {((item.chanceIncidente || 0) >= 60) ? 'Alta' : ((item.chanceIncidente || 0) >= 35) ? 'Média' : 'Baixa'}
+                                          {((item.chanceIncidente || 0) >= 60) ? 'Alta' : ((item.chanceIncidente || 0) >= 35) ? 'MÃ©dia' : 'Baixa'}
                                        </span>
                                        <span className={`text-xs ${((item.chanceIncidente || 0) >= 60) ? 'text-red-500' : ((item.chanceIncidente || 0) >= 35) ? 'text-orange-500' : 'text-emerald-500'}`}>{item.chanceIncidente || 0}%</span>
                                     </div>
                                  </td>
                                  <td className="px-5 py-4 align-middle text-right text-[13px] font-mono text-gray-300">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(item.multaEstimada || 0)}</td>
                                  <td className="px-5 py-4 align-middle text-center">
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' ? 'text-red-400' : 'text-gray-400'}`}>
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'CrÃ­tico' ? 'text-red-400' : 'text-gray-400'}`}>
                                        {item.status === 'Monitorado' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-0.5"></span>}
                                        {item.status}
                                     </span>
@@ -1616,15 +1702,15 @@ export default function RiscosPage() {
               </div>
             )}
 
-            {activeTab === 'Histórico' && (
+            {activeTab === 'HistÃ³rico' && (
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar">
                 <div className="bg-[#121826] border border-blue-500/20 rounded-xl p-4 flex items-center gap-4 bg-gradient-to-r from-blue-500/5 to-transparent">
                   <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20">
                      <Info className="w-4 h-4 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-200">Este histórico é imutável e somente leitura.</p>
-                    <p className="text-[13px] text-gray-400">Os registros não podem ser editados ou excluídos.</p>
+                    <p className="text-sm font-bold text-gray-200">Este histÃ³rico Ã© imutÃ¡vel e somente leitura.</p>
+                    <p className="text-[13px] text-gray-400">Os registros nÃ£o podem ser editados ou excluÃ­dos.</p>
                   </div>
                 </div>
 
@@ -1634,7 +1720,7 @@ export default function RiscosPage() {
                         <FileText className="w-6 h-6 text-purple-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-purple-400 mb-0.5">Registros históricos</h3>
+                        <h3 className="text-xs font-bold text-purple-400 mb-0.5">Registros histÃ³ricos</h3>
                         <p className="text-2xl font-bold text-white mb-0.5">{riskHistoryList.length}</p>
                         <p className="text-[11px] text-gray-500">Total de registros</p>
                      </div>
@@ -1644,7 +1730,7 @@ export default function RiscosPage() {
                         <Bot className="w-6 h-6 text-blue-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automática</h3>
+                        <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automÃ¡tica</h3>
                         <p className="text-2xl font-bold text-white mb-0.5">{riskHistoryList.filter(item => item.isAutomatic).length}</p>
                         <p className="text-[11px] text-gray-500">{Math.round((riskHistoryList.filter(item => item.isAutomatic).length / Math.max(1, riskHistoryList.length)) * 100)}% do total</p>
                      </div>
@@ -1664,7 +1750,7 @@ export default function RiscosPage() {
                         <CalendarDays className="w-6 h-6 text-orange-400" />
                      </div>
                      <div>
-                        <h3 className="text-xs font-bold text-orange-400 mb-0.5">Última atualização</h3>
+                        <h3 className="text-xs font-bold text-orange-400 mb-0.5">Ãšltima atualizaÃ§Ã£o</h3>
                         <p className="text-lg font-bold text-white mb-0.5">{riskHistoryList[0] ? new Date(riskHistoryList[0].updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
                         <p className="text-[11px] text-gray-500">{riskHistoryList[0] ? new Date(riskHistoryList[0].updatedAt).toLocaleDateString('pt-BR') : '--/--/----'}</p>
                      </div>
@@ -1677,7 +1763,7 @@ export default function RiscosPage() {
                       <thead className="bg-[#0b0f19]">
                         <tr>
                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">ID</th>
-                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Título do risco</th>
+                          <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">TÃ­tulo do risco</th>
                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Origem</th>
                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Setor</th>
                           <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">Atividade</th>
@@ -1719,7 +1805,7 @@ export default function RiscosPage() {
                             <td className="px-5 py-4 align-middle">
                               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold bg-[#0b0f19] ${isAuto ? 'text-blue-400 border-blue-500/20' : 'text-emerald-400 border-emerald-500/20'}`}>
                                  {isAuto ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                                 {isAuto ? 'Automática' : 'Manual'}
+                                 {isAuto ? 'AutomÃ¡tica' : 'Manual'}
                               </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
@@ -1735,8 +1821,8 @@ export default function RiscosPage() {
                               <span className="text-[13px] text-gray-300">{historyItem?.updatedAt ? new Date(historyItem.updatedAt).toLocaleString('pt-BR') : '--'}</span>
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' || item.status === 'Aberto' ? 'text-red-400' : 'text-blue-400'}`}>
-                                 <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'Monitorado' ? 'bg-emerald-500' : item.status === 'Crítico' || item.status === 'Aberto' ? 'bg-red-500' : 'bg-blue-500'} mb-0.5`}></span>
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'CrÃ­tico' || item.status === 'Aberto' ? 'text-red-400' : 'text-blue-400'}`}>
+                                 <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'Monitorado' ? 'bg-emerald-500' : item.status === 'CrÃ­tico' || item.status === 'Aberto' ? 'bg-red-500' : 'bg-blue-500'} mb-0.5`}></span>
                                  {item.status}
                               </span>
                             </td>
@@ -1769,7 +1855,7 @@ export default function RiscosPage() {
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                      <ShieldAlert className="w-16 h-16 text-red-500" />
                   </div>
-                  <h3 className="text-[12px] text-red-400 mb-1 z-10 relative">Atividades com risco crítico</h3>
+                  <h3 className="text-[12px] text-red-400 mb-1 z-10 relative">Atividades com risco crÃ­tico</h3>
                   <p className="text-3xl font-bold text-white mb-2 z-10 relative">{atividadesCriticas}</p>
                   <p className="text-xs text-gray-500 z-10 relative">{getPercentage(atividadesCriticas, totalAtividades)}% do total</p>
                 </div>
@@ -1779,7 +1865,7 @@ export default function RiscosPage() {
                   </div>
                   <h3 className="text-[12px] text-orange-400 mb-1 z-10 relative">Maior atividade de risco</h3>
                   <p className="text-2xl font-bold text-white mb-2 z-10 relative truncate">{maiorAtividade}</p>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-white/10 bg-white/5 text-gray-300 z-10 relative">{sortedActivities[0]?.maxNivelName || 'Sem nível'}</span>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-white/10 bg-white/5 text-gray-300 z-10 relative">{sortedActivities[0]?.maxNivelName || 'Sem nÃ­vel'}</span>
                 </div>
                 <div className="bg-[#121826] p-4 border border-yellow-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -1799,7 +1885,7 @@ export default function RiscosPage() {
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Atividade</th>
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Setor Vinculado</th>
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Riscos e Perigos</th>
-                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Exigência EPI/EPC</th>
+                        <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ExigÃªncia EPI/EPC</th>
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Chance de Incidente</th>
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Multa Estimada</th>
                         <th className="px-5 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
@@ -1815,7 +1901,7 @@ export default function RiscosPage() {
                       ) : sortedActivities.map((item, idx) => {
                          const isSelected = selectedAction?.atividade === item.atividade;
                          const avgChance = item.count > 0 ? Math.round(item.chanceSum / item.count) : 0;
-                         const chanceLabel = avgChance >= 60 ? 'Alta' : avgChance >= 35 ? 'Média' : 'Baixa';
+                         const chanceLabel = avgChance >= 60 ? 'Alta' : avgChance >= 35 ? 'MÃ©dia' : 'Baixa';
                          const chanceColor = avgChance >= 60 ? 'text-red-500' : avgChance >= 35 ? 'text-yellow-500' : 'text-emerald-500';
 
                          return (
@@ -1873,7 +1959,7 @@ export default function RiscosPage() {
                               </div>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                               <span className="text-[13px] text-gray-400">{item.setores[0] || 'Vários'}</span>
+                               <span className="text-[13px] text-gray-400">{item.setores[0] || 'VÃ¡rios'}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
                                <div className="flex flex-col gap-0.5">
@@ -1885,7 +1971,7 @@ export default function RiscosPage() {
                                <div className="flex flex-col gap-1">
                                  {item.episAusentes > 0 ? (
                                     <>
-                                      <span className="text-[13px] text-gray-200 truncate max-w-[150px]">Controles obrigatórios pendentes</span>
+                                      <span className="text-[13px] text-gray-200 truncate max-w-[150px]">Controles obrigatÃ³rios pendentes</span>
                                       <span className="text-[10px] font-bold text-red-400 bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded w-max">{item.episAusentes} de {item.episTotal} ausentes</span>
                                     </>
                                  ) : (
@@ -1906,9 +1992,9 @@ export default function RiscosPage() {
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
                                <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border tracking-wider bg-opacity-10 
-                                  ${item.maxNivelName === 'Crítico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
+                                  ${item.maxNivelName === 'CrÃ­tico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
                                     item.maxNivelName === 'Alto' ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
-                                    item.maxNivelName === 'Médio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
+                                    item.maxNivelName === 'MÃ©dio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
                                     'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
                                  {item.maxNivelName}
                                </span>
@@ -1929,7 +2015,7 @@ export default function RiscosPage() {
                       </div>
                       <div className="flex items-center gap-2">
                          <select className="bg-[#121826] border border-white/10 rounded px-2 py-1 text-gray-400 focus:outline-none">
-                            <option>10 por página</option>
+                            <option>10 por pÃ¡gina</option>
                          </select>
                       </div>
                    </div>
@@ -1941,7 +2027,7 @@ export default function RiscosPage() {
         </div>
       </motion.div>
 
-      {/* DRAWER DETALHES DE AÇÃO CRÍTICA */}
+      {/* DRAWER DETALHES DE AÃ‡ÃƒO CRÃTICA */}
       <AnimatePresence>
         {isDrawerActionOpen && selectedAction && (
           <>
@@ -1971,14 +2057,14 @@ export default function RiscosPage() {
 
              <div className="flex-1 overflow-y-auto p-6 space-y-8">
                
-               {activeTab === 'Histórico' ? (
+               {activeTab === 'HistÃ³rico' ? (
                  <>
                    <div className="flex items-start justify-between border-b border-white/5 pb-4 mb-4">
                      <span className="text-sm font-bold text-purple-400">{getRiskDrawerId(selectedAction)}</span>
                      <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
-                          ${selectedAction.status === 'Crítico' || selectedAction.status === 'Pendente' ? 'text-red-400 border-red-500/20 bg-red-400' : 
-                            selectedAction.status === 'Em análise' ? 'text-blue-400 border-blue-500/20 bg-blue-400' :
-                            selectedAction.status === 'Concluído' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-400' : 
+                          ${selectedAction.status === 'CrÃ­tico' || selectedAction.status === 'Pendente' ? 'text-red-400 border-red-500/20 bg-red-400' : 
+                            selectedAction.status === 'Em anÃ¡lise' ? 'text-blue-400 border-blue-500/20 bg-blue-400' :
+                            selectedAction.status === 'ConcluÃ­do' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-400' : 
                             'text-yellow-400 border-yellow-500/20 bg-yellow-400'}`}>
                        {selectedAction.status}
                      </span>
@@ -2007,20 +2093,20 @@ export default function RiscosPage() {
                      </h3>
 
                      <div className="relative border-l-2 border-white/10 ml-3 pl-6 space-y-6">
-                        {/* Passo 1: Inspeção/Origem */}
+                        {/* Passo 1: InspeÃ§Ã£o/Origem */}
                         <div className="relative">
                            <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-emerald-500 flex items-center justify-center">
                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                            </div>
-                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Origem da Identificação</p>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Origem da IdentificaÃ§Ã£o</p>
                            <div className="bg-white/5 border border-white/5 rounded-lg p-3">
                               {(selectedAction.origem || '').toLowerCase().includes('inspe') ? (
                                  <>
                                     <div className="flex items-center gap-2 text-emerald-400 font-medium text-[13px] mb-1">
-                                       <ShieldCheck className="w-4 h-4" /> Inspeção de Segurança
+                                       <ShieldCheck className="w-4 h-4" /> InspeÃ§Ã£o de SeguranÃ§a
                                     </div>
                                     <p className="text-[13px] text-gray-200">
-                                       <span className="text-gray-400">Inspeção:</span> {selectedAction.inspection_name || selectedActionInspection?.checklist || selectedActionInspection?.tipoInspecao || '--'}
+                                       <span className="text-gray-400">InspeÃ§Ã£o:</span> {selectedAction.inspection_name || selectedActionInspection?.checklist || selectedActionInspection?.tipoInspecao || '--'}
                                     </p>
                                     <p className="text-[13px] text-gray-200">
                                        <span className="text-gray-400">Checklist/Item:</span> {selectedActionInspection?.checklist || selectedAction.atividade || '--'}
@@ -2028,7 +2114,7 @@ export default function RiscosPage() {
                                     {(selectedAction as any).perguntaOrigem && (
                                        <div className="mt-2 text-[12px] bg-black/20 p-2 rounded">
                                           <p className="text-gray-400 italic">&quot;{((selectedAction as any).perguntaOrigem)}&quot;</p>
-                                          <p className="text-red-400 font-medium mt-1">Resposta Inconforme: {(selectedAction as any).respostaOrigem || 'Não'}</p>
+                                          <p className="text-red-400 font-medium mt-1">Resposta Inconforme: {(selectedAction as any).respostaOrigem || 'NÃ£o'}</p>
                                        </div>
                                     )}
                                  </>
@@ -2037,24 +2123,24 @@ export default function RiscosPage() {
                                     <div className="flex items-center gap-2 text-blue-400 font-medium text-[13px] mb-1">
                                        <Bot className="w-4 h-4" /> Motor de Riscos (Sistema)
                                     </div>
-                                    <p className="text-[13px] text-gray-400">Gerado automaticamente via parâmetros da organização e histórico.</p>
+                                    <p className="text-[13px] text-gray-400">Gerado automaticamente via parÃ¢metros da organizaÃ§Ã£o e histÃ³rico.</p>
                                  </>
                               )}
                            </div>
                         </div>
 
-                        {/* Passo 2: Fundamentação Legal */}
+                        {/* Passo 2: FundamentaÃ§Ã£o Legal */}
                         <div className="relative">
                            <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-purple-500 flex items-center justify-center">
                               <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
                            </div>
-                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Fundamentação Normativa</p>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">FundamentaÃ§Ã£o Normativa</p>
                            <div className="bg-white/5 border border-white/5 rounded-lg p-3">
                               <div className="flex items-center gap-2 text-purple-400 font-medium text-[13px] mb-1">
-                                 <FileText className="w-4 h-4" /> {selectedAction.nr || selectedAction.nrRelacionada || 'Norma não especificada'}
+                                 <FileText className="w-4 h-4" /> {selectedAction.nr || selectedAction.nrRelacionada || 'Norma nÃ£o especificada'}
                               </div>
                               <p className="text-[13px] text-gray-200">
-                                 <span className="text-gray-400">Regra associada:</span> {selectedAction.regraTitulo || selectedAction.titulo || 'Regra não declarada'}
+                                 <span className="text-gray-400">Regra associada:</span> {selectedAction.regraTitulo || selectedAction.titulo || 'Regra nÃ£o declarada'}
                               </p>
                               {(selectedAction.multaEstimada || selectedAction.chanceIncidente) ? (
                                 <div className="mt-2 flex gap-4 text-[12px]">
@@ -2078,31 +2164,31 @@ export default function RiscosPage() {
                                        <Users className="w-4 h-4" /> {selectedAction.trabalhadoresExpostos || 0} Trabalhadores Expostos
                                     </div>
                                     <p className="text-[13px] text-gray-200">
-                                       <span className="text-gray-400">Perfil:</span> {selectedAction.perfilExposto || 'Não informado'}
+                                       <span className="text-gray-400">Perfil:</span> {selectedAction.perfilExposto || 'NÃ£o informado'}
                                     </p>
                                  </div>
                                  <div className="text-right">
                                     <p className="text-[11px] text-gray-500 mb-1">Dano Potencial Evitado</p>
-                                    <p className="text-[12px] font-bold text-red-400 max-w-[150px]">{selectedAction.impactoHumano || 'Dano físico'}</p>
+                                    <p className="text-[12px] font-bold text-red-400 max-w-[150px]">{selectedAction.impactoHumano || 'Dano fÃ­sico'}</p>
                                  </div>
                               </div>
                            </div>
                         </div>
 
-                        {/* Passo 4: Próximo passo -> Ação (Se existir) */}
+                        {/* Passo 4: PrÃ³ximo passo -> AÃ§Ã£o (Se existir) */}
                         <div className="relative">
                            <div className="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-[#121826] border-2 border-gray-600 flex items-center justify-center">
                               <div className="w-1 h-1 rounded-full bg-gray-500"></div>
                            </div>
-                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">Resolução (Ação/Mitigação)</p>
+                           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold mb-1">ResoluÃ§Ã£o (AÃ§Ã£o/MitigaÃ§Ã£o)</p>
                            <div className="bg-white/5 border border-white/5 border-dashed rounded-lg p-3 flex justify-between items-center">
                               <div className="text-[13px]">
-                                 <p className="text-gray-300 font-medium mb-0.5">Execução & Validação</p>
-                                 <p className="text-gray-500 text-[12px]">Quem resolve: {selectedAction.executorCorrecao || 'Não definido'}</p>
-                                 <p className="text-gray-500 text-[12px]">Quem assina: {selectedAction.validadorCorrecao || 'Não definido'}</p>
+                                 <p className="text-gray-300 font-medium mb-0.5">ExecuÃ§Ã£o & ValidaÃ§Ã£o</p>
+                                 <p className="text-gray-500 text-[12px]">Quem resolve: {selectedAction.executorCorrecao || 'NÃ£o definido'}</p>
+                                 <p className="text-gray-500 text-[12px]">Quem assina: {selectedAction.validadorCorrecao || 'NÃ£o definido'}</p>
                               </div>
                               <button onClick={() => window.location.href='/operacao/acoes'} className="text-[12px] bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded border border-white/10 transition-colors">
-                                 Ver Ações
+                                 Ver AÃ§Ãµes
                               </button>
                            </div>
                         </div>
@@ -2112,7 +2198,7 @@ export default function RiscosPage() {
 
                    <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
                      <h3 className="text-sm font-bold text-purple-400 mb-4 flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" /> Informações de auditoria
+                        <CheckCircle2 className="w-4 h-4" /> InformaÃ§Ãµes de auditoria
                      </h3>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Criado em</span>
@@ -2122,23 +2208,23 @@ export default function RiscosPage() {
                         <span className="text-[13px] text-gray-500 shrink-0">Origem</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            {(selectedAction.origem || '').toLowerCase().includes('inspe') ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                           {selectedAction.origem || 'Não informada'} 
-                            <span className="text-gray-500 text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
+                           {selectedAction.origem || 'NÃ£o informada'} 
+                            <span className="text-gray-500 text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'InspeÃ§Ã£o de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'InserÃ§Ã£o Manual')})</span>
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Última atualização</span>
+                        <span className="text-[13px] text-gray-500 shrink-0">Ãšltima atualizaÃ§Ã£o</span>
                         <span className="text-[13px] text-gray-200 text-right">{selectedRiskAudit?.updatedAt ? new Date(selectedRiskAudit.updatedAt).toLocaleString('pt-BR') : '--'}</span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Atualizado por</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            <Settings2 className="w-3.5 h-3.5" />
-                           {selectedRiskAudit?.updatedBy || 'Não informado'}
+                           {selectedRiskAudit?.updatedBy || 'NÃ£o informado'}
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
-                        <span className="text-[13px] text-gray-500 shrink-0">Versão do registro</span>
+                        <span className="text-[13px] text-gray-500 shrink-0">VersÃ£o do registro</span>
                         <span className="text-[13px] text-gray-200 text-right font-mono">{selectedRiskAudit?.version || '1'}</span>
                      </div>
                      <div className="flex justify-between items-center gap-6">
@@ -2167,9 +2253,9 @@ export default function RiscosPage() {
                        </div>
                      </div>
                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-opacity-10 
-                          ${selectedAction.nivel === 'Crítico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
+                          ${selectedAction.nivel === 'CrÃ­tico' ? 'text-red-400 border-red-500/20 bg-red-400' : 
                             selectedAction.nivel === 'Alto' ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
-                            selectedAction.nivel === 'Médio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
+                            selectedAction.nivel === 'MÃ©dio' ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
                             'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
                        {selectedAction.nivel}
                      </span>
@@ -2191,8 +2277,8 @@ export default function RiscosPage() {
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-[11px] text-gray-500 mb-0.5">Perfil Expôsto</p>
-                          <p className="text-[13px] font-medium text-gray-200">{selectedAction.perfilExposto || 'Não informado'}</p>
+                          <p className="text-[11px] text-gray-500 mb-0.5">Perfil ExpÃ´sto</p>
+                          <p className="text-[13px] font-medium text-gray-200">{selectedAction.perfilExposto || 'NÃ£o informado'}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-gray-500 mb-0.5">Qtd. Pessoas</p>
@@ -2200,7 +2286,7 @@ export default function RiscosPage() {
                         </div>
                         <div className="col-span-2">
                           <p className="text-[11px] text-gray-500 mb-0.5">Impacto Humano Estimado</p>
-                          <p className="text-[13px] font-medium text-red-400">{selectedAction.impactoHumano || 'Dano à integridade física'}</p>
+                          <p className="text-[13px] font-medium text-red-400">{selectedAction.impactoHumano || 'Dano Ã  integridade fÃ­sica'}</p>
                         </div>
                       </div>
 
@@ -2208,21 +2294,21 @@ export default function RiscosPage() {
 
                       <div className="grid grid-cols-2 gap-4">
                          <div>
-                            <p className="text-[11px] text-gray-500 mb-0.5">Executor da Correção</p>
+                            <p className="text-[11px] text-gray-500 mb-0.5">Executor da CorreÃ§Ã£o</p>
                             <div className="flex items-center gap-2 mt-1">
                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                                   {selectedAction.executorCorrecao?.charAt(0) || 'E'}
                                </div>
-                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.executorCorrecao || 'Não definido'}</span>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.executorCorrecao || 'NÃ£o definido'}</span>
                             </div>
                          </div>
                          <div>
-                            <p className="text-[11px] text-gray-500 mb-0.5">Validador (Responsável)</p>
+                            <p className="text-[11px] text-gray-500 mb-0.5">Validador (ResponsÃ¡vel)</p>
                             <div className="flex items-center gap-2 mt-1">
                                <div className="w-5 h-5 rounded-full bg-[#121826] border border-white/10 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                                   {selectedAction.validadorCorrecao?.charAt(0) || 'V'}
                                </div>
-                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.validadorCorrecao || 'Não definido'}</span>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.validadorCorrecao || 'NÃ£o definido'}</span>
                             </div>
                          </div>
                       </div>
@@ -2242,15 +2328,15 @@ export default function RiscosPage() {
                            {selectedAction.regraFixa === true ? (
                               <p><span className="font-bold text-gray-500">Regra Fixa:</span> Sim</p>
                            ) : selectedAction.regraFixa === false ? (
-                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Não</p>
+                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> NÃ£o</p>
                            ) : (
-                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Regra normativa não vinculada</p>
+                              <p><span className="font-bold text-gray-500">Regra Fixa:</span> Regra normativa nÃ£o vinculada</p>
                            )}
 
                            {selectedAction.perguntaOrigem && <p><span className="font-bold text-gray-500">Pergunta:</span> {selectedAction.perguntaOrigem}</p>}
                            {selectedAction.respostaOrigem && <p><span className="font-bold text-gray-500">Resposta:</span> {selectedAction.respostaOrigem}</p>}
                            {(selectedAction.inspection_name || selectedAction.checklistId) && (
-                              <p><span className="font-bold text-gray-500">Origem:</span> {getActionInspectionCode(selectedAction) ? `Inspeção #${getActionInspectionCode(selectedAction)}` : 'Inspeção'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
+                              <p><span className="font-bold text-gray-500">Origem:</span> {getActionInspectionCode(selectedAction) ? `InspeÃ§Ã£o #${getActionInspectionCode(selectedAction)}` : 'InspeÃ§Ã£o'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
                            )}
                         </div>
                         {selectedAction.explicacaoNormativa && (
@@ -2267,7 +2353,7 @@ export default function RiscosPage() {
                  <div>
                     <h4 className="text-xs font-bold text-gray-200 mb-1">Chance de incidente</h4>
                     <p className={`text-base font-bold ${((selectedAction.chanceIncidente || 0) >= 60 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 60)) ? 'text-red-500' : ((selectedAction.chanceIncidente || 0) >= 35 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 35)) ? 'text-orange-500' : 'text-emerald-500'}`}>
-                       {((selectedAction.chanceIncidente || 0) >= 60 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 60)) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 35)) ? 'Média' : 'Baixa'}
+                       {((selectedAction.chanceIncidente || 0) >= 60 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 60)) ? 'Alta' : ((selectedAction.chanceIncidente || 0) >= 35 || ((selectedAction as any).chanceSum > 0 && Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) >= 35)) ? 'MÃ©dia' : 'Baixa'}
                     </p>
                     <p className="text-[11px] text-gray-500 mt-1">Estimativa: {(selectedAction as any).chanceSum > 0 ? Math.round((selectedAction as any).chanceSum / Math.max(1, (selectedAction as any).count || 1)) : (selectedAction.chanceIncidente || 0)}%</p>
                  </div>
@@ -2306,7 +2392,7 @@ export default function RiscosPage() {
                      <div className="flex flex-col gap-1">
                         <h4 className="text-xs font-bold text-gray-200">EPI/EPC ausente</h4>
                         <p className="text-[11px] text-gray-400 leading-snug">
-                           Falta de equipamentos essenciais para atuação segura em {safeLowerText(getActionActivityLabel(selectedAction)) || 'atividade'}.
+                           Falta de equipamentos essenciais para atuaÃ§Ã£o segura em {safeLowerText(getActionActivityLabel(selectedAction)) || 'atividade'}.
                         </p>
                      </div>
                   </div>
@@ -2323,7 +2409,7 @@ export default function RiscosPage() {
                         <Plus className="w-4 h-4" />
                      </div>
                      <div>
-                        <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">Ação recomendada</h4>
+                        <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">AÃ§Ã£o recomendada</h4>
                         <p className="text-[11px] text-gray-500">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${safeLowerText(getActionActivityLabel(selectedAction)) || 'atividade'}.`}</p>
                      </div>
                   </div>
@@ -2336,9 +2422,9 @@ export default function RiscosPage() {
                         {selectedActionResponsible ? selectedActionResponsible.substring(0, 2).toUpperCase() : '--'}
                      </div>
                      <div>
-                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                        <p className="text-xs font-bold text-white">{selectedActionResponsible || 'Não definido'}</p>
-                        <p className="text-[11px] text-gray-500">{selectedAction.executorCorrecao ? 'Executor da correção' : selectedAction.validadorCorrecao ? 'Validador da correção' : 'Aguardando atribuição'}</p>
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">ResponsÃ¡vel</h4>
+                        <p className="text-xs font-bold text-white">{selectedActionResponsible || 'NÃ£o definido'}</p>
+                        <p className="text-[11px] text-gray-500">{selectedAction.executorCorrecao ? 'Executor da correÃ§Ã£o' : selectedAction.validadorCorrecao ? 'Validador da correÃ§Ã£o' : 'Aguardando atribuiÃ§Ã£o'}</p>
                      </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors shrink-0" />
@@ -2349,12 +2435,12 @@ export default function RiscosPage() {
              </div>
 
              <div className="p-6 border-t border-white/5 bg-[#0b0f19] space-y-3">
-               {activeTab !== 'Histórico' && (
+               {activeTab !== 'HistÃ³rico' && (
                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-colors flex justify-center items-center gap-2 border border-purple-500/30">
                    Marcar como tratado <CheckCircle2 className="w-4 h-4 ml-1" />
                  </button>
                )}
-               <button onClick={() => setIsDrawerActionOpen(false)} className={`w-full py-3 rounded-lg ${activeTab === 'Histórico' ? 'bg-white/5 hover:bg-white/10 text-white text-sm' : 'text-xs text-gray-400 hover:text-white'} font-bold transition-colors border border-transparent`}>
+               <button onClick={() => setIsDrawerActionOpen(false)} className={`w-full py-3 rounded-lg ${activeTab === 'HistÃ³rico' ? 'bg-white/5 hover:bg-white/10 text-white text-sm' : 'text-xs text-gray-400 hover:text-white'} font-bold transition-colors border border-transparent`}>
                  Fechar painel
                </button>
              </div>
@@ -2399,7 +2485,7 @@ export default function RiscosPage() {
                         selectedSectorItem.altos > 0 ? 'text-orange-400 border-orange-500/20 bg-orange-400' : 
                         selectedSectorItem.medios > 0 ? 'text-yellow-400 border-yellow-500/20 bg-yellow-400' : 
                         'text-emerald-400 border-emerald-500/20 bg-emerald-400'}`}>
-                   {selectedSectorItem.crits > 0 ? 'Crítico' : selectedSectorItem.altos > 0 ? 'Alto' : selectedSectorItem.medios > 0 ? 'Médio' : 'Baixo'}
+                   {selectedSectorItem.crits > 0 ? 'CrÃ­tico' : selectedSectorItem.altos > 0 ? 'Alto' : selectedSectorItem.medios > 0 ? 'MÃ©dio' : 'Baixo'}
                  </span>
                </div>
 
@@ -2418,9 +2504,9 @@ export default function RiscosPage() {
                </div>
 
                <div>
-                  <h4 className="text-xs font-bold text-gray-200 mb-2">Visão geral do setor</h4>
+                  <h4 className="text-xs font-bold text-gray-200 mb-2">VisÃ£o geral do setor</h4>
                   <p className="text-[13px] text-gray-400 leading-relaxed">
-                     {selectedSectorItem.crits > 0 ? 'Setor com maior concentração de riscos críticos.' : 'Setor estável, focar em prevenções rotineiras.'} Processos com exposição aos riscos: {selectedSectorItem.riscosNames.slice(0, 3).join(', ')}.
+                     {selectedSectorItem.crits > 0 ? 'Setor com maior concentraÃ§Ã£o de riscos crÃ­ticos.' : 'Setor estÃ¡vel, focar em prevenÃ§Ãµes rotineiras.'} Processos com exposiÃ§Ã£o aos riscos: {selectedSectorItem.riscosNames.slice(0, 3).join(', ')}.
                   </p>
                </div>
 
@@ -2431,7 +2517,7 @@ export default function RiscosPage() {
                       (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 60 ? 'text-red-500' : 
                       (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 35 ? 'text-orange-500' : 'text-emerald-500'
                     }`}>
-                       {(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 60 ? 'Alta' : (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 35 ? 'Média' : 'Baixa'}
+                       {(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 60 ? 'Alta' : (selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count)) >= 35 ? 'MÃ©dia' : 'Baixa'}
                     </p>
                     <p className="text-[11px] text-gray-500 mt-1">Estimativa: {Math.round(selectedSectorItem.chanceSum / Math.max(1, selectedSectorItem.count))}%</p>
                  </div>
@@ -2466,10 +2552,10 @@ export default function RiscosPage() {
 
                <div className="flex flex-col gap-2 p-4 bg-[#121826] border border-white/5 rounded-xl border-l-2 border-l-purple-500">
                   <h4 className="text-[10px] uppercase font-bold text-purple-400 flex items-center gap-1.5">
-                     <Zap className="w-3.5 h-3.5"/> Ação sugerida
+                     <Zap className="w-3.5 h-3.5"/> AÃ§Ã£o sugerida
                   </h4>
                   <p className="text-[12px] text-gray-300">
-                     Priorizar adequações nas frentes de trabalho relacionadas aos principais riscos detectados no setor de {safeLowerText(selectedSectorItem?.setor) || 'setor'} e intensificar inspeções de rotina.
+                     Priorizar adequaÃ§Ãµes nas frentes de trabalho relacionadas aos principais riscos detectados no setor de {safeLowerText(selectedSectorItem?.setor) || 'setor'} e intensificar inspeÃ§Ãµes de rotina.
                   </p>
                </div>
 
@@ -2478,9 +2564,9 @@ export default function RiscosPage() {
                      <UserPlus className="w-4 h-4 text-purple-400"/>
                   </div>
                   <div className="flex-1">
-                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                     <p className="text-sm font-bold text-white">{getRiskResponsibleLabel(selectedSectorItem?.representativeRisk) || 'Não definido'}</p>
-                     <p className="text-[11px] text-gray-500">{selectedSectorItem?.representativeRisk?.executorCorrecao ? 'Executor vinculado ao setor' : 'Sem responsável setorial definido'}</p>
+                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">ResponsÃ¡vel</h4>
+                     <p className="text-sm font-bold text-white">{getRiskResponsibleLabel(selectedSectorItem?.representativeRisk) || 'NÃ£o definido'}</p>
+                     <p className="text-[11px] text-gray-500">{selectedSectorItem?.representativeRisk?.executorCorrecao ? 'Executor vinculado ao setor' : 'Sem responsÃ¡vel setorial definido'}</p>
                   </div>
                </div>
                
@@ -2516,7 +2602,7 @@ export default function RiscosPage() {
             <div className="flex flex-col h-full overflow-hidden">
               <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#0b0f19] rounded-t-2xl shrink-0">
                 <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                  {editingItem ? `Avaliar Condição Existente` : `Registro de Risco`}
+                  {editingItem ? `Avaliar CondiÃ§Ã£o Existente` : `Registro de Risco`}
                 </h2>
                 <div className="flex items-center gap-2">
                   {editingItem && (
@@ -2547,16 +2633,16 @@ export default function RiscosPage() {
                         onChange={e => setFormData({...formData, prioridade: e.target.value as any})}
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
                       >
-                        <option value="">Automático</option>
-                        <option value="P1">P1 - Crítico</option>
+                        <option value="">AutomÃ¡tico</option>
+                        <option value="P1">P1 - CrÃ­tico</option>
                         <option value="P2">P2 - Alto</option>
-                        <option value="P3">P3 - Médio</option>
+                        <option value="P3">P3 - MÃ©dio</option>
                         <option value="P4">P4 - Baixo</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
-                        Prazo Máximo (Opcional)
+                        Prazo MÃ¡ximo (Opcional)
                       </label>
                       <input 
                         type="text" 
@@ -2574,11 +2660,14 @@ export default function RiscosPage() {
                     </label>
                     <select 
                       value={formData.atividade || ""} 
-                      onChange={e => setFormData({...formData, atividade: e.target.value})}
+                        onChange={e => {
+                          const activity = e.target.value;
+                          setFormData(buildRiskFormFromActivity(activity, formData));
+                        }}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
                     >
                       <option value="" className="bg-[#121826] text-gray-400">Selecione a atividade</option>
-                      {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
+                      {operationalActivityCatalog.map((option: any) => <option key={`${option.pacote}-${option.activity}`} value={option.activity} className="bg-[#121826] text-white">{option.activity}</option>)}
                     </select>
 
                     {normativeDetection && (
@@ -2589,12 +2678,12 @@ export default function RiscosPage() {
                          <div className="grid grid-cols-2 gap-2 text-[11px]">
                            <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
                              <span className="text-gray-500 block mb-0.5">Severidade</span>
-                             <span className={`font-bold uppercase ${normativeDetection.severity === 'crítica' ? 'text-red-400' : 'text-orange-400'}`}>
+                             <span className={`font-bold uppercase ${normativeDetection.severity === 'crÃ­tica' ? 'text-red-400' : 'text-orange-400'}`}>
                                {normativeDetection.severity}
                              </span>
                            </div>
                            <div className="bg-[#0b0f19] p-2 rounded-lg border border-white/5">
-                             <span className="text-gray-500 block mb-0.5">Ação Inicial Recomendada</span>
+                             <span className="text-gray-500 block mb-0.5">AÃ§Ã£o Inicial Recomendada</span>
                              <span className="text-gray-300 font-medium leading-tight">
                                {normativeDetection.recommendedAction}
                              </span>
@@ -2614,7 +2703,7 @@ export default function RiscosPage() {
 
                          {normativeDetection.ppe.length > 0 && (
                            <div>
-                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">EPI / EPC Mínimos</span>
+                             <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">EPI / EPC MÃ­nimos</span>
                              <div className="flex flex-wrap gap-1.5">
                                {normativeDetection.ppe.map((epi: string) => (
                                  <span key={epi} className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-gray-300">{epi}</span>
@@ -2627,7 +2716,7 @@ export default function RiscosPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
-                      Área / Setor
+                      Ãrea / Setor
                     </label>
                     <select 
                       value={formData.setor || ""} 
@@ -2655,7 +2744,7 @@ export default function RiscosPage() {
                      </div>
                      <div>
                        <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
-                         Perfil Exposto (Função)
+                         Perfil Exposto (FunÃ§Ã£o)
                        </label>
                        <input 
                          type="text" 
@@ -2671,7 +2760,7 @@ export default function RiscosPage() {
                      <div>
                        <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider text-indigo-400 flex items-center gap-1">
                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                         Executor da Ação
+                         Executor da AÃ§Ã£o
                        </label>
                        <select
                          value={formData.executorCorrecao || ''} 
@@ -2687,7 +2776,7 @@ export default function RiscosPage() {
                      <div>
                        <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                         Validador / Responsável
+                         Validador / ResponsÃ¡vel
                        </label>
                        <select
                          value={formData.validadorCorrecao || ''} 
@@ -2708,7 +2797,7 @@ export default function RiscosPage() {
                     <h3 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider mb-1 flex items-center gap-2">
                        Checklist de Conformidade Base
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-tight">Marque as opções em que o cenário está 100% conforme. Ausências gerarão gatilhos de Criticidade Alta/Extrema baseado na matriz de risco NR.</p>
+                    <p className="text-[11px] text-gray-500 leading-tight">Marque as opÃ§Ãµes em que o cenÃ¡rio estÃ¡ 100% conforme. AusÃªncias gerarÃ£o gatilhos de Criticidade Alta/Extrema baseado na matriz de risco NR.</p>
                   </div>
 
                   <div className="space-y-3">
@@ -2723,7 +2812,7 @@ export default function RiscosPage() {
                       </div>
                       <div>
                          <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">EPI / EPC (Equipamentos)</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador utiliza os equipamentos obrigatórios corretos para a tarefa (Cinto, ferramentas, proteções ativas)?</span>
+                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador utiliza os equipamentos obrigatÃ³rios corretos para a tarefa (Cinto, ferramentas, proteÃ§Ãµes ativas)?</span>
                       </div>
                     </label>
 
@@ -2738,7 +2827,7 @@ export default function RiscosPage() {
                       </div>
                       <div>
                          <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">Procedimento Operacional / PT</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">Existe Permissão de Trabalho (PT), Análise de Risco (APR) preenchida ou protocolo LOTO ativo e seguido?</span>
+                         <span className="block text-[11px] text-gray-500 leading-snug">Existe PermissÃ£o de Trabalho (PT), AnÃ¡lise de Risco (APR) preenchida ou protocolo LOTO ativo e seguido?</span>
                       </div>
                     </label>
 
@@ -2752,8 +2841,8 @@ export default function RiscosPage() {
                         />
                       </div>
                       <div>
-                         <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">Capacitação Normativa (NR)</span>
-                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador possui treinamento válido exigido para este maquinário ou risco (ex: NR-35, NR-10)?</span>
+                         <span className="block text-xs font-bold text-gray-200 group-hover:text-white mb-1">CapacitaÃ§Ã£o Normativa (NR)</span>
+                         <span className="block text-[11px] text-gray-500 leading-snug">O colaborador possui treinamento vÃ¡lido exigido para este maquinÃ¡rio ou risco (ex: NR-35, NR-10)?</span>
                       </div>
                     </label>
                   </div>
@@ -2762,9 +2851,9 @@ export default function RiscosPage() {
                 <div className="bg-gradient-to-br from-[#121826] to-purple-900/10 border border-purple-500/20 p-5 rounded-xl flex items-start gap-3">
                   <Settings2 className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider mb-1">Cálculo de Tipo / Severidade Automático</h4>
+                    <h4 className="text-[10px] font-bold text-purple-300 uppercase tracking-wider mb-1">CÃ¡lculo de Tipo / Severidade AutomÃ¡tico</h4>
                     <p className="text-[11px] text-purple-200/60 leading-relaxed">
-                      De acordo com o tipo de risco (Físico, Químico, etc.) e as opções acima, a prioridade será designada automaticamente para garantir agilidade na ação.
+                      De acordo com o tipo de risco (FÃ­sico, QuÃ­mico, etc.) e as opÃ§Ãµes acima, a prioridade serÃ¡ designada automaticamente para garantir agilidade na aÃ§Ã£o.
                     </p>
                   </div>
                 </div>
@@ -2812,7 +2901,7 @@ export default function RiscosPage() {
                      <Activity className="w-5 h-5 text-blue-400" />
                    </div>
                    <div>
-                     <h2 className="text-sm font-bold text-white uppercase tracking-wider">Detalhamento do Cálculo</h2>
+                     <h2 className="text-sm font-bold text-white uppercase tracking-wider">Detalhamento do CÃ¡lculo</h2>
                      <p className="text-[11px] text-gray-400">Risco: {selectedAction.titulo || selectedAction.atividade}</p>
                    </div>
                  </div>
@@ -2827,11 +2916,11 @@ export default function RiscosPage() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-[#121826] border border-white/5 rounded-xl p-4">
                        <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-3 flex items-center gap-2">
-                         <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> Variáveis Base
+                         <ShieldAlert className="w-3.5 h-3.5 text-blue-400" /> VariÃ¡veis Base
                        </h4>
                        <div className="space-y-2">
                           <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Severidade Padrão</span>
+                             <span className="text-gray-400">Severidade PadrÃ£o</span>
                              <span className="font-bold text-white">{selectedAction.severidade || selectedAction.gravidade}</span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
@@ -2843,7 +2932,7 @@ export default function RiscosPage() {
                              <span className="font-bold text-blue-400">{selectedAction.nr}</span>
                           </div>
                           <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
-                             <span className="text-gray-400">Prazo Automático</span>
+                             <span className="text-gray-400">Prazo AutomÃ¡tico</span>
                              <span className="font-bold text-orange-400">{selectedAction.prazo}</span>
                           </div>
                        </div>
@@ -2857,9 +2946,9 @@ export default function RiscosPage() {
                           <div className="flex justify-between items-center bg-black/20 p-2 rounded text-xs">
                              <span className="text-gray-400">Impacto Operacional</span>
                              <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase
-                                ${selectedAction.impactoOperacional === 'Crítico' ? 'bg-red-500/20 text-red-400' : 
+                                ${selectedAction.impactoOperacional === 'CrÃ­tico' ? 'bg-red-500/20 text-red-400' : 
                                   selectedAction.impactoOperacional === 'Alto' ? 'bg-orange-500/20 text-orange-400' :
-                                  selectedAction.impactoOperacional === 'Médio' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  selectedAction.impactoOperacional === 'MÃ©dio' ? 'bg-yellow-500/20 text-yellow-400' :
                                   'bg-emerald-500/20 text-emerald-400'
                                 }`}>{selectedAction.impactoOperacional}</span>
                           </div>
@@ -2877,8 +2966,8 @@ export default function RiscosPage() {
                              <span className="text-gray-400">Conformidade</span>
                              <span className={`font-bold ${
                                 selectedAction.nivelConformidade === 'Conforme' ? 'text-emerald-400' :
-                                selectedAction.nivelConformidade === 'Atenção' ? 'text-yellow-400' :
-                                selectedAction.nivelConformidade === 'Não conforme crítico' ? 'text-red-400' :
+                                selectedAction.nivelConformidade === 'AtenÃ§Ã£o' ? 'text-yellow-400' :
+                                selectedAction.nivelConformidade === 'NÃ£o conforme crÃ­tico' ? 'text-red-400' :
                                 'text-orange-400'
                              }`}>{selectedAction.nivelConformidade}</span>
                           </div>
@@ -2893,15 +2982,15 @@ export default function RiscosPage() {
                     <div className="bg-[#121826] border border-white/5 rounded-xl p-4">
                       <div className="text-xs text-gray-300 leading-relaxed mb-3">
                          <span className="text-blue-400 font-bold block mb-1">Multa Investigada:</span>
-                         “{selectedAction.justificativaMulta || 'Cálculo com base em tabela NR.'}”
+                         â€œ{selectedAction.justificativaMulta || 'CÃ¡lculo com base em tabela NR.'}â€
                       </div>
                       <div className="text-xs text-gray-300 leading-relaxed mb-3">
                          <span className="text-orange-400 font-bold block mb-1">Chance de Incidente:</span>
-                         “{selectedAction.justificativaIncidente || 'Variáveis base da matriz.'}”
+                         â€œ{selectedAction.justificativaIncidente || 'VariÃ¡veis base da matriz.'}â€
                       </div>
                       <div className="text-xs text-gray-300 leading-relaxed">
                          <span className="text-emerald-400 font-bold block mb-1">Origem do Dado:</span>
-                         “{selectedAction.justificativa || 'Lançado pela inspeção.'}”
+                         â€œ{selectedAction.justificativa || 'LanÃ§ado pela inspeÃ§Ã£o.'}â€
                       </div>
                     </div>
                  </div>
@@ -2924,7 +3013,7 @@ export default function RiscosPage() {
                  <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl flex gap-3">
                    <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
                    <p className="text-[9px] sm:text-[10px] font-medium text-yellow-200/80 leading-relaxed">
-                     Os valores de multa e chance de incidente são estimativas internas para apoio à decisão e priorização. Não substituem avaliação legal, fiscalização oficial, perícia, laudo técnico ou análise profissional habilitada.
+                     Os valores de multa e chance de incidente sÃ£o estimativas internas para apoio Ã  decisÃ£o e priorizaÃ§Ã£o. NÃ£o substituem avaliaÃ§Ã£o legal, fiscalizaÃ§Ã£o oficial, perÃ­cia, laudo tÃ©cnico ou anÃ¡lise profissional habilitada.
                    </p>
                  </div>
 

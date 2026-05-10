@@ -157,6 +157,43 @@ function getChecklistActivityLabel(checklist: any) {
   );
 }
 
+function normalizeLookupToken(value: unknown) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function getChecklistActivities(checklist: any) {
+  const directActivities = Array.isArray(checklist?.atividades) ? checklist.atividades : [];
+  const fallbackValues = [
+    checklist?.atividade,
+    checklist?.ondeUsar,
+    checklist?.area,
+    checklist?.segmento,
+    getChecklistActivityLabel(checklist),
+  ];
+
+  return Array.from(new Set([...directActivities, ...fallbackValues].map((value) => String(value || '').trim()).filter(Boolean)));
+}
+
+function getChecklistPackageLabel(checklist: any) {
+  return checklist?.pacote || checklist?.package || 'Base SST';
+}
+
+function getInspectionPriorityFromSource(activity: string, checklist?: any) {
+  const checklistSeverity = normalizeLookupToken(checklist?.criticidadePadrao || checklist?.priority || checklist?.prioridade);
+  if (checklistSeverity.includes('crit') || checklistSeverity.includes('alta')) return 'Alta';
+  if (checklistSeverity.includes('med')) return 'Média';
+  if (checklistSeverity.includes('baix')) return 'Baixa';
+
+  const t = normalizeLookupToken(activity);
+  if (t.includes('altura') || t.includes('eletric') || t.includes('espaco') || t.includes('confinado') || t.includes('quimic') || t.includes('incendio') || t.includes('fogo') || t.includes('hospital') || t.includes('biologico')) return 'Alta';
+  if (t.includes('maquina') || t.includes('movimentacao') || t.includes('carga') || t.includes('manutencao') || t.includes('construcao')) return 'Média';
+  return 'Baixa';
+}
+
 function getChecklistCriticalCount(checklist: any) {
   return getChecklistQuestions(checklist).filter((question: any) =>
     ['Crítico', 'Crítica', 'Alta'].includes(question?.riskMap),
@@ -234,11 +271,41 @@ export default function InspecoesPage() {
   }, []);
 
   const router = useRouter();
-  const { checklists: customChecklists, addInspecao, updateInspecao, riscos, acoes, sectors, users } = store;
+  const { checklists: customChecklists, addInspecao, updateInspecao, riscos, acoes, sectors, users, rulePackages } = store;
   const checklists = useMemo(
     () => getTodosChecklistsAtivos(customChecklists).map((checklist: any, index: number) => normalizeChecklistForUi(checklist, index)),
     [customChecklists],
   );
+  const activePackageNames = useMemo(() => {
+    const names = (rulePackages || []).filter((pkg: any) => pkg?.isActive).map((pkg: any) => pkg.name);
+    return Array.from(new Set(['Base SST', ...names]));
+  }, [rulePackages]);
+  const eligibleChecklists = useMemo(() => {
+    return checklists.filter((checklist: any) => {
+      if (checklist.ativo === false || checklist.status === 'Inativo') return false;
+      const packageName = getChecklistPackageLabel(checklist);
+      return packageName === 'Base SST' || activePackageNames.includes(packageName);
+    });
+  }, [checklists, activePackageNames]);
+  const inspectionActivityOptions = useMemo(() => {
+    const activityMap = new Map<string, { activity: string; checklistId: string; checklistTitle: string; pacote: string; priority: string }>();
+
+    eligibleChecklists.forEach((checklist: any) => {
+      getChecklistActivities(checklist).forEach((activity) => {
+        const token = normalizeLookupToken(activity);
+        if (!token || activityMap.has(token)) return;
+        activityMap.set(token, {
+          activity,
+          checklistId: checklist.id,
+          checklistTitle: getChecklistTitle(checklist),
+          pacote: getChecklistPackageLabel(checklist),
+          priority: getInspectionPriorityFromSource(activity, checklist),
+        });
+      });
+    });
+
+    return Array.from(activityMap.values()).sort((left, right) => left.activity.localeCompare(right.activity, 'pt-BR'));
+  }, [eligibleChecklists]);
   const sectorOptions = useMemo(
     () => (sectors || []).map((sector: any) => sector?.name).filter(Boolean),
     [sectors],
@@ -248,7 +315,7 @@ export default function InspecoesPage() {
     [users],
   );
 
-  const [activeTab, setActiveTab] = useState<'Agendadas' | 'Realizadas' | 'Checklists'>('Agendadas');
+  const [activeTab, setActiveTab] = useState<'Todas' | 'Em andamento' | 'Agendadas' | 'Realizadas' | 'Checklists'>('Todas');
   
   const [drawerMode, setDrawerMode] = useState<'VIEW' | 'EXECUTE' | 'ISSUES' | 'RESCHEDULE' | 'REPORT' | 'CANCEL' | 'CHECKLIST_VIEW' | 'EDIT' | 'REOPEN'>('VIEW');
   const [selectedInspecao, setSelectedInspecao] = useState<Inspecao | null>(null);
@@ -308,16 +375,47 @@ export default function InspecoesPage() {
   });
 
   // Checklist Filter Logic for New Inspection Form
+  const selectedInspectionActivityPreset = useMemo(() => {
+    const selectedToken = normalizeLookupToken(inspectionData.tipoInspecao);
+    return inspectionActivityOptions.find((option) => normalizeLookupToken(option.activity) === selectedToken) || null;
+  }, [inspectionActivityOptions, inspectionData.tipoInspecao]);
+
   const filteredChecklistsForForm = useMemo(() => {
-    return checklists.filter((checklist) => checklist.ativo !== false && checklist.status !== 'Inativo');
-  }, [checklists]);
+    if (!inspectionData.tipoInspecao) return eligibleChecklists;
+    const selectedToken = normalizeLookupToken(inspectionData.tipoInspecao);
+    return eligibleChecklists.filter((checklist) =>
+      getChecklistActivities(checklist).some((activity) => normalizeLookupToken(activity) === selectedToken),
+    );
+  }, [eligibleChecklists, inspectionData.tipoInspecao]);
 
   const prioridadeCalculada = useMemo(() => {
-    const t = inspectionData.tipoInspecao.toLowerCase();
-    if (t.includes('altura') || t.includes('elétrica') || t.includes('espaço') || t.includes('confinado') || t.includes('químico') || t.includes('incêndio') || t.includes('fogo')) return 'Alta';
-    if (t.includes('máquina') || t.includes('movimentação') || t.includes('carga')) return 'Média';
-    return 'Baixa';
-  }, [inspectionData.tipoInspecao]);
+    if (selectedInspectionActivityPreset?.priority) return selectedInspectionActivityPreset.priority;
+    const selectedChecklist = eligibleChecklists.find((checklist: any) => checklist.id === inspectionData.checklistId);
+    return getInspectionPriorityFromSource(inspectionData.tipoInspecao, selectedChecklist);
+  }, [selectedInspectionActivityPreset, eligibleChecklists, inspectionData.checklistId, inspectionData.tipoInspecao]);
+  const buildInspectionFormState = (
+    activity: string,
+    baseState?: typeof inspectionData,
+  ) => {
+    const preset =
+      inspectionActivityOptions.find((option) => option.activity === activity) ||
+      inspectionActivityOptions.find((option) => normalizeLookupToken(option.activity) === normalizeLookupToken(activity)) ||
+      null;
+
+    const fallbackState = baseState || inspectionData;
+    const selectedChecklist = eligibleChecklists.find((checklist: any) => checklist.id === preset?.checklistId) || null;
+
+    return {
+      ...fallbackState,
+      tipoInspecao: preset?.activity || activity,
+      checklistId: preset?.checklistId || '',
+      prioridade:
+        preset?.priority ||
+        getInspectionPriorityFromSource(preset?.activity || activity, selectedChecklist) ||
+        fallbackState.prioridade ||
+        'Baixa',
+    };
+  };
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [urlFilter, setUrlFilter] = useState<string>('');
 
@@ -352,9 +450,21 @@ export default function InspecoesPage() {
 
   const getResolvedDate = (item: any) => item.data || item.proximaInspecao;
 
-  const agendadas = allInspecoes.filter(i => {
+  const todas = allInspecoes.filter(i => {
     const rs = getResolvedStatus(i);
     return rs === 'Agendada' || rs === 'Em andamento' || rs === 'Atrasada';
+  });
+
+  const emAndamento = allInspecoes.filter(i => {
+    return getResolvedStatus(i) === 'Em andamento';
+  });
+
+  const agendadas = allInspecoes.filter(i => {
+    return getResolvedStatus(i) === 'Agendada';
+  });
+
+  const atrasadas = allInspecoes.filter(i => {
+    return getResolvedStatus(i) === 'Atrasada';
   });
 
   const realizadas = allInspecoes.filter(i => {
@@ -374,17 +484,13 @@ export default function InspecoesPage() {
     realizadas.some(ins => ins.id === a.inspection_id)
   ).length || 0;
 
-  const pendentesHoje = agendadas.filter(i => {
+  const pendentesHoje = todas.filter(i => {
     return getResolvedDate(i) === hojeDateStr;
   }).length || 0;
 
-  const emAtraso = agendadas.filter(i => {
-    return getResolvedStatus(i) === 'Atrasada';
-  }).length || 0;
+  const emAtraso = atrasadas.length || 0;
 
-  const activeExecutions = agendadas.filter(i => {
-    return getResolvedStatus(i) === 'Em andamento';
-  }).length || 0;
+  const activeExecutions = emAndamento.length || 0;
 
   const checklistsTabItems = useMemo(() => {
     return checklists.map((c: any) => ({
@@ -409,7 +515,11 @@ export default function InspecoesPage() {
   }), [checklistsTabItems]);
 
   let listToPaginate: any[] = [];
-  if (activeTab === 'Agendadas') {
+  if (activeTab === 'Todas') {
+    listToPaginate = todas;
+  } else if (activeTab === 'Em andamento') {
+    listToPaginate = emAndamento;
+  } else if (activeTab === 'Agendadas') {
     listToPaginate = agendadas;
   } else if (activeTab === 'Realizadas') {
     listToPaginate = realizadas;
@@ -417,9 +527,9 @@ export default function InspecoesPage() {
     listToPaginate = checklistsTabItems;
   }
 
-  if (urlFilter === 'pendentes' && activeTab === 'Agendadas') {
+  if (urlFilter === 'pendentes' && activeTab === 'Todas') {
      listToPaginate = listToPaginate.filter(i => getResolvedStatus(i) === 'Atrasada' || getResolvedDate(i) <= hojeDateStr);
-  }
+   }
 
   const totalPages = Math.ceil(listToPaginate.length / itemsPerPage) || 1;
   const currentItems = listToPaginate.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -585,7 +695,7 @@ export default function InspecoesPage() {
       setIsDrawerOpen(true);
     }
     
-    setActiveTab('Agendadas');
+    setActiveTab('Todas');
     setIsFormDrawerOpen(false);
   };
 
@@ -649,7 +759,7 @@ export default function InspecoesPage() {
     }
   };
 
-  const activeTabMetrics = useMemo(() => {
+  const activeTabMetrics = (() => {
     const totalInspecoes = store.inspecoes.length;
     let totalNConformidades = 0;
     
@@ -667,14 +777,21 @@ export default function InspecoesPage() {
     const acoesPendentes = store.acoes.filter(a => a.status === 'Em aberto' || a.status === 'Pendente').length;
     const evidenciasAusentes = store.acoes.filter(a => a.exigeEvidencia && !a.evidenciaUrl).length;
 
-    return {
+     return {
        totalInspecoes,
+       inspecoesPeriodo: totalInspecoes,
        totalNConformidades,
        ncQueGeraramRisco: riscosInspecao,
        acoesPendentes,
-       evidenciasAusentes
-    };
-  }, [store.inspecoes, store.riscos, store.acoes]);
+       evidenciasAusentes,
+       todas: todas.length,
+       emAndamento: emAndamento.length,
+       agendadas: agendadas.length,
+       realizadas: realizadas.length,
+       checklists: checklistsTabItems.length,
+       atrasadas: atrasadas.length,
+     };
+  })();
 
   if (!mounted) return null;
 
@@ -713,17 +830,27 @@ export default function InspecoesPage() {
                 Exportar
               </button>
               <button 
-                onClick={() => {
-                  setFormType('Inspecao');
-                  setInspectionStep(1);
-                  setInspectionData({ 
-                    tipoInspecao: '', checklistId: '', ondeUsar: '', data: new Date().toISOString().split('T')[0], responsavel: '', observacoes: '',
-                    prioridade: 'Normal', trabalhadoresExpostos: 0, perfilExposto: ''
-                  });
-                  setChecklistItems([]);
-                  setIsEditing(false);
-                  setIsFormDrawerOpen(true);
-                }}
+               onClick={() => {
+                   const firstActivityOption = inspectionActivityOptions[0];
+                   setFormType('Inspecao');
+                   setInspectionStep(1);
+                   setInspectionData(
+                     buildInspectionFormState(firstActivityOption?.activity || '', {
+                       tipoInspecao: '',
+                       checklistId: '',
+                       ondeUsar: '',
+                       data: new Date().toISOString().split('T')[0],
+                       responsavel: '',
+                       observacoes: '',
+                       prioridade: 'Baixa',
+                       trabalhadoresExpostos: 0,
+                       perfilExposto: '',
+                     }),
+                   );
+                   setChecklistItems([]);
+                   setIsEditing(false);
+                   setIsFormDrawerOpen(true);
+                 }}
                 className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-[13px] font-medium transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
                >
                 <Plus className="w-4 h-4" />
@@ -733,92 +860,97 @@ export default function InspecoesPage() {
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shrink-0 mb-6">
-            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                      <Calendar className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Inspeções do período</h3>
-                </div>
-                <div className="flex items-end justify-between">
-                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.inspecoesPeriodo}</div>
-                    <span className="text-[11px] text-blue-400 font-medium">Global</span>
-                </div>
-            </div>
-
-            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="flex items-center gap-3 mb-3">
+             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                 <div className="flex items-center gap-3 mb-3">
                     <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                      <ShieldAlert className="w-4 h-4 text-red-500" />
+                      <AlertTriangle className="w-4 h-4 text-red-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Não conformidades</h3>
-                </div>
-                <div className="flex items-end justify-between">
-                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.totalNConformidades}</div>
-                    <span className="text-[11px] text-red-400 font-medium whitespace-nowrap">Itens reprovados</span>
-                </div>
-            </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Atrasadas</h3>
+                 </div>
+                 <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.atrasadas}</div>
+                    <span className="text-[11px] text-red-400 font-medium">Exigem atenção imediata</span>
+                 </div>
+             </div>
 
-            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                 <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-blue-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por inspeção</h3>
-                </div>
-                <div className="flex items-end justify-between">
-                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.ncQueGeraramRisco}</div>
-                    <span className="text-[11px] text-orange-400 font-medium uppercase tracking-tight">Auto-gerados</span>
-                </div>
-            </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Em andamento</h3>
+                 </div>
+                 <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.emAndamento}</div>
+                    <span className="text-[11px] text-blue-400 font-medium whitespace-nowrap">Em execução agora</span>
+                 </div>
+             </div>
 
-            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="flex items-center gap-3 mb-3">
+             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                 <div className="flex items-center gap-3 mb-3">
                     <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                      <ClipboardList className="w-4 h-4 text-purple-400" />
+                      <Calendar className="w-4 h-4 text-purple-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Ações pendentes</h3>
-                </div>
-                <div className="flex items-end justify-between">
-                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.acoesPendentes}</div>
-                    <span className="text-[11px] text-purple-400 font-medium">Corretivas</span>
-                </div>
-            </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Agendadas</h3>
+                 </div>
+                 <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.agendadas}</div>
+                    <span className="text-[11px] text-purple-400 font-medium uppercase tracking-tight">Na agenda futura</span>
+                 </div>
+             </div>
 
-            <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center">
-                      <PlusCircle className="w-4 h-4 text-gray-400" />
+             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                 <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Evidências ausentes</h3>
-                </div>
-                <div className="flex items-end justify-between">
-                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.evidenciasAusentes}</div>
-                    <span className="text-[11px] text-gray-400 font-medium">Em falta</span>
-                </div>
-            </div>
-          </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Realizadas</h3>
+                 </div>
+                 <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.realizadas}</div>
+                    <span className="text-[11px] text-emerald-400 font-medium">Concluídas</span>
+                 </div>
+             </div>
 
-          <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
-             {[
-               { id: 'Agendadas', label: 'Agendadas', icon: <Calendar className="w-4 h-4" /> },
-               { id: 'Realizadas', label: 'Realizadas', icon: <CheckCircle2 className="w-4 h-4" /> },
-               { id: 'Checklists', label: 'Checklists', icon: <ListChecks className="w-4 h-4" /> }
-             ].map((tab) => (
-                <button 
-                  key={tab.id}
+             <div className="bg-[#0b0f19]/80 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
+                 <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                      <ListChecks className="w-4 h-4 text-indigo-400" />
+                    </div>
+                    <h3 className="text-[12px] font-medium text-gray-400">Checklists</h3>
+                 </div>
+                 <div className="flex items-end justify-between">
+                    <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.checklists}</div>
+                    <span className="text-[11px] text-indigo-400 font-medium">Modelos ativos</span>
+                 </div>
+             </div>
+           </div>
+
+           <div className="flex bg-[#0f172a]/80 p-1.5 rounded-2xl border border-slate-400/20 shrink-0 self-start w-full sm:w-auto overflow-x-auto custom-scrollbar gap-1 mb-6">
+              {[
+               { id: 'Todas', label: 'Todas', icon: <ClipboardList className="w-4 h-4" />, count: activeTabMetrics.todas },
+               { id: 'Em andamento', label: 'Em andamento', icon: <Play className="w-4 h-4" />, count: activeTabMetrics.emAndamento },
+               { id: 'Agendadas', label: 'Agendadas', icon: <Calendar className="w-4 h-4" />, count: activeTabMetrics.agendadas },
+               { id: 'Realizadas', label: 'Realizadas', icon: <CheckCircle2 className="w-4 h-4" />, count: activeTabMetrics.realizadas },
+               { id: 'Checklists', label: 'Checklists', icon: <ListChecks className="w-4 h-4" />, count: activeTabMetrics.checklists }
+              ].map((tab) => (
+                 <button 
+                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id as any); setCurrentPage(1); setIsDrawerOpen(false); setIsFormDrawerOpen(false); }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start whitespace-nowrap ${
                     activeTab === tab.id 
                       ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
                       : 'bg-transparent text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
                   }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-             ))}
-          </div>
+                 >
+                   {tab.icon}
+                   {tab.label}
+                   <span className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${activeTab === tab.id ? 'bg-white/10 text-white' : 'bg-white/5 text-slate-300'}`}>
+                     {tab.count}
+                   </span>
+                 </button>
+              ))}
+           </div>
 
             <div className="flex-1 overflow-hidden flex flex-col min-h-0 space-y-6">
               
@@ -1083,7 +1215,7 @@ export default function InspecoesPage() {
                     })}
                     {currentItems.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">
+                        <td colSpan={activeTab === 'Checklists' ? 9 : 10} className="px-5 py-12 text-center text-sm text-gray-500">
                            Nenhuma inspeção encontrada nesta aba.
                         </td>
                       </tr>
@@ -1648,34 +1780,32 @@ export default function InspecoesPage() {
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
                        <label className="text-[13px] font-bold text-gray-300">Tipo de inspeção <span className="text-red-500">*</span></label>
-                       <input 
-                         type="text" 
-                         placeholder="Ex: Trabalho em altura" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
-                         value={inspectionData.tipoInspecao} 
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           let newChecklistId = inspectionData.checklistId;
-                           if (val.trim().length > 3) {
-                             const search = val.toLowerCase();
-                              const match = checklists.find(c => {
-                                const title = getChecklistTitle(c).toLowerCase();
-                                return title.includes(search) || search.includes(title.replace('checklist', '').trim());
-                              });
-                             if (match) newChecklistId = match.id;
-                           }
-                           setInspectionData({...inspectionData, tipoInspecao: val, checklistId: newChecklistId});
-                         }}
-                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Checklist vinculado <span className="text-red-500">*</span></label>
-                       <select 
-                         value={inspectionData.checklistId} disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'} 
-                         onChange={(e) => setInspectionData({...inspectionData, checklistId: e.target.value})}
-                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
-                       >
-                         <option value="">Selecione um modelo</option>
+                     <select
+                       disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                       value={inspectionData.tipoInspecao}
+                       onChange={(e) => {
+                         const activity = e.target.value;
+                         setInspectionData(buildInspectionFormState(activity, inspectionData));
+                       }}
+                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                     >
+                      <option value="">Selecione o tipo de inspeção</option>
+                      {inspectionActivityOptions.map((option) => (
+                        <option key={`${option.pacote}-${option.activity}`} value={option.activity}>
+                          {option.activity}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-bold text-gray-300">Checklist vinculado <span className="text-red-500">*</span></label>
+                    <select 
+                      value={inspectionData.checklistId}
+                      disabled
+                      onChange={(e) => setInspectionData({...inspectionData, checklistId: e.target.value})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    >
+                      <option value="">Selecione um modelo</option>
                           {filteredChecklistsForForm.map(c => <option key={c.id} value={c.id}>{getChecklistTitle(c)}</option>)}
                        </select>
                      </div>
