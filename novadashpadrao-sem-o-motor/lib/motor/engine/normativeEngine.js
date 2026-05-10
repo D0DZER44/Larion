@@ -1,21 +1,30 @@
 import { addDaysToIso } from "../core/dateUtils.js";
 import { generateId } from "../core/idUtils.js";
 import { calculatePriority } from "./severityEngine.js";
-import { findPackageById, findPackageOfNR } from "../nrs/nrPackages.js";
+import { findPackageById, findPackageOfNR, getActivePackages } from "../nrs/nrPackages.js";
 import { findSegmentById } from "../nrs/nrSegments.js";
 import { NR_ACTIVITY_TO_NRS, NR_RULES, listRulesByActivity } from "../nrs/nrRules.js";
+import { getActivityById } from "../nrs/activityTemplates.js";
+
+function normalizeRuleResponse(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
 function shouldTriggerRule(rule, answer = {}) {
-  const response = answer.resposta || answer.answer || "pendente";
+  const response = normalizeRuleResponse(answer.resposta || answer.answer || "pendente");
   const evidences = Array.isArray(answer.evidencias) ? answer.evidencias : [];
 
   switch (rule.condicaoDisparo) {
     case "ANSWER_NEGATIVE":
-      return response === "não";
+      return response === "nao";
     case "ANSWER_POSITIVE":
       return response === "sim";
     case "ANSWER_NA":
-      return response === "não-aplicável";
+      return response === "nao-aplicavel";
     case "EVIDENCE_MISSING":
       return rule.exigeEvidencia && evidences.length === 0;
     case "ALWAYS":
@@ -25,14 +34,69 @@ function shouldTriggerRule(rule, answer = {}) {
   }
 }
 
+function normalizeLookupToken(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveActivityNRs(activityType) {
+  if (NR_ACTIVITY_TO_NRS[activityType]) return NR_ACTIVITY_TO_NRS[activityType];
+  const normalized = normalizeLookupToken(activityType);
+  const matchedKey = Object.keys(NR_ACTIVITY_TO_NRS).find((key) => normalizeLookupToken(key) === normalized);
+  return matchedKey ? NR_ACTIVITY_TO_NRS[matchedKey] : [];
+}
+
+function resolveExplicitActivePackageIds(options = {}) {
+  const hasPackageConfig =
+    Array.isArray(options.rulePackages) ||
+    Array.isArray(options.packages) ||
+    Array.isArray(options.activePackages);
+
+  if (!hasPackageConfig) return null;
+
+  if (Array.isArray(options.activePackages)) {
+    return options.activePackages
+      .map((item) => (typeof item === "string" ? item : item?.id || item?.name))
+      .filter(Boolean);
+  }
+
+  return getActivePackages(options).map((item) => item.id);
+}
+
+function isActivityEnabledForPackages(activityType, activePackageIds) {
+  if (!Array.isArray(activePackageIds)) return true;
+  const activity = getActivityById(activityType);
+  if (!activity) return true;
+  const packageIds = Array.isArray(activity.packageIds) ? activity.packageIds : [];
+  if (packageIds.length === 0) return true;
+  return packageIds.some((packageId) => activePackageIds.includes(packageId));
+}
+
 export function getApplicableNRs(activityType, sector, options = {}) {
-  const activityNRs = NR_ACTIVITY_TO_NRS[activityType] || [];
+  const activePackageIds = resolveExplicitActivePackageIds(options);
+  if (!isActivityEnabledForPackages(activityType, activePackageIds)) {
+    return [];
+  }
+
+  const activityNRs = resolveActivityNRs(activityType);
   const segmentNRs = findSegmentById(options.segmento || sector)?.nrsRecomendadas || [];
-  const packageNRs = options.pacote ? (findPackageById(options.pacote)?.nrs || []) : [];
+  const packageIsAllowed =
+    !Array.isArray(activePackageIds) ||
+    !options.pacote ||
+    activePackageIds.includes(findPackageById(options.pacote)?.id || options.pacote);
+  const packageNRs = options.pacote && packageIsAllowed ? (findPackageById(options.pacote)?.nrs || []) : [];
   return [...new Set([...activityNRs, ...segmentNRs, ...packageNRs])];
 }
 
 export function getApplicableRules(activityType, sector, options = {}) {
+  const activePackageIds = resolveExplicitActivePackageIds(options);
+  if (!isActivityEnabledForPackages(activityType, activePackageIds)) {
+    return [];
+  }
   const applicableNRs = new Set(getApplicableNRs(activityType, sector, options));
   return listRulesByActivity(activityType).filter((rule) => applicableNRs.has(rule.nr));
 }

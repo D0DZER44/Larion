@@ -3,6 +3,7 @@ import { getRiskByNRChart, getRiskBySectorChart } from "../engine/chartEngine.js
 import { generateRisksFromNonConformities } from "../engine/operationalEngine.js";
 import { calculateRiskMetrics } from "../engine/metricsEngine.js";
 import { mapStoreStateToMotorDataset, severityToTargetLevel } from "../bridge";
+import { buildAutomaticRisksFromInspections } from "./automaticRiskAdapter.js";
 
 function normalizeText(value = "") {
   return String(value)
@@ -72,11 +73,13 @@ export function buildRisksViewModel(state = {}) {
 export function buildTargetRisksViewModel(state = {}, options = {}) {
   const activePackages = new Set(options.activePackages || []);
   const includeInactivePackages = Boolean(options.includeInactivePackages);
-  const filteredRisks = (state.riscos || []).filter((risk) => {
+  const filteredManualRisks = (state.riscos || []).filter((risk) => {
     const pacote = risk?.pacote || risk?.package || "Base SST";
     if (includeInactivePackages) return true;
     return pacote === "Base SST" || activePackages.has(pacote);
   });
+  const automaticRisks = buildAutomaticRisksFromInspections(state, options);
+  const filteredRisks = [...filteredManualRisks, ...automaticRisks];
   const dataset = mapStoreStateToMotorDataset({
     ...state,
     riscos: filteredRisks,
