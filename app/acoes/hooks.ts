@@ -8,6 +8,7 @@ import { buildTargetActionsViewModel } from '@/lib/motor/adapters/actionsAdapter
 export function useAcoes() {
   const storeAcoes = useAppStore(state => state.acoes);
   const storeRiscos = useAppStore(state => state.riscos);
+  const storeInspecoes = useAppStore(state => state.inspecoes);
   const rulePackages = useAppStore(state => state.rulePackages);
   const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
   const addAcao = useAppStore(state => state.addAcao);
@@ -20,13 +21,14 @@ export function useAcoes() {
       {
         acoes: storeAcoes || [],
         riscos: storeRiscos || [],
+        inspecoes: storeInspecoes || [],
       },
       {
         activePackages: activePackageNames,
         includeInactivePackages: true,
       },
     ).actions.sort((a: ActionItem, b: ActionItem) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
-  }, [storeAcoes, storeRiscos, activePackageNames]);
+  }, [storeAcoes, storeRiscos, storeInspecoes, activePackageNames]);
 
   const acoes = useMemo(() => {
     if (showInactive) return allAcoes;
@@ -473,6 +475,20 @@ export function useAcoes() {
   const concluirAcao = (id: string, observacaoFinal?: string, validacaoPayload?: any, evidenciaPayloads?: any[]) => {
     const acaoObj = acoes.find(a => a.id === id);
     if (!acaoObj) return;
+
+    const evidenciasExistentes = Array.isArray(acaoObj.evidencia) ? acaoObj.evidencia : [];
+    const evidenciasNovas = Array.isArray(evidenciaPayloads) ? evidenciaPayloads : [];
+    const evidenciasEsperadas = Array.isArray((acaoObj as any).evidenciasEsperadas)
+      ? (acaoObj as any).evidenciasEsperadas
+      : Array.isArray((acaoObj as any).expectedEvidence)
+        ? (acaoObj as any).expectedEvidence
+        : [];
+    const exigeEvidencia = Boolean((acaoObj as any).exigeEvidencia) || evidenciasEsperadas.length > 0;
+
+    if (exigeEvidencia && evidenciasExistentes.length + evidenciasNovas.length === 0) {
+      alert('Esta ação exige evidência antes da conclusão.');
+      return;
+    }
 
     const updates: Partial<ActionItem> = {
       status: 'Concluída',
