@@ -78,6 +78,30 @@ function safeLowerText(value: unknown) {
   return safeText(value).toLowerCase();
 }
 
+function toNormalizedToken(value: unknown) {
+  return safeLowerText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function toStringList(value: unknown) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => safeText(item).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(/[;,|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 function getActionActivityLabel(action: any) {
   return safeText(action?.atividade, safeText(action?.tipoDeRisco, 'atividade'));
 }
@@ -279,6 +303,68 @@ export default function RiscosPage() {
     executorCorrecao: '',
     validadorCorrecao: ''
   });
+
+  const normativeDetection = useMemo(() => {
+    const atividade = safeText(formData.atividade).trim();
+    if (!atividade) return null;
+
+    const atividadeToken = toNormalizedToken(atividade);
+    const setorToken = toNormalizedToken(formData.setor);
+
+    const matchedRisk = combinedData.find((risk: any) => {
+      const normalizedActivity = toNormalizedToken(risk?.atividade);
+      const sameActivity =
+        normalizedActivity === atividadeToken ||
+        normalizedActivity.includes(atividadeToken) ||
+        atividadeToken.includes(normalizedActivity);
+
+      if (!sameActivity) return false;
+
+      if (!setorToken) return true;
+      return toNormalizedToken(risk?.setor) === setorToken;
+    });
+
+    if (!matchedRisk) return null;
+
+    const documents = [
+      ...toStringList(matchedRisk?.documentos),
+      ...toStringList(matchedRisk?.documentacao),
+      ...toStringList(matchedRisk?.documents),
+    ];
+
+    const ppe = [
+      ...toStringList(matchedRisk?.epi),
+      ...toStringList(matchedRisk?.epc),
+      ...toStringList(matchedRisk?.ppe),
+      ...toStringList(matchedRisk?.controles),
+    ];
+
+    return {
+      nr: safeText(matchedRisk?.nr, 'Sem NR vinculada'),
+      riskType: safeText(
+        matchedRisk?.tipoDeRisco ||
+          matchedRisk?.category ||
+          matchedRisk?.title ||
+          matchedRisk?.titulo,
+        'Leitura operacional',
+      ),
+      severity: safeText(
+        matchedRisk?.severity ||
+          matchedRisk?.severidade ||
+          matchedRisk?.grau ||
+          matchedRisk?.nivel,
+        'moderada',
+      ).toLowerCase(),
+      recommendedAction: safeText(
+        matchedRisk?.acaoRecomendada ||
+          matchedRisk?.recommendedAction ||
+          matchedRisk?.planoAcao,
+        'Sem ação recomendada consolidada até o momento.',
+      ),
+      documents: Array.from(new Set(documents)),
+      ppe: Array.from(new Set(ppe)),
+    };
+  }, [combinedData, formData.atividade, formData.setor]);
   
   const [selectedAction, setSelectedAction] = useState<RiskInstance | null>(null);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
@@ -383,7 +469,22 @@ export default function RiscosPage() {
   const storeUpdateRisco = useAppStore(state => state.updateRisco);
 
   const handleSaveForm = () => {
-    const evaluated = applyManualRules(formData);
+    if (!formData.atividade || !formData.setor) {
+      alert('Selecione a atividade operacional e o setor antes de salvar o risco.');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      titulo: formData.titulo || formData.tipoDeRisco || `Risco em ${formData.atividade}`,
+      atividade: formData.atividade,
+      setor: formData.setor,
+      status: formData.status || 'Aberto',
+      responsavel: formData.responsavel || formData.validadorCorrecao || formData.executorCorrecao || '',
+      trabalhadoresExpostos: Number(formData.trabalhadoresExpostos || 0),
+    };
+
+    const evaluated = applyManualRules(payload);
     if (editingItem) {
       storeUpdateRisco(editingItem.id, evaluated);
     } else {
@@ -527,7 +628,7 @@ export default function RiscosPage() {
   const criticalRiskTrend = useMemo(
     () =>
       buildRiskMetricTrend(
-        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado' && risk.nivel === 'CrÃ­tico') as any[],
+        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado' && risk.nivel === 'Crítico') as any[],
         () => 1,
       ),
     [combinedData],
@@ -543,9 +644,9 @@ export default function RiscosPage() {
 
   const topCards = [
     { id: 'c9', label: 'Total de riscos', val: combinedData.length, sub: getTrendDeltaLabel(totalRiskTrend, ' risco(s)'), icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', trend: totalRiskTrend, sparkColor: SPARK_COLORS.purple },
-    { id: 'c5', label: 'CrÃ­ticos em aberto', val: criticosCount, sub: getTrendDeltaLabel(criticalRiskTrend, ' crÃ­tico(s)'), icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: criticalRiskTrend, sparkColor: SPARK_COLORS.red },
+    { id: 'c5', label: 'Críticos em aberto', val: criticosCount, sub: getTrendDeltaLabel(criticalRiskTrend, ' crítico(s)'), icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: criticalRiskTrend, sparkColor: SPARK_COLORS.red },
     { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(totalMultaAberto), sub: getTrendDeltaLabel(multaTrend), icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', trend: multaTrend, sparkColor: SPARK_COLORS.yellow },
-    { id: 'c11', label: 'Chance mÃ©dia de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
   const nrMetrics = useMemo(() => getNrMetrics({ inspections: inspecoes || [], risks: combinedData, actions: storeAcoes }), [inspecoes, combinedData, storeAcoes]);

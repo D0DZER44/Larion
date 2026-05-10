@@ -82,11 +82,11 @@ const CARD_TONE_MAP = {
 };
 
 const CENTRAL_TABS = [
-  { id: "VisaoGeral", label: "Visao Geral", icon: BarChart2 },
-  { id: "Diagnostico", label: "Diagnostico", icon: Target },
-  { id: "Tendencia", label: "Tendencia", icon: TrendingUp },
+  { id: "VisaoGeral", label: "Visão Geral", icon: BarChart2 },
+  { id: "Diagnostico", label: "Diagnóstico", icon: Target },
+  { id: "Tendencia", label: "Tendência", icon: TrendingUp },
   { id: "Gargalos", label: "Gargalos", icon: ShieldAlert },
-  { id: "Historico", label: "Historico", icon: History },
+  { id: "Historico", label: "Histórico", icon: History },
 ] as const;
 
 type CentralTab = (typeof CENTRAL_TABS)[number]["id"];
@@ -141,7 +141,7 @@ export default function CentralPage() {
     fullMark: 100,
   }));
 
-  const activeTabLabel = CENTRAL_TABS.find((tab) => tab.id === activeTab)?.label || "Visao Geral";
+  const activeTabLabel = CENTRAL_TABS.find((tab) => tab.id === activeTab)?.label || "Visão Geral";
   const overviewCards = model.topCards.slice(0, 4);
   const overviewRankings = model.rankings.slice(0, 3);
   const overviewTimeline = model.timeline.slice(0, 3);
@@ -187,13 +187,13 @@ export default function CentralPage() {
             <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-300">{model.executive.summary}</p>
             <div className="mt-6 grid gap-3 md:grid-cols-2">
               <div className="rounded-2xl border border-orange-500/15 bg-orange-500/5 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-300">Maior friccao</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-300">Maior fricção</p>
                 <p className="mt-2 text-sm leading-6 text-gray-200">{model.executive.scoreLabel}</p>
               </div>
               <div className="rounded-2xl border border-blue-500/15 bg-blue-500/5 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-300">Leitura do periodo</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-300">Leitura do período</p>
                 <p className="mt-2 text-sm leading-6 text-gray-200">
-                  Radar consolidado com tendencia mensal, gargalos operacionais e impacto dos eventos no score.
+                  Radar consolidado com tendência mensal, gargalos operacionais e impacto dos eventos no score.
                 </p>
               </div>
             </div>
@@ -203,8 +203,8 @@ export default function CentralPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           {model.criticalAlerts.length === 0 ? (
             <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">Alertas criticos</p>
-              <p className="mt-4 text-sm leading-6 text-gray-300">Sem alertas criticos gerados pelo motor neste momento.</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">Alertas críticos</p>
+              <p className="mt-4 text-sm leading-6 text-gray-300">Sem alertas críticos gerados pelo motor neste momento.</p>
             </div>
           ) : (
             model.criticalAlerts.map((alert: any) => (
@@ -222,6 +222,70 @@ export default function CentralPage() {
               </div>
             ))
           )}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderOverviewPulseSection = () => (
+    <section className="grid gap-6 xl:grid-cols-[0.9fr,1.1fr]">
+      <div className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Painel de maturidade</p>
+            <h2 className="mt-2 text-xl font-bold text-white">Radar resumido dos eixos críticos</h2>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-gray-300">
+            Score atual: <span className="font-bold text-white">{model.executive.score}</span>
+          </div>
+        </div>
+
+        <div className="h-[320px] rounded-[24px] border border-white/10 bg-[#111827]/70 p-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={radarData}>
+              <PolarGrid stroke="rgba(148,163,184,0.18)" />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: "#cbd5e1", fontSize: 11, fontWeight: 600 }} />
+              <PolarRadiusAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} />
+              <Radar
+                name="Maturidade"
+                dataKey="score"
+                stroke="#a855f7"
+                fill="rgba(168,85,247,0.28)"
+                fillOpacity={1}
+                strokeWidth={2.5}
+              />
+              <Tooltip content={<PremiumTooltip />} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Tendência consolidada</p>
+            <h2 className="mt-2 text-xl font-bold text-white">Resumo mensal do score e da pressão operacional</h2>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-gray-300">
+            Base: {model.trend.latestLabel}
+          </div>
+        </div>
+
+        <div className="h-[320px] rounded-[24px] border border-white/10 bg-[#111827]/70 p-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={model.trend.series}>
+              <CartesianGrid stroke="rgba(148,163,184,0.12)" strokeDasharray="3 3" />
+              <XAxis dataKey="label" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="score" domain={[0, 100]} tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="count" orientation="right" tick={{ fill: "#64748b", fontSize: 12 }} allowDecimals={false} axisLine={false} tickLine={false} />
+              <Tooltip content={<PremiumTooltip />} />
+              <Legend wrapperStyle={{ color: "#cbd5e1", fontSize: 12 }} />
+              <Line yAxisId="score" type="monotone" dataKey="score" stroke="#a855f7" strokeWidth={3} dot={{ r: 3 }} name="Score" />
+              <Line yAxisId="score" type="monotone" dataKey="conformidadeNr" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 2 }} name="Conformidade NR" />
+              <Line yAxisId="count" type="monotone" dataKey="riscosCríticos" stroke="#ef4444" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 2 }} name="Riscos críticos" />
+              <Line yAxisId="count" type="monotone" dataKey="acoesVencidas" stroke="#f97316" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 2 }} name="Ações vencidas" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </section>
@@ -317,7 +381,7 @@ export default function CentralPage() {
       </div>
 
       <div className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
-        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Diagnostico automatico</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Diagnóstico automático</p>
         <h2 className="mt-2 text-xl font-bold text-white">Leitura orientada pelo motor</h2>
 
         <div className="mt-6 space-y-4">
@@ -354,8 +418,8 @@ export default function CentralPage() {
     <section className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
       <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Tendencia mensal</p>
-          <h2 className="mt-2 text-xl font-bold text-white">Evolucao do radar de maturidade</h2>
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Tendência mensal</p>
+          <h2 className="mt-2 text-xl font-bold text-white">Evolução do radar de maturidade</h2>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-gray-300">
           Base: {model.trend.latestLabel} e 5 meses anteriores
@@ -373,9 +437,9 @@ export default function CentralPage() {
             <Legend wrapperStyle={{ color: "#cbd5e1", fontSize: 12 }} />
             <Line yAxisId="score" type="monotone" dataKey="score" stroke="#a855f7" strokeWidth={3} dot={{ r: 4 }} name="Score de maturidade" />
             <Line yAxisId="score" type="monotone" dataKey="conformidadeNr" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} name="Conformidade NR" />
-            <Line yAxisId="count" type="monotone" dataKey="riscosCriticos" stroke="#ef4444" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Riscos criticos" />
-            <Line yAxisId="count" type="monotone" dataKey="acoesVencidas" stroke="#f97316" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Acoes vencidas" />
-            <Line yAxisId="count" type="monotone" dataKey="evidenciasPendentes" stroke="#eab308" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Evidencias pendentes" />
+            <Line yAxisId="count" type="monotone" dataKey="riscosCríticos" stroke="#ef4444" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Riscos críticos" />
+            <Line yAxisId="count" type="monotone" dataKey="acoesVencidas" stroke="#f97316" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Ações vencidas" />
+            <Line yAxisId="count" type="monotone" dataKey="evidenciasPendentes" stroke="#eab308" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} name="Evidências pendentes" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -385,7 +449,7 @@ export default function CentralPage() {
   const renderRankingsSection = () => (
     <section className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
       <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Ranking de gargalos</p>
-      <h2 className="mt-2 text-xl font-bold text-white">Onde o score esta travando</h2>
+      <h2 className="mt-2 text-xl font-bold text-white">Onde o score está travando</h2>
 
       <div className="mt-6 space-y-3">
         {model.rankings.map((item: any, index: number) => (
@@ -423,7 +487,7 @@ export default function CentralPage() {
   const renderTimelineSection = () => (
     <section className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
       <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-gray-500">Linha do tempo inteligente</p>
-      <h2 className="mt-2 text-xl font-bold text-white">Inspecao, risco, acao, prazo e evidencia conectados ao score</h2>
+      <h2 className="mt-2 text-xl font-bold text-white">Inspeção, risco, ação, prazo e evidência conectados ao score</h2>
 
       {model.timeline.length === 0 ? (
         <div className="mt-6 rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
@@ -504,6 +568,7 @@ export default function CentralPage() {
   const renderOverviewSection = () => (
     <div className="space-y-6">
       {renderExecutiveSection()}
+      {renderOverviewPulseSection()}
 
       <section className="rounded-[28px] border border-white/10 bg-[#0b0f19]/85 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -553,7 +618,7 @@ export default function CentralPage() {
           <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">Ultimos impactos</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">Últimos impactos</p>
                 <h3 className="mt-2 text-lg font-bold text-white">Eventos que mexeram no score</h3>
               </div>
               <button
@@ -614,12 +679,12 @@ export default function CentralPage() {
           </div>
 
           <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">Sinais de atencao</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">Sinais de atenção</p>
             <div className="mt-4 grid gap-3">
               {overviewAlerts.length === 0 ? (
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                  <p className="text-sm font-bold text-emerald-300">Sem alertas criticos abertos</p>
-                  <p className="mt-1 text-sm leading-6 text-gray-300">O motor nao identificou alertas urgentes adicionais para esta janela.</p>
+                  <p className="text-sm font-bold text-emerald-300">Sem alertas críticos abertos</p>
+                  <p className="mt-1 text-sm leading-6 text-gray-300">O motor não identificou alertas urgentes adicionais para esta janela.</p>
                 </div>
               ) : (
                 overviewAlerts.map((alert: any) => (
@@ -636,7 +701,7 @@ export default function CentralPage() {
                   onClick={() => handleNavigate(firstTimeline.href)}
                   className="rounded-2xl border border-white/10 bg-black/20 p-4 text-left transition-colors hover:bg-white/[0.04]"
                 >
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500">Proximo detalhe util</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500">Próximo detalhe útil</p>
                   <h4 className="mt-2 text-sm font-bold text-white">{firstTimeline.title}</h4>
                   <p className="mt-1 text-sm leading-6 text-gray-400">{firstTimeline.description}</p>
                   <span className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-purple-300">
@@ -682,18 +747,18 @@ export default function CentralPage() {
             </div>
             <div>
               <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.32em] text-purple-300/80">
-                <span>Central de inteligencia</span>
+              <span>Central de inteligência</span>
                 <span className="text-white/20">&gt;</span>
                 <span className="text-white/90">{activeTabLabel}</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-white">Radar de Maturidade SST</h1>
-              <p className="mt-1 text-sm text-gray-400">Leitura executiva da maturidade operacional em seguranca do trabalho.</p>
+              <p className="mt-1 text-sm text-gray-400">Leitura executiva da maturidade operacional em segurança do trabalho.</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-xl border border-white/10 bg-[#0b0f19]/80 px-4 py-2.5 text-sm font-medium text-gray-300 backdrop-blur-xl">
-              Ultimos 6 meses
+              Últimos 6 meses
             </div>
             <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f19]/80 px-4 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5">
               <Filter className="h-4 w-4" /> Filtros
@@ -705,7 +770,7 @@ export default function CentralPage() {
               onClick={() => handleNavigate("/operacao/riscos")}
               className="flex items-center gap-2 rounded-xl border border-purple-500/40 bg-purple-600/90 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(124,58,237,0.25)] transition-colors hover:bg-purple-600"
             >
-              Abrir operacao <ArrowRight className="h-4 w-4" />
+              Abrir operação <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </header>
@@ -720,13 +785,13 @@ export default function CentralPage() {
               <h2 className="text-2xl font-bold text-white md:text-3xl">Radar aguardando base operacional</h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-400 md:text-base">
                 Esta central passa a ler dados reais de inspecoes, riscos, acoes, evidencias, prazos, responsaveis e NRs.
-                Assim que o fluxo operacional gerar registros, o radar calcula score, tendencia, gargalos e diagnosticos automaticamente.
+                Assim que o fluxo operacional gerar registros, o radar calcula score, tendência, gargalos e diagnósticos automaticamente.
               </p>
               <div className="mt-8 grid w-full gap-4 md:grid-cols-3">
                 {[
-                  { title: "Inspecoes", description: "Planejamento e execucao alimentam prevencao e conformidade.", href: "/operacao/inspecoes" },
-                  { title: "Riscos", description: "Criticidade e reincidencia ajustam o score mensal.", href: "/operacao/riscos" },
-                  { title: "Acoes", description: "Prazo, evidencia e disciplina fecham o ciclo de maturidade.", href: "/operacao/acoes" },
+                  { title: "Inspeções", description: "Planejamento e execução alimentam prevenção e conformidade.", href: "/operacao/inspecoes" },
+                  { title: "Riscos", description: "Criticidade e reincidência ajustam o score mensal.", href: "/operacao/riscos" },
+                  { title: "Ações", description: "Prazo, evidência e disciplina fecham o ciclo de maturidade.", href: "/operacao/acoes" },
                 ].map((item) => (
                   <button
                     key={item.title}
