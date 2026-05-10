@@ -1,12 +1,21 @@
-// @ts-nocheck
-
 import { listActiveNRs } from "./nrs/nrCatalog.js";
-import { findPackageOfNR, NR_PACKAGES } from "./nrs/nrPackages.js";
+import { findPackageOfNR } from "./nrs/nrPackages.js";
 import { listSegmentsForNR } from "./nrs/nrSegments.js";
-import { NR_ACTIVITY_TO_NRS, NR_RULES } from "./nrs/nrRules.js";
-import { generateNonConformitiesFromInspection, generateRisksFromNonConformities, generateActionsFromRisks } from "./engine/operationalEngine.js";
-import { estimateRiskFinancialImpact, estimateActionDelayImpact } from "./engine/financialImpactEngine.js";
-import { calculateOperationalCriticality, calculatePriority, calculateSeverity } from "./engine/severityEngine.js";
+import { NR_RULES } from "./nrs/nrRules.js";
+import {
+  generateNonConformitiesFromInspection,
+  generateRisksFromNonConformities,
+  generateActionsFromRisks,
+} from "./engine/operationalEngine.js";
+import {
+  estimateRiskFinancialImpact,
+  estimateActionDelayImpact,
+} from "./engine/financialImpactEngine.js";
+import {
+  calculateOperationalCriticality,
+  calculatePriority,
+  calculateSeverity,
+} from "./engine/severityEngine.js";
 
 const HUMAN_ACTIVITY_BY_CODE = {
   "uso-de-epi": "Uso de EPI",
@@ -136,10 +145,14 @@ export function mapHumanActivityToCode(value = "") {
   const normalized = normalizeText(value);
   if (!normalized) return "uso-de-epi";
 
-  const exactMatch = Object.entries(ACTIVITY_CODE_BY_TEXT).find(([key]) => normalized === key);
+  const exactMatch = Object.entries(ACTIVITY_CODE_BY_TEXT).find(
+    ([key]) => normalized === key,
+  );
   if (exactMatch) return exactMatch[1];
 
-  const containsMatch = Object.entries(ACTIVITY_CODE_BY_TEXT).find(([key]) => normalized.includes(key));
+  const containsMatch = Object.entries(ACTIVITY_CODE_BY_TEXT).find(([key]) =>
+    normalized.includes(key),
+  );
   if (containsMatch) return containsMatch[1];
 
   return "uso-de-epi";
@@ -157,9 +170,13 @@ export function getActivityCodesFromOrganization(organization = {}) {
   if (organization.segmento) {
     const segmentText = normalizeText(organization.segmento);
     if (segmentText.includes("constr")) return ["construcao-civil", "trabalho-em-altura"];
-    if (segmentText.includes("ind")) return ["maquina-sem-protecao", "eletricidade", "uso-de-epi"];
+    if (segmentText.includes("ind")) {
+      return ["maquina-sem-protecao", "eletricidade", "uso-de-epi"];
+    }
     if (segmentText.includes("log")) return ["movimentacao-de-carga", "uso-de-epi"];
-    if (segmentText.includes("saude") || segmentText.includes("hospital")) return ["uso-de-epi", "ergonomia"];
+    if (segmentText.includes("saude") || segmentText.includes("hospital")) {
+      return ["uso-de-epi", "ergonomia"];
+    }
   }
 
   return ["uso-de-epi"];
@@ -215,7 +232,9 @@ export function buildFixedNrChecklists() {
     });
   });
 
-  return Array.from(groups.values()).sort((left, right) => left.titulo.localeCompare(right.titulo));
+  return Array.from(groups.values()).sort((left, right) =>
+    left.titulo.localeCompare(right.titulo),
+  );
 }
 
 export function buildInitialRiskRules() {
@@ -245,7 +264,9 @@ export function buildNrMatrix() {
     const segments = listSegmentsForNR(nr.codigo).map((segment) => segment.id);
     const maxSeverity = rules.reduce((current, rule) => {
       const levels = ["Baixa", "Média", "Alta", "Crítica"];
-      return levels.indexOf(rule.severidadePadrao) > levels.indexOf(current) ? rule.severidadePadrao : current;
+      return levels.indexOf(rule.severidadePadrao) > levels.indexOf(current)
+        ? rule.severidadePadrao
+        : current;
     }, "Baixa");
 
     return {
@@ -254,7 +275,9 @@ export function buildNrMatrix() {
       descricaoCurta: nr.nome,
       pacote: nr.pacote,
       segmentosAplicaveis: segments.length > 0 ? segments : ["Todos"],
-      atividadesRelacionadas: rules.map((rule) => getHumanActivityLabel(rule.atividadeRelacionada)),
+      atividadesRelacionadas: rules.map((rule) =>
+        getHumanActivityLabel(rule.atividadeRelacionada),
+      ),
       tipo: nr.pacote === "Base SST" ? "geral" : "setorial",
       ativa: nr.ativa,
       prioridadePadrao: maxSeverity,
@@ -269,7 +292,9 @@ export function getApplicableNrMatrix(params = {}) {
   const matrix = buildNrMatrix();
   const selectedPackages = new Set(["Base SST", ...(params.pacotesAtivos || [])]);
   const selectedSegment = params.segmentoOrganizacao || "Todos";
-  const selectedActivityCodes = (params.atividadesCriticas || []).map((activity) => mapHumanActivityToCode(activity));
+  const selectedActivityCodes = (params.atividadesCriticas || []).map((activity) =>
+    mapHumanActivityToCode(activity),
+  );
 
   return matrix.filter((nr) => {
     const packageMatch = selectedPackages.has(nr.pacote);
@@ -279,7 +304,9 @@ export function getApplicableNrMatrix(params = {}) {
       nr.segmentosAplicaveis.includes(selectedSegment);
     const activityMatch =
       selectedActivityCodes.length === 0 ||
-      nr.atividadesRelacionadas.some((activity) => selectedActivityCodes.includes(mapHumanActivityToCode(activity)));
+      nr.atividadesRelacionadas.some((activity) =>
+        selectedActivityCodes.includes(mapHumanActivityToCode(activity)),
+      );
 
     return packageMatch || (segmentMatch && activityMatch);
   });
@@ -291,9 +318,15 @@ export function mapInspectionItemsToAnswers(items = []) {
     const mappedStatus =
       status === "sim" || status === "conforme"
         ? "sim"
-        : status === "nao" || status === "não" || status === "parcialmente" || status === "nao conforme"
+        : status === "nao" ||
+            status === "não" ||
+            status === "parcialmente" ||
+            status === "nao conforme"
           ? "não"
-          : status === "n/a" || status === "na" || status === "não aplicável" || status === "nao aplicavel"
+          : status === "n/a" ||
+              status === "na" ||
+              status === "não aplicável" ||
+              status === "nao aplicavel"
             ? "não-aplicável"
             : "pendente";
 
@@ -311,7 +344,12 @@ export function mapInspectionItemsToAnswers(items = []) {
 }
 
 export function mapTargetInspectionToMotor(inspection = {}) {
-  const checklistName = inspection.checklist || inspection.tipoInspecao || inspection.titulo || inspection.nome || "Inspeção";
+  const checklistName =
+    inspection.checklist ||
+    inspection.tipoInspecao ||
+    inspection.titulo ||
+    inspection.nome ||
+    "Inspeção";
   return {
     id: inspection.id,
     titulo: inspection.titulo || inspection.title || checklistName,
@@ -319,11 +357,20 @@ export function mapTargetInspectionToMotor(inspection = {}) {
     responsavel: inspection.responsavel || inspection.inspector || "A definir",
     atividades: [mapHumanActivityToCode(inspection.tipoInspecao || checklistName)],
     status: inspection.status || inspection.situacao || "Agendada",
-    data: toIsoDate(inspection.data || inspection.proximaInspecao || inspection.created_at || inspection.criadoEm),
+    data: toIsoDate(
+      inspection.data ||
+        inspection.proximaInspecao ||
+        inspection.created_at ||
+        inspection.criadoEm,
+    ),
     hasNonConformity: Boolean(inspection.nonConformities),
     observacao: inspection.observacoes || inspection.observacao || "",
-    createdAt: toTimestamp(inspection.criadoEm || inspection.created_at || inspection.createdAt),
-    updatedAt: toTimestamp(inspection.atualizadoEm || inspection.updated_at || inspection.updatedAt),
+    createdAt: toTimestamp(
+      inspection.criadoEm || inspection.created_at || inspection.createdAt,
+    ),
+    updatedAt: toTimestamp(
+      inspection.atualizadoEm || inspection.updated_at || inspection.updatedAt,
+    ),
     checklistAnswers: mapInspectionItemsToAnswers(inspection.items || []),
   };
 }
@@ -335,7 +382,11 @@ export function mapTargetRiskToMotor(risk = {}) {
     titulo: risk.titulo || risk.title || risk.atividade || "Risco operacional",
     descricao: risk.descricao || "",
     setor: risk.setor || risk.sector_id || "Geral",
-    severidade: calculateSeverity({ severidade: severityToTargetLevel(risk.nivel || risk.prioridade || risk.severidade || "Médio") }),
+    severidade: calculateSeverity({
+      severidade: severityToTargetLevel(
+        risk.nivel || risk.prioridade || risk.severidade || "Médio",
+      ),
+    }),
     prioridade: priorityToTarget(risk.prioridade || risk.priority || risk.nivel || "Média"),
     status: statusToMotorRisk(risk.status || "Aberto"),
     pacote: risk.pacote || risk.package || findPackageOfNR(risk.nr)?.id || "Base SST",
@@ -363,12 +414,17 @@ export function mapTargetActionToMotor(action = {}) {
     origem: action.origem || "manual",
     createdAt: toTimestamp(action.criadoEm || action.created_at || action.createdAt),
     updatedAt: toTimestamp(action.atualizadoEm || action.updated_at || action.updatedAt),
-    completedAt: action.status === "Concluída" ? toTimestamp(action.updated_at || action.updatedAt) : undefined,
+    completedAt:
+      action.status === "Concluída"
+        ? toTimestamp(action.updated_at || action.updatedAt)
+        : undefined,
   };
 }
 
 export function mapStoreStateToMotorDataset(state = {}) {
-  const inspections = (state.inspecoes || []).map((inspection) => mapTargetInspectionToMotor(inspection));
+  const inspections = (state.inspecoes || []).map((inspection) =>
+    mapTargetInspectionToMotor(inspection),
+  );
   const risks = (state.riscos || []).map((risk) => mapTargetRiskToMotor(risk));
   const actions = (state.acoes || []).map((action) => mapTargetActionToMotor(action));
   const auditLogs = (state.logs || []).map((log) => ({
@@ -417,11 +473,16 @@ export function mapStoreStateToMotorDataset(state = {}) {
 }
 
 function buildFallbackNonConformities(inspection, answers, generatedNonConformities) {
-  const generatedKeys = new Set(generatedNonConformities.map((item) => item.questionId || item.ruleId || item.pergunta));
+  const generatedKeys = new Set(
+    generatedNonConformities.map((item) => item.questionId || item.ruleId || item.pergunta),
+  );
 
   return answers
     .filter((answer) => answer.resposta === "não")
-    .filter((answer) => !generatedKeys.has(answer.perguntaId) && !generatedKeys.has(answer.pergunta))
+    .filter(
+      (answer) =>
+        !generatedKeys.has(answer.perguntaId) && !generatedKeys.has(answer.pergunta),
+    )
     .map((answer) => ({
       id: `nc-fallback-${inspection.id}-${answer.perguntaId}`,
       inspectionId: inspection.id,
@@ -455,8 +516,24 @@ function mapMotorRiskToTarget(risk, inspection) {
     multaEstimada: risk.multaEstimada,
     nr: risk.nr,
   });
-  const chanceIncidente = Math.max(5, Math.min(95, calculateOperationalCriticality({ severidade: risk.severidade, recurrence: risk.recorrencia || 0 }) + 15));
-  const impactoOperacional = chanceIncidente >= 75 ? "Crítico" : chanceIncidente >= 50 ? "Alto" : chanceIncidente >= 25 ? "Médio" : "Baixo";
+  const chanceIncidente = Math.max(
+    5,
+    Math.min(
+      95,
+      calculateOperationalCriticality({
+        severidade: risk.severidade,
+        recurrence: risk.recorrencia || 0,
+      }) + 15,
+    ),
+  );
+  const impactoOperacional =
+    chanceIncidente >= 75
+      ? "Crítico"
+      : chanceIncidente >= 50
+        ? "Alto"
+        : chanceIncidente >= 25
+          ? "Médio"
+          : "Baixo";
 
   return {
     id: risk.id,
@@ -480,7 +557,12 @@ function mapMotorRiskToTarget(risk, inspection) {
     created_at: new Date(risk.createdAt).toISOString(),
     atualizadoEm: new Date(risk.updatedAt).toISOString(),
     updated_at: new Date(risk.updatedAt).toISOString(),
-    atividade: inspection.tipoInspecao || inspection.checklist || getHumanActivityLabel(mapHumanActivityToCode(inspection.tipoInspecao || inspection.checklist || "")),
+    atividade:
+      inspection.tipoInspecao ||
+      inspection.checklist ||
+      getHumanActivityLabel(
+        mapHumanActivityToCode(inspection.tipoInspecao || inspection.checklist || ""),
+      ),
     tipoDeRisco: risk.titulo,
     origem: "Inspeção / Checklist",
     inspection_id: risk.inspectionId,
@@ -534,13 +616,21 @@ function mapMotorActionToTarget(action, risk, inspection) {
 export function synchronizeInspectionWithMotor(inspectionInput = {}, state = {}) {
   const inspection = mapTargetInspectionToMotor(inspectionInput);
   const answers = mapInspectionItemsToAnswers(inspectionInput.items || []);
-  const generatedNonConformities = generateNonConformitiesFromInspection(inspection, answers, {
-    activityType: inspection.atividades?.[0] || "uso-de-epi",
-    sector: inspection.setor,
-    pacote: inspectionInput.pacote || "Base SST",
-    responsavel: inspection.responsavel,
-  });
-  const fallbackNonConformities = buildFallbackNonConformities(inspection, answers, generatedNonConformities);
+  const generatedNonConformities = generateNonConformitiesFromInspection(
+    inspection,
+    answers,
+    {
+      activityType: inspection.atividades?.[0] || "uso-de-epi",
+      sector: inspection.setor,
+      pacote: inspectionInput.pacote || "Base SST",
+      responsavel: inspection.responsavel,
+    },
+  );
+  const fallbackNonConformities = buildFallbackNonConformities(
+    inspection,
+    answers,
+    generatedNonConformities,
+  );
   const nonConformities = [...generatedNonConformities, ...fallbackNonConformities];
   const generatedRisks = generateRisksFromNonConformities(nonConformities, {
     responsavel: inspection.responsavel,
@@ -553,7 +643,9 @@ export function synchronizeInspectionWithMotor(inspectionInput = {}, state = {})
 
   const risks = generatedRisks.map((risk) => mapMotorRiskToTarget(risk, inspectionInput));
   const riskById = Object.fromEntries(risks.map((risk) => [risk.id, risk]));
-  const actions = generatedActions.map((action) => mapMotorActionToTarget(action, riskById[action.riskId], inspectionInput));
+  const actions = generatedActions.map((action) =>
+    mapMotorActionToTarget(action, riskById[action.riskId], inspectionInput),
+  );
 
   const alerts = [
     ...risks
@@ -578,7 +670,12 @@ export function synchronizeInspectionWithMotor(inspectionInput = {}, state = {})
       title: "Ação corretiva criada",
       description: action.titulo,
       status: "Ativo",
-      severity: action.prioridade === "Crítica" ? "Crítico" : action.prioridade === "Alta" ? "Alto" : "Médio",
+      severity:
+        action.prioridade === "Crítica"
+          ? "Crítico"
+          : action.prioridade === "Alta"
+            ? "Alto"
+            : "Médio",
       origin: "Ação",
       originId: action.id,
       package: action.pacote,
@@ -598,7 +695,12 @@ export function synchronizeInspectionWithMotor(inspectionInput = {}, state = {})
       origin_type: "inspecao",
       origin_id: inspection.id,
       created_at: new Date().toISOString(),
-      metadata: { inspectionId: inspection.id, nonConformities: nonConformities.length, risks: risks.length, actions: actions.length },
+      metadata: {
+        inspectionId: inspection.id,
+        nonConformities: nonConformities.length,
+        risks: risks.length,
+        actions: actions.length,
+      },
     },
   ];
 
