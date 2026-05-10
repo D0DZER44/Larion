@@ -13,7 +13,7 @@ import {
   Factory, Wrench, Truck, Package, User, Info, FileText, Bot, Calendar, Eye, File, CalendarDays
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
-import { 
+import {
   calcularPrioridade, 
   calcularPrazo, 
   calcularMultaEstimada, 
@@ -26,7 +26,8 @@ import {
   applyManualRules,
   getNrMetrics
 } from '@/lib/risk-calculations';
-import { NormativeEngine, RiskEngine, EconomicImpactEngine } from '@/lib/engines';
+import { buildTargetRisksViewModel } from '@/lib/motor/adapters/risksAdapter.js';
+import { buildRiskHistoryViewModel, buildRiskAuditDetailViewModel } from '@/lib/motor/adapters/auditAdapter.js';
 
 import Sparkline from '@/components/Sparkline';
 
@@ -85,7 +86,8 @@ const SUB_TABS = ['Visão Geral', 'Atividade', 'Setor', 'Tipo', 'Histórico'] as
 type TabType = typeof SUB_TABS[number];
 
 export default function RiscosPage() {
-  const { sectors } = useAppStore();
+  const store = useAppStore();
+  const { sectors, inspecoes, riscos: rawRiscos = [], acoes: rawAcoes = [], rulePackages } = store;
   const SETORES_OPCOES = sectors.map(s => s.name);
 
   const filterJunk = (items: any[]) => {
@@ -97,49 +99,47 @@ export default function RiscosPage() {
     });
   };
 
-  const storeRiscosRaw = useAppStore(state => state.riscos);
-  const storeAcoesRaw = useAppStore(state => state.acoes);
-  const rulePackages = useAppStore(state => state.rulePackages);
   const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
   
   const [showInactivePackages, setShowInactivePackages] = useState(false);
 
-  const storeRiscos = useMemo(() => {
-    let base = filterJunk(storeRiscosRaw || []);
-    if (!showInactivePackages) {
-      return base.filter(r => {
-        const pacote = r.pacote || r.package || 'Base SST';
-        return pacote === 'Base SST' || activePackageNames.includes(pacote);
-      });
-    }
-    return base;
-  }, [storeRiscosRaw, showInactivePackages, activePackageNames]);
+  const risksViewModel = useMemo(() => {
+    return buildTargetRisksViewModel(
+      {
+        ...store,
+        riscos: filterJunk(rawRiscos || []),
+        acoes: filterJunk(rawAcoes || []),
+      },
+      {
+        activePackages: activePackageNames,
+        includeInactivePackages: showInactivePackages,
+      },
+    );
+  }, [store, rawRiscos, rawAcoes, activePackageNames, showInactivePackages]);
 
-  const storeAcoes = useMemo(() => filterJunk(storeAcoesRaw || []), [storeAcoesRaw]);
+  const storeRiscos = useMemo(() => risksViewModel.risks || [], [risksViewModel]);
+  const storeAcoes = useMemo(() => filterJunk(rawAcoes || []), [rawAcoes]);
 
   const [activeTab, setActiveTab] = useState<TabType>('Visão Geral');
   const [tipoFilter, setTipoFilter] = useState<'Todos' | NivelRisco>('Todos');
 
   const combinedData = useMemo(() => {
-    return storeRiscos.map(sr => {
-      let status = sr.status;
-      if (status === 'Pendente' || status === 'A tratar') status = 'Aberto';
-      if (status === 'Monitorando') status = 'Em análise';
-      
-      return {
-        ...sr,
-        atividade: sr.atividade || sr.tipoDeRisco || sr.titulo || sr.title || 'Atividade não especificada',
-        status: status || 'Aberto',
-        nivel: (sr.nivel as NivelRisco) || 'Baixo',
-        prioridade: sr.prioridade || 'P4',
-        prazo: sr.prazo || 'Sem prazo',
-        gravidade: sr.gravidade || sr.severidade || 'Baixa',
-        probabilidade: sr.probabilidade || 'Média',
-        tipoDeRisco: sr.tipoDeRisco || sr.titulo || sr.title || 'Risco de segurança',
-        setor: sr.setor || 'Geral'
-      } as RiskInstance;
-    });
+    return storeRiscos.map((risk: any) => ({
+      ...risk,
+      nivel: ((risk.nivel || 'Baixo') as NivelRisco),
+    }) as RiskInstance);
   }, [storeRiscos]);
+
+  const riskHistoryList = useMemo(() => {
+    return buildRiskHistoryViewModel(store, combinedData as any[]);
+  }, [store, combinedData]);
+
+  const riskHistoryById = useMemo(() => {
+    return riskHistoryList.reduce((acc, item) => {
+      acc[item.riskId] = item;
+      return acc;
+    }, {} as Record<string, any>);
+  }, [riskHistoryList]);
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerActionOpen, setIsDrawerActionOpen] = useState(false);
@@ -163,7 +163,9 @@ export default function RiscosPage() {
   const [selectedAction, setSelectedAction] = useState<RiskInstance | null>(null);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
 
-  const normativeDetection = useMemo(() => NormativeEngine.detect(formData.atividade || ''), [formData.atividade]);
+  const selectedRiskAudit = useMemo(() => {
+    return selectedAction ? buildRiskAuditDetailViewModel(store, selectedAction as any) : null;
+  }, [store, selectedAction]);
 
   const getNivelColor = (nivel?: NivelRisco) => {
     switch(nivel) {
@@ -394,8 +396,7 @@ export default function RiscosPage() {
     { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
-  const storeInspecoes = useAppStore(state => state.inspecoes);
-  const nrMetrics = useMemo(() => getNrMetrics({ inspections: storeInspecoes || [], risks: combinedData, actions: storeAcoes }), [storeInspecoes, combinedData, storeAcoes]);
+  const nrMetrics = useMemo(() => getNrMetrics({ inspections: inspecoes || [], risks: combinedData, actions: storeAcoes }), [inspecoes, combinedData, storeAcoes]);
 
   let nrBarData = nrMetrics.map(m => ({ name: m.nr, Total: m.multaEstimada })).sort((a,b) => b.Total - a.Total).slice(0, 6);
   let nrRiscosData = nrMetrics.map(m => ({ name: m.nr, Total: m.totalRiscos, Críticos: m.riscosCriticos })).sort((a,b) => b.Total - a.Total).slice(0, 6);
@@ -1319,7 +1320,7 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-purple-400 mb-0.5">Registros históricos</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.length}</p>
+                        <p className="text-2xl font-bold text-white mb-0.5">{riskHistoryList.length}</p>
                         <p className="text-[11px] text-gray-500">Total de registros</p>
                      </div>
                   </div>
@@ -1329,8 +1330,8 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-blue-400 mb-0.5">Origem automática</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => (d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe')).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-white mb-0.5">{riskHistoryList.filter(item => item.isAutomatic).length}</p>
+                        <p className="text-[11px] text-gray-500">{Math.round((riskHistoryList.filter(item => item.isAutomatic).length / Math.max(1, riskHistoryList.length)) * 100)}% do total</p>
                      </div>
                   </div>
                   <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
@@ -1339,8 +1340,8 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-emerald-400 mb-0.5">Origem manual</h3>
-                        <p className="text-2xl font-bold text-white mb-0.5">{combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length}</p>
-                        <p className="text-[11px] text-gray-500">{Math.round((combinedData.filter(d => !((d.origem || '').toLowerCase().includes('auto') || (d.origem || '').toLowerCase().includes('inspe'))).length / Math.max(1, combinedData.length)) * 100)}% do total</p>
+                        <p className="text-2xl font-bold text-white mb-0.5">{riskHistoryList.filter(item => !item.isAutomatic).length}</p>
+                        <p className="text-[11px] text-gray-500">{Math.round((riskHistoryList.filter(item => !item.isAutomatic).length / Math.max(1, riskHistoryList.length)) * 100)}% do total</p>
                      </div>
                   </div>
                   <div className="bg-[#121826] p-5 border border-white/5 rounded-xl flex items-center gap-4">
@@ -1349,8 +1350,8 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h3 className="text-xs font-bold text-orange-400 mb-0.5">Última atualização</h3>
-                        <p className="text-lg font-bold text-white mb-0.5">Hoje, 08:42</p>
-                        <p className="text-[11px] text-gray-500">21/05/2025</p>
+                        <p className="text-lg font-bold text-white mb-0.5">{riskHistoryList[0] ? new Date(riskHistoryList[0].updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
+                        <p className="text-[11px] text-gray-500">{riskHistoryList[0] ? new Date(riskHistoryList[0].updatedAt).toLocaleDateString('pt-BR') : '--/--/----'}</p>
                      </div>
                   </div>
                 </div>
@@ -1374,7 +1375,8 @@ export default function RiscosPage() {
                       <tbody className="divide-y divide-white/5 bg-[#121826]">
                         {combinedData.map((item) => {
                           const isSelected = selectedAction?.id === item.id;
-                          const isAuto = (item.origem || '').toLowerCase().includes('auto') || (item.origem || '').toLowerCase().includes('inspe');
+                          const historyItem = riskHistoryById[item.id];
+                          const isAuto = historyItem ? historyItem.isAutomatic : (item.origem || '').toLowerCase().includes('auto') || (item.origem || '').toLowerCase().includes('inspe');
                           return (
                           <tr key={item.id} className={`hover:bg-white/5 transition-colors cursor-pointer ${isSelected ? 'bg-purple-900/10 border-l-2 border-purple-500' : 'border-l-2 border-transparent'}`} onClick={() => {
                              if (isSelected && isDrawerActionOpen) {
@@ -1415,7 +1417,7 @@ export default function RiscosPage() {
                               <span className="text-[13px] text-purple-400">{Array.isArray(item.nr) ? item.nr[0] : item.nr}</span>
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className="text-[13px] text-gray-300">21/05/2025 08:42</span>
+                              <span className="text-[13px] text-gray-300">{historyItem?.updatedAt ? new Date(historyItem.updatedAt).toLocaleString('pt-BR') : '--'}</span>
                             </td>
                             <td className="px-5 py-4 align-middle text-center">
                               <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded inline-flex items-center gap-1.5 ${item.status === 'Monitorado' ? 'text-emerald-400' : item.status === 'Crítico' || item.status === 'Aberto' ? 'text-red-400' : 'text-blue-400'}`}>
@@ -1797,7 +1799,7 @@ export default function RiscosPage() {
                      </h3>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Criado em</span>
-                        <span className="text-[13px] text-gray-200 text-right">21/05/2025 08:31</span>
+                        <span className="text-[13px] text-gray-200 text-right">{selectedRiskAudit?.createdAt ? new Date(selectedRiskAudit.createdAt).toLocaleString('pt-BR') : '--'}</span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Origem</span>
@@ -1809,23 +1811,23 @@ export default function RiscosPage() {
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Última atualização</span>
-                        <span className="text-[13px] text-gray-200 text-right">21/05/2025 08:31</span>
+                        <span className="text-[13px] text-gray-200 text-right">{selectedRiskAudit?.updatedAt ? new Date(selectedRiskAudit.updatedAt).toLocaleString('pt-BR') : '--'}</span>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Atualizado por</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            <Settings2 className="w-3.5 h-3.5" />
-                           Sistema
+                           {selectedRiskAudit?.updatedBy || 'Sistema'}
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
                         <span className="text-[13px] text-gray-500 shrink-0">Versão do registro</span>
-                        <span className="text-[13px] text-gray-200 text-right font-mono">1</span>
+                        <span className="text-[13px] text-gray-200 text-right font-mono">{selectedRiskAudit?.version || '1'}</span>
                      </div>
                      <div className="flex justify-between items-center gap-6">
                         <span className="text-[13px] text-gray-500 shrink-0">Hash do registro</span>
                         <div className="flex items-center gap-2 group cursor-pointer">
-                           <span className="text-[12px] font-mono text-gray-400 group-hover:text-gray-300">a7f2c9e1d4b7...</span>
+                           <span className="text-[12px] font-mono text-gray-400 group-hover:text-gray-300">{selectedRiskAudit?.hash ? `${selectedRiskAudit.hash.slice(0, 12)}...` : '---'}</span>
                            <File className="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-400" />
                         </div>
                      </div>

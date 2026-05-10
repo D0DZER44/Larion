@@ -1,21 +1,18 @@
 import React, { useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
+import { buildAuditTimelineViewModel } from '@/lib/motor/adapters/auditAdapter.js';
 import { Clock, ShieldCheck, AlertTriangle, CheckCircle2, User, FileText, Activity } from 'lucide-react';
 
 export default function TimelineHistory({ itemId, relatedInspectionId, relatedRiskId }: { itemId: string, relatedInspectionId?: string, relatedRiskId?: string }) {
-  const logs = useAppStore(state => state.logs);
+  const storeState = useAppStore();
 
   const itemLogs = useMemo(() => {
-    // We want logs that belong to THIS item, OR related origins (e.g. if this is an action, we want its risk logs and inspection logs).
-    const relevantIds = [itemId];
-    if (relatedInspectionId) relevantIds.push(relatedInspectionId);
-    if (relatedRiskId) relevantIds.push(relatedRiskId);
-
-    const filtered = logs.filter(log => relevantIds.includes(log.origin_id || '') || relevantIds.includes(log.id || ''));
-    
-    // sort by created_at asc
-    return filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  }, [logs, itemId, relatedInspectionId, relatedRiskId]);
+    return buildAuditTimelineViewModel(storeState, {
+      itemId,
+      relatedInspectionId,
+      relatedRiskId,
+    }).events;
+  }, [storeState, itemId, relatedInspectionId, relatedRiskId]);
 
   if (!itemLogs || itemLogs.length === 0) {
     return (
@@ -55,14 +52,14 @@ export default function TimelineHistory({ itemId, relatedInspectionId, relatedRi
           {itemLogs.map((log, index) => (
             <div key={log.id || index} className="relative pl-6">
                <span className="absolute -left-3 top-0.5 w-6 h-6 rounded-full bg-[#121826] border-2 border-white/10 flex items-center justify-center">
-                  {getIconForEvent(log.event_type)}
+                   {getIconForEvent(log.eventType)}
                </span>
                <div className="flex flex-col">
                   <span className="text-xs font-bold text-gray-200">{log.description}</span>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500">
-                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(log.created_at).toLocaleString('pt-BR')}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(log.createdAt).toLocaleString('pt-BR')}</span>
                      <span>•</span>
-                     <span className="flex items-center gap-1"><User className="w-3 h-3" /> {log.user_id}</span>
+                      <span className="flex items-center gap-1"><User className="w-3 h-3" /> {log.userId}</span>
                   </div>
                </div>
             </div>

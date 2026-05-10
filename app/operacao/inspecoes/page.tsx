@@ -4,10 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
-import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
 import { getNRsAplicaveis } from '@/lib/nrMatrix';
-import { NormativeEngine } from '@/lib/engines';
+import { adaptTargetInspectionPayload } from '@/lib/motor/adapters/inspectionsAdapter.js';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, 
   Download, Plus, Settings as SettingsIcon, 
@@ -149,7 +148,6 @@ export default function InspecoesPage() {
     }
   }, []);
 
-  const normativeDetection = NormativeEngine.detect(formData.nome || '');
   const hojeDateStr = new Date().toISOString().split('T')[0];
 
   const filterJunk = (items: any[]) => {
@@ -343,7 +341,7 @@ export default function InspecoesPage() {
     }
   };
 
-   const handleSalvarInspecao = () => {
+  const handleSalvarInspecao = () => {
     if (!inspectionData.tipoInspecao || !inspectionData.ondeUsar || !inspectionData.responsavel || !inspectionData.data || !inspectionData.checklistId) {
       alert("Preencha todos os campos obrigatórios (marcados com *).");
       return;
@@ -351,16 +349,31 @@ export default function InspecoesPage() {
 
     const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
     const dataHoje = new Date().toISOString().split('T')[0];
+    const adaptedInspection = adaptTargetInspectionPayload(
+      {
+        titulo: modelo,
+        tipoInspecao: inspectionData.tipoInspecao,
+        setor: inspectionData.ondeUsar,
+        responsavel: inspectionData.responsavel,
+        atividades: [inspectionData.tipoInspecao],
+        data: inspectionData.data,
+      },
+      {
+        sectorName: inspectionData.ondeUsar,
+        responsibleName: inspectionData.responsavel,
+      },
+    );
 
     if (isEditing && selectedInspecao) {
       const updatedData = {
-        tipoInspecao: inspectionData.tipoInspecao,
+        ...adaptedInspection,
+        tipoInspecao: adaptedInspection.tipoInspecao,
         checklist: modelo,
-        ondeUsar: inspectionData.ondeUsar,
-        proximaInspecao: inspectionData.data,
-        responsavel: inspectionData.responsavel,
+        ondeUsar: adaptedInspection.ondeUsar,
+        proximaInspecao: adaptedInspection.proximaInspecao,
+        responsavel: adaptedInspection.responsavel,
         prioridade: prioridadeCalculada,
-        data: inspectionData.data,
+        data: adaptedInspection.data,
         observacoes: inspectionData.observacoes,
         trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
         perfilExposto: inspectionData.perfilExposto
@@ -375,15 +388,16 @@ export default function InspecoesPage() {
       
       const newInspecao = {
         id: inspecaoId,
-        tipoInspecao: inspectionData.tipoInspecao,
+        ...adaptedInspection,
+        tipoInspecao: adaptedInspection.tipoInspecao,
         checklist: modelo,
-        ondeUsar: inspectionData.ondeUsar,
-        proximaInspecao: inspectionData.data,
-        responsavel: inspectionData.responsavel,
+        ondeUsar: adaptedInspection.ondeUsar,
+        proximaInspecao: adaptedInspection.proximaInspecao,
+        responsavel: adaptedInspection.responsavel,
         prioridade: prioridadeCalculada,
         situacao: statusInicial,
         status: statusInicial,
-        data: inspectionData.data,
+        data: adaptedInspection.data,
         observacoes: inspectionData.observacoes,
         trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
         perfilExposto: inspectionData.perfilExposto,
@@ -405,18 +419,33 @@ export default function InspecoesPage() {
   const handleSalvarRascunho = () => {
     const inspecaoId = Date.now().toString();
     const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
+    const adaptedInspection = adaptTargetInspectionPayload(
+      {
+        titulo: modelo,
+        tipoInspecao: inspectionData.tipoInspecao || 'Nova Inspeção',
+        setor: inspectionData.ondeUsar || 'Geral',
+        responsavel: inspectionData.responsavel || 'Não definido',
+        atividades: [inspectionData.tipoInspecao || 'Nova Inspeção'],
+        data: inspectionData.data || new Date().toISOString().split('T')[0],
+      },
+      {
+        sectorName: inspectionData.ondeUsar || 'Geral',
+        responsibleName: inspectionData.responsavel || 'Não definido',
+      },
+    );
     
     addInspecao({
       id: inspecaoId,
-      tipoInspecao: inspectionData.tipoInspecao || 'Nova Inspeção',
+      ...adaptedInspection,
+      tipoInspecao: adaptedInspection.tipoInspecao,
       checklist: modelo,
-      ondeUsar: inspectionData.ondeUsar || 'Geral',
-      proximaInspecao: inspectionData.data || new Date().toISOString().split('T')[0],
-      responsavel: inspectionData.responsavel || 'Não definido',
+      ondeUsar: adaptedInspection.ondeUsar,
+      proximaInspecao: adaptedInspection.proximaInspecao,
+      responsavel: adaptedInspection.responsavel,
       prioridade: prioridadeCalculada,
       situacao: 'Rascunho',
       status: 'Rascunho',
-      data: inspectionData.data || new Date().toISOString().split('T')[0],
+      data: adaptedInspection.data,
       observacoes: inspectionData.observacoes,
       trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
       perfilExposto: inspectionData.perfilExposto,

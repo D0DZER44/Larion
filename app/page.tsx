@@ -13,17 +13,17 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, PieChart, Pie, Cell
 import { useAppStore } from '@/lib/store';
 import { subDays } from 'date-fns';
 import { calculateDashboardMetrics } from '@/lib/dashboardMetrics';
-import { FineEngine } from '@/lib/fineEngine';
-import { EconomicImpactEngine, LariContextEngine } from '@/lib/engines';
+import { buildTargetDashboardPageModel } from '@/lib/motor/adapters/dashboardAdapter.js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
+  const storeState = useAppStore();
   const { 
     riscos = [], acoes = [], inspecoes = [], checklists = [], logs = [], 
     rulePackages = [], alertas = [], users = [], epi_records = [], trainings = [],
     organization, signOut
-  } = useAppStore();
+  } = storeState;
   const router = useRouter();
 
   const activePackageNames = useMemo(() => 
@@ -61,6 +61,15 @@ export default function Dashboard() {
   const cleanInspecoes = useMemo(() => filterJunk(inspecoes || []), [inspecoes, filterJunk]);
   const cleanChecklists = useMemo(() => filterJunk(checklists || []), [checklists, filterJunk]);
   const cleanLogs = useMemo(() => (logs || []), [logs]);
+  const dashboardPageModel = useMemo(() => buildTargetDashboardPageModel({
+    ...storeState,
+    riscos: cleanRiscos,
+    acoes: cleanAcoes,
+    inspecoes: cleanInspecoes,
+    checklists: cleanChecklists,
+    logs: cleanLogs,
+    epi_records: epi_records || [],
+  }, { scoreTimeRange }), [storeState, cleanRiscos, cleanAcoes, cleanInspecoes, cleanChecklists, cleanLogs, epi_records, scoreTimeRange]);
 
   const metrics = useMemo(() => {
     // KPI 1: Exposição
@@ -90,8 +99,8 @@ export default function Dashboard() {
     });
 
     // Multa Exposure Calculation
-    const estimatedExposure = EconomicImpactEngine.estimateAggregate(activeRisks);
-    const avoidedExposure = EconomicImpactEngine.estimateAggregate(resolvedRisks);
+    const estimatedExposure = 0;
+    const avoidedExposure = 0;
 
     const getRiskWeight = (r: any) => {
        const level = (r.nivel || r.level || '').toLowerCase();
@@ -217,8 +226,7 @@ export default function Dashboard() {
     
     const conformityRate = validWeights > 0 ? Math.round(totalScore / validWeights) : 100;
 
-    const ctxLari = LariContextEngine.getRealtimeContext({ riscos, acoes, inspecoes, checklists, logs, rulePackages, organization: useAppStore.getState().organization });
-    const lariRecommendations = ctxLari.top5Recomendacoes;
+    const lariRecommendations: any[] = [];
 
     // Pie chart by sector
     const sectorsMap: Record<string, { count: number; prioritySum: number }> = {};
@@ -704,15 +712,15 @@ export default function Dashboard() {
     else if (exposicaoOperacional === 'Média') exposicaoOperacionalClass = 'border-white/20 text-white bg-white/5';
 
     return {
-      operationalScore,
-      scoreClass,
+      operationalScore: dashboardPageModel.operationalScore || operationalScore,
+      scoreClass: dashboardPageModel.scoreClass || scoreClass,
       scoreColorText,
       scoreColorBg,
       scoreColorStroke,
       scoreDiff: 0,
       openRisksCount,
       exposicaoOperacional: exposicaoOperacional === 'Média' ? 'Normal' : exposicaoOperacional,
-      scoreSeries,
+      scoreSeries: dashboardPageModel.scoreSeries?.length ? dashboardPageModel.scoreSeries : scoreSeries,
       exposicaoOperacionalClass,
       estimatedExposure,
       avoidedExposure,
@@ -730,13 +738,13 @@ export default function Dashboard() {
       completedInspectionsCount: completedInspections.length,
       inspExpiringTodayCount: inspExpiringToday.length,
       conformityRate,
-      riskSectorData,
-      conformidadeNR,
+      riskSectorData: dashboardPageModel.riskSectorData?.length ? dashboardPageModel.riskSectorData : riskSectorData,
+      conformidadeNR: dashboardPageModel.conformidadeNR?.length ? dashboardPageModel.conformidadeNR : conformidadeNR,
       sortedLogs,
       upcomingActions,
       alertas,
-      topRisks: topRisks.slice(0, 5),
-      lariRecommendations,
+      topRisks: dashboardPageModel.topRisks?.length ? dashboardPageModel.topRisks : topRisks.slice(0, 5),
+      lariRecommendations: dashboardPageModel.lariRecommendations?.length ? dashboardPageModel.lariRecommendations : lariRecommendations,
       missingEvidenceCount: pendingActions.filter((a: any) => a.exigeEvidencia && (!a.evidenciaUrl && !a.evidence)).length,
       
       // Inteligencia
@@ -750,7 +758,7 @@ export default function Dashboard() {
       actionsCompleted: concluidasActions.length,
       actionsDelayed: atrasadasActions.length,
 
-      totalTrabalhadoresExpostos,
+      totalTrabalhadoresExpostos: dashboardPageModel.totalTrabalhadoresExpostos ?? totalTrabalhadoresExpostos,
 
       checklistsTodayCats,
 

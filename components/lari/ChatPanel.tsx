@@ -4,12 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Zap, Activity } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { askLari, LariMessage } from '@/lib/lari/client';
-import { LariContextEngine } from '@/lib/engines';
-import { Markdown } from '@/components/ui/Markdown'; // wait, I don't know if this exists. I'll just use raw div or react-markdown if installed, but I can't be sure it is. Let's just use raw text for safety.
-
-// Oh wait, framework instructions mention react-markdown:
-// "A div className="markdown-body"><Markdown>{markdown}</Markdown></div>"
-
 import ReactMarkdown from 'react-markdown';
 
 export function ChatPanel({ isFloating = false }: { isFloating?: boolean }) {
@@ -28,8 +22,6 @@ export function ChatPanel({ isFloating = false }: { isFloating?: boolean }) {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const ctx = LariContextEngine.getRealtimeContext(store);
-
   const handleSend = async (text: string) => {
     if (!text.trim() || isTyping) return;
     
@@ -43,15 +35,18 @@ export function ChatPanel({ isFloating = false }: { isFloating?: boolean }) {
     setInputValue('');
     setIsTyping(true);
 
+    const criticalRisks = store.riscos.filter(r => r.nivel === 'Crítico').length;
+    const acoesAtrasadas = store.acoes.filter(a => a.status === 'Atrasada' || a.status === 'Vencida').length;
+    
     const contextArgs = {
-      summary: `Apex ops status: ${ctx.criticalRisks} riscos críticos, ${ctx.acoesAtrasadas} ações em atraso, ${ctx.conformidade}% conformidade.`,
-      criticalRisks: ctx.criticalRisks,
-      acoesAtrasadas: ctx.acoesAtrasadas,
-      inspecoesPendentes: ctx.inspecoesPendentes,
-      operationalScore: ctx.operationalScore,
-      topSector: ctx.topSector || 'Nenhum',
-      conformidade: ctx.conformidade,
-      checklistsHoje: ctx.checklistsHoje || 0
+      summary: `Apex ops status: ${criticalRisks} riscos críticos, ${acoesAtrasadas} ações em atraso.`,
+      criticalRisks,
+      acoesAtrasadas,
+      inspecoesPendentes: 0,
+      operationalScore: 100,
+      topSector: 'Nenhum',
+      conformidade: 100,
+      checklistsHoje: 0
     };
 
     const lariResponse = await askLari(text.trim(), contextArgs);

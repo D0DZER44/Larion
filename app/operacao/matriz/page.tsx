@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
 import { NR_MATRIX, getNRsAplicaveis } from '@/lib/nrMatrix';
 import { fixedNrChecklists } from '@/lib/normativeChecklists';
+import { buildPGRViewModel } from '@/lib/motor/adapters/pgrAdapter.js';
 import { 
   ShieldCheck, 
   BookOpen, 
@@ -18,6 +19,7 @@ import {
 
 export default function MatrizNormativaPage() {
   const [activeTab, setActiveTab] = useState<'Matriz' | 'Checklists'>('Matriz');
+  const storeState = useAppStore();
   const storeChecklists = useAppStore(state => state.checklists);
   const [mounted, setMounted] = useState(false);
 
@@ -31,10 +33,15 @@ export default function MatrizNormativaPage() {
 
   const rulePackages = useAppStore(state => state.rulePackages);
   const activeRulePackages = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
+  const pgrViewModel = useMemo(() => buildPGRViewModel(storeState), [storeState]);
+  const pgrCriticalActivities = useMemo(
+    () => Array.from(new Set((pgrViewModel.criticalItems || []).map((item: any) => item.atividade).filter(Boolean))),
+    [pgrViewModel],
+  );
 
   const nrsAplicaveis = getNRsAplicaveis({
     segmentoOrganizacao: selectedSegment,
-    atividadesCriticas: [], // User could filter
+    atividadesCriticas: pgrCriticalActivities,
     pacotesAtivos: activeRulePackages
   });
 

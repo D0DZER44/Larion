@@ -67,8 +67,8 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
   }, [nrMetrics]);
 
   const stats = useMemo(() => {
-     let pendentes = 0, andamento = 0, concluidas = 0, vencidas = 0, canceladas = 0;
-     let followUpsPendentes = 0, escalonadas = 0, semAtualizacao = 0;
+     let pendentes = 0, andamento = 0, concluidas = 0, vencidas = 0, canceladas = 0, criticas = 0;
+     let followUpsPendentes = 0, escalonadas = 0, semAtualizacao = 0, semResponsavel = 0, semEvidencia = 0, valorEstimado = 0;
      let automaticas = 0, manuais = 0;
      acoes.forEach(a => {
         if (a.status === 'Pendente') pendentes++;
@@ -76,6 +76,12 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
         else if (a.status === 'Concluída') concluidas++;
         else if (a.status === 'Vencida') vencidas++;
         else if (a.status === 'Cancelada') canceladas++;
+
+        if (a.prioridade === 'Crítica') criticas++;
+        if (!a.responsavel) semResponsavel++;
+        if (!a.evidencia) semEvidencia++;
+        
+        if (a.valorEstimado) valorEstimado += a.valorEstimado;
 
         if (a.followUp?.precisaFollowUp) followUpsPendentes++;
         if (a.followUp?.escalado) escalonadas++;
@@ -87,7 +93,7 @@ export default function VisaoGeral({ acoes, onOpen }: { acoes: ActionItem[], onO
            manuais++;
         }
      });
-     return { pendentes, andamento, concluidas, vencidas, canceladas, total: acoes.length, followUpsPendentes, escalonadas, semAtualizacao, automaticas, manuais };
+     return { pendentes, andamento, concluidas, vencidas, canceladas, criticas, semResponsavel, semEvidencia, valorEstimado, total: acoes.length, followUpsPendentes, escalonadas, semAtualizacao, automaticas, manuais };
   }, [acoes, storeRiscos]);
 
   const pieData = useMemo(() => [

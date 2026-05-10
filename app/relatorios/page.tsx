@@ -8,6 +8,7 @@ import {
   Activity, ArrowRight
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { buildReportsViewModel } from '@/lib/motor/adapters/reportsAdapter.js';
 
 
 // ============================================================================
@@ -16,6 +17,10 @@ import { useAppStore } from '@/lib/store';
 
 function formatCurrency(v: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+}
+
+function formatReportTimestamp(value?: number) {
+  return new Date(value || Date.now()).toLocaleString('pt-BR');
 }
 
 function RelatorioExecutivoPreview({ periodLabel }: { periodLabel: string }) {
@@ -563,6 +568,29 @@ export default function RelatoriosPage() {
     return mStr.charAt(0).toUpperCase() + mStr.slice(1);
   }, [reportMonth]);
 
+  const reportsViewModel = useMemo(() => buildReportsViewModel(store), [store]);
+
+  const reportHighlights = useMemo(() => {
+    const executiveMetrics = reportsViewModel.executive?.metricas || {};
+    const financialMetrics = reportsViewModel.financial?.metricas || {};
+
+    return {
+      generatedCount: Object.values(reportsViewModel).filter(Boolean).length,
+      criticalPending: Number(executiveMetrics.openCriticalRisks || 0),
+      openActions: Number(executiveMetrics.pendingActions || 0),
+      avoidableImpact: Number(financialMetrics.valorEstimado || 0),
+    };
+  }, [reportsViewModel]);
+
+  const recentReports = useMemo(() => ([
+    { name: reportsViewModel.executive?.titulo || 'RelatÃ³rio Executivo de SST', period: periodLabel, date: formatReportTimestamp(reportsViewModel.executive?.geradoEm), icon: <FileText className="w-4 h-4" />, bg: 'bg-blue-500/10 text-blue-400' },
+    { name: reportsViewModel.normative?.titulo || 'RelatÃ³rio Normativo', period: periodLabel, date: formatReportTimestamp(reportsViewModel.normative?.geradoEm), icon: <Shield className="w-4 h-4" />, bg: 'bg-orange-500/10 text-orange-400' },
+    { name: reportsViewModel.pgr?.titulo || 'RelatÃ³rio PGR Vivo', period: periodLabel, date: formatReportTimestamp(reportsViewModel.pgr?.geradoEm), icon: <ClipboardCheck className="w-4 h-4" />, bg: 'bg-purple-500/10 text-purple-400' },
+    { name: reportsViewModel.financial?.titulo || 'RelatÃ³rio de Impacto Financeiro', period: periodLabel, date: formatReportTimestamp(reportsViewModel.financial?.geradoEm), icon: <DollarSign className="w-4 h-4" />, bg: 'bg-emerald-500/10 text-emerald-400' },
+  ]), [periodLabel, reportsViewModel]);
+
+  void recentReports;
+
   const handlePrint = (exportType: string = 'PDF') => {
      store.addLog({
         empresa_id: '1',
@@ -607,7 +635,7 @@ export default function RelatoriosPage() {
              <div>
                <p className="text-sm font-semibold text-gray-400">Gerados no mês</p>
                <div className="flex items-end gap-3 mt-1">
-                 <p className="text-3xl font-black text-white">24</p>
+                  <p className="text-3xl font-black text-white">{reportHighlights.generatedCount}</p>
                  <span className="text-emerald-500 text-xs font-bold mb-1 flex items-center">↑ 26% <span className="text-gray-500 font-normal ml-1">vs mês anterior</span></span>
                </div>
              </div>
@@ -619,7 +647,7 @@ export default function RelatoriosPage() {
              <div>
                <p className="text-sm font-semibold text-gray-400">Pendências críticas</p>
                <div className="flex items-end gap-3 mt-1">
-                 <p className="text-3xl font-black text-white">7</p>
+                  <p className="text-3xl font-black text-white">{reportHighlights.criticalPending}</p>
                  <span className="text-red-500 text-xs font-bold mb-1 flex items-center">↑ 16% <span className="text-gray-500 font-normal ml-1">vs mês anterior</span></span>
                </div>
              </div>
@@ -631,7 +659,7 @@ export default function RelatoriosPage() {
              <div>
                <p className="text-sm font-semibold text-gray-400">Ações abertas</p>
                <div className="flex items-end gap-3 mt-1">
-                 <p className="text-3xl font-black text-white">132</p>
+                  <p className="text-3xl font-black text-white">{reportHighlights.openActions}</p>
                  <span className="text-orange-500 text-xs font-bold mb-1 flex items-center">↓ 8% <span className="text-gray-500 font-normal ml-1">vs mês anterior</span></span>
                </div>
              </div>
@@ -643,7 +671,7 @@ export default function RelatoriosPage() {
              <div>
                <p className="text-sm font-semibold text-gray-400">Impacto evitável</p>
                <div className="flex items-end gap-3 mt-1">
-                 <p className="text-2xl font-black text-white">R$ 41.000</p>
+                  <p className="text-2xl font-black text-white">{formatCurrency(reportHighlights.avoidableImpact)}</p>
                  <span className="text-emerald-500 text-xs font-bold mb-1 flex items-center">↑ 34% <span className="text-gray-500 font-normal ml-1">vs mês anterior</span></span>
                </div>
              </div>

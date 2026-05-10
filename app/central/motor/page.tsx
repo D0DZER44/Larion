@@ -3,8 +3,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'motion/react';
-import { getTodasRegrasAtivas } from '@/lib/normativeRules';
 import { FineEngine } from '@/lib/fineEngine';
+import { buildNormativeMotorViewModel } from '@/lib/motor/adapters/intelligenceAdapter.js';
 import { 
   Zap, AlertTriangle, CheckCircle2, ChevronDown, ListChecks, ArrowRight,
   TrendingUp, Scaling, ShieldCheck, Activity, BarChart2, DollarSign, Brain
@@ -15,59 +15,14 @@ function formatCurrency(value: number) {
 }
 
 export default function MotorNormativoPage() {
-  const { riscos = [], rules: customRules = [], rulePackages = [] } = useAppStore();
+  const { riscos = [], rulePackages = [] } = useAppStore();
   
-  const rules = useMemo(() => getTodasRegrasAtivas(customRules), [customRules]);
-
   const activeRulePackages = useMemo(() => 
     rulePackages.filter(p => p.isActive).map(p => p.name)
   , [rulePackages]);
 
   // Calculations for Multa Evitada & Multa Estimada
-  const riskStats = useMemo(() => {
-    let estimada = 0;
-    let evitada = 0;
-    let regrasAcionadasCount = 0;
-
-    const regrasMap: Record<string, { count: number, multaEstimada: number, evitada: number, detalhes: any }> = {};
-
-    riscos.forEach(r => {
-      let multa = Number(r.multaEstimada);
-      if (isNaN(multa) || multa === 0) {
-         // Fallback calculation using engine if not explicitly set
-         const est = FineEngine.calcularFaixaMulta({
-           nr: r.nr || 'NR-Geral',
-           criticidade: r.nivel || r.level || 'Alta',
-           numeroEmpregados: 50 // assume standard
-         });
-         multa = est.maximoEstimado;
-      }
-
-      if (r.status === 'Resolvido' || r.status === 'Mitigado') {
-        evitada += multa;
-      } else {
-        estimada += multa;
-      }
-
-      if (r.nr) {
-         if (!regrasMap[r.nr]) regrasMap[r.nr] = { count: 0, multaEstimada: 0, evitada: 0, detalhes: [] };
-         regrasMap[r.nr].count++;
-         if (r.status === 'Resolvido' || r.status === 'Mitigado') {
-            regrasMap[r.nr].evitada += multa;
-         } else {
-            regrasMap[r.nr].multaEstimada += multa;
-         }
-         regrasMap[r.nr].detalhes.push(r);
-         regrasAcionadasCount++;
-      }
-    });
-
-    const regrasData = Object.entries(regrasMap).map(([nr, stats]) => ({
-       nr, ...stats
-    })).sort((a,b) => b.multaEstimada - a.multaEstimada);
-
-    return { estimada, evitada, regrasAcionadasCount, regrasData };
-  }, [riscos]);
+  const riskStats = useMemo(() => buildNormativeMotorViewModel({ riscos }), [riscos]);
 
   const [expandedNR, setExpandedNR] = useState<string | null>(null);
 

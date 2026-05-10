@@ -1,8 +1,8 @@
 export type NivelRisco = 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
-export type Prioridade = 'Baixa' | 'Média' | 'Alta' | 'Crítica';
-export type StatusRisco = 'Aberto' | 'Em mitigação' | 'Mitigado' | 'Resolvido' | 'Vencido';
-export type StatusAcao = 'Pendente' | 'Em andamento' | 'Concluída' | 'Cancelada' | 'Vencida';
-export type StatusInspecao = 'Agendada' | 'Em andamento' | 'Concluída' | 'Atrasada' | 'Cancelada' | 'Anulada';
+export type Prioridade = 'Baixa' | 'Média' | 'Alta' | 'Crítica' | 'P1' | 'P2' | 'P3' | 'P4' | 'Urgente';
+export type StatusRisco = 'Aberto' | 'Em mitigação' | 'Mitigado' | 'Resolvido' | 'Vencido' | 'Identificado';
+export type StatusAcao = 'Pendente' | 'Em aberto' | 'Em andamento' | 'Iniciada' | 'Concluída' | 'Concluído' | 'Fechada' | 'Cancelada' | 'Vencida' | 'Em atraso' | 'Atrasada';
+export type StatusInspecao = 'Agendada' | 'Programada' | 'Em andamento' | 'Iniciada' | 'Realizada' | 'Concluída' | 'Reprovada' | 'Atrasada' | 'Cancelada' | 'Anulada' | 'Pendente';
 export type Pacote = 'Base SST' | 'Construção Civil' | 'Indústria' | 'Saúde/Hospitalar';
 
 export interface Risco {
@@ -21,7 +21,9 @@ export interface Risco {
   pacote: Pacote;
   criadoEm: string;
   atualizadoEm?: string;
-  [key: string]: any; // Allow other properties
+  atividade?: string;
+  sector_id?: string;
+  package?: Pacote;
 }
 
 export interface Acao {
@@ -39,7 +41,7 @@ export interface Acao {
   pacote: Pacote;
   criadoEm: string;
   atualizadoEm?: string;
-  [key: string]: any; // Allow other properties
+  valorEstimado?: number;
 }
 
 export interface Inspecao {
@@ -56,7 +58,6 @@ export interface Inspecao {
   pacote: Pacote;
   criadoEm: string;
   atualizadoEm?: string;
-  [key: string]: any; // Allow other properties
 }
 
 export type Alerta = {
@@ -111,6 +112,8 @@ export type Organization = {
   emailCorporativo: string;
   endereco: string;
   seed_demo?: boolean;
+  name?: string;
+  segment?: string;
 };
 
 export type RulePackage = {
@@ -163,4 +166,7 @@ export type ChecklistTemplate = {
   geraRiscoSeNaoConforme?: boolean;
   ativo: boolean;
   regraFixa?: boolean;
+  segmento?: string;
+  atividade?: string;
+  nrRelacionada?: string;
 };

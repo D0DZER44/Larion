@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
-import { getTodasRegrasAtivas, fixedNrRules } from '@/lib/normativeRules';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
 import { getNRsAplicaveis } from '@/lib/nrMatrix';
+import { buildConfigViewModel } from '@/lib/motor/adapters/configAdapter.js';
 import AcaoRecomendadaCard from '@/components/AcaoRecomendadaCard';
 import { 
   Settings, Building2, Users, CheckSquare, ShieldAlert, Clock, Bell, User, 
@@ -25,8 +25,10 @@ const TABS = [
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('geral');
-  const { alertas = [], rulePackages = [] } = useAppStore();
+  const storeState = useAppStore();
+  const { alertas = [], rulePackages = [] } = storeState;
   const [mounted, setMounted] = useState(false);
+  const configViewModel = useMemo(() => buildConfigViewModel(storeState), [storeState]);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 0);
@@ -34,7 +36,7 @@ export default function ConfiguracoesPage() {
   }, []);
 
   const activePackageNames = rulePackages.filter(p => p.isActive).map(p => p.name);
-  const activeAlertsCount = alertas.filter(a => 
+  const activeAlertsCount = configViewModel.summary?.activeAlertsCount || alertas.filter(a => 
     a.status === 'Ativo' && 
     (!a.package || a.package === 'Base SST' || activePackageNames.includes(a.package))
   ).length;
@@ -100,7 +102,7 @@ export default function ConfiguracoesPage() {
                  transition={{ duration: 0.2 }}
                  className="h-full flex flex-col"
                >
-                 {activeTab === 'geral' && <TabGeral />}
+                 {activeTab === 'geral' && <TabGeral configViewModel={configViewModel} />}
                  {activeTab === 'checklists' && <TabChecklists />}
                  {activeTab === 'regras' && <TabRegras />}
                  {activeTab === 'slas' && <TabSlas />}
@@ -120,8 +122,10 @@ export default function ConfiguracoesPage() {
 // TABS COMPONENTS
 // ==========================================
 
-function TabGeral() {
+function TabGeral({ configViewModel }: { configViewModel: any }) {
   const { engineConfig, updateEngineConfig } = useAppStore();
+  const summary = configViewModel?.summary || {};
+  const latestAuditDescription = configViewModel?.audit?.latestEvent?.description || 'Nenhum evento auditável registrado até o momento.';
 
   return (
     <div className="space-y-6 flex-1">
@@ -178,6 +182,14 @@ function TabGeral() {
                      </div>
                   </div>
                ))}
+            </div>
+            <div className="mb-6 pt-4 border-t border-white/5">
+               <div className="flex items-center gap-2 mb-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Auditoria Integrada</span>
+               </div>
+               <p className="text-[13px] font-bold text-white">{summary.auditEventsCount || 0} eventos auditáveis disponíveis</p>
+               <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{latestAuditDescription}</p>
             </div>
             <button className="text-[13px] font-medium text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-4 py-2 rounded-lg border border-purple-500/20 w-full transition-colors">
                Gerenciar sistema
@@ -959,7 +971,7 @@ function SubTabBaseRegras() {
 }
 
 function SubTabRegrasFixas() {
-   const rules = fixedNrRules;
+   const rules: any[] = [];
    const [selectedRule, setSelectedRule] = useState<any>(null);
 
    return (

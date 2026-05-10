@@ -4,7 +4,6 @@ import './globals.css';
 import { LayoutShell } from '@/components/LayoutShell';
 import FloatingChat from '@/components/FloatingChat';
 import { AppProvider } from '@/contexts/AppContext';
-import '@/lib/engines'; // Initializes window.Engines on client side
 
 const inter = Inter({ subsets: ['latin'] });
 

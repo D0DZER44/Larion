@@ -7,25 +7,13 @@ import {
   ArrowRight, ShieldCheck, Activity
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { 
-  calcularPrioridade, 
-  calcularPrazo, 
-  calcularMultaEstimada, 
-  calcularChanceIncidente, 
-  calcularImpactoOperacional, 
-  calcularNivelConformidade,
-  formatCurrency,
-  RiskInstance,
-  applyManualRules
-} from '@/lib/risk-calculations';
+import { formatCurrency } from '@/lib/risk-calculations';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
-import { AutomationEngine } from '@/lib/engines';
+import { buildInspectionExecutionPreview } from '@/lib/motor/adapters/inspectionsAdapter.js';
 
 export default function ExecutionView({ inspectionId, onClose }: { inspectionId: string, onClose: () => void }) {
   const store = useAppStore();
   const inspection = store.inspecoes?.find(i => i.id === inspectionId);
-  const addRisco = store.addRisco;
-  const addAcao = store.addAcao;
   const updateInspecao = store.updateInspecao;
 
   // Initialize questions if empty
@@ -71,7 +59,15 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     }
   }, [inspection, updateInspecao]);
 
-  const risks = useMemo(() => {
+  const executionPreview = useMemo(() => {
+    if (!inspection) {
+      return { risks: [], actions: [], nonConformities: [] };
+    }
+
+    return buildInspectionExecutionPreview(inspection, items, store);
+  }, [inspection, items, store]);
+
+  const legacyRisks = useMemo(() => {
     return items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').map((nc: any) => {
       const isCritica = nc.riskMap === 'Crítica';
       const isAlta = nc.riskMap === 'Alta';
@@ -103,8 +99,32 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     });
   }, [items, inspection?.tipoInspecao, inspection?.checklist]);
 
-  const ncsDetectadasCount = items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').length;
-  const acoesGeradasCount = ncsDetectadasCount;
+  const risks = useMemo(() => {
+    const previewRisks = (executionPreview.risks || []).map((risk: any) => {
+      const relatedAction = (executionPreview.actions || []).find((action: any) => action.riscoId === risk.id || action.riskId === risk.id);
+      const isCritica = risk.nivel === 'CrÃ­tico';
+      const isAlta = risk.nivel === 'Alto';
+
+      return {
+        ...risk,
+        text: risk.titulo || risk.title || risk.descricao,
+        nrRef: risk.nr,
+        severidade: risk.nivel || risk.severity || 'MÃ©dio',
+        prioridade: risk.prioridade,
+        prazo: risk.prazo || 'Conforme SLA do motor',
+        multa: formatCurrency(risk.multaEstimada || 0),
+        chance: Number(risk.chanceIncidente || 0),
+        impactoScore: isCritica ? -15 : isAlta ? -10 : -5,
+        acaoSugerida: relatedAction?.titulo || getAcaoSugerida(risk.titulo || risk.descricao || ''),
+        alerta: isCritica ? 'Alerta CrÃ­tico: Risco de incidente grave detectado. Recomenda-se paralisaÃ§Ã£o imediata para correÃ§Ã£o.' : null
+      };
+    });
+
+    return previewRisks.length > 0 ? previewRisks : legacyRisks;
+  }, [executionPreview, legacyRisks]);
+
+  const ncsDetectadasCount = executionPreview.nonConformities?.length || items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').length;
+  const acoesGeradasCount = executionPreview.actions?.length || ncsDetectadasCount;
 
   if (!inspection) return null;
 
@@ -134,21 +154,13 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
       status: 'Em andamento',
       situacao: 'Em andamento'
     });
-    
-    // Process automation flow
-    AutomationEngine.processInspection(inspection.id);
 
     setInitialItems(JSON.stringify(items));
-    setSaveMessage("Respostas salvas. O motor de riscos processou as não conformidades.");
+    setSaveMessage("Respostas salvas.");
     setTimeout(() => {
       setSaveMessage(null);
       setIsSaving(false);
     }, 3000);
-  };
-
-  const syncRisks = (currentItems: any[]) => {
-    // Legacy syncRisks is now handled by AutomationEngine.processInspection
-    AutomationEngine.processInspection(inspection.id);
   };
 
   const handleConfirmarConclusao = () => {
@@ -163,9 +175,6 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
       dataConclusao: new Date().toISOString(),
       finalizadaEm: new Date().toISOString()
     });
-    
-    // Standardize automation at the end
-    AutomationEngine.processInspection(inspection.id);
 
     onClose();
   };

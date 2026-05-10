@@ -1,8 +1,9 @@
 "use client";
 
 import { useAppStore } from '@/lib/store';
-import { ActionItem, AcaoStatus, AcaoPrioridade, ActionFollowUp } from './types';
+import { ActionItem, ActionFollowUp } from './types';
 import { useMemo, useCallback, useState } from 'react';
+import { buildTargetActionsViewModel } from '@/lib/motor/adapters/actionsAdapter.js';
 
 export function useAcoes() {
   const storeAcoes = useAppStore(state => state.acoes);
@@ -12,82 +13,20 @@ export function useAcoes() {
   const addAcao = useAppStore(state => state.addAcao);
   const updateAcao = useAppStore(state => state.updateAcao);
   const addLog = useAppStore(state => state.addLog);
+  const [showInactive, setShowInactive] = useState(false);
 
   const allAcoes: ActionItem[] = useMemo(() => {
-    return (storeAcoes || []).filter(a => {
-      if (!a) return false;
-      const textFields = [a.title, a.titulo, a.description, a.descricao, a.category].filter(Boolean).join(' ').toLowerCase();
-      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
-      if (!a.title && !a.titulo && !a.description && !a.descricao && !a.category) return false;
-      return true;
-    }).map((a: any) => {
-      // Logic to parse status
-      let baseStatus: AcaoStatus = 'Pendente';
-      const rawStatus = typeof a.status === 'string' ? a.status.toLowerCase() : '';
-      
-      if (rawStatus === 'concluída' || rawStatus === 'concluído' || rawStatus === 'fechada') {
-        baseStatus = 'Concluída';
-      } else if (rawStatus === 'cancelada') {
-        baseStatus = 'Cancelada';
-      } else if (rawStatus === 'em andamento' || a.progresso > 0) {
-        baseStatus = 'Em andamento';
-      }
-      
-      const prazoStr = a.prazo || a.due_date || a.deadlineTime;
-      // Calculate Vencida if pending/em andamento and deadline has passed
-      if ((baseStatus === 'Pendente' || baseStatus === 'Em andamento') && prazoStr) {
-        const prazoDate = new Date(prazoStr);
-        prazoDate.setHours(23, 59, 59, 999);
-        if (new Date() > prazoDate) {
-           baseStatus = 'Vencida';
-        }
-      }
-
-      // Logic to parse priority
-      let basePrioridade: AcaoPrioridade = 'Média';
-      const pri = a.priority || a.prioridade;
-      const rawPri = typeof pri === 'string' ? pri.toLowerCase() : '';
-      if (rawPri.includes('crític') || rawPri === 'p1') basePrioridade = 'Crítica';
-      else if (rawPri.includes('alta') || rawPri === 'p2') basePrioridade = 'Alta';
-      else if (rawPri.includes('média') || rawPri === 'p3') basePrioridade = 'Média';
-      else if (rawPri.includes('baixa') || rawPri === 'p4') basePrioridade = 'Baixa';
-
-      // Find risk
-      const relatedRisk = storeRiscos.find(r => r.id === (a.risk_id || a.riscoId || a.item_origem_id));
-      const pacote = a.pacote || relatedRisk?.pacote || relatedRisk?.package || 'Base SST';
-
-      return {
-        id: a.id,
-        titulo: a.title || a.titulo || 'Nova Ação',
-        descricao: a.description || a.descricao || '',
-        prioridade: basePrioridade,
-        status: baseStatus,
-        setor: a.category || a.setor || a.sector_id || 'Não definido',
-        responsavel: a.responsavel || a.responsible?.name || 'Não atribuído',
-        prazo: (typeof a.prazo === 'string' ? a.prazo : null) || (typeof a.due_date === 'string' ? a.due_date : null) || (typeof a.deadlineTime === 'string' ? a.deadlineTime : null) || new Date().toISOString().split('T')[0],
-        progresso: a.progresso || 0,
-        origem: a.origem || a.originText || (a.item_origem_tipo === 'inspecao' ? 'Inspeção' : a.item_origem_tipo === 'risco' ? 'Risco' : 'Manual'),
-        riscoId: a.riscoId || a.risk_id || (a.item_origem_tipo === 'risco' ? a.item_origem_id : undefined),
-        riscoVinculado: a.riscoVinculado || relatedRisk?.titulo || relatedRisk?.title || '',
-        inspecaoId: a.inspecaoId || (a.item_origem_tipo === 'inspecao' ? a.item_origem_id : undefined),
-        checklistId: a.checklistId || '',
-        perguntaOrigem: a.perguntaOrigem || '',
-        respostaOrigem: a.respostaOrigem || '',
-        nrRelacionada: a.nrRelacionada || a.nr || relatedRisk?.nr,
-        pacote,
-        multaEstimada: a.multaEstimada || 0,
-        chanceIncidente: a.chanceIncidente || 'Baixa',
-        criadoEm: a.criadoEm || a.createdAt || new Date().toISOString(),
-        atualizadoEm: a.atualizadoEm || new Date().toISOString(),
-        iniciadoEm: a.iniciadoEm || null,
-        concluidoEm: a.concluidoEm || null,
-        evidencia: a.evidencia || [],
-        historico: a.historico || []
-      };
-    }).sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
-  }, [storeAcoes, storeRiscos]);
-
-  const [showInactive, setShowInactive] = useState(false);
+    return buildTargetActionsViewModel(
+      {
+        acoes: storeAcoes || [],
+        riscos: storeRiscos || [],
+      },
+      {
+        activePackages: activePackageNames,
+        includeInactivePackages: true,
+      },
+    ).actions.sort((a: ActionItem, b: ActionItem) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+  }, [storeAcoes, storeRiscos, activePackageNames]);
 
   const acoes = useMemo(() => {
     if (showInactive) return allAcoes;

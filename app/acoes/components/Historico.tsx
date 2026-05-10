@@ -23,6 +23,7 @@ import {
   Package
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { buildActionHistoryViewModel } from '@/lib/motor/adapters/auditAdapter.js';
 
 interface ExHistoryEvent {
   id: string;
@@ -61,7 +62,8 @@ const hashCode = (s: string) => {
 
 export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a: ActionItem) => void }) {
   const [selectedEvent, setSelectedEvent] = useState<ExHistoryEvent | null>(null);
-  const rulePackages = useAppStore(state => state.rulePackages);
+  const storeState = useAppStore();
+  const rulePackages = storeState.rulePackages;
   const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
 
   const historyList = useMemo(() => {
@@ -103,11 +105,22 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
      return allEvents.sort((a, b) => new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime());
   }, [acoes]);
 
+  const auditHistoryList = useMemo(() => {
+     return buildActionHistoryViewModel(storeState, acoes) as ExHistoryEvent[];
+  }, [storeState, acoes]);
+
+  const displayHistoryList = auditHistoryList.length > 0 ? auditHistoryList : historyList;
+
   const cards = useMemo(() => {
-     const total = historyList.length;
+     const total = displayHistoryList.length;
      const automaticas = historyList.filter(h => h.origem === 'Automática' || h.origem === 'Sistema').length;
-     const manuais = historyList.filter(h => h.origem === 'Manual').length;
-     const ultima = historyList.length > 0 ? historyList[0].dataHora : null;
+     const manuais = auditHistoryList.filter(h => h.origem === 'Manual').length;
+     const ultima = auditHistoryList.length > 0 ? auditHistoryList[0].dataHora : null;
+     const automaticasAudit = automaticas;
+     const manuaisAudit = manuais;
+     const automaticasDisplay = displayHistoryList.filter((item) => item.origem === 'Automática' || item.origem === 'Sistema').length;
+     const manuaisDisplay = displayHistoryList.filter((item) => item.origem === 'Manual').length;
+     const ultimaDisplay = displayHistoryList.length > 0 ? displayHistoryList[0].dataHora : null;
      
      let relativeTime = 'Sem registros';
      if (ultima) {
@@ -118,14 +131,14 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
 
      return {
         total,
-        automaticas,
-        autoPerc: total > 0 ? ((automaticas / total) * 100).toFixed(1) : '0',
-        manuais,
-        manuaisPerc: total > 0 ? ((manuais / total) * 100).toFixed(1) : '0',
-        ultima: ultima ? new Date(ultima).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '--',
+         automaticas: automaticasDisplay,
+         autoPerc: total > 0 ? ((automaticasDisplay / total) * 100).toFixed(1) : '0',
+         manuais: manuaisDisplay,
+         manuaisPerc: total > 0 ? ((manuaisDisplay / total) * 100).toFixed(1) : '0',
+        ultima: ultimaDisplay ? new Date(ultimaDisplay).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '--',
         relativeTime
      };
-  }, [historyList]);
+  }, [historyList, auditHistoryList, displayHistoryList]);
 
   const getEventBadge = (evento: string) => {
      if (evento.includes('Criação')) return 'text-purple-400 bg-purple-500/10 border-purple-500/30';
@@ -229,7 +242,7 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                   {historyList.map(item => {
+                   {displayHistoryList.map(item => {
                       const isSelected = selectedEvent?.id === item.id;
                       const avatarColors = ['bg-indigo-500/20 text-indigo-400', 'bg-blue-500/20 text-blue-400', 'bg-purple-500/20 text-purple-400', 'bg-emerald-500/20 text-emerald-400', 'bg-pink-500/20 text-pink-400'];
                       const charCode = item.usuario.charCodeAt(0) || 0;
@@ -300,7 +313,7 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
                          </tr>
                       );
                    })}
-                   {historyList.length === 0 && (
+                   {displayHistoryList.length === 0 && (
                       <tr>
                          <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">Nenhum evento registrado.</td>
                       </tr>
@@ -496,4 +509,3 @@ export default function Historico({ acoes }: { acoes: ActionItem[], onOpen?: (a:
     </div>
   );
 }
-
