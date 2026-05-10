@@ -70,6 +70,126 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 type RiskInstanceLocal = RiskInstance; // Keep for internal type alias if needed or just use RiskInstance
 
+function safeText(value: unknown, fallback = '') {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function safeLowerText(value: unknown) {
+  return safeText(value).toLowerCase();
+}
+
+function getActionActivityLabel(action: any) {
+  return safeText(action?.atividade, safeText(action?.tipoDeRisco, 'atividade'));
+}
+
+function getActionActivityToken(action: any) {
+  return getActionActivityLabel(action).split(' ')[0] || 'atividade';
+}
+
+function getActionSectorLabel(action: any) {
+  return safeText(action?.setor, 'setor');
+}
+
+function getActionInspectionCode(action: any) {
+  return safeText(action?.inspection_id).slice(0, 6).toUpperCase();
+}
+
+function toEntityTimestamp(value: unknown) {
+  if (!value) return 0;
+  const parsed = new Date(String(value)).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildRecentMonthLabels(total = 6) {
+  const labels: { key: string; label: string }[] = [];
+  const baseDate = new Date();
+  baseDate.setDate(1);
+  for (let index = total - 1; index >= 0; index -= 1) {
+    const current = new Date(baseDate.getFullYear(), baseDate.getMonth() - index, 1);
+    labels.push({
+      key: `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`,
+      label: current.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+    });
+  }
+  return labels;
+}
+
+function buildRiskMetricTrend(items: any[], valueResolver: (item: any) => number, total = 6) {
+  const months = buildRecentMonthLabels(total);
+  const buckets = months.reduce((acc, month) => {
+    acc[month.key] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  items.forEach((item) => {
+    const timestamp = toEntityTimestamp(item?.criadoEm || item?.created_at || item?.dataLancamento || item?.updated_at);
+    if (!timestamp) return;
+    const current = new Date(timestamp);
+    const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    if (!(key in buckets)) return;
+    buckets[key] += valueResolver(item);
+  });
+
+  return months.map((month) => buckets[month.key]);
+}
+
+function getTrendDeltaLabel(series: number[], suffix = '') {
+  if (series.length < 2) return 'Sem histórico';
+  const current = series[series.length - 1] || 0;
+  const previous = series[series.length - 2] || 0;
+  const delta = current - previous;
+  if (delta === 0) return `Estável${suffix}`;
+  return `${delta > 0 ? '+' : ''}${delta}${suffix}`;
+}
+
+function getRiskRelatedInspection(inspections: any[], risk: any) {
+  return inspections.find((inspection: any) =>
+    inspection?.id === risk?.inspection_id ||
+    inspection?.id === risk?.item_origem_id ||
+    inspection?.checklistId === risk?.checklistId ||
+    inspection?.checklist === risk?.inspection_name,
+  );
+}
+
+function getInspectionProgressMetrics(inspection: any) {
+  if (!inspection) {
+    return { percent: 0, label: 'Sem vínculo de checklist', detail: '0/0' };
+  }
+
+  const items = Array.isArray(inspection?.items)
+    ? inspection.items
+    : Array.isArray(inspection?.answers)
+      ? inspection.answers
+      : [];
+
+  const relevantItems = items.filter((item: any) => item?.status !== 'N/A');
+  if (relevantItems.length === 0) {
+    return { percent: 0, label: 'Checklist sem respostas registradas', detail: '0/0' };
+  }
+
+  const approvedItems = relevantItems.filter((item: any) => ['Sim', 'Conforme'].includes(item?.status));
+  const percent = Math.round((approvedItems.length / relevantItems.length) * 100);
+  return {
+    percent,
+    label: inspection?.checklist || inspection?.tipoInspecao || 'Checklist vinculado',
+    detail: `${approvedItems.length}/${relevantItems.length}`,
+  };
+}
+
+function getRiskResponsibleLabel(risk: any) {
+  return safeText(
+    risk?.responsavel ||
+      risk?.executorCorrecao ||
+      risk?.validadorCorrecao ||
+      risk?.owner ||
+      risk?.assignedTo,
+  );
+}
+
+function getRiskDrawerId(risk: any) {
+  return safeText(risk?.id || risk?.riskId || risk?.inspection_id || risk?.item_origem_id || 'SEM-ID');
+}
+
 const ATIVIDADES_OPCOES = [
   'Trabalho em altura',
   'Manutenção elétrica',
@@ -148,11 +268,11 @@ export default function RiscosPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [formData, setFormData] = useState<Partial<RiskInstance>>({
-    atividade: 'Trabalho em altura',
-    setor: 'Manutenção',
-    hasEpiEpc: true,
-    hasProcedimento: true,
-    hasTreinamento: true,
+    atividade: '',
+    setor: '',
+    hasEpiEpc: false,
+    hasProcedimento: false,
+    hasTreinamento: false,
     status: 'Aberto',
     trabalhadoresExpostos: 0,
     perfilExposto: '',
@@ -167,6 +287,18 @@ export default function RiscosPage() {
     return selectedAction ? buildRiskAuditDetailViewModel(store, selectedAction as any) : null;
   }, [store, selectedAction]);
 
+  const selectedActionInspection = useMemo(() => {
+    return selectedAction ? getRiskRelatedInspection(inspecoes || [], selectedAction) : null;
+  }, [inspecoes, selectedAction]);
+
+  const selectedActionProgress = useMemo(() => {
+    return getInspectionProgressMetrics(selectedActionInspection);
+  }, [selectedActionInspection]);
+
+  const selectedActionResponsible = useMemo(() => {
+    return getRiskResponsibleLabel(selectedAction) || safeText(selectedRiskAudit?.updatedBy);
+  }, [selectedAction, selectedRiskAudit]);
+
   const getNivelColor = (nivel?: NivelRisco) => {
     switch(nivel) {
       case 'Crítico': return 'text-red-500 bg-red-500/10 border-red-500/30';
@@ -177,8 +309,8 @@ export default function RiscosPage() {
     }
   };
 
-  const getRiskTypeIcon = (tipo: string) => {
-    const term = tipo.toLowerCase();
+  const getRiskTypeIcon = (tipo?: string) => {
+    const term = safeLowerText(tipo);
     if (term.includes('queda')) return <TrendingDown className="w-5 h-5 text-purple-400" />;
     if (term.includes('choque') || term.includes('elétric')) return <Zap className="w-5 h-5 text-yellow-400" />;
     if (term.includes('asfixia') || term.includes('afogamento')) return <Waves className="w-5 h-5 text-blue-400" />;
@@ -189,8 +321,8 @@ export default function RiscosPage() {
     return <AlertTriangle className="w-5 h-5 text-gray-400" />;
   };
 
-  const getRiskOrigem = (tipo: string) => {
-    const term = tipo.toLowerCase();
+  const getRiskOrigem = (tipo?: string) => {
+    const term = safeLowerText(tipo);
     if (term.includes('queda') || term.includes('choque') || term.includes('elétric') || term.includes('máquina') || term.includes('prensamento') || term.includes('corte') || term.includes('incêndio') || term.includes('explosão') || term.includes('atropelamento') || term.includes('impacto') || term.includes('esmagamento')) return 'Acidentes (Mecânicos)';
     if (term.includes('químic') || term.includes('asfixia') || term.includes('afogamento') || term.includes('gases')) return 'Químicos';
     if (term.includes('ergonômic') || term.includes('esforço') || term.includes('repetit')) return 'Ergonômicos';
@@ -208,8 +340,8 @@ export default function RiscosPage() {
     }
   };
 
-  const getActivityIcon = (atividade: string) => {
-    const term = atividade.toLowerCase();
+  const getActivityIcon = (atividade?: string) => {
+    const term = safeLowerText(atividade);
     switch(term) {
       case 'produção': return <Factory className="w-5 h-5 text-gray-400" />;
       case 'manutenção': return <Wrench className="w-5 h-5 text-gray-400" />;
@@ -297,6 +429,7 @@ export default function RiscosPage() {
       riscosNames: string[];
       nrs: string[];
       lastRecord: Date;
+      representativeRisk: RiskInstance | null;
     }> = {};
 
     combinedData.filter(r => r.status && r.status !== 'Resolvido' && r.status !== 'Mitigado').forEach(r => {
@@ -304,7 +437,7 @@ export default function RiscosPage() {
         if (!groups[s]) {
             groups[s] = {
                 setor: s, count: 0, crits: 0, altos: 0, medios: 0, baixos: 0,
-                multaTotal: 0, chanceSum: 0, riscosNames: [], nrs: [], lastRecord: new Date('2000-01-01')
+                multaTotal: 0, chanceSum: 0, riscosNames: [], nrs: [], lastRecord: new Date('2000-01-01'), representativeRisk: null
             };
         }
         const obj = groups[s];
@@ -320,6 +453,9 @@ export default function RiscosPage() {
         if (r.nr && !obj.nrs.includes(r.nr)) obj.nrs.push(r.nr);
         const rd = new Date(r.criadoEm || r.dataLancamento || new Date());
         if (rd > obj.lastRecord) obj.lastRecord = rd;
+        if (!obj.representativeRisk || (r.chanceIncidente || 0) >= (obj.representativeRisk.chanceIncidente || 0)) {
+          obj.representativeRisk = r;
+        }
     });
 
     const list = Object.values(groups).sort((a,b) => b.crits - a.crits || b.multaTotal - a.multaTotal);
@@ -387,13 +523,29 @@ export default function RiscosPage() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const mockTrend = [5, 7, 6, 8, 10, 9, 12, 10, 15, 14, 18];
+  const totalRiskTrend = useMemo(() => buildRiskMetricTrend(combinedData as any[], () => 1), [combinedData]);
+  const criticalRiskTrend = useMemo(
+    () =>
+      buildRiskMetricTrend(
+        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado' && risk.nivel === 'CrÃ­tico') as any[],
+        () => 1,
+      ),
+    [combinedData],
+  );
+  const multaTrend = useMemo(
+    () =>
+      buildRiskMetricTrend(
+        combinedData.filter((risk) => risk.status !== 'Resolvido' && risk.status !== 'Mitigado') as any[],
+        (risk) => Number(risk?.multaEstimada || 0),
+      ),
+    [combinedData],
+  );
 
   const topCards = [
-    { id: 'c9', label: 'Total de riscos', val: combinedData.length, sub: '+4 no último mês', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.purple },
-    { id: 'c5', label: 'Críticos em aberto', val: criticosCount, sub: 'Exigem ação imediata', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.red },
-    { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(totalMultaAberto), sub: 'Potencial de multas', icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', trend: mockTrend, sparkColor: SPARK_COLORS.yellow },
-    { id: 'c11', label: 'Chance média de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { id: 'c9', label: 'Total de riscos', val: combinedData.length, sub: getTrendDeltaLabel(totalRiskTrend, ' risco(s)'), icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', trend: totalRiskTrend, sparkColor: SPARK_COLORS.purple },
+    { id: 'c5', label: 'CrÃ­ticos em aberto', val: criticosCount, sub: getTrendDeltaLabel(criticalRiskTrend, ' crÃ­tico(s)'), icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', trend: criticalRiskTrend, sparkColor: SPARK_COLORS.red },
+    { id: 'c10', label: 'Multa estimada em aberto', val: formatCurrency(totalMultaAberto), sub: getTrendDeltaLabel(multaTrend), icon: BadgeInfo, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', trend: multaTrend, sparkColor: SPARK_COLORS.yellow },
+    { id: 'c11', label: 'Chance mÃ©dia de incidente', val: `${Math.round(avgChanceIncidente)}%`, sub: 'Risco moderado', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   ];
 
   const nrMetrics = useMemo(() => getNrMetrics({ inspections: inspecoes || [], risks: combinedData, actions: storeAcoes }), [inspecoes, combinedData, storeAcoes]);
@@ -434,6 +586,8 @@ export default function RiscosPage() {
     episAusentes: number;
     nrString: string;
     atividade: string;
+    pacotes: string[];
+    representativeRisk: RiskInstance | null;
   }> = {};
 
   const nivelToValue = { 'Crítico': 4, 'Alto': 3, 'Médio': 2, 'Baixo': 1 };
@@ -455,11 +609,12 @@ export default function RiscosPage() {
         episAusentes: 0,
         nrString: r.nr || 'NR-Geral',
         atividade: act,
-        pacotes: []
+        pacotes: [],
+        representativeRisk: null
       };
     }
     
-    const obj = activityGroups[act] as any;
+    const obj = activityGroups[act];
     obj.count++;
     if (r.tipoDeRisco && !obj.riscosNames.includes(r.tipoDeRisco)) obj.riscosNames.push(r.tipoDeRisco);
     if (r.setor && !obj.setores.includes(r.setor)) obj.setores.push(r.setor);
@@ -472,6 +627,9 @@ export default function RiscosPage() {
     if (nv > obj.maxNivelValue) {
       obj.maxNivelValue = nv;
       obj.maxNivelName = r.nivel as string;
+    }
+    if (!obj.representativeRisk || nv >= (nivelToValue[obj.representativeRisk.nivel as keyof typeof nivelToValue] || 1)) {
+      obj.representativeRisk = r;
     }
 
     obj.episTotal += 1;
@@ -539,8 +697,8 @@ export default function RiscosPage() {
                <button onClick={() => {
                  setFormData({ 
                    titulo: '',
-                   atividade: 'Trabalho em altura', 
-                   setor: 'Produção', 
+                   atividade: '',
+                   setor: '', 
                    justificativa: '',
                    evidencias: '',
                    acaoVinculada: '',
@@ -982,10 +1140,10 @@ export default function RiscosPage() {
                         <h3 className="text-xs font-bold text-gray-400 mb-1">Setores monitorados</h3>
                         <p className="text-3xl font-bold text-white tracking-tight mb-2">{totalSetoresAtivos}</p>
                         <div className="flex items-center gap-2">
-                           <span className="text-xs text-gray-500">100% dos setores ativos</span>
+                           <span className="text-xs text-gray-500">{totalSetoresAtivos} setor(es) com risco ativo</span>
                         </div>
                         <div className="mt-3 text-xs font-medium text-gray-500 flex items-center gap-1.5 pt-3 border-t border-white/5">
-                           <span className="w-1.5 h-0.5 bg-gray-500 rounded"></span> Sem variação
+                           <span className="w-1.5 h-0.5 bg-gray-500 rounded"></span> Leitura da base atual
                         </div>
                      </div>
                   </div>
@@ -1044,7 +1202,7 @@ export default function RiscosPage() {
                            <span className="text-xs text-gray-400">Estimativa total de multas</span>
                         </div>
                         <div className="mt-3 text-xs font-medium text-emerald-400 flex items-center gap-1pt-3 pt-3 border-t border-white/5">
-                           <ArrowDownRight className="w-3 h-3" /> -8,4% <span className="text-gray-500 font-normal">vs mês anterior</span>
+                           <ArrowDownRight className="w-3 h-3" /> {sectorGroups.length} setores monitorados <span className="text-gray-500 font-normal">na base atual</span>
                         </div>
                      </div>
                   </div>
@@ -1448,7 +1606,7 @@ export default function RiscosPage() {
                   </div>
                   <h3 className="text-[12px] text-purple-400 mb-1 z-10 relative">Atividades monitoradas</h3>
                   <p className="text-3xl font-bold text-white mb-2 z-10 relative">{totalAtividades}</p>
-                  <p className="text-xs text-gray-500 z-10 relative">+3 desde a semana passada</p>
+                  <p className="text-xs text-gray-500 z-10 relative">{getPercentage(atividadesCriticas, totalAtividades)}% do total</p>
                 </div>
                 <div className="bg-[#121826] p-4 border border-red-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -1464,7 +1622,7 @@ export default function RiscosPage() {
                   </div>
                   <h3 className="text-[12px] text-orange-400 mb-1 z-10 relative">Maior atividade de risco</h3>
                   <p className="text-2xl font-bold text-white mb-2 z-10 relative truncate">{maiorAtividade}</p>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-red-500/20 bg-red-500/10 text-red-400 z-10 relative">Crítico</span>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-white/10 bg-white/5 text-gray-300 z-10 relative">{sortedActivities[0]?.maxNivelName || 'Sem nível'}</span>
                 </div>
                 <div className="bg-[#121826] p-4 border border-yellow-500/30 rounded-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -1510,22 +1668,24 @@ export default function RiscosPage() {
                                  setTimeout(() => setSelectedAction(null), 300);
                              } else {
                                  // Let's create a combined simulated risk instance to feed the right drawer
+                                 const representativeRisk = item.representativeRisk;
                                  setSelectedAction({
-                                     id: `simulated-${idx}`,
+                                     ...(representativeRisk || {}),
+                                     id: representativeRisk?.id || `atividade-${idx}`,
                                      atividade: item.atividade,
-                                     setor: item.setores.join(', ') || 'N/A',
-                                     nr: Array.from(new Set(item.nrs)).join(', ') || 'NR-Geral',
-                                     nivel: item.maxNivelName,
-                                     status: 'Aberto',
-                                     responsavel: 'João Silva', // Mock as per screenshot
+                                     setor: item.setores.join(', ') || representativeRisk?.setor || '',
+                                     nr: Array.from(new Set(item.nrs)).join(', ') || representativeRisk?.nr || '',
+                                     nivel: representativeRisk?.nivel || item.maxNivelName,
+                                     status: representativeRisk?.status || 'Aberto',
+                                     responsavel: getRiskResponsibleLabel(representativeRisk),
                                      episAusentes: item.episAusentes,
                                      episTotal: item.episTotal,
                                      riscosNomes: item.riscosNames,
                                      chanceSum: item.chanceSum,
                                      count: item.count,
                                      maxNivelName: item.maxNivelName,
-                                     acaoRecomendada: `Implementar linha de vida e treinamento de reciclagem.`,
-                                     problemaPrincipal: `Alta chance de incidente em ${item.atividade}`,
+                                     acaoRecomendada: representativeRisk?.acaoRecomendada || representativeRisk?.recommendedAction || '',
+                                     problemaPrincipal: representativeRisk?.titulo || representativeRisk?.tipoDeRisco || item.riscosNames[0] || item.atividade,
                                      multaTotal: item.multaTotal
                                  } as any);
                                  setIsDrawerActionOpen(true);
@@ -1568,7 +1728,7 @@ export default function RiscosPage() {
                                <div className="flex flex-col gap-1">
                                  {item.episAusentes > 0 ? (
                                     <>
-                                      <span className="text-[13px] text-gray-200 truncate max-w-[150px]">Cinto paraquedista...</span>
+                                      <span className="text-[13px] text-gray-200 truncate max-w-[150px]">Controles obrigatórios pendentes</span>
                                       <span className="text-[10px] font-bold text-red-400 bg-red-400/10 border border-red-500/20 px-2 py-0.5 rounded w-max">{item.episAusentes} de {item.episTotal} ausentes</span>
                                     </>
                                  ) : (
@@ -1657,7 +1817,7 @@ export default function RiscosPage() {
                {activeTab === 'Histórico' ? (
                  <>
                    <div className="flex items-start justify-between border-b border-white/5 pb-4 mb-4">
-                     <span className="text-sm font-bold text-purple-400">{selectedAction.id}</span>
+                     <span className="text-sm font-bold text-purple-400">{getRiskDrawerId(selectedAction)}</span>
                      <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase border bg-opacity-10 
                           ${selectedAction.status === 'Crítico' || selectedAction.status === 'Pendente' ? 'text-red-400 border-red-500/20 bg-red-400' : 
                             selectedAction.status === 'Em análise' ? 'text-blue-400 border-blue-500/20 bg-blue-400' :
@@ -1703,10 +1863,10 @@ export default function RiscosPage() {
                                        <ShieldCheck className="w-4 h-4" /> Inspeção de Segurança
                                     </div>
                                     <p className="text-[13px] text-gray-200">
-                                       <span className="text-gray-400">Inspeção:</span> {selectedAction.inspection_name || 'Auditoria Interna'}
+                                       <span className="text-gray-400">Inspeção:</span> {selectedAction.inspection_name || selectedActionInspection?.checklist || selectedActionInspection?.tipoInspecao || '--'}
                                     </p>
                                     <p className="text-[13px] text-gray-200">
-                                       <span className="text-gray-400">Checklist/Item:</span> {selectedAction.atividade || 'Checklist de rotina'}
+                                       <span className="text-gray-400">Checklist/Item:</span> {selectedActionInspection?.checklist || selectedAction.atividade || '--'}
                                     </p>
                                     {(selectedAction as any).perguntaOrigem && (
                                        <div className="mt-2 text-[12px] bg-black/20 p-2 rounded">
@@ -1782,7 +1942,7 @@ export default function RiscosPage() {
                               <div className="text-[13px]">
                                  <p className="text-gray-300 font-medium mb-0.5">Execução & Validação</p>
                                  <p className="text-gray-500 text-[12px]">Quem resolve: {selectedAction.executorCorrecao || 'Não definido'}</p>
-                                 <p className="text-gray-500 text-[12px]">Quem assina: {selectedAction.validadorCorrecao || 'SST'}</p>
+                                 <p className="text-gray-500 text-[12px]">Quem assina: {selectedAction.validadorCorrecao || 'Não definido'}</p>
                               </div>
                               <button onClick={() => window.location.href='/operacao/acoes'} className="text-[12px] bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded border border-white/10 transition-colors">
                                  Ver Ações
@@ -1805,7 +1965,7 @@ export default function RiscosPage() {
                         <span className="text-[13px] text-gray-500 shrink-0">Origem</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            {(selectedAction.origem || '').toLowerCase().includes('inspe') ? <ShieldCheck className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                           {selectedAction.origem || 'Automática'} 
+                           {selectedAction.origem || 'Não informada'} 
                             <span className="text-gray-500 text-xs">({(selectedAction.origem || '').toLowerCase().includes('inspe') ? 'Inspeção de campo' : ((selectedAction.origem || '').toLowerCase().includes('auto') ? 'Motor de Riscos' : 'Inserção Manual')})</span>
                         </div>
                      </div>
@@ -1817,7 +1977,7 @@ export default function RiscosPage() {
                         <span className="text-[13px] text-gray-500 shrink-0">Atualizado por</span>
                         <div className="flex items-center gap-2 text-[13px] text-blue-400">
                            <Settings2 className="w-3.5 h-3.5" />
-                           {selectedRiskAudit?.updatedBy || 'Sistema'}
+                           {selectedRiskAudit?.updatedBy || 'Não informado'}
                         </div>
                      </div>
                      <div className="flex justify-between items-center gap-6 pb-3">
@@ -1861,7 +2021,7 @@ export default function RiscosPage() {
                    <div>
                       <h4 className="text-xs font-bold text-gray-200 mb-2">Resumo</h4>
                       <p className="text-[13px] text-gray-400 leading-relaxed">
-                         Atividade com alto potencial de incidentes em {selectedAction.setor?.toLowerCase()} relacionados aos riscos: {(selectedAction as any).riscosNomes?.join(', ') || selectedAction.tipoDeRisco || 'N/A'}. Requer acompanhamento de fatores agravantes para manter compliance. 
+                         Atividade com alto potencial de incidentes em {safeLowerText(getActionSectorLabel(selectedAction)) || 'setor'} relacionados aos riscos: {(selectedAction as any).riscosNomes?.join(', ') || selectedAction.tipoDeRisco || 'N/A'}. Requer acompanhamento de fatores agravantes para manter compliance. 
                       </p>
                    </div>
 
@@ -1896,7 +2056,7 @@ export default function RiscosPage() {
                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                                   {selectedAction.executorCorrecao?.charAt(0) || 'E'}
                                </div>
-                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.executorCorrecao || 'A definir'}</span>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.executorCorrecao || 'Não definido'}</span>
                             </div>
                          </div>
                          <div>
@@ -1905,7 +2065,7 @@ export default function RiscosPage() {
                                <div className="w-5 h-5 rounded-full bg-[#121826] border border-white/10 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                                   {selectedAction.validadorCorrecao?.charAt(0) || 'V'}
                                </div>
-                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.validadorCorrecao || 'A definir'}</span>
+                               <span className="text-[13px] text-gray-300 truncate">{selectedAction.validadorCorrecao || 'Não definido'}</span>
                             </div>
                          </div>
                       </div>
@@ -1933,7 +2093,7 @@ export default function RiscosPage() {
                            {selectedAction.perguntaOrigem && <p><span className="font-bold text-gray-500">Pergunta:</span> {selectedAction.perguntaOrigem}</p>}
                            {selectedAction.respostaOrigem && <p><span className="font-bold text-gray-500">Resposta:</span> {selectedAction.respostaOrigem}</p>}
                            {(selectedAction.inspection_name || selectedAction.checklistId) && (
-                              <p><span className="font-bold text-gray-500">Origem:</span> {selectedAction.inspection_id ? `Inspeção #${selectedAction.inspection_id.substring(0,6).toUpperCase()}` : 'Inspeção'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
+                              <p><span className="font-bold text-gray-500">Origem:</span> {getActionInspectionCode(selectedAction) ? `Inspeção #${getActionInspectionCode(selectedAction)}` : 'Inspeção'} / {selectedAction.inspection_name || selectedAction.checklistId}</p>
                            )}
                         </div>
                         {selectedAction.explicacaoNormativa && (
@@ -1970,14 +2130,14 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">Checklist vinculado</h4>
-                        <p className="text-[11px] text-gray-500">Checklist {(selectedAction.atividade as string).split(' ')[0]}</p>
+                        <p className="text-[11px] text-gray-500">{selectedActionProgress.label}</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-3 w-[100px]">
                      <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500/80 rounded-full" style={{width: '70%'}}></div>
+                        <div className="h-full bg-purple-500/80 rounded-full" style={{width: `${selectedActionProgress.percent}%`}}></div>
                      </div>
-                     <span className="text-[11px] font-mono text-gray-400">70%</span>
+                     <span className="text-[11px] font-mono text-gray-400">{selectedActionProgress.percent}%</span>
                   </div>
                </div>
 
@@ -1989,7 +2149,7 @@ export default function RiscosPage() {
                      <div className="flex flex-col gap-1">
                         <h4 className="text-xs font-bold text-gray-200">EPI/EPC ausente</h4>
                         <p className="text-[11px] text-gray-400 leading-snug">
-                           Falta de equipamentos essenciais para atuação segura em {(selectedAction.atividade as string).toLowerCase()}.
+                           Falta de equipamentos essenciais para atuação segura em {safeLowerText(getActionActivityLabel(selectedAction)) || 'atividade'}.
                         </p>
                      </div>
                   </div>
@@ -2007,7 +2167,7 @@ export default function RiscosPage() {
                      </div>
                      <div>
                         <h4 className="text-xs font-bold text-gray-200 leading-none mb-1">Ação recomendada</h4>
-                        <p className="text-[11px] text-gray-500">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${(selectedAction.atividade as string).toLowerCase()}.`}</p>
+                        <p className="text-[11px] text-gray-500">{(selectedAction as any).acaoRecomendada || `Revisar processos de ${safeLowerText(getActionActivityLabel(selectedAction)) || 'atividade'}.`}</p>
                      </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors shrink-0" />
@@ -2016,12 +2176,12 @@ export default function RiscosPage() {
                <div className="flex items-center justify-between p-4 bg-[#121826] border border-white/5 rounded-xl cursor-pointer hover:border-white/20 transition-colors group">
                   <div className="flex items-center gap-4">
                      <div className="w-8 h-8 rounded-full bg-[#1e1a30] text-gray-400 flex items-center justify-center text-xs font-bold border border-white/10 uppercase shrink-0">
-                        {selectedAction.responsavel ? selectedAction.responsavel.substring(0, 2) : 'JS'}
+                        {selectedActionResponsible ? selectedActionResponsible.substring(0, 2).toUpperCase() : '--'}
                      </div>
                      <div>
                         <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                        <p className="text-xs font-bold text-white">{selectedAction.responsavel || 'João Silva'}</p>
-                        <p className="text-[11px] text-gray-500">Técnico de Segurança</p>
+                        <p className="text-xs font-bold text-white">{selectedActionResponsible || 'Não definido'}</p>
+                        <p className="text-[11px] text-gray-500">{selectedAction.executorCorrecao ? 'Executor da correção' : selectedAction.validadorCorrecao ? 'Validador da correção' : 'Aguardando atribuição'}</p>
                      </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors shrink-0" />
@@ -2152,7 +2312,7 @@ export default function RiscosPage() {
                      <Zap className="w-3.5 h-3.5"/> Ação sugerida
                   </h4>
                   <p className="text-[12px] text-gray-300">
-                     Priorizar adequações nas frentes de trabalho relacionadas aos principais riscos detectados no setor de {selectedSectorItem.setor.toLowerCase()} e intensificar inspeções de rotina.
+                     Priorizar adequações nas frentes de trabalho relacionadas aos principais riscos detectados no setor de {safeLowerText(selectedSectorItem?.setor) || 'setor'} e intensificar inspeções de rotina.
                   </p>
                </div>
 
@@ -2162,8 +2322,8 @@ export default function RiscosPage() {
                   </div>
                   <div className="flex-1">
                      <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Responsável</h4>
-                     <p className="text-sm font-bold text-white">Carlos Eduardo Silva</p>
-                     <p className="text-[11px] text-gray-500">Gerente de {selectedSectorItem.setor}</p>
+                     <p className="text-sm font-bold text-white">{getRiskResponsibleLabel(selectedSectorItem?.representativeRisk) || 'Não definido'}</p>
+                     <p className="text-[11px] text-gray-500">{selectedSectorItem?.representativeRisk?.executorCorrecao ? 'Executor vinculado ao setor' : 'Sem responsável setorial definido'}</p>
                   </div>
                </div>
                
@@ -2256,10 +2416,11 @@ export default function RiscosPage() {
                       Atividade Operacional
                     </label>
                     <select 
-                      value={formData.atividade} 
+                      value={formData.atividade || ""} 
                       onChange={e => setFormData({...formData, atividade: e.target.value})}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none mb-3"
                     >
+                      <option value="" className="bg-[#121826] text-gray-400">Selecione a atividade</option>
                       {ATIVIDADES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
                     </select>
 
@@ -2312,10 +2473,11 @@ export default function RiscosPage() {
                       Área / Setor
                     </label>
                     <select 
-                      value={formData.setor} 
+                      value={formData.setor || ""} 
                       onChange={e => setFormData({...formData, setor: e.target.value})}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm font-medium text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none"
                     >
+                      <option value="" className="bg-[#121826] text-gray-400">Selecione o setor</option>
                       {SETORES_OPCOES.map(opt => <option key={opt} value={opt} className="bg-[#121826] text-white">{opt}</option>)}
                     </select>
                   </div>

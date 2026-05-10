@@ -11,6 +11,20 @@ import { formatCurrency } from '@/lib/risk-calculations';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
 import { buildInspectionExecutionPreview } from '@/lib/motor/adapters/inspectionsAdapter.js';
 
+function getTemplateTitle(template: any) {
+  return template?.titulo || template?.name || template?.title || template?.nr || 'Atividade operacional';
+}
+
+function getTemplateNr(template: any) {
+  return (
+    template?.nr ||
+    template?.nrRelacionada ||
+    template?.sections?.[0]?.questions?.[0]?.nr ||
+    template?.sections?.[0]?.questions?.[0]?.nrRelacionada ||
+    ''
+  );
+}
+
 export default function ExecutionView({ inspectionId, onClose }: { inspectionId: string, onClose: () => void }) {
   const store = useAppStore();
   const inspection = store.inspecoes?.find(i => i.id === inspectionId);
@@ -71,8 +85,8 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     return items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').map((nc: any) => {
       const isCritica = nc.riskMap === 'Crítica';
       const isAlta = nc.riskMap === 'Alta';
-      const activity = inspection?.tipoInspecao || inspection?.checklist || 'Trabalho em altura';
-      const nr = nc.nr || 'NR-35';
+      const activity = inspection?.tipoInspecao || inspection?.checklist || getTemplateTitle(template);
+      const nr = nc.nr || nc.nrRelacionada || inspection?.nr || inspection?.nrRelacionada || getTemplateNr(template) || '';
       
       const payload: Partial<RiskInstance> = {
         atividade: activity,
@@ -97,7 +111,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
         alerta: isCritica ? 'Alerta Crítico: Risco de incidente grave detectado. Recomenda-se paralisação imediata para correção.' : null
       };
     });
-  }, [items, inspection?.tipoInspecao, inspection?.checklist]);
+  }, [items, inspection?.tipoInspecao, inspection?.checklist, inspection?.nr, inspection?.nrRelacionada, template]);
 
   const risks = useMemo(() => {
     const previewRisks = (executionPreview.risks || []).map((risk: any) => {

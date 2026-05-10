@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
@@ -42,6 +42,113 @@ type Inspecao = {
   perfilExposto?: string;
 };
 
+function getChecklistTitle(checklist: any) {
+  return checklist?.titulo || checklist?.title || checklist?.name || checklist?.nome || checklist?.nr || 'Checklist';
+}
+
+function getChecklistSections(checklist: any) {
+  return Array.isArray(checklist?.sections) ? checklist.sections : [];
+}
+
+function getChecklistNr(checklist: any) {
+  return (
+    checklist?.nr ||
+    checklist?.nrRelacionada ||
+    checklist?.sections?.[0]?.questions?.[0]?.nrRelacionada ||
+    checklist?.sections?.[0]?.questions?.[0]?.nr || ''
+  );
+}
+
+function getChecklistQuestions(checklist: any) {
+  return getChecklistSections(checklist).flatMap((section: any) =>
+    Array.isArray(section?.questions) ? section.questions : []
+  );
+}
+
+function getChecklistPackage(checklist: any) {
+  return checklist?.pacote || checklist?.package || checklist?.group || 'Base SST';
+}
+
+function getChecklistActivityLabel(checklist: any) {
+  return (
+    checklist?.atividade ||
+    checklist?.ondeUsar ||
+    checklist?.area ||
+    checklist?.segmento ||
+    checklist?.category ||
+    getChecklistPackage(checklist) ||
+    'Nao classificado'
+  );
+}
+
+function getChecklistCriticalCount(checklist: any) {
+  return getChecklistQuestions(checklist).filter((question: any) =>
+    ['CrÃ­tico', 'CrÃ­tica', 'Alta'].includes(question?.riskMap),
+  ).length;
+}
+
+function hasChecklistRiskAutomation(checklist: any) {
+  return getChecklistQuestions(checklist).some((question: any) =>
+    Boolean(question?.riskMap || question?.nr || question?.nrRelacionada || question?.regraId),
+  );
+}
+
+function hasChecklistActionAutomation(checklist: any) {
+  return getChecklistQuestions(checklist).some((question: any) =>
+    Boolean(question?.acaoSugerida || question?.actionSuggestion || question?.riskMap),
+  );
+}
+
+function getChecklistImpactScore(checklist: any) {
+  return Math.max(0, getChecklistCriticalCount(checklist) * 2);
+}
+
+function getInspectionChecklistLabel(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value : 'Checklist';
+}
+
+function getInspectionQuestions(item: any) {
+  if (Array.isArray(item?.items)) return item.items;
+  if (Array.isArray(item?.answers)) return item.answers;
+  return [];
+}
+
+function getInspectionAnsweredItems(item: any) {
+  return getInspectionQuestions(item).filter((question: any) => question?.status && question.status !== 'Pendente');
+}
+
+function getInspectionApprovedItems(item: any) {
+  return getInspectionQuestions(item).filter((question: any) =>
+    ['Sim', 'Conforme', 'N/A'].includes(question?.status),
+  );
+}
+
+function getInspectionConformityScore(item: any) {
+  const relevantItems = getInspectionQuestions(item).filter((question: any) => question?.status !== 'N/A');
+  if (relevantItems.length === 0) return 0;
+  const approvedItems = relevantItems.filter((question: any) => ['Sim', 'Conforme'].includes(question?.status));
+  return Math.round((approvedItems.length / relevantItems.length) * 100);
+}
+
+function getInspectionPriorityLabel(item: any) {
+  return item?.prioridade || item?.priority || 'Nao definida';
+}
+
+function formatInspectionDate(value?: string) {
+  if (!value) return '--';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('pt-BR');
+}
+
+function findChecklistForInspection(item: any, checklistList: any[]) {
+  return checklistList.find((checklist: any) =>
+    checklist?.id === item?.checklistId ||
+    getChecklistTitle(checklist) === item?.checklist ||
+    getChecklistTitle(checklist) === item?.tipoInspecao,
+  );
+}
+
 export default function InspecoesPage() {
   const store = useAppStore();
   const [mounted, setMounted] = useState(false);
@@ -70,16 +177,16 @@ export default function InspecoesPage() {
     const status = getResolvedStatus(inspecao);
     const hasAnswers = (inspecao.answers && inspecao.answers.length > 0) || (inspecao.items && inspecao.items.some(i => i.status && i.status !== 'Pendente'));
     
-    if (status === 'Concluída') return false;
+    if (status === 'ConcluÃ­da') return false;
     
     if (status === 'Em andamento') {
-      // Enquanto status = Em andamento: permitir editar apenas: responsável, observações, evidências, continuar checklist
+      // Enquanto status = Em andamento: permitir editar apenas: responsÃ¡vel, observaÃ§Ãµes, evidÃªncias, continuar checklist
       if (['responsavel', 'observacoes', 'evidencias'].includes(field)) return true;
       return false;
     }
     
     if (status === 'Agendada' || status === 'Atrasada') {
-      // Enquanto status = Agendada: permitir editar: data, responsável, checklist, observações, setor, tipo, se ainda não foi iniciada
+      // Enquanto status = Agendada: permitir editar: data, responsÃ¡vel, checklist, observaÃ§Ãµes, setor, tipo, se ainda nÃ£o foi iniciada
       if (hasAnswers) {
          if (['responsavel', 'observacoes', 'data'].includes(field)) return true;
          return false;
@@ -124,18 +231,21 @@ export default function InspecoesPage() {
     });
     const nrsAplicaveisIds = nrsAplicaveis.map(nr => nr.id);
 
-    return checklists.filter(checklist =>
-      checklist.ativo && (
-        checklist.pacote === "Base SST" || 
-        (nrsAplicaveisIds.includes(checklist.nr) && pacotesAtivos.includes(checklist.pacote))
-      )
-    );
+    return checklists.filter(checklist => {
+      const checklistNr = getChecklistNr(checklist);
+      const checklistPackage = getChecklistPackage(checklist);
+
+      return checklist.ativo && (
+        checklistPackage === "Base SST" ||
+        (nrsAplicaveisIds.includes(checklistNr) && pacotesAtivos.includes(checklistPackage))
+      );
+    });
   }, [checklists, rulePackages, organization.segmento, organization.atividadesCriticas]);
 
   const prioridadeCalculada = useMemo(() => {
     const t = inspectionData.tipoInspecao.toLowerCase();
-    if (t.includes('altura') || t.includes('elétrica') || t.includes('espaço') || t.includes('confinado') || t.includes('químico') || t.includes('incêndio') || t.includes('fogo')) return 'Alta';
-    if (t.includes('máquina') || t.includes('movimentação') || t.includes('carga')) return 'Média';
+    if (t.includes('altura') || t.includes('elÃ©trica') || t.includes('espaÃ§o') || t.includes('confinado') || t.includes('quÃ­mico') || t.includes('incÃªndio') || t.includes('fogo')) return 'Alta';
+    if (t.includes('mÃ¡quina') || t.includes('movimentaÃ§Ã£o') || t.includes('carga')) return 'MÃ©dia';
     return 'Baixa';
   }, [inspectionData.tipoInspecao]);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
@@ -163,7 +273,7 @@ export default function InspecoesPage() {
 
   const getResolvedStatus = (item: any) => {
     const s = item.status || item.situacao || 'Agendada';
-    if (['Concluída', 'Concluído', 'Finalizada', 'Cancelada', 'Anulada', 'Reprovada', 'Reprovado'].includes(s)) return 'Concluída';
+    if (['ConcluÃ­da', 'ConcluÃ­do', 'Finalizada', 'Cancelada', 'Anulada', 'Reprovada', 'Reprovado'].includes(s)) return 'ConcluÃ­da';
     if (s === 'Em andamento') return 'Em andamento';
     const d = item.data || item.proximaInspecao;
     if (d < hojeDateStr) return 'Atrasada';
@@ -179,11 +289,11 @@ export default function InspecoesPage() {
 
   const realizadas = allInspecoes.filter(i => {
     const rs = getResolvedStatus(i);
-    return rs === 'Concluída';
+    return rs === 'ConcluÃ­da';
   });
 
   const totalNConformidades = realizadas.reduce((acc, current) => {
-    return acc + (current.items?.filter((item: any) => item.status === 'Não' || item.status === 'Parcialmente').length || 0);
+    return acc + (current.items?.filter((item: any) => item.status === 'NÃ£o' || item.status === 'Parcialmente').length || 0);
   }, 0);
 
   const totalRiscosRealizadas = store.riscos?.filter((r: any) => 
@@ -206,24 +316,24 @@ export default function InspecoesPage() {
     return getResolvedStatus(i) === 'Em andamento';
   }).length || 0;
 
-  // Mock data for Checklists tab as per requirements
   const checklistsTabItems = useMemo(() => {
     return checklists.map((c: any) => ({
       ...c,
-      tipo: c.regraFixa ? 'Padrão do motor' : 'Personalizado',
-      atividade: c.titulo.includes('Altura') ? 'Atividades Críticas' : 'Operação Fabril',
-      nr: c.regraFixa ? (c.sections[0]?.questions[0]?.nrRelacionada || 'NR-01') : (c.titulo.includes('Altura') ? 'NR-35' : (c.titulo.includes('Máquinas') ? 'NR-12' : (c.titulo.includes('Elétrica') ? 'NR-10' : 'NR-01'))),
-      riscoAuto: true,
-      acaoAuto: true,
-      impactoScore: c.titulo.includes('Altura') ? 15 : 8,
-      perguntasCriticas: c.sections.reduce((acc: any, sec: any) => acc + sec.questions.filter((q: any) => q.riskMap === 'Crítico' || q.riskMap === 'Alta' || q.riskMap === 'Crítica').length, 0),
-      totalPerguntas: c.sections.reduce((acc: any, sec: any) => acc + sec.questions.length, 0),
+      titulo: getChecklistTitle(c),
+      tipo: c.regraFixa ? 'PadrÃ£o do motor' : 'Personalizado',
+      atividade: getChecklistActivityLabel(c),
+      nr: getChecklistNr(c) || 'Sem NR',
+      riscoAuto: hasChecklistRiskAutomation(c),
+      acaoAuto: hasChecklistActionAutomation(c),
+      impactoScore: getChecklistImpactScore(c),
+      perguntasCriticas: getChecklistCriticalCount(c),
+      totalPerguntas: getChecklistQuestions(c).length,
     }));
   }, [checklists]);
 
   const checklistsStats = useMemo(() => ({
     ativos: checklistsTabItems.filter(c => c.status === 'Ativo').length,
-    padraoMotor: checklistsTabItems.filter(c => c.tipo === 'Padrão do motor').length,
+    padraoMotor: checklistsTabItems.filter(c => c.tipo === 'PadrÃ£o do motor').length,
     totalPerguntas: checklistsTabItems.reduce((acc, cur) => acc + cur.totalPerguntas, 0),
     nrsVinculadas: new Set(checklistsTabItems.map(c => c.nr)).size
   }), [checklistsTabItems]);
@@ -246,34 +356,34 @@ export default function InspecoesPage() {
 
   const getAcaoSugerida = (question: string) => {
     const lowerQ = question.toLowerCase();
-    if (lowerQ.includes('partes móveis') && lowerQ.includes('proteg')) return 'Instalar ou regularizar proteção física nas partes móveis.';
-    if (lowerQ.includes('rotas de fuga') && lowerQ.includes('desobstruídas')) return 'Desobstruir imediatamente as rotas de fuga do local.';
-    if (lowerQ.includes('ambiente') && lowerQ.includes('limpo')) return 'Realizar limpeza e organização do local sinalizando as áreas.';
+    if (lowerQ.includes('partes mÃ³veis') && lowerQ.includes('proteg')) return 'Instalar ou regularizar proteÃ§Ã£o fÃ­sica nas partes mÃ³veis.';
+    if (lowerQ.includes('rotas de fuga') && lowerQ.includes('desobstruÃ­das')) return 'Desobstruir imediatamente as rotas de fuga do local.';
+    if (lowerQ.includes('ambiente') && lowerQ.includes('limpo')) return 'Realizar limpeza e organizaÃ§Ã£o do local sinalizando as Ã¡reas.';
     if (lowerQ.includes('epi') && lowerQ.includes('estado')) return 'Solicitar e substituir EPIs danificados por uniformes/equipamentos novos.';
-    if (lowerQ.includes('permissão de trabalho')) return 'Emitir, revisar e validar a Permissão de Trabalho (PT) com os responsáveis antes de continuar a operação.';
+    if (lowerQ.includes('permissÃ£o de trabalho')) return 'Emitir, revisar e validar a PermissÃ£o de Trabalho (PT) com os responsÃ¡veis antes de continuar a operaÃ§Ã£o.';
     if (lowerQ.includes('ancoragem')) return 'Avaliar os pontos de ancoragem e testar estabilidade antes da tarefa.';
-    if (lowerQ.includes('emergência') && lowerQ.includes('botão')) return 'Solicitar manutenção imediata do botão de emergência da máquina.';
+    if (lowerQ.includes('emergÃªncia') && lowerQ.includes('botÃ£o')) return 'Solicitar manutenÃ§Ã£o imediata do botÃ£o de emergÃªncia da mÃ¡quina.';
     return `Regularizar conformidade: ${question.replace('?', '')}`;
   };
 
   const getPrazoDias = (gravidade: string) => {
     switch(gravidade) {
-      case 'Crítico': return 1;
+      case 'CrÃ­tico': return 1;
       case 'Alta': return 7;
-      case 'Média': return 15;
+      case 'MÃ©dia': return 15;
       case 'Baixo': default: return 30;
     }
   };
 
   const handleOpenDrawer = (item: Inspecao, mode: 'VIEW' | 'EXECUTE' | 'ISSUES' | 'RESCHEDULE' | 'REPORT' | 'CANCEL' | 'EDIT' = 'VIEW') => {
-    if (mode === 'REPORT') { alert('Gerar relatório em desenvolvimento.'); return; }
+    if (mode === 'REPORT') { alert('Gerar relatÃ³rio em desenvolvimento.'); return; }
     
     setSelectedInspecao(item);
     
     if (mode === 'EDIT') {
       setInspectionData({
         tipoInspecao: item.tipoInspecao || item.checklist || '',
-        checklistId: checklists.find(c => c.titulo === item.checklist)?.id || '',
+        checklistId: checklists.find(c => getChecklistTitle(c) === item.checklist)?.id || '',
         ondeUsar: item.ondeUsar || '',
         data: item.data || item.proximaInspecao || '',
         responsavel: item.responsavel || '',
@@ -302,10 +412,10 @@ export default function InspecoesPage() {
         setChecklistItems(item.items);
       } else {
         const tempChecklistItems: any[] = [];
-        const foundC = checklists.find(c => c.titulo === item.checklist);
+        const foundC = checklists.find(c => getChecklistTitle(c) === item.checklist);
         if (foundC) {
-          foundC.sections.forEach((sec: any) => {
-            sec.questions.forEach((q: any) => {
+          getChecklistSections(foundC).forEach((sec: any) => {
+            (sec?.questions || []).forEach((q: any) => {
               tempChecklistItems.push({
                 id: q.id,
                 sectionId: sec.id,
@@ -331,8 +441,8 @@ export default function InspecoesPage() {
       const selectedModel = checklists.find(c => c.id === (inspectionData.checklistId || checklists[0]?.id));
       if (!selectedModel) return;
       const newItems: any[] = [];
-      selectedModel.sections.forEach((sec: any) => {
-        sec.questions.forEach((q: any) => {
+      getChecklistSections(selectedModel).forEach((sec: any) => {
+        (sec?.questions || []).forEach((q: any) => {
           newItems.push({ id: q.id, sectionId: sec.id, sectionTitle: sec.title, text: q.text, status: 'Conforme', gravidade: 'Baixo', observacao: '', acaoCorretiva: getAcaoSugerida(q.text), evidencia: '' });
         });
       });
@@ -343,11 +453,11 @@ export default function InspecoesPage() {
 
   const handleSalvarInspecao = () => {
     if (!inspectionData.tipoInspecao || !inspectionData.ondeUsar || !inspectionData.responsavel || !inspectionData.data || !inspectionData.checklistId) {
-      alert("Preencha todos os campos obrigatórios (marcados com *).");
+      alert("Preencha todos os campos obrigatÃ³rios (marcados com *).");
       return;
     }
 
-    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
+    const modelo = getChecklistTitle(checklists.find(c => c.id === inspectionData.checklistId)) || 'InspeÃ§Ã£o';
     const dataHoje = new Date().toISOString().split('T')[0];
     const adaptedInspection = adaptTargetInspectionPayload(
       {
@@ -418,19 +528,19 @@ export default function InspecoesPage() {
 
   const handleSalvarRascunho = () => {
     const inspecaoId = Date.now().toString();
-    const modelo = checklists.find(c => c.id === inspectionData.checklistId)?.titulo || 'Inspeção';
+    const modelo = getChecklistTitle(checklists.find(c => c.id === inspectionData.checklistId)) || 'InspeÃ§Ã£o';
     const adaptedInspection = adaptTargetInspectionPayload(
       {
         titulo: modelo,
-        tipoInspecao: inspectionData.tipoInspecao || 'Nova Inspeção',
+        tipoInspecao: inspectionData.tipoInspecao || 'Nova InspeÃ§Ã£o',
         setor: inspectionData.ondeUsar || 'Geral',
-        responsavel: inspectionData.responsavel || 'Não definido',
-        atividades: [inspectionData.tipoInspecao || 'Nova Inspeção'],
+        responsavel: inspectionData.responsavel || 'NÃ£o definido',
+        atividades: [inspectionData.tipoInspecao || 'Nova InspeÃ§Ã£o'],
         data: inspectionData.data || new Date().toISOString().split('T')[0],
       },
       {
         sectorName: inspectionData.ondeUsar || 'Geral',
-        responsibleName: inspectionData.responsavel || 'Não definido',
+        responsibleName: inspectionData.responsavel || 'NÃ£o definido',
       },
     );
     
@@ -464,8 +574,8 @@ export default function InspecoesPage() {
       case 'Ativo': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
       case 'Rascunho': return 'text-orange-400 border-orange-500/30 bg-orange-500/10';
       case 'Em andamento': return 'text-purple-400 border-purple-500/30 bg-purple-500/10';
-      case 'Em revisão': return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
-      case 'Concluída': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+      case 'Em revisÃ£o': return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
+      case 'ConcluÃ­da': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
       case 'Finalizada': return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
       case 'Arquivado': return 'text-gray-400 border-gray-500/30 bg-gray-500/10';
       case 'Cancelada': return 'text-red-400 border-red-500/30 bg-red-500/10 opacity-70';
@@ -481,21 +591,21 @@ export default function InspecoesPage() {
     store.inspecoes.forEach(i => {
        if (i.items) {
           i.items.forEach((item: any) => {
-             if (item.status === 'Não' || item.status === 'Parcialmente') {
+             if (item.status === 'NÃ£o' || item.status === 'Parcialmente') {
                 totalNConformidades++;
              }
           });
        }
     });
 
-    const riscosInspecão = store.riscos.filter(r => r.origem === 'Inspeção / Checklist').length;
+    const riscosInspecao = store.riscos.filter(r => r.origem === 'InspeÃ§Ã£o / Checklist').length;
     const acoesPendentes = store.acoes.filter(a => a.status === 'Em aberto' || a.status === 'Pendente').length;
     const evidenciasAusentes = store.acoes.filter(a => a.exigeEvidencia && !a.evidenciaUrl).length;
 
     return {
        totalInspecoes,
        totalNConformidades,
-       ncQueGeraramRisco: riscosInspecão,
+       ncQueGeraramRisco: riscosInspecao,
        acoesPendentes,
        evidenciasAusentes
     };
@@ -517,15 +627,15 @@ export default function InspecoesPage() {
           <header className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6 shrink-0 mt-2">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-2">
-                 <span>Operação</span>
+                 <span>OperaÃ§Ã£o</span>
                  <span>&gt;</span>
-                 <span className="text-gray-300">Inspeções</span>
+                 <span className="text-gray-300">InspeÃ§Ãµes</span>
                  <span>&gt;</span>
                  <span className="text-purple-400">{activeTab}</span>
               </div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">Inspeções</h1>
+              <h1 className="text-3xl font-bold text-white tracking-tight">InspeÃ§Ãµes</h1>
               <p className="text-[13px] text-gray-400 mt-1.5 font-medium tracking-wide">
-                Planeje, execute e acompanhe inspeções operacionais com geração automática de riscos, ações e conformidade.
+                Planeje, execute e acompanhe inspeÃ§Ãµes operacionais com geraÃ§Ã£o automÃ¡tica de riscos, aÃ§Ãµes e conformidade.
               </p>
             </div>
             <div className="flex gap-3">
@@ -552,7 +662,7 @@ export default function InspecoesPage() {
                 className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-[13px] font-medium transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
                >
                 <Plus className="w-4 h-4" />
-                Nova Inspeção
+                Nova InspeÃ§Ã£o
               </button>
             </div>
           </header>
@@ -563,7 +673,7 @@ export default function InspecoesPage() {
                     <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                       <Calendar className="w-4 h-4 text-blue-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Inspeções do período</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">InspeÃ§Ãµes do perÃ­odo</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.inspecoesPeriodo}</div>
@@ -576,7 +686,7 @@ export default function InspecoesPage() {
                     <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                       <ShieldAlert className="w-4 h-4 text-red-500" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Não conformidades</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">NÃ£o conformidades</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.totalNConformidades}</div>
@@ -589,7 +699,7 @@ export default function InspecoesPage() {
                     <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por inspeção</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">Riscos por inspeÃ§Ã£o</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.ncQueGeraramRisco}</div>
@@ -602,7 +712,7 @@ export default function InspecoesPage() {
                     <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
                       <ClipboardList className="w-4 h-4 text-purple-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Ações pendentes</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">AÃ§Ãµes pendentes</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.acoesPendentes}</div>
@@ -615,7 +725,7 @@ export default function InspecoesPage() {
                     <div className="w-9 h-9 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center">
                       <PlusCircle className="w-4 h-4 text-gray-400" />
                     </div>
-                    <h3 className="text-[12px] font-medium text-gray-400">Evidências ausentes</h3>
+                    <h3 className="text-[12px] font-medium text-gray-400">EvidÃªncias ausentes</h3>
                 </div>
                 <div className="flex items-end justify-between">
                     <div className="text-2xl font-bold text-white tracking-tight">{activeTabMetrics.evidenciasAusentes}</div>
@@ -651,7 +761,7 @@ export default function InspecoesPage() {
                 <div className="bg-blue-500/5 border border-blue-500/20 p-3 px-4 rounded-xl flex items-center gap-3 shrink-0">
                   <Info className="w-4 h-4 text-blue-400 shrink-0" />
                   <p className="text-[12px] text-blue-200">
-                    <span className="font-bold">Os checklists são gerenciados em Configurações.</span> Checklists padrão do motor são essenciais e não podem ser removidos.
+                    <span className="font-bold">Os checklists sÃ£o gerenciados em ConfiguraÃ§Ãµes.</span> Checklists padrÃ£o do motor sÃ£o essenciais e nÃ£o podem ser removidos.
                   </p>
                 </div>
               )}
@@ -669,35 +779,35 @@ export default function InspecoesPage() {
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">NR vinculada</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Total perguntas</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Gera Risco</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Gera Ação</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Gera AÃ§Ã£o</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Status</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 w-24">Ações</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 w-24">AÃ§Ãµes</th>
                       </tr>
                     ) : activeTab === 'Realizadas' ? (
                       <tr>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Data Conclusão</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Tipo de inspeção</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Data ConclusÃ£o</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Tipo de inspeÃ§Ã£o</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Setor</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Responsável</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">ResponsÃ¡vel</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Checklist</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Conformidade</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Riscos</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Ações</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">AÃ§Ãµes</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Status</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 w-32">Detalhes</th>
                       </tr>
                     ) : (
                       <tr>
                         <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Status</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Tipo de inspeção</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 whitespace-nowrap">Tipo de inspeÃ§Ã£o</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Setor</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Responsável</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">ResponsÃ¡vel</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Data</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Checklist vinculado</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Riscos gerados</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Ações geradas</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">AÃ§Ãµes geradas</th>
                         <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5">Progresso</th>
-                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 w-32">Ações</th>
+                        <th className="px-5 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/5 w-32">AÃ§Ãµes</th>
                       </tr>
                     )}
                   </thead>
@@ -708,12 +818,12 @@ export default function InspecoesPage() {
                           <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
                             <td className="px-5 py-4">
                               <div className="flex flex-col">
-                                <span className="text-[13px] font-bold text-gray-200">{item.titulo}</span>
+                                <span className="text-[13px] font-bold text-gray-200">{getChecklistTitle(item)}</span>
                                 <span className="text-[10px] text-gray-500 uppercase tracking-tight">{item.category}</span>
                               </div>
                             </td>
                             <td className="px-5 py-4">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${item.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${item.tipo === 'PadrÃ£o do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>
                                 {item.tipo}
                               </span>
                             </td>
@@ -745,7 +855,7 @@ export default function InspecoesPage() {
                                  <button 
                                   onClick={() => router.push('/configuracoes?tab=checklists')}
                                   className="text-[11px] font-bold text-gray-500 hover:text-gray-300 transition-colors"
-                                 >Configurações</button>
+                                 >ConfiguraÃ§Ãµes</button>
                               </div>
                             </td>
                           </tr>
@@ -756,12 +866,7 @@ export default function InspecoesPage() {
                         const itemRiscos = store.riscos?.filter((r: any) => r.inspection_id === item.id) || [];
                         const itemAcoes = store.acoes?.filter((a: any) => a.inspection_id === item.id) || [];
                         
-                        let conformidadeNum = 0;
-                        if (item.items && item.items.length > 0) {
-                          const total = item.items.length;
-                          const ok = item.items.filter((i: any) => i.status === 'Sim' || i.status === 'N/A').length;
-                          conformidadeNum = Math.round((ok / total) * 100);
-                        }
+                        const conformidadeNum = getInspectionConformityScore(item);
 
                         return (
                           <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => handleOpenDrawer(item, 'VIEW')}>
@@ -793,7 +898,7 @@ export default function InspecoesPage() {
                             <td className="px-5 py-4 text-[13px] text-red-500/80 font-medium">{itemRiscos.length}</td>
                             <td className="px-5 py-4 text-[13px] text-orange-500/80 font-medium">{itemAcoes.length}</td>
                             <td className="px-5 py-4">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-emerald-500/10 border-emerald-500/20 text-emerald-400`}>Concluída</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-emerald-500/10 border-emerald-500/20 text-emerald-400`}>ConcluÃ­da</span>
                             </td>
                             <td className="px-5 py-4 text-center">
                               <button className="text-gray-500 hover:text-white transition-colors"><MoreVertical className="w-4 h-4" /></button>
@@ -804,6 +909,8 @@ export default function InspecoesPage() {
 
                       const rStatus = getResolvedStatus(item);
                       const rDate = getResolvedDate(item);
+                      const inspectionChecklist = findChecklistForInspection(item, checklists);
+                      const inspectionNr = getChecklistNr(inspectionChecklist);
                       
                       const itemRiscos = store.riscos?.filter((r: any) => r.inspection_id === item.id) || [];
                       const itemAcoes = store.acoes?.filter((a: any) => a.inspection_id === item.id) || [];
@@ -825,10 +932,10 @@ export default function InspecoesPage() {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
-                             {item.checklist.includes('Altura') || item.checklist.includes('NR-35') ? <Activity className="w-3.5 h-3.5 text-purple-400" /> :
-                              item.checklist.includes('Elétrica') || item.checklist.includes('NR-10') ? <Zap className="w-3.5 h-3.5 text-orange-400" /> :
-                              <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />}
-                             <span className="text-[13px] font-bold text-gray-200">{item.tipoInspecao || item.checklist.replace('Checklist ', '')}</span>
+                             {inspectionNr === 'NR-35' ? <Activity className="w-3.5 h-3.5 text-purple-400" /> :
+                              inspectionNr === 'NR-10' ? <Zap className="w-3.5 h-3.5 text-orange-400" /> :
+                               <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />}
+                             <span className="text-[13px] font-bold text-gray-200">{item.tipoInspecao || getInspectionChecklistLabel(item.checklist).replace('Checklist ', '')}</span>
                           </div>
                         </td>
                         <td className="px-5 py-4">
@@ -846,17 +953,17 @@ export default function InspecoesPage() {
                         </td>
                         <td className="px-5 py-4">
                            <span className={`text-[13px] font-medium text-gray-300`}>
-                              {rDate === hojeDateStr ? `Hoje, 14:00` : rDate}
+                              {rDate === hojeDateStr ? 'Hoje' : formatInspectionDate(rDate)}
                            </span>
                         </td>
                         <td className="px-5 py-4">
-                           <span className="text-[13px] text-blue-400 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 rounded-md hover:bg-blue-500/20 transition-colors cursor-pointer">{item.checklist}</span>
+                           <span className="text-[13px] text-blue-400 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 rounded-md hover:bg-blue-500/20 transition-colors cursor-pointer">{getInspectionChecklistLabel(item.checklist)}</span>
                         </td>
                         <td className="px-5 py-4">
                            <span className={`text-[13px] font-medium ${itemRiscos.length > 0 ? 'text-red-400' : 'text-gray-500'}`}>{itemRiscos.length} risco{itemRiscos.length !== 1 && 's'}</span>
                         </td>
                         <td className="px-5 py-4">
-                           <span className={`text-[13px] font-medium ${itemAcoes.length > 0 ? 'text-orange-400' : 'text-gray-500'}`}>{itemAcoes.length} ação{itemAcoes.length !== 1 && 'ões'}</span>
+                           <span className={`text-[13px] font-medium ${itemAcoes.length > 0 ? 'text-orange-400' : 'text-gray-500'}`}>{itemAcoes.length} aÃ§Ã£o{itemAcoes.length !== 1 && 'Ãµes'}</span>
                         </td>
                         <td className="px-5 py-4">
                            <div className="flex items-center gap-3 w-32">
@@ -892,7 +999,7 @@ export default function InspecoesPage() {
                                   Iniciar agora
                                 </button>
                              )}
-                             {rStatus === 'Concluída' && (
+                             {rStatus === 'ConcluÃ­da' && (
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleOpenDrawer(item, 'VIEW'); }}
                                   className={`px-3 py-1 text-[11px] font-medium rounded transition-colors border flex items-center gap-1.5 focus:outline-none bg-transparent hover:bg-white/5 text-emerald-400 border-emerald-500/30`}
@@ -912,7 +1019,7 @@ export default function InspecoesPage() {
                     {currentItems.length === 0 && (
                       <tr>
                         <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">
-                           Nenhuma inspeção encontrada nesta aba.
+                           Nenhuma inspeÃ§Ã£o encontrada nesta aba.
                         </td>
                       </tr>
                     )}
@@ -920,7 +1027,7 @@ export default function InspecoesPage() {
                 </table>
               </div>
               <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 bg-[#0b0f19]/80 backdrop-blur-md">
-                 <span>{((currentPage - 1) * itemsPerPage) + 1} – {Math.min(currentPage * itemsPerPage, listToPaginate.length)} de {listToPaginate.length} inspeções</span>
+                 <span>{((currentPage - 1) * itemsPerPage) + 1} â€“ {Math.min(currentPage * itemsPerPage, listToPaginate.length)} de {listToPaginate.length} inspeÃ§Ãµes</span>
                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-2 py-1 rounded bg-transparent border border-transparent hover:text-white transition-colors disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
@@ -946,8 +1053,8 @@ export default function InspecoesPage() {
                     </div>
                     <div className="flex items-center gap-2 bg-[#121826] border border-white/10 rounded-lg px-2 h-8">
                        <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-transparent outline-none text-gray-300 font-medium">
-                          <option value={10}>10 por página</option>
-                          <option value={20}>20 por página</option>
+                          <option value={10}>10 por pÃ¡gina</option>
+                          <option value={20}>20 por pÃ¡gina</option>
                        </select>
                     </div>
                  </div>
@@ -974,9 +1081,9 @@ export default function InspecoesPage() {
                <div className="p-6 flex justify-between items-start border-b border-white/5 shrink-0 bg-[#0b0f19]">
                   <div>
                     <h3 className="text-sm font-bold text-white mb-2 tracking-tight">Detalhes do Checklist</h3>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${selectedChecklist.tipo === 'Padrão do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>{selectedChecklist.tipo}</span>
-                    <h2 className="text-xl font-bold text-white leading-snug mt-3">{selectedChecklist.titulo}</h2>
-                    <p className="text-[11px] font-bold text-gray-500 mt-1 uppercase tracking-widest">{selectedChecklist.nr} • {selectedChecklist.atividade}</p>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${selectedChecklist.tipo === 'PadrÃ£o do motor' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'}`}>{selectedChecklist.tipo}</span>
+                    <h2 className="text-xl font-bold text-white leading-snug mt-3">{getChecklistTitle(selectedChecklist)}</h2>
+                    <p className="text-[11px] font-bold text-gray-500 mt-1 uppercase tracking-widest">{getChecklistNr(selectedChecklist)} â€¢ {selectedChecklist.atividade || 'Checklist operacional'}</p>
                   </div>
                   <button onClick={() => { setIsDrawerOpen(false); setSelectedChecklist(null); }} className="text-gray-500 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors border border-transparent hover:border-white/10">
                     <X className="w-5 h-5" />
@@ -987,37 +1094,37 @@ export default function InspecoesPage() {
                   <div className="grid grid-cols-2 gap-4">
                      <div className="bg-white/5 border border-white/5 p-4 rounded-xl">
                         <span className="text-[10px] text-gray-500 uppercase font-black block mb-1">Total de perguntas</span>
-                        <span className="text-2xl font-black text-white">{selectedChecklist.totalPerguntas}</span>
+                        <span className="text-2xl font-black text-white">{selectedChecklist.totalPerguntas || getChecklistQuestions(selectedChecklist).length}</span>
                      </div>
                      <div className="bg-white/5 border border-white/5 p-4 rounded-xl">
-                        <span className="text-[10px] text-gray-500 uppercase font-black block mb-1">Perguntas Críticas</span>
-                        <span className="text-2xl font-black text-red-500">{selectedChecklist.perguntasCriticas}</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-black block mb-1">Perguntas CrÃ­ticas</span>
+                        <span className="text-2xl font-black text-red-500">{selectedChecklist.perguntasCriticas || 0}</span>
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                     <h4 className="text-xs font-bold text-gray-200 uppercase tracking-widest border-b border-white/10 pb-2">Configurações Ativas</h4>
+                     <h4 className="text-xs font-bold text-gray-200 uppercase tracking-widest border-b border-white/10 pb-2">ConfiguraÃ§Ãµes Ativas</h4>
                      <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
                         <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[13px] text-emerald-400 font-medium">Geração de Risco Automático</span>
+                        <span className="text-[13px] text-emerald-400 font-medium">GeraÃ§Ã£o de Risco AutomÃ¡tico</span>
                      </div>
                      <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
                         <Zap className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[13px] text-emerald-400 font-medium">Geração de Ação Automática</span>
+                        <span className="text-[13px] text-emerald-400 font-medium">GeraÃ§Ã£o de AÃ§Ã£o AutomÃ¡tica</span>
                      </div>
                      <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/10 p-3 rounded-xl">
                         <Activity className="w-4 h-4 text-blue-400" />
-                        <span className="text-[13px] text-blue-400 font-medium">Impacto no Score: <span className="font-bold">+{selectedChecklist.impactoScore} pts</span></span>
+                        <span className="text-[13px] text-blue-400 font-medium">Impacto no Score: <span className="font-bold">+{selectedChecklist.impactoScore || 0} pts</span></span>
                      </div>
                     </div>
 
                   <div className="space-y-4">
                      <h4 className="text-xs font-bold text-gray-200 uppercase tracking-widest border-b border-white/10 pb-2">Perguntas Essenciais</h4>
                      <div className="space-y-3">
-                        {selectedChecklist.sections[0]?.questions.map((q: any) => (
+                        {getChecklistQuestions(selectedChecklist).map((q: any) => (
                           <div key={q.id} className="p-3 bg-black/20 border border-white/5 rounded-xl">
                              <div className="flex items-start gap-3">
-                                <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${q.riskMap === 'Crítico' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-blue-500'}`} />
+                                <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${q.riskMap === 'CrÃ­tico' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-blue-500'}`} />
                                 <p className="text-[12px] text-gray-300 leading-relaxed">{q.text}</p>
                              </div>
                           </div>
@@ -1032,12 +1139,12 @@ export default function InspecoesPage() {
                        onClick={() => router.push('/configuracoes?tab=checklists')}
                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-colors border border-purple-500/50 flex justify-center items-center gap-2"
                      >
-                        <SettingsIcon className="w-4 h-4" /> Editar em Configurações
+                        <SettingsIcon className="w-4 h-4" /> Editar em ConfiguraÃ§Ãµes
                      </button>
                   ) : (
-                     <p className="text-[11px] text-purple-400 font-bold text-center border border-purple-500/20 bg-purple-500/10 py-2 rounded-lg">Checklist padrão do sistema. Não editável.</p>
+                     <p className="text-[11px] text-purple-400 font-bold text-center border border-purple-500/20 bg-purple-500/10 py-2 rounded-lg">Checklist padrÃ£o do sistema. NÃ£o editÃ¡vel.</p>
                   )}
-                  <p className="text-[10px] text-gray-500 text-center italic">Checklists padrão do motor são protegidos contra edição direta.</p>
+                  <p className="text-[10px] text-gray-500 text-center italic">Checklists padrÃ£o do motor sÃ£o protegidos contra ediÃ§Ã£o direta.</p>
                </div>
              </div>
            </motion.div>
@@ -1054,7 +1161,7 @@ export default function InspecoesPage() {
            <div className="w-[420px] h-full flex flex-col pt-safe-top overflow-y-auto">
              <div className="p-6 flex justify-between items-start border-b border-white/5 shrink-0 bg-[#0b0f19]">
                 <div>
-                  <h3 className="text-sm font-bold text-white mb-2">Detalhes da inspeção</h3>
+                  <h3 className="text-sm font-bold text-white mb-2">Detalhes da inspeÃ§Ã£o</h3>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase inline-block ${getStatusStyle(selectedInspecao.situacao || 'Agendada')}`}>{selectedInspecao.situacao || 'Agendada'}</span>
                   <h2 className="text-xl font-bold text-white leading-snug mt-3">{selectedInspecao.checklist}</h2>
                   <p className="text-[12px] font-medium text-gray-500 mt-1 uppercase tracking-wider">ID: {selectedInspecao.id.length > 8 ? `I-2025-${selectedInspecao.id.slice(-5)}` : selectedInspecao.id}</p>
@@ -1068,14 +1175,14 @@ export default function InspecoesPage() {
                 
                 {drawerMode === 'VIEW' && (
                   <>
-                  {selectedInspecao.situacao === 'Concluída' ? (
+                  {selectedInspecao.situacao === 'ConcluÃ­da' ? (
                      <>
                         <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-5 mb-6">
                            <div className="flex items-center gap-3 mb-5">
                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                  <TrendingUp className="w-4 h-4 text-indigo-400" />
                               </div>
-                              <h4 className="text-[15px] font-bold text-white">Resumo da inspeção</h4>
+                              <h4 className="text-[15px] font-bold text-white">Resumo da inspeÃ§Ã£o</h4>
                            </div>
                            
                            <div className="space-y-3.5">
@@ -1084,14 +1191,14 @@ export default function InspecoesPage() {
                                  <span className="text-[13px] font-semibold text-white">{selectedInspecao.ondeUsar}</span>
                               </div>
                               <div className="flex justify-between items-center">
-                                 <span className="text-[13px] text-gray-400">Responsável local</span>
+                                 <span className="text-[13px] text-gray-400">ResponsÃ¡vel local</span>
                                  <span className="text-[13px] font-semibold text-white">{selectedInspecao.responsavel}</span>
                               </div>
                                <div className="flex justify-between items-center bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
                                   <span className="text-[13px] font-bold text-blue-400 flex items-center gap-2"><User className="w-4 h-4"/> Pessoas expostas</span>
                                   <div className="text-right">
                                      <p className="text-[14px] font-bold text-white">{selectedInspecao.trabalhadoresExpostos || 0} vidas</p>
-                                     <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'Não especificado'}</p>
+                                     <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'NÃ£o especificado'}</p>
                                   </div>
                                </div>
                               <div className="flex justify-between items-center">
@@ -1108,11 +1215,11 @@ export default function InspecoesPage() {
                                  const nrsAfetadas = new Set<string>();
                                  if (selectedInspecao.items) {
                                    selectedInspecao.items.forEach((item: any) => {
-                                     if ((item.status === 'Não' || item.status === 'Parcialmente') && item.regraFixa) {
+                                     if ((item.status === 'NÃ£o' || item.status === 'Parcialmente') && item.regraFixa) {
                                        rulesApplied++;
                                        if (item.nrRelacionada) nrsAfetadas.add(item.nrRelacionada);
                                        const severity = (item.riskMap || item.severidade || '').toLowerCase();
-                                       let penalty = severity === 'crítica' ? 10 : severity === 'alta' ? 5 : severity === 'média' ? 2 : 1;
+                                       let penalty = severity === 'crÃ­tica' ? 10 : severity === 'alta' ? 5 : severity === 'mÃ©dia' ? 2 : 1;
                                        if (item.status === 'Parcialmente') penalty = penalty / 2;
                                        impactScore -= penalty;
                                      }
@@ -1143,21 +1250,21 @@ export default function InspecoesPage() {
                               })()}
                               <div className="flex justify-between items-center pb-3 border-b border-white/5">
                                  <span className="text-[13px] text-gray-400">Prioridade operacional</span>
-                                 <span className="text-[13px] font-bold text-red-500 flex items-center gap-1"><ChevronUp className="w-4 h-4" /> Alta</span>
+                                 <span className="text-[13px] font-bold text-red-500 flex items-center gap-1"><ChevronUp className="w-4 h-4" /> {getInspectionPriorityLabel(selectedInspecao)}</span>
                               </div>
                               
                               <div className="pt-1 space-y-3">
                                  <div className="flex justify-between items-center">
                                     <span className="text-[13px] flex items-center gap-2 text-gray-400"><Calendar className="w-4 h-4 text-indigo-400/70" /> Agendada para</span>
-                                    <span className="text-[13px] font-semibold text-white">{selectedInspecao.proximaInspecao || selectedInspecao.data} <span className="text-gray-500 font-normal ml-1">08:30</span></span>
+                                    <span className="text-[13px] font-semibold text-white">{formatInspectionDate(selectedInspecao.proximaInspecao || selectedInspecao.data)}</span>
                                  </div>
                                  <div className="flex justify-between items-center">
                                     <span className="text-[13px] flex items-center gap-2 text-gray-400"><Clock className="w-4 h-4 text-indigo-400/70" /> Iniciada em</span>
-                                    <span className="text-[13px] font-semibold text-white">{selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="text-gray-500 font-normal ml-1">14:02</span></span>
+                                    <span className="text-[13px] font-semibold text-white">{formatInspectionDate(selectedInspecao.iniciadaEm || selectedInspecao.updated_at || selectedInspecao.data || selectedInspecao.proximaInspecao)}</span>
                                  </div>
                                  <div className="flex justify-between items-center">
-                                    <span className="text-[13px] flex items-center gap-2 text-gray-400"><Clock className="w-4 h-4 text-indigo-400/70" /> Concluída em</span>
-                                    <span className="text-[13px] font-semibold text-white">{selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="text-gray-500 font-normal ml-1">14:48</span></span>
+                                    <span className="text-[13px] flex items-center gap-2 text-gray-400"><Clock className="w-4 h-4 text-indigo-400/70" /> ConcluÃ­da em</span>
+                                    <span className="text-[13px] font-semibold text-white">{formatInspectionDate(selectedInspecao.finalizadaEm || selectedInspecao.dataConclusao || selectedInspecao.updated_at || selectedInspecao.data || selectedInspecao.proximaInspecao)}</span>
                                  </div>
                               </div>
                            </div>
@@ -1168,8 +1275,9 @@ export default function InspecoesPage() {
                            const inspectionActions = acoes.filter(a => a.item_origem_id === selectedInspecao.id || a.source_id === selectedInspecao.id);
                            const answers = selectedInspecao.answers || [];
                            const nonConformities = answers.filter(a => a.isConform === false).length;
-                           const totalQuestions = answers.length || 24; 
-                           const conformityScore = totalQuestions > 0 ? Math.round(((totalQuestions - nonConformities) / totalQuestions) * 100) : 100;
+                           const totalQuestions = getInspectionQuestions(selectedInspecao).length;
+                           const answeredQuestions = getInspectionAnsweredItems(selectedInspecao).length;
+                           const conformityScore = getInspectionConformityScore(selectedInspecao);
 
                            return (
                               <div className="bg-[#1a1f2e] border border-white/5 rounded-xl p-5 mb-6">
@@ -1183,7 +1291,7 @@ export default function InspecoesPage() {
                                  <div className="mb-4">
                                     <span className={`text-[13px] font-bold flex items-center gap-1.5 ${conformityScore >= 80 ? 'text-emerald-400' : 'text-red-400'}`}>
                                        {conformityScore >= 80 ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />} 
-                                       Checklist aprovado: {conformityScore}%
+                                       Conformidade do checklist: {conformityScore}%
                                     </span>
                                  </div>
 
@@ -1191,7 +1299,7 @@ export default function InspecoesPage() {
                                     <div className="bg-[#121621] rounded-lg p-3 border border-white/5 flex flex-col justify-between">
                                        <div className="flex items-center gap-2 mb-1">
                                           <ListChecks className="w-4 h-4 text-indigo-400" />
-                                          <span className="text-lg font-bold text-white">{totalQuestions}/{totalQuestions}</span>
+                                          <span className="text-lg font-bold text-white">{answeredQuestions}/{totalQuestions}</span>
                                        </div>
                                        <span className="text-[11px] text-gray-400 font-medium">Respondidas</span>
                                     </div>
@@ -1214,7 +1322,7 @@ export default function InspecoesPage() {
                                           <CheckCircle2 className="w-4 h-4 text-blue-400" />
                                           <span className="text-lg font-bold text-white">{inspectionActions.length}</span>
                                        </div>
-                                       <span className="text-[11px] text-gray-400 font-medium">Ações geradas</span>
+                                       <span className="text-[11px] text-gray-400 font-medium">AÃ§Ãµes geradas</span>
                                     </div>
                                  </div>
                               </div>
@@ -1247,24 +1355,24 @@ export default function InspecoesPage() {
                               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                                  <Clock className="w-4 h-4 text-indigo-400" />
                               </div>
-                              <h4 className="text-[15px] font-bold text-white">Timeline da execução</h4>
+                              <h4 className="text-[15px] font-bold text-white">Timeline da execuÃ§Ã£o</h4>
                            </div>
 
                            <div className="relative pl-3 space-y-5 before:content-[''] before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/5">
                               <div className="relative pl-6">
                                  <div className="absolute left-[-2px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                                 <p className="text-[13px] font-bold text-white">Inspeção criada</p>
-                                 <p className="text-[12px] text-gray-500 mt-0.5">{selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="ml-2">11:30</span></p>
+                                 <p className="text-[13px] font-bold text-white">InspeÃ§Ã£o criada</p>
+                                 <p className="text-[12px] text-gray-500 mt-0.5">{formatInspectionDate(selectedInspecao.created_at || selectedInspecao.criadoEm || selectedInspecao.data || selectedInspecao.proximaInspecao)}</p>
                               </div>
                               <div className="relative pl-6">
                                  <div className="absolute left-[-2px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                                  <p className="text-[13px] font-bold text-white">Iniciada</p>
-                                 <p className="text-[12px] text-gray-500 mt-0.5">{selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="ml-2">14:02</span></p>
+                                 <p className="text-[12px] text-gray-500 mt-0.5">{formatInspectionDate(selectedInspecao.iniciadaEm || selectedInspecao.updated_at || selectedInspecao.data || selectedInspecao.proximaInspecao)}</p>
                               </div>
                               <div className="relative pl-6">
                                  <div className="absolute left-[-2px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                                 <p className="text-[13px] font-bold text-white">Concluída</p>
-                                 <p className="text-[12px] text-gray-500 mt-0.5">{selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="ml-2">14:48</span></p>
+                                 <p className="text-[13px] font-bold text-white">ConcluÃ­da</p>
+                                 <p className="text-[12px] text-gray-500 mt-0.5">{formatInspectionDate(selectedInspecao.finalizadaEm || selectedInspecao.dataConclusao || selectedInspecao.updated_at || selectedInspecao.data || selectedInspecao.proximaInspecao)}</p>
                               </div>
                            </div>
                         </div>
@@ -1275,11 +1383,11 @@ export default function InspecoesPage() {
                               <h4 className="text-[13px] font-semibold text-gray-300">Origem e conectividade</h4>
                            </div>
                            <div className="text-[11px] text-gray-500 flex items-center flex-wrap gap-2 gap-y-1">
-                              <span className="flex items-center gap-1 text-indigo-400"><Smartphone className="w-3.5 h-3.5" /> APP MOBILE (V2.4.1)</span>
-                              <span className="text-gray-700">•</span>
-                              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-gray-600" /> Geo: -23.5505, -46.6333</span>
-                              <span className="text-gray-700">•</span>
-                              <span className="flex items-center gap-1"><RefreshCcw className="w-3.5 h-3.5 text-gray-600" /> Sincronia: Instantânea</span>
+                              <span className="flex items-center gap-1 text-indigo-400"><Smartphone className="w-3.5 h-3.5" /> Status: {selectedInspecao.situacao || selectedInspecao.status || 'Agendada'}</span>
+                              <span className="text-gray-700">â€¢</span>
+                              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-gray-600" /> Setor: {selectedInspecao.ondeUsar || 'Nao informado'}</span>
+                              <span className="text-gray-700">â€¢</span>
+                              <span className="flex items-center gap-1"><RefreshCcw className="w-3.5 h-3.5 text-gray-600" /> Checklist: {selectedInspecao.checklist || 'Nao vinculado'}</span>
                            </div>
                         </div>
                      </>
@@ -1287,8 +1395,8 @@ export default function InspecoesPage() {
                      <>
                      <div className="space-y-4 mb-8">
                         <h4 className="text-sm font-bold text-white border-b border-white/10 pb-2 flex items-center justify-between">
-                           Resumo da inspeção
-                           {selectedInspecao.situacao === 'Concluída' && (
+                           Resumo da inspeÃ§Ã£o
+                           {selectedInspecao.situacao === 'ConcluÃ­da' && (
                              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Auditada</span>
                            )}
                          </h4>
@@ -1298,27 +1406,27 @@ export default function InspecoesPage() {
                               <span className="text-[13px] font-medium text-white">{selectedInspecao.ondeUsar}</span>
                            </div>
                            <div className="flex justify-between items-center">
-                              <span className="text-[13px] text-gray-400">Responsável local</span>
+                              <span className="text-[13px] text-gray-400">ResponsÃ¡vel local</span>
                               <span className="text-[13px] font-medium text-white">{selectedInspecao.responsavel}</span>
                            </div>
                            <div className="flex justify-between items-center bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
                               <span className="text-[13px] font-bold text-blue-400 flex items-center gap-2"><User className="w-4 h-4"/> Pessoas expostas</span>
                               <div className="text-right">
                                  <p className="text-[14px] font-bold text-white">{selectedInspecao.trabalhadoresExpostos || 0} vidas</p>
-                                 <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'Não especificado'}</p>
+                                 <p className="text-[10px] text-blue-300">{selectedInspecao.perfilExposto || 'NÃ£o especificado'}</p>
                               </div>
                            </div>
                            <div className="flex justify-between items-center">
                               <span className="text-[13px] text-gray-400">Prioridade operacional</span>
-                              <span className="text-[13px] font-bold text-red-500 flex items-center gap-1"><ChevronUp className="w-3.5 h-3.5 -rotate-90" /> Alta</span>
+                              <span className="text-[13px] font-bold text-red-500 flex items-center gap-1"><ChevronUp className="w-3.5 h-3.5 -rotate-90" /> {getInspectionPriorityLabel(selectedInspecao)}</span>
                            </div>
                            <div className="flex justify-between items-center">
                               <span className="text-[13px] text-gray-400">Agendada para</span>
-                              <span className="text-[13px] font-medium text-white flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-gray-500" /> {selectedInspecao.proximaInspecao || selectedInspecao.data} <span className="opacity-50">08:30</span></span>
+                              <span className="text-[13px] font-medium text-white flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-gray-500" /> {formatInspectionDate(selectedInspecao.proximaInspecao || selectedInspecao.data)}</span>
                            </div>
                            <div className="flex justify-between items-center">
                               <span className="text-[13px] text-gray-400">Criada em</span>
-                              <span className="text-[13px] font-medium text-white flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-500" /> {selectedInspecao.data || selectedInspecao.proximaInspecao} <span className="opacity-50">14:02</span></span>
+                              <span className="text-[13px] font-medium text-white flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-500" /> {formatInspectionDate(selectedInspecao.created_at || selectedInspecao.criadoEm || selectedInspecao.data || selectedInspecao.proximaInspecao)}</span>
                            </div>
                         </div>
                      </div>
@@ -1331,30 +1439,30 @@ export default function InspecoesPage() {
                               <span className="text-sm font-bold text-white">{selectedInspecao.checklist}</span>
                            </div>
                            
-                           <p className="text-[12px] text-gray-500 leading-relaxed mt-2">Este checklist será utilizado na execução desta inspeção.</p>
+                           <p className="text-[12px] text-gray-500 leading-relaxed mt-2">{selectedInspecao.items?.length ? `${selectedInspecao.items.length} itens registrados nesta inspeção.` : 'Checklist vinculado pronto para execução.'}</p>
                         </div>
                      </div>
 
                      <div className="space-y-4 mb-8">
-                        <h4 className="text-sm font-bold text-white border-b border-white/10 pb-2">Observações</h4>
+                        <h4 className="text-sm font-bold text-white border-b border-white/10 pb-2">ObservaÃ§Ãµes</h4>
                         <div className="bg-black/30 border border-white/5 rounded-xl p-4 min-h-[80px]">
-                           <p className="text-[12px] text-gray-400 leading-relaxed">Inspeção programada para início do turno. Validar EPCs, linha de vida, ancoragem e treinamento NR-35.</p>
+                           <p className="text-[12px] text-gray-400 leading-relaxed">{selectedInspecao.observacoes || 'Nenhuma observação registrada para esta inspeção.'}</p>
                         </div>
                      </div>
 
                      <div className="space-y-4 mb-8">
-                        <h4 className="text-sm font-bold text-white border-b border-white/10 pb-2 uppercase tracking-wide text-[11px] text-gray-500">Timeline da execução</h4>
+                        <h4 className="text-sm font-bold text-white border-b border-white/10 pb-2 uppercase tracking-wide text-[11px] text-gray-500">Timeline da execuÃ§Ã£o</h4>
                         <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/10">
                           <div className="relative">
                             <div className="absolute left-[-23px] top-1.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-[#121826]"></div>
-                            <p className="text-[13px] font-bold text-white">Inspeção criada</p>
-                            <p className="text-[11px] text-gray-500">{selectedInspecao.data || selectedInspecao.proximaInspecao} — 11:30</p>
+                            <p className="text-[13px] font-bold text-white">InspeÃ§Ã£o criada</p>
+                            <p className="text-[11px] text-gray-500">{formatInspectionDate(selectedInspecao.created_at || selectedInspecao.criadoEm || selectedInspecao.data || selectedInspecao.proximaInspecao)}</p>
                           </div>
                           {selectedInspecao.situacao === 'Em andamento' && (
                              <div className="relative">
                                 <div className="absolute left-[-23px] top-1.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#121826]"></div>
                                 <p className="text-[13px] font-bold text-white">Iniciada</p>
-                                <p className="text-[11px] text-gray-500">{selectedInspecao.data || selectedInspecao.proximaInspecao} — 14:02</p>
+                                <p className="text-[11px] text-gray-500">{formatInspectionDate(selectedInspecao.iniciadaEm || selectedInspecao.updated_at || selectedInspecao.data || selectedInspecao.proximaInspecao)}</p>
                              </div>
                           )}
                         </div>
@@ -1370,14 +1478,14 @@ export default function InspecoesPage() {
                {drawerMode === 'VIEW' && (
                   <>
                      <div className="flex flex-col gap-4">
-                        {selectedInspecao.situacao === 'Concluída' ? (
+                        {selectedInspecao.situacao === 'ConcluÃ­da' ? (
                            <>
                               <button 
                                 onClick={() => setDrawerMode('CHECKLIST_VIEW')}
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-[0_15px_40px_rgba(79,70,229,0.3)] border border-indigo-500/50 active:scale-95 group"
                               >
                                 <FileText className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
-                                Ver Relatório
+                                Ver RelatÃ³rio
                               </button>
                            </>
                         ) : (
@@ -1393,12 +1501,12 @@ export default function InspecoesPage() {
                         )}
                         
                         <div className="grid grid-cols-2 gap-3">
-                           {selectedInspecao.situacao === 'Concluída' ? (
+                           {selectedInspecao.situacao === 'ConcluÃ­da' ? (
                               <button 
                                 onClick={() => setDrawerMode('REOPEN')}
                                 className="bg-red-500/10 hover:bg-red-500/20 text-red-500 py-3 rounded-xl text-[11px] font-black tracking-widest uppercase border border-red-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
                               >
-                                <RefreshCcw className="w-3.5 h-3.5" /> Reabrir Inspeção
+                                <RefreshCcw className="w-3.5 h-3.5" /> Reabrir InspeÃ§Ã£o
                               </button>
                            ) : (
                               <button 
@@ -1418,11 +1526,11 @@ export default function InspecoesPage() {
                )}
                {drawerMode === 'REOPEN' && (
                   <div className="flex flex-col gap-4">
-                     <p className="text-[13px] text-gray-300">Tem certeza que deseja reabrir esta inspeção? Informe o motivo abaixo.</p>
+                     <p className="text-[13px] text-gray-300">Tem certeza que deseja reabrir esta inspeÃ§Ã£o? Informe o motivo abaixo.</p>
                      <textarea 
                         value={reopenReason}
                         onChange={(e) => setReopenReason(e.target.value)}
-                        placeholder="Ex: Faltou registrar foto da evidência."
+                        placeholder="Ex: Faltou registrar foto da evidÃªncia."
                         className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-[13px] text-white focus:border-red-500/50 outline-none resize-none h-[80px]"
                      />
                      <div className="grid grid-cols-2 gap-3 mt-2">
@@ -1456,8 +1564,8 @@ export default function InspecoesPage() {
              <div className="bg-[#121826] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 flex flex-col p-8 max-h-[90vh]">
                 <div className="mb-6 flex justify-between items-start">
                   <div>
-                    <h2 className="text-xl font-bold text-white">{isEditing ? 'Editar Inspeção' : 'Nova Inspeção'}</h2>
-                    <p className="text-[13px] text-gray-400 mt-1">{isEditing ? 'Atualize os dados desta inspeção.' : 'Cadastre uma nova inspeção operacional e vincule um checklist para execução.'}</p>
+                    <h2 className="text-xl font-bold text-white">{isEditing ? 'Editar InspeÃ§Ã£o' : 'Nova InspeÃ§Ã£o'}</h2>
+                    <p className="text-[13px] text-gray-400 mt-1">{isEditing ? 'Atualize os dados desta inspeÃ§Ã£o.' : 'Cadastre uma nova inspeÃ§Ã£o operacional e vincule um checklist para execuÃ§Ã£o.'}</p>
                   </div>
                   <button onClick={() => { setIsFormDrawerOpen(false); setIsEditing(false); }} className="text-gray-500 hover:text-white p-1 rounded-md transition-colors border border-transparent hover:border-white/10"><X className="w-5 h-5" /></button>
                 </div>
@@ -1466,7 +1574,7 @@ export default function InspecoesPage() {
                    <div className="mb-6 bg-orange-500/10 border border-orange-500/20 p-3 px-4 rounded-xl flex items-center gap-3">
                       <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" />
                       <p className="text-[12px] text-orange-200">
-                        Esta inspeção já foi iniciada. Para preservar a rastreabilidade, tipo, setor e checklist não podem ser alterados.
+                        Esta inspeÃ§Ã£o jÃ¡ foi iniciada. Para preservar a rastreabilidade, tipo, setor e checklist nÃ£o podem ser alterados.
                       </p>
                    </div>
                  )}
@@ -1474,7 +1582,7 @@ export default function InspecoesPage() {
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-5">
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Tipo de inspeção <span className="text-red-500">*</span></label>
+                       <label className="text-[13px] font-bold text-gray-300">Tipo de inspeÃ§Ã£o <span className="text-red-500">*</span></label>
                        <input 
                          type="text" 
                          placeholder="Ex: Trabalho em altura" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
@@ -1484,7 +1592,10 @@ export default function InspecoesPage() {
                            let newChecklistId = inspectionData.checklistId;
                            if (val.trim().length > 3) {
                              const search = val.toLowerCase();
-                             const match = checklists.find(c => c.titulo.toLowerCase().includes(search) || search.includes(c.titulo.toLowerCase().replace('checklist', '').trim()));
+                              const match = checklists.find(c => {
+                                const title = getChecklistTitle(c).toLowerCase();
+                                return title.includes(search) || search.includes(title.replace('checklist', '').trim());
+                              });
                              if (match) newChecklistId = match.id;
                            }
                            setInspectionData({...inspectionData, tipoInspecao: val, checklistId: newChecklistId});
@@ -1500,7 +1611,7 @@ export default function InspecoesPage() {
                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
                        >
                          <option value="">Selecione um modelo</option>
-                         {checklists.map(c => <option key={c.id} value={c.id}>{c.titulo}</option>)}
+                          {filteredChecklistsForForm.map(c => <option key={c.id} value={c.id}>{getChecklistTitle(c)}</option>)}
                        </select>
                      </div>
                    </div>
@@ -1510,17 +1621,17 @@ export default function InspecoesPage() {
                        <label className="text-[13px] font-bold text-gray-300">Setor <span className="text-red-500">*</span></label>
                        <input 
                          type="text" 
-                         placeholder="Ex: Produção" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                         placeholder="Ex: ProduÃ§Ã£o" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
                          value={inspectionData.ondeUsar} 
                          onChange={(e) => setInspectionData({...inspectionData, ondeUsar: e.target.value})}
                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
                        />
                      </div>
                      <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Responsável <span className="text-red-500">*</span></label>
+                       <label className="text-[13px] font-bold text-gray-300">ResponsÃ¡vel <span className="text-red-500">*</span></label>
                        <input 
                          type="text" 
-                         placeholder="Nome do responsável"
+                         placeholder="Nome do responsÃ¡vel"
                          value={inspectionData.responsavel} 
                          onChange={(e) => setInspectionData({...inspectionData, responsavel: e.target.value})}
                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
@@ -1530,7 +1641,7 @@ export default function InspecoesPage() {
                    
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Data da inspeção <span className="text-red-500">*</span></label>
+                       <label className="text-[13px] font-bold text-gray-300">Data da inspeÃ§Ã£o <span className="text-red-500">*</span></label>
                        <input 
                          type="date" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'} 
                          value={inspectionData.data} 
@@ -1544,13 +1655,13 @@ export default function InspecoesPage() {
                           {prioridadeCalculada}
                           {prioridadeCalculada === 'Alta' && <AlertTriangle className="w-4 h-4 text-red-500" />}
                        </div>
-                       <p className="text-[10px] text-gray-500 ml-1 mt-1">Preenchimento automático via regras de negócio.</p>
+                       <p className="text-[10px] text-gray-500 ml-1 mt-1">Preenchimento automÃ¡tico via regras de negÃ³cio.</p>
                      </div>
                    </div>
 
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Qtd. Trabalhadores Expostos Na Área</label>
+                       <label className="text-[13px] font-bold text-gray-300">Qtd. Trabalhadores Expostos Na Ãrea</label>
                        <input 
                          type="number" min="0" placeholder="0" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
                          value={inspectionData.trabalhadoresExpostos} 
@@ -1559,7 +1670,7 @@ export default function InspecoesPage() {
                        />
                      </div>
                      <div className="space-y-2">
-                       <label className="text-[13px] font-bold text-gray-300">Perfil Exposto (Função/Cargo)</label>
+                       <label className="text-[13px] font-bold text-gray-300">Perfil Exposto (FunÃ§Ã£o/Cargo)</label>
                        <input 
                          type="text" 
                          placeholder="Ex: Eletricistas, Montadores" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
@@ -1572,11 +1683,11 @@ export default function InspecoesPage() {
 
                    <div className="space-y-2">
                      <div className="flex justify-between items-end">
-                        <label className="text-[13px] font-bold text-gray-300">Observações <span className="text-gray-500 font-normal">(Opcional)</span></label>
+                        <label className="text-[13px] font-bold text-gray-300">ObservaÃ§Ãµes <span className="text-gray-500 font-normal">(Opcional)</span></label>
                         <span className={`text-[10px] ${inspectionData.observacoes.length > 500 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>{inspectionData.observacoes.length}/500</span>
                      </div>
                      <textarea 
-                       placeholder="Detalhes adicionais sobre a inspeção..."
+                       placeholder="Detalhes adicionais sobre a inspeÃ§Ã£o..."
                        rows={3}
                        maxLength={500}
                        value={inspectionData.observacoes} 
@@ -1590,7 +1701,7 @@ export default function InspecoesPage() {
                    <button onClick={() => { setIsFormDrawerOpen(false); setIsEditing(false); }} className="px-5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white hover:bg-white/5 text-[13px] font-bold transition-colors">Cancelar</button>
                    {!isEditing && <button onClick={handleSalvarRascunho} className="px-5 py-2.5 rounded-xl border border-white/10 bg-transparent text-gray-300 hover:bg-white/5 text-[13px] font-bold transition-colors">Salvar rascunho</button>}
                    <button onClick={handleSalvarInspecao} className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50 text-[13px] font-bold transition-colors flex items-center gap-2">
-                     {isEditing ? <CheckSquare className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {isEditing ? 'Salvar alterações' : 'Gerar inspeção'}
+                     {isEditing ? <CheckSquare className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {isEditing ? 'Salvar alteraÃ§Ãµes' : 'Gerar inspeÃ§Ã£o'}
                    </button>
                 </div>
              </div>
