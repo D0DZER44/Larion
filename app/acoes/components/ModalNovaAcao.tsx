@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { ActionItem } from '../types';
 import { motion } from 'motion/react';
+import { useAppStore } from '@/lib/store';
 
 export default function ModalNovaAcao({ onClose, onCreate }: { onClose: () => void, onCreate: (acao: any) => void }) {
+  const sectors = useAppStore((state) => state.sectors);
+  const users = useAppStore((state) => state.users);
+  const sectorOptions = sectors.map((sector: any) => sector?.name).filter(Boolean);
+  const responsibleOptions = users.filter((user: any) => user?.status !== 'Inativo').map((user: any) => user?.name).filter(Boolean);
   const [formData, setFormData] = useState({
     titulo: '',
     descricao: '',
@@ -21,7 +25,7 @@ export default function ModalNovaAcao({ onClose, onCreate }: { onClose: () => vo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.titulo) return;
+    if (!formData.titulo || !formData.setor || !formData.executor || !formData.responsavel) return;
     
     // Status depends on plazo vs now
     const now = new Date();
@@ -87,7 +91,12 @@ export default function ModalNovaAcao({ onClose, onCreate }: { onClose: () => vo
                    </div>
                    <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Setor / Local</label>
-                      <input type="text" value={formData.setor} onChange={e => setFormData({...formData, setor: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Ex: Área 04" />
+                      <select value={formData.setor} onChange={e => setFormData({...formData, setor: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none">
+                         <option value="">Selecione um setor</option>
+                         {sectorOptions.map((sectorName) => (
+                           <option key={sectorName} value={sectorName}>{sectorName}</option>
+                         ))}
+                      </select>
                    </div>
                    <div className="col-span-2 lg:col-span-1">
                       <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Prazo Máximo</label>
@@ -123,14 +132,24 @@ export default function ModalNovaAcao({ onClose, onCreate }: { onClose: () => vo
                       <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider gap-2 flex items-center">
                         <div className="w-2 h-2 rounded-full bg-indigo-500"></div> Executor da Correção
                       </label>
-                      <input type="text" value={formData.executor} onChange={e => setFormData({...formData, executor: e.target.value})} placeholder="Iniciais/Nome do responsável pela obra/ação" className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors" />
+                      <select value={formData.executor} onChange={e => setFormData({...formData, executor: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors appearance-none">
+                        <option value="">Selecione quem executa</option>
+                        {responsibleOptions.map((responsibleName) => (
+                          <option key={responsibleName} value={responsibleName}>{responsibleName}</option>
+                        ))}
+                      </select>
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight">A pessoa física ou terceiro que irá executar o reparo ou implementação no chão de fábrica.</p>
                    </div>
                    <div className="bg-[#1a2332]/50 p-4 rounded-xl border border-white/5">
                       <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Validador de Segurança
                       </label>
-                      <input type="text" required value={formData.responsavel} onChange={e => setFormData({...formData, responsavel: e.target.value})} placeholder="Iniciais/Nome de quem assina a baixa" className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors" />
+                      <select required value={formData.responsavel} onChange={e => setFormData({...formData, responsavel: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors appearance-none">
+                        <option value="">Selecione quem valida</option>
+                        {responsibleOptions.map((responsibleName) => (
+                          <option key={responsibleName} value={responsibleName}>{responsibleName}</option>
+                        ))}
+                      </select>
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight">O responsável por ir ao local confirmar se a intervenção garantiu a integridade humana.</p>
                    </div>
                 </div>

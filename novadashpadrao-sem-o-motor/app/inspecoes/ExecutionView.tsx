@@ -7,7 +7,7 @@ import {
   ArrowRight, ShieldCheck, Activity
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { formatCurrency } from '@/lib/risk-calculations';
+import { applyManualRules, formatCurrency } from '@/lib/risk-calculations';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
 import { buildInspectionExecutionPreview } from '@/lib/motor/adapters/inspectionsAdapter.js';
 
@@ -25,13 +25,41 @@ function getTemplateNr(template: any) {
   );
 }
 
+function normalizeTemplateSections(template: any) {
+  const sections = Array.isArray(template?.sections) ? template.sections : [];
+  return sections.map((section: any, sectionIndex: number) => ({
+    ...section,
+    id: section?.id || `${template?.id || 'template'}-section-${sectionIndex}`,
+    title: section?.title || section?.titulo || `Seção ${sectionIndex + 1}`,
+    questions: (Array.isArray(section?.questions) ? section.questions : []).map((question: any, questionIndex: number) => ({
+      ...question,
+      id: question?.id || `${template?.id || 'template'}-question-${sectionIndex}-${questionIndex}`,
+      text: question?.text || question?.titulo || question?.label || `Pergunta ${questionIndex + 1}`,
+    })),
+  }));
+}
+
+function normalizeTemplate(template: any, index: number) {
+  return {
+    ...template,
+    id: template?.id || `template-${index}`,
+    titulo: getTemplateTitle(template),
+    name: template?.name || getTemplateTitle(template),
+    title: template?.title || getTemplateTitle(template),
+    sections: normalizeTemplateSections(template),
+  };
+}
+
 export default function ExecutionView({ inspectionId, onClose }: { inspectionId: string, onClose: () => void }) {
   const store = useAppStore();
   const inspection = store.inspecoes?.find(i => i.id === inspectionId);
   const updateInspecao = store.updateInspecao;
 
   // Initialize questions if empty
-  const checklistsAtivos = useMemo(() => getTodosChecklistsAtivos(store.checklists || []), [store.checklists]);
+  const checklistsAtivos = useMemo(
+    () => getTodosChecklistsAtivos(store.checklists || []).map((template: any, index: number) => normalizeTemplate(template, index)),
+    [store.checklists],
+  );
   const template = checklistsAtivos.find(c => c.name === inspection?.checklist || c.titulo === inspection?.checklist || c.title === inspection?.checklist || c.id === inspection?.checklistId);
   
   const [items, setItems] = useState<any[]>(() => {
@@ -88,7 +116,7 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
       const activity = inspection?.tipoInspecao || inspection?.checklist || getTemplateTitle(template);
       const nr = nc.nr || nc.nrRelacionada || inspection?.nr || inspection?.nrRelacionada || getTemplateNr(template) || '';
       
-      const payload: Partial<RiskInstance> = {
+      const payload: any = {
         atividade: activity,
         nr: nr,
         severidade: nc.riskMap || 'Média',

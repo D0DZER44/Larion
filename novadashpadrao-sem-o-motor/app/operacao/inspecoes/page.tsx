@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
-import { getNRsAplicaveis } from '@/lib/nrMatrix';
 import { adaptTargetInspectionPayload } from '@/lib/motor/adapters/inspectionsAdapter.js';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, 
@@ -235,10 +234,18 @@ export default function InspecoesPage() {
   }, []);
 
   const router = useRouter();
-  const { checklists: customChecklists, addInspecao, updateInspecao, addRisco, addAcao, riscos, acoes, rulePackages, organization } = store;
+  const { checklists: customChecklists, addInspecao, updateInspecao, riscos, acoes, sectors, users } = store;
   const checklists = useMemo(
     () => getTodosChecklistsAtivos(customChecklists).map((checklist: any, index: number) => normalizeChecklistForUi(checklist, index)),
     [customChecklists],
+  );
+  const sectorOptions = useMemo(
+    () => (sectors || []).map((sector: any) => sector?.name).filter(Boolean),
+    [sectors],
+  );
+  const responsibleOptions = useMemo(
+    () => (users || []).filter((user: any) => user?.status !== 'Inativo').map((user: any) => user?.name).filter(Boolean),
+    [users],
   );
 
   const [activeTab, setActiveTab] = useState<'Agendadas' | 'Realizadas' | 'Checklists'>('Agendadas');
@@ -302,25 +309,8 @@ export default function InspecoesPage() {
 
   // Checklist Filter Logic for New Inspection Form
   const filteredChecklistsForForm = useMemo(() => {
-    const pacotesAtivos = rulePackages.filter(p => p.isActive).map(p => p.name);
-    
-    const nrsAplicaveis = getNRsAplicaveis({
-      segmentoOrganizacao: organization.segmento,
-      atividadesCriticas: organization.atividadesCriticas,
-      pacotesAtivos: pacotesAtivos
-    });
-    const nrsAplicaveisIds = nrsAplicaveis.map(nr => nr.id);
-
-    return checklists.filter(checklist => {
-      const checklistNr = getChecklistNr(checklist);
-      const checklistPackage = getChecklistPackage(checklist);
-
-      return checklist.ativo && (
-        checklistPackage === "Base SST" ||
-        (nrsAplicaveisIds.includes(checklistNr) && pacotesAtivos.includes(checklistPackage))
-      );
-    });
-  }, [checklists, rulePackages, organization.segmento, organization.atividadesCriticas]);
+    return checklists.filter((checklist) => checklist.ativo !== false && checklist.status !== 'Inativo');
+  }, [checklists]);
 
   const prioridadeCalculada = useMemo(() => {
     const t = inspectionData.tipoInspecao.toLowerCase();
@@ -1694,23 +1684,30 @@ export default function InspecoesPage() {
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
                        <label className="text-[13px] font-bold text-gray-300">Setor <span className="text-red-500">*</span></label>
-                       <input 
-                         type="text" 
-                         placeholder="Ex: Produção" disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
-                         value={inspectionData.ondeUsar} 
+                       <select
+                         disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                         value={inspectionData.ondeUsar}
                          onChange={(e) => setInspectionData({...inspectionData, ondeUsar: e.target.value})}
-                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
-                       />
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                       >
+                         <option value="">Selecione um setor</option>
+                         {sectorOptions.map((sectorName) => (
+                           <option key={sectorName} value={sectorName}>{sectorName}</option>
+                         ))}
+                       </select>
                      </div>
                      <div className="space-y-2">
                        <label className="text-[13px] font-bold text-gray-300">Responsável <span className="text-red-500">*</span></label>
-                       <input 
-                         type="text" 
-                         placeholder="Nome do responsável"
-                         value={inspectionData.responsavel} 
+                       <select
+                         value={inspectionData.responsavel}
                          onChange={(e) => setInspectionData({...inspectionData, responsavel: e.target.value})}
-                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors placeholder:text-gray-600"
-                       />
+                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                       >
+                         <option value="">Selecione um responsável</option>
+                         {responsibleOptions.map((responsibleName) => (
+                           <option key={responsibleName} value={responsibleName}>{responsibleName}</option>
+                         ))}
+                       </select>
                      </div>
                    </div>
                    

@@ -278,8 +278,9 @@ type TabType = typeof SUB_TABS[number];
 
 export default function RiscosPage() {
   const store = useAppStore();
-  const { sectors, inspecoes, riscos: rawRiscos = [], acoes: rawAcoes = [], rulePackages } = store;
+  const { sectors, users, inspecoes, riscos: rawRiscos = [], acoes: rawAcoes = [], rulePackages } = store;
   const SETORES_OPCOES = sectors.map(s => s.name);
+  const RESPONSAVEIS_OPCOES = (users || []).filter((user: any) => user?.status !== 'Inativo').map((user: any) => user.name).filter(Boolean);
 
   const filterJunk = (items: any[]) => {
     return items.filter(i => {
@@ -517,8 +518,8 @@ export default function RiscosPage() {
   const storeAddAcao = useAppStore(state => state.addAcao);
 
   const handleSaveForm = () => {
-    if (!formData.atividade || !formData.setor) {
-      alert('Selecione a atividade operacional e o setor antes de salvar o risco.');
+    if (!formData.atividade || !formData.setor || !formData.validadorCorrecao) {
+      alert('Selecione a atividade, o setor e o responsável validador antes de salvar o risco.');
       return;
     }
 
@@ -2672,26 +2673,32 @@ export default function RiscosPage() {
                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
                          Executor da Ação
                        </label>
-                       <input 
-                         type="text" 
+                       <select
                          value={formData.executorCorrecao || ''} 
                          onChange={e => setFormData({...formData, executorCorrecao: e.target.value})}
-                         className="w-full bg-black/40 border border-indigo-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-gray-600"
-                         placeholder="Iniciais/Nome"
-                       />
+                         className="w-full bg-black/40 border border-indigo-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                       >
+                         <option value="">Selecione quem executa</option>
+                         {RESPONSAVEIS_OPCOES.map((name) => (
+                           <option key={name} value={name}>{name}</option>
+                         ))}
+                       </select>
                      </div>
                      <div>
                        <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                          Validador / Responsável
                        </label>
-                       <input 
-                         type="text" 
+                       <select
                          value={formData.validadorCorrecao || ''} 
                          onChange={e => setFormData({...formData, validadorCorrecao: e.target.value})}
-                         className="w-full bg-black/40 border border-emerald-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-gray-600"
-                         placeholder="Quem assina a baixa"
-                       />
+                         className="w-full bg-black/40 border border-emerald-500/20 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                       >
+                         <option value="">Selecione quem valida</option>
+                         {RESPONSAVEIS_OPCOES.map((name) => (
+                           <option key={name} value={name}>{name}</option>
+                         ))}
+                       </select>
                      </div>
                    </div>
                 </div>

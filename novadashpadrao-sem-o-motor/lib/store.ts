@@ -168,6 +168,63 @@ export function getPackageFromNr(nr?: string) {
   return 'Base SST';
 }
 
+function normalizeChecklistQuestionPayload(question: any = {}, sectionId: string, questionIndex: number) {
+  return {
+    ...question,
+    id: question?.id || `${sectionId}-question-${questionIndex}`,
+    text: question?.text || question?.titulo || question?.label || `Pergunta ${questionIndex + 1}`,
+    type: question?.type || 'boolean',
+    riskMap: question?.riskMap || question?.criticidade || 'Médio',
+  };
+}
+
+function normalizeChecklistSectionPayload(section: any = {}, checklistId: string, sectionIndex: number) {
+  const sectionId = section?.id || `${checklistId}-section-${sectionIndex}`;
+  const sourceQuestions = Array.isArray(section?.questions)
+    ? section.questions
+    : Array.isArray(section?.itens)
+      ? section.itens
+      : [];
+
+  return {
+    ...section,
+    id: sectionId,
+    title: section?.title || section?.titulo || `Seção ${sectionIndex + 1}`,
+    questions: sourceQuestions.map((question: any, questionIndex: number) =>
+      normalizeChecklistQuestionPayload(question, sectionId, questionIndex),
+    ),
+  };
+}
+
+function normalizeChecklistPayload(checklist: any = {}, existingId?: string) {
+  const checklistId = checklist?.id || existingId || crypto.randomUUID();
+  const sections = Array.isArray(checklist?.sections)
+    ? checklist.sections
+    : Array.isArray(checklist?.perguntas)
+      ? [{ id: `${checklistId}-section-0`, title: 'Itens de verificação', questions: checklist.perguntas }]
+      : [];
+
+  const title = checklist?.titulo || checklist?.title || checklist?.name || checklist?.nr || 'Checklist operacional';
+  const status = checklist?.status || (checklist?.ativo === false ? 'Inativo' : 'Ativo');
+
+  return {
+    ...checklist,
+    id: checklistId,
+    titulo: title,
+    title: checklist?.title || title,
+    name: checklist?.name || title,
+    category: checklist?.category || checklist?.nr || checklist?.nrRelacionada || 'Base SST',
+    status,
+    ativo: checklist?.ativo !== false && status !== 'Inativo',
+    pacote: checklist?.pacote || checklist?.package || getPackageFromNr(checklist?.nr || checklist?.nrRelacionada),
+    segmentos: Array.isArray(checklist?.segmentos) ? checklist.segmentos : [],
+    atividades: Array.isArray(checklist?.atividades) ? checklist.atividades : [],
+    sections: sections.map((section: any, sectionIndex: number) =>
+      normalizeChecklistSectionPayload(section, checklistId, sectionIndex),
+    ),
+  };
+}
+
 const COMPLETED_INSPECTION_STATUSES = ['Concluída', 'Concluído', 'Finalizada', 'Realizada', 'Reprovada'];
 
 function isInspectionCompletedStatus(status?: string) {
@@ -501,8 +558,8 @@ export const useAppStore = create<AppStore>()(
       },
 
       checklists: INITIAL_CHECKLISTS,
-      addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, { ...checklist, id: crypto.randomUUID() }] })),
-      updateChecklist: (id, checklist) => set((state) => ({ checklists: state.checklists.map((c) => c.id === id ? { ...c, ...checklist } : c) })),
+      addChecklist: (checklist) => set((state) => ({ checklists: [...state.checklists, normalizeChecklistPayload(checklist)] })),
+      updateChecklist: (id, checklist) => set((state) => ({ checklists: state.checklists.map((c) => c.id === id ? normalizeChecklistPayload({ ...c, ...checklist }, id) : c) })),
       deleteChecklist: (id) => set((state) => ({ checklists: state.checklists.filter((c) => c.id !== id) })),
       
       riskRules: INITIAL_RISK_RULES,
