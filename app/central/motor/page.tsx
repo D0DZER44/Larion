@@ -16,10 +16,6 @@ function formatCurrency(value: number) {
 
 export default function MotorNormativoPage() {
   const { riscos = [], rulePackages = [] } = useAppStore();
-  
-  const activeRulePackages = useMemo(() => 
-    rulePackages.filter(p => p.isActive).map(p => p.name)
-  , [rulePackages]);
 
   // Calculations for Multa Evitada & Multa Estimada
   const riskStats = useMemo(() => buildNormativeMotorViewModel({ riscos }), [riscos]);

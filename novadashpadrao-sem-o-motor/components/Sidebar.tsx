@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -18,32 +18,32 @@ const navGroups = [
     items: [
       { name: 'Dashboard', href: '/', icon: LayoutGrid },
       { 
-        name: 'Operação', 
+        name: 'OperaÃ§Ã£o', 
         href: '#', 
         icon: ShieldCheck,
         subItems: [
-          { name: 'Inspeções', href: '/operacao/inspecoes', icon: HardHat },
+          { name: 'InspeÃ§Ãµes', href: '/operacao/inspecoes', icon: HardHat },
           { name: 'Riscos', href: '/operacao/riscos', icon: AlertTriangle },
-          { name: 'Ações', href: '/operacao/acoes', icon: Activity },
+          { name: 'AÃ§Ãµes', href: '/operacao/acoes', icon: Activity },
           { name: 'Matriz Normativa', href: '/operacao/matriz', icon: ClipboardCheck },
         ]
       },
       { 
-        name: 'Inteligência', 
+        name: 'InteligÃªncia', 
         href: '#', 
         icon: Brain,
         subItems: [
-          { name: 'Visão Geral (Central)', href: '/central', icon: BarChart3 },
+          { name: 'VisÃ£o Geral (Central)', href: '/central', icon: BarChart3 },
           { name: 'Motor Normativo', href: '/central/motor', icon: Zap },
         ]
       },
-      { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
+      { name: 'RelatÃ³rios', href: '/relatorios', icon: BarChart3 },
     ]
   },
   {
     items: [
-      { name: 'Organização', href: '/organizacao', icon: Building2 },
-      { name: 'Configurações', href: '/configuracoes', icon: Settings },
+      { name: 'OrganizaÃ§Ã£o', href: '/organizacao', icon: Building2 },
+      { name: 'ConfiguraÃ§Ãµes', href: '/configuracoes', icon: Settings },
     ]
   }
 ];
@@ -55,27 +55,27 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    'Operação': pathname.startsWith('/operacao'),
-    'Inteligência': pathname.startsWith('/central')
+    'OperaÃ§Ã£o': pathname.startsWith('/operacao'),
+    'InteligÃªncia': pathname.startsWith('/central')
   });
 
   useEffect(() => {
-    if (pathname.startsWith('/operacao') && !expanded['Operação']) {
+    if (pathname.startsWith('/operacao') && !expanded['OperaÃ§Ã£o']) {
       const timer = setTimeout(() => {
         setExpanded(prev => {
-          if (!prev['Operação']) {
-            return { ...prev, 'Operação': true };
+          if (!prev['OperaÃ§Ã£o']) {
+            return { ...prev, 'OperaÃ§Ã£o': true };
           }
           return prev;
         });
       }, 0);
       return () => clearTimeout(timer);
     }
-    if (pathname.startsWith('/central') && !expanded['Inteligência']) {
+    if (pathname.startsWith('/central') && !expanded['InteligÃªncia']) {
       const timer = setTimeout(() => {
         setExpanded(prev => {
-          if (!prev['Inteligência']) {
-            return { ...prev, 'Inteligência': true };
+          if (!prev['InteligÃªncia']) {
+            return { ...prev, 'InteligÃªncia': true };
           }
           return prev;
         });
@@ -124,7 +124,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <Building2 className="w-4 h-4 text-[#A78BFA]" />
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-[10px] text-[#71717A] font-medium leading-none mb-1">Organização ativa</p>
+            <p className="text-[10px] text-[#71717A] font-medium leading-none mb-1">OrganizaÃ§Ã£o ativa</p>
             <p className="text-sm font-semibold text-[#F4F4F5] truncate">ApexShield Corp</p>
           </div>
           <ChevronDown className="w-4 h-4 text-[#71717A] group-hover:text-white transition-colors" />
@@ -140,8 +140,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               const isExpanded = expanded[item.name];
               const hasSubItems = !!itemAny.subItems;
               const isActive = pathname === item.href || (hasSubItems && (
-                (pathname.startsWith('/operacao') && item.name === 'Operação') ||
-                (pathname.startsWith('/central') && item.name === 'Inteligência')
+                (pathname.startsWith('/operacao') && item.name === 'OperaÃ§Ã£o') ||
+                (pathname.startsWith('/central') && item.name === 'InteligÃªncia')
               ));
               
               return (
@@ -221,13 +221,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#A78BFA] to-[#7C3AED] text-white font-black">NOVO</span>
           </div>
           <p className="text-[11px] text-[#A1A1AA] leading-relaxed mb-4 relative z-10">
-            Sua copiloto de IA em SST. Tire dúvidas sobre NRs, gere documentos e receba orientações em tempo real.
+            Sua copiloto de IA em SST. Tire dÃºvidas sobre NRs, gere documentos e receba orientaÃ§Ãµes em tempo real.
           </p>
           <Link 
             href="/chat"
             className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#A78BFA]/10 hover:bg-[#A78BFA]/20 border border-[#A78BFA]/30 text-white text-[12px] font-bold transition-all relative z-10 active:scale-95"
           >
-            Conversar com a Lari →
+            Conversar com a Lari â†’
           </Link>
         </div>
 
@@ -263,10 +263,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
                   <div className="h-px bg-white/5 my-1" />
 
-                  <Link href="/configuracoes" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
-                    <Palette className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-                    <span className="font-medium">Personalização</span>
-                  </Link>
+
+
 
                   <Link href="/perfil" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
                     <UserCircle className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
@@ -275,12 +273,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
                   <Link href="/configuracoes" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
                     <Settings className="w-4 h-4 text-gray-400 group-hover:scale-110 transition-transform" />
-                    <span className="font-medium">Configurações</span>
+                    <span className="font-medium">ConfiguraÃ§Ãµes</span>
                   </Link>
 
                   <div className="h-px bg-white/5 my-1" />
 
-                  <Link href="/ajuda" className="flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
+                  <Link href="/chat" className="flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors group">
                     <div className="flex items-center gap-3">
                       <HelpCircle className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
                       <span className="font-medium">Ajuda</span>
@@ -341,4 +339,5 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
     </aside>
   );
 }
+
 

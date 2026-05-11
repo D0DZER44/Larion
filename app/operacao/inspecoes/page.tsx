@@ -5,7 +5,10 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
-import { adaptTargetInspectionPayload } from '@/lib/motor/adapters/inspectionsAdapter.js';
+import {
+  adaptTargetInspectionPayload,
+  buildInspectionCreationBinding,
+} from '@/lib/motor/adapters/inspectionsAdapter.js';
 import { 
   ClipboardCheck, Clock, FileText, AlertTriangle, 
   Download, Plus, Settings as SettingsIcon, 
@@ -18,7 +21,6 @@ import {
 import { useRouter } from 'next/navigation';
 
 import ExecutionView from '../../inspecoes/ExecutionView';
-import AcaoRecomendadaCard from '@/components/AcaoRecomendadaCard';
 
 type Inspecao = {
   id: string;
@@ -128,7 +130,11 @@ function normalizeChecklistForUi(checklist: any, index: number) {
 function buildChecklistExecutionItems(checklist: any, getAcaoSugerida: (question: string) => string) {
   return getChecklistSections(checklist).flatMap((section: any) =>
     (section?.questions || []).map((question: any) => ({
+      ...question,
       id: question.id,
+      regraId: question.regraId || question.ruleId || question.id,
+      nr: question.nr || question.nrRelacionada || '',
+      nrRelacionada: question.nrRelacionada || question.nr || '',
       sectionId: section.id,
       sectionTitle: section.title,
       text: question.text,
@@ -276,36 +282,6 @@ export default function InspecoesPage() {
     () => getTodosChecklistsAtivos(customChecklists).map((checklist: any, index: number) => normalizeChecklistForUi(checklist, index)),
     [customChecklists],
   );
-  const activePackageNames = useMemo(() => {
-    const names = (rulePackages || []).filter((pkg: any) => pkg?.isActive).map((pkg: any) => pkg.name);
-    return Array.from(new Set(['Base SST', ...names]));
-  }, [rulePackages]);
-  const eligibleChecklists = useMemo(() => {
-    return checklists.filter((checklist: any) => {
-      if (checklist.ativo === false || checklist.status === 'Inativo') return false;
-      const packageName = getChecklistPackageLabel(checklist);
-      return packageName === 'Base SST' || activePackageNames.includes(packageName);
-    });
-  }, [checklists, activePackageNames]);
-  const inspectionActivityOptions = useMemo(() => {
-    const activityMap = new Map<string, { activity: string; checklistId: string; checklistTitle: string; pacote: string; priority: string }>();
-
-    eligibleChecklists.forEach((checklist: any) => {
-      getChecklistActivities(checklist).forEach((activity) => {
-        const token = normalizeLookupToken(activity);
-        if (!token || activityMap.has(token)) return;
-        activityMap.set(token, {
-          activity,
-          checklistId: checklist.id,
-          checklistTitle: getChecklistTitle(checklist),
-          pacote: getChecklistPackageLabel(checklist),
-          priority: getInspectionPriorityFromSource(activity, checklist),
-        });
-      });
-    });
-
-    return Array.from(activityMap.values()).sort((left, right) => left.activity.localeCompare(right.activity, 'pt-BR'));
-  }, [eligibleChecklists]);
   const sectorOptions = useMemo(
     () => (sectors || []).map((sector: any) => sector?.name).filter(Boolean),
     [sectors],
@@ -374,46 +350,65 @@ export default function InspecoesPage() {
     perfilExposto: ''
   });
 
-  // Checklist Filter Logic for New Inspection Form
-  const selectedInspectionActivityPreset = useMemo(() => {
-    const selectedToken = normalizeLookupToken(inspectionData.tipoInspecao);
-    return inspectionActivityOptions.find((option) => normalizeLookupToken(option.activity) === selectedToken) || null;
-  }, [inspectionActivityOptions, inspectionData.tipoInspecao]);
-
-  const filteredChecklistsForForm = useMemo(() => {
-    if (!inspectionData.tipoInspecao) return eligibleChecklists;
-    const selectedToken = normalizeLookupToken(inspectionData.tipoInspecao);
-    return eligibleChecklists.filter((checklist) =>
-      getChecklistActivities(checklist).some((activity) => normalizeLookupToken(activity) === selectedToken),
+  const inspectionBinding = useMemo(() => {
+    return buildInspectionCreationBinding(
+      {
+        tipoInspecao: inspectionData.tipoInspecao,
+        checklistId: inspectionData.checklistId,
+        setor: inspectionData.ondeUsar,
+        ondeUsar: inspectionData.ondeUsar,
+      },
+      {
+        rulePackages,
+        sectors,
+        checklists,
+      },
     );
-  }, [eligibleChecklists, inspectionData.tipoInspecao]);
+  }, [checklists, inspectionData.checklistId, inspectionData.ondeUsar, inspectionData.tipoInspecao, rulePackages, sectors]);
 
-  const prioridadeCalculada = useMemo(() => {
-    if (selectedInspectionActivityPreset?.priority) return selectedInspectionActivityPreset.priority;
-    const selectedChecklist = eligibleChecklists.find((checklist: any) => checklist.id === inspectionData.checklistId);
-    return getInspectionPriorityFromSource(inspectionData.tipoInspecao, selectedChecklist);
-  }, [selectedInspectionActivityPreset, eligibleChecklists, inspectionData.checklistId, inspectionData.tipoInspecao]);
+  const inspectionActivityOptions = inspectionBinding.availableActivities;
+  const filteredChecklistsForForm = inspectionBinding.checklistOptions;
+  const prioridadeCalculada = inspectionBinding.priorityLabel;
+
   const buildInspectionFormState = (
-    activity: string,
+    nextValues: Partial<typeof inspectionData>,
     baseState?: typeof inspectionData,
+    options: { autoSelectFirstActivity?: boolean; clearUnavailableActivity?: boolean } = {},
   ) => {
-    const preset =
-      inspectionActivityOptions.find((option) => option.activity === activity) ||
-      inspectionActivityOptions.find((option) => normalizeLookupToken(option.activity) === normalizeLookupToken(activity)) ||
-      null;
-
     const fallbackState = baseState || inspectionData;
-    const selectedChecklist = eligibleChecklists.find((checklist: any) => checklist.id === preset?.checklistId) || null;
+    const candidateState = {
+      ...fallbackState,
+      ...nextValues,
+    };
+    const derivedBinding = buildInspectionCreationBinding(
+      {
+        tipoInspecao: candidateState.tipoInspecao,
+        checklistId: candidateState.checklistId,
+        setor: candidateState.ondeUsar,
+        ondeUsar: candidateState.ondeUsar,
+      },
+      {
+        rulePackages,
+        sectors,
+        checklists,
+      },
+      {
+        autoSelectFirstActivity: options.autoSelectFirstActivity,
+      },
+    );
+
+    let nextActivityLabel = candidateState.tipoInspecao;
+    if (derivedBinding.selectedActivity?.label) {
+      nextActivityLabel = derivedBinding.selectedActivity.label;
+    } else if (options.clearUnavailableActivity) {
+      nextActivityLabel = '';
+    }
 
     return {
-      ...fallbackState,
-      tipoInspecao: preset?.activity || activity,
-      checklistId: preset?.checklistId || '',
-      prioridade:
-        preset?.priority ||
-        getInspectionPriorityFromSource(preset?.activity || activity, selectedChecklist) ||
-        fallbackState.prioridade ||
-        'Baixa',
+      ...candidateState,
+      tipoInspecao: nextActivityLabel,
+      checklistId: derivedBinding.standardChecklistTemplate?.id || '',
+      prioridade: derivedBinding.priorityLabel || candidateState.prioridade || 'Baixa',
     };
   };
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
@@ -563,7 +558,7 @@ export default function InspecoesPage() {
     if (mode === 'EDIT') {
       setInspectionData({
         tipoInspecao: item.tipoInspecao || item.checklist || '',
-        checklistId: item.checklistId || checklists.find(c => getChecklistTitle(c) === item.checklist)?.id || '',
+        checklistId: item.checklistId || item.standardChecklistTemplate?.id || checklists.find(c => getChecklistTitle(c) === item.checklist)?.id || '',
         ondeUsar: item.ondeUsar || '',
         data: item.data || item.proximaInspecao || '',
         responsavel: item.responsavel || '',
@@ -604,7 +599,11 @@ export default function InspecoesPage() {
 
   const handleAvancarInspecao = () => {
     if (formType === 'Inspecao') {
-      const selectedModel = checklists.find(c => c.id === (inspectionData.checklistId || checklists[0]?.id));
+      const selectedModel =
+        filteredChecklistsForForm.find(c => c.id === inspectionData.checklistId) ||
+        inspectionBinding.standardChecklistTemplate ||
+        checklists.find(c => c.id === inspectionData.checklistId) ||
+        null;
       if (!selectedModel) return;
       const newItems = buildChecklistExecutionItems(selectedModel, getAcaoSugerida);
       if (newItems.length === 0) {
@@ -617,18 +616,18 @@ export default function InspecoesPage() {
   };
 
   const handleSalvarInspecao = () => {
-    if (!inspectionData.tipoInspecao || !inspectionData.ondeUsar || !inspectionData.responsavel || !inspectionData.data || !inspectionData.checklistId) {
+    if (!inspectionData.ondeUsar || !inspectionData.responsavel || !inspectionData.data) {
       alert("Preencha todos os campos obrigatórios (marcados com *).");
       return;
     }
 
-    const selectedChecklistModel = checklists.find(c => c.id === inspectionData.checklistId);
-    if (!selectedChecklistModel) {
-      alert('O checklist selecionado não foi encontrado. Atualize a página e tente novamente.');
+    if (inspectionBinding.hasMappedActivities && !inspectionBinding.selectedActivity) {
+      alert('Selecione uma atividade/serviço válida para o setor informado.');
       return;
     }
 
-    const modelo = getChecklistTitle(selectedChecklistModel) || 'Inspeção';
+    const selectedChecklistModel = inspectionBinding.standardChecklistTemplate || null;
+    const modelo = getChecklistTitle(selectedChecklistModel) || '';
     const dataHoje = new Date().toISOString().split('T')[0];
     const adaptedInspection = adaptTargetInspectionPayload(
       {
@@ -636,12 +635,16 @@ export default function InspecoesPage() {
         tipoInspecao: inspectionData.tipoInspecao,
         setor: inspectionData.ondeUsar,
         responsavel: inspectionData.responsavel,
-        atividades: [inspectionData.tipoInspecao],
+        activityId: inspectionBinding.selectedActivity?.id || '',
+        atividades: inspectionBinding.selectedActivity?.id ? [inspectionBinding.selectedActivity.id] : [],
         data: inspectionData.data,
       },
       {
         sectorName: inspectionData.ondeUsar,
         responsibleName: inspectionData.responsavel,
+        rulePackages,
+        sectors,
+        checklists,
       },
     );
 
@@ -649,8 +652,8 @@ export default function InspecoesPage() {
       const updatedData = {
         ...adaptedInspection,
         tipoInspecao: adaptedInspection.tipoInspecao,
-        checklistId: selectedChecklistModel.id,
-        checklist: modelo,
+        checklistId: adaptedInspection.checklistId || '',
+        checklist: adaptedInspection.checklist || '',
         ondeUsar: adaptedInspection.ondeUsar,
         proximaInspecao: adaptedInspection.proximaInspecao,
         responsavel: adaptedInspection.responsavel,
@@ -668,24 +671,24 @@ export default function InspecoesPage() {
       let statusInicial = 'Agendada';
       if (inspectionData.data < dataHoje) statusInicial = 'Atrasada';
       
-      const newInspecao = {
-        id: inspecaoId,
-        ...adaptedInspection,
-        tipoInspecao: adaptedInspection.tipoInspecao,
-        checklist: modelo,
-        ondeUsar: adaptedInspection.ondeUsar,
-        proximaInspecao: adaptedInspection.proximaInspecao,
-        responsavel: adaptedInspection.responsavel,
+        const newInspecao = {
+          id: inspecaoId,
+          ...adaptedInspection,
+          tipoInspecao: adaptedInspection.tipoInspecao,
+          checklist: adaptedInspection.checklist || '',
+          ondeUsar: adaptedInspection.ondeUsar,
+          proximaInspecao: adaptedInspection.proximaInspecao,
+          responsavel: adaptedInspection.responsavel,
         prioridade: prioridadeCalculada,
         situacao: statusInicial,
         status: statusInicial,
-        data: adaptedInspection.data,
-        observacoes: inspectionData.observacoes,
-        trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
-        perfilExposto: inspectionData.perfilExposto,
-        checklistId: selectedChecklistModel.id,
-        items: []
-      };
+          data: adaptedInspection.data,
+          observacoes: inspectionData.observacoes,
+          trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
+          perfilExposto: inspectionData.perfilExposto,
+          checklistId: adaptedInspection.checklistId || '',
+          items: []
+        };
       
       addInspecao(newInspecao);
       
@@ -701,20 +704,24 @@ export default function InspecoesPage() {
 
   const handleSalvarRascunho = () => {
     const inspecaoId = Date.now().toString();
-    const selectedChecklistModel = checklists.find(c => c.id === inspectionData.checklistId);
-    const modelo = getChecklistTitle(selectedChecklistModel) || 'Inspeção';
+    const selectedChecklistModel = inspectionBinding.standardChecklistTemplate || null;
+    const modelo = getChecklistTitle(selectedChecklistModel) || '';
     const adaptedInspection = adaptTargetInspectionPayload(
       {
         titulo: modelo,
-        tipoInspecao: inspectionData.tipoInspecao || 'Nova Inspeção',
-        setor: inspectionData.ondeUsar || 'Geral',
-        responsavel: inspectionData.responsavel || 'Não definido',
-        atividades: [inspectionData.tipoInspecao || 'Nova Inspeção'],
+        tipoInspecao: inspectionData.tipoInspecao || '',
+        setor: inspectionData.ondeUsar || '',
+        responsavel: inspectionData.responsavel || '',
+        activityId: inspectionBinding.selectedActivity?.id || '',
+        atividades: inspectionBinding.selectedActivity?.id ? [inspectionBinding.selectedActivity.id] : [],
         data: inspectionData.data || new Date().toISOString().split('T')[0],
       },
       {
-        sectorName: inspectionData.ondeUsar || 'Geral',
-        responsibleName: inspectionData.responsavel || 'Não definido',
+        sectorName: inspectionData.ondeUsar || '',
+        responsibleName: inspectionData.responsavel || '',
+        rulePackages,
+        sectors,
+        checklists,
       },
     );
     
@@ -722,7 +729,7 @@ export default function InspecoesPage() {
       id: inspecaoId,
       ...adaptedInspection,
       tipoInspecao: adaptedInspection.tipoInspecao,
-      checklist: modelo,
+      checklist: adaptedInspection.checklist || '',
       ondeUsar: adaptedInspection.ondeUsar,
       proximaInspecao: adaptedInspection.proximaInspecao,
       responsavel: adaptedInspection.responsavel,
@@ -733,7 +740,7 @@ export default function InspecoesPage() {
       observacoes: inspectionData.observacoes,
       trabalhadoresExpostos: inspectionData.trabalhadoresExpostos,
       perfilExposto: inspectionData.perfilExposto,
-      checklistId: selectedChecklistModel?.id || '',
+      checklistId: adaptedInspection.checklistId || '',
       items: []
     });
     
@@ -830,26 +837,23 @@ export default function InspecoesPage() {
                 Exportar
               </button>
               <button 
-               onClick={() => {
-                   const firstActivityOption = inspectionActivityOptions[0];
-                   setFormType('Inspecao');
-                   setInspectionStep(1);
-                   setInspectionData(
-                     buildInspectionFormState(firstActivityOption?.activity || '', {
-                       tipoInspecao: '',
-                       checklistId: '',
-                       ondeUsar: '',
-                       data: new Date().toISOString().split('T')[0],
-                       responsavel: '',
-                       observacoes: '',
-                       prioridade: 'Baixa',
-                       trabalhadoresExpostos: 0,
-                       perfilExposto: '',
-                     }),
-                   );
-                   setChecklistItems([]);
-                   setIsEditing(false);
-                   setIsFormDrawerOpen(true);
+                onClick={() => {
+                    setFormType('Inspecao');
+                    setInspectionStep(1);
+                    setInspectionData({
+                      tipoInspecao: '',
+                      checklistId: '',
+                      ondeUsar: '',
+                      data: new Date().toISOString().split('T')[0],
+                      responsavel: '',
+                      observacoes: '',
+                      prioridade: 'Baixa',
+                      trabalhadoresExpostos: 0,
+                      perfilExposto: '',
+                    });
+                    setChecklistItems([]);
+                    setIsEditing(false);
+                    setIsFormDrawerOpen(true);
                  }}
                 className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-[13px] font-medium transition-colors shadow-[0_0_15px_rgba(124,58,237,0.3)] border border-purple-500/50"
                >
@@ -1780,21 +1784,28 @@ export default function InspecoesPage() {
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
                        <label className="text-[13px] font-bold text-gray-300">Tipo de inspeção <span className="text-red-500">*</span></label>
-                     <select
-                       disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
-                       value={inspectionData.tipoInspecao}
-                       onChange={(e) => {
-                         const activity = e.target.value;
-                         setInspectionData(buildInspectionFormState(activity, inspectionData));
-                       }}
-                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
-                     >
-                      <option value="">Selecione o tipo de inspeção</option>
-                      {inspectionActivityOptions.map((option) => (
-                        <option key={`${option.pacote}-${option.activity}`} value={option.activity}>
-                          {option.activity}
-                        </option>
-                      ))}
+                      <select
+                        disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                        value={inspectionData.tipoInspecao}
+                        onChange={(e) => {
+                          setInspectionData(
+                            buildInspectionFormState(
+                              { tipoInspecao: e.target.value },
+                              inspectionData,
+                            ),
+                          );
+                        }}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                      >
+                       <option value="">Selecione o tipo de inspeção</option>
+                       {inspectionData.ondeUsar && inspectionActivityOptions.length === 0 && (
+                         <option value="" disabled>Nenhuma atividade mapeada para este setor</option>
+                       )}
+                       {inspectionActivityOptions.map((option) => (
+                         <option key={`${option.pacote}-${option.activityId}`} value={option.activity}>
+                           {option.activity}
+                         </option>
+                       ))}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -1806,6 +1817,9 @@ export default function InspecoesPage() {
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
                     >
                       <option value="">Selecione um modelo</option>
+                          {inspectionData.tipoInspecao && filteredChecklistsForForm.length === 0 && (
+                            <option value="" disabled>Nenhum checklist padrão disponível</option>
+                          )}
                           {filteredChecklistsForForm.map(c => <option key={c.id} value={c.id}>{getChecklistTitle(c)}</option>)}
                        </select>
                      </div>
@@ -1814,12 +1828,20 @@ export default function InspecoesPage() {
                    <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-2">
                        <label className="text-[13px] font-bold text-gray-300">Setor <span className="text-red-500">*</span></label>
-                       <select
-                         disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
-                         value={inspectionData.ondeUsar}
-                         onChange={(e) => setInspectionData({...inspectionData, ondeUsar: e.target.value})}
-                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
-                       >
+                        <select
+                          disabled={isEditing && selectedInspecao?.situacao === 'Em andamento'}
+                          value={inspectionData.ondeUsar}
+                          onChange={(e) =>
+                            setInspectionData(
+                              buildInspectionFormState(
+                                { ondeUsar: e.target.value },
+                                inspectionData,
+                                { autoSelectFirstActivity: true, clearUnavailableActivity: true },
+                              ),
+                            )
+                          }
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white focus:outline-none focus:border-purple-500 transition-colors"
+                        >
                          <option value="">Selecione um setor</option>
                          {sectorOptions.map((sectorName) => (
                            <option key={sectorName} value={sectorName}>{sectorName}</option>
