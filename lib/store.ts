@@ -514,7 +514,9 @@ export const useAppStore = create<AppStore>()(
             };
 
             if (isInspectionCompletedStatus(mergedInspection.status || mergedInspection.situacao) && Array.isArray(mergedInspection.items)) {
-              const sync = synchronizeInspectionWithMotor(mergedInspection, state);
+              const sync = synchronizeInspectionWithMotor(mergedInspection, state, {
+                persistMode: 'nonConformitiesOnly'
+              });
               const removableOrigins = new Set(['Inspeção / Checklist', 'motor-operacional']);
 
               nextRiscos = state.riscos.filter((risco: any) => {
@@ -536,7 +538,12 @@ export const useAppStore = create<AppStore>()(
               newLogs = [...newLogs, ...sync.logs];
 
               return {
-                inspecoes: state.inspecoes.map((v) => v.id === id ? { ...mergedInspection, nonConformities: sync.nonConformities.length, motorSyncVersion: sync.inspection.motorSyncVersion } : v),
+                inspecoes: state.inspecoes.map((v) => v.id === id ? {
+                  ...mergedInspection,
+                  nonConformities: sync.nonConformities.length,
+                  nonConformityItems: sync.nonConformities,
+                  motorSyncVersion: sync.inspection.motorSyncVersion
+                } : v),
                 riscos: nextRiscos,
                 acoes: nextAcoes,
                 alertas: nextAlertas,

@@ -1,21 +1,153 @@
 /**
- * Declarative NR catalog used by the JS normative engine.
+ * Declarative NR catalog for the JS normative engine.
+ * The package field represents the primary package owner, while relatedPackages
+ * expresses where the NR is inherited or commonly applied.
  */
 
 export const NR_CATALOG = [
-  { codigo: "NR-01", nome: "Disposições Gerais e GRO", pacote: "Base SST", ativa: true },
-  { codigo: "NR-06", nome: "Equipamento de Proteção Individual", pacote: "Base SST", ativa: true },
-  { codigo: "NR-07", nome: "PCMSO", pacote: "Saúde", ativa: true },
-  { codigo: "NR-10", nome: "Segurança em Eletricidade", pacote: "Indústria", ativa: true },
-  { codigo: "NR-11", nome: "Movimentação e Armazenagem", pacote: "Logística", ativa: true },
-  { codigo: "NR-12", nome: "Máquinas e Equipamentos", pacote: "Indústria", ativa: true },
-  { codigo: "NR-17", nome: "Ergonomia", pacote: "Base SST", ativa: true },
-  { codigo: "NR-18", nome: "Construção Civil", pacote: "Construção Civil", ativa: true },
-  { codigo: "NR-20", nome: "Inflamáveis e Combustíveis", pacote: "Indústria", ativa: true },
-  { codigo: "NR-23", nome: "Proteção Contra Incêndios", pacote: "Base SST", ativa: true },
-  { codigo: "NR-26", nome: "Sinalização de Segurança", pacote: "Base SST", ativa: true },
-  { codigo: "NR-33", nome: "Espaços Confinados", pacote: "Indústria", ativa: true },
-  { codigo: "NR-35", nome: "Trabalho em Altura", pacote: "Construção Civil", ativa: true },
+  {
+    codigo: "NR-01",
+    nome: "Disposicoes Gerais e GRO",
+    pacote: "Base SST",
+    relatedPackages: [
+      "Base SST",
+      "Construcao Civil",
+      "Industria",
+      "Saude/Hospitalar",
+      "Logistica",
+      "Portuario",
+      "Escritorio/Administrativo",
+    ],
+    ativa: true,
+  },
+  {
+    codigo: "NR-06",
+    nome: "Equipamento de Protecao Individual",
+    pacote: "Base SST",
+    relatedPackages: [
+      "Base SST",
+      "Construcao Civil",
+      "Industria",
+      "Saude/Hospitalar",
+      "Logistica",
+      "Portuario",
+      "Escritorio/Administrativo",
+    ],
+    ativa: true,
+  },
+  {
+    codigo: "NR-07",
+    nome: "PCMSO",
+    pacote: "Saude/Hospitalar",
+    relatedPackages: ["Saude/Hospitalar", "Base SST"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-10",
+    nome: "Seguranca em Instalacoes e Servicos em Eletricidade",
+    pacote: "Industria",
+    relatedPackages: ["Industria", "Construcao Civil", "Portuario"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-11",
+    nome: "Transporte, Movimentacao, Armazenagem e Manuseio de Materiais",
+    pacote: "Logistica",
+    relatedPackages: ["Logistica", "Construcao Civil", "Portuario", "Industria"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-12",
+    nome: "Seguranca no Trabalho em Maquinas e Equipamentos",
+    pacote: "Industria",
+    relatedPackages: ["Industria", "Construcao Civil", "Portuario"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-17",
+    nome: "Ergonomia",
+    pacote: "Base SST",
+    relatedPackages: [
+      "Base SST",
+      "Escritorio/Administrativo",
+      "Logistica",
+      "Industria",
+      "Saude/Hospitalar",
+    ],
+    ativa: true,
+  },
+  {
+    codigo: "NR-18",
+    nome: "Condicoes de Seguranca e Saude na Industria da Construcao",
+    pacote: "Construcao Civil",
+    relatedPackages: ["Construcao Civil"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-20",
+    nome: "Seguranca e Saude no Trabalho com Inflamaveis e Combustiveis",
+    pacote: "Industria",
+    relatedPackages: ["Industria", "Portuario", "Logistica"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-23",
+    nome: "Protecao Contra Incendios",
+    pacote: "Base SST",
+    relatedPackages: [
+      "Base SST",
+      "Construcao Civil",
+      "Industria",
+      "Saude/Hospitalar",
+      "Logistica",
+      "Portuario",
+      "Escritorio/Administrativo",
+    ],
+    ativa: true,
+  },
+  {
+    codigo: "NR-26",
+    nome: "Sinalizacao de Seguranca",
+    pacote: "Base SST",
+    relatedPackages: [
+      "Base SST",
+      "Construcao Civil",
+      "Industria",
+      "Saude/Hospitalar",
+      "Logistica",
+      "Portuario",
+      "Escritorio/Administrativo",
+    ],
+    ativa: true,
+  },
+  {
+    codigo: "NR-29",
+    nome: "Seguranca e Saude no Trabalho Portuario",
+    pacote: "Portuario",
+    relatedPackages: ["Portuario"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-32",
+    nome: "Seguranca e Saude no Trabalho em Servicos de Saude",
+    pacote: "Saude/Hospitalar",
+    relatedPackages: ["Saude/Hospitalar"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-33",
+    nome: "Seguranca e Saude nos Trabalhos em Espacos Confinados",
+    pacote: "Industria",
+    relatedPackages: ["Industria", "Construcao Civil", "Portuario", "Saude/Hospitalar"],
+    ativa: true,
+  },
+  {
+    codigo: "NR-35",
+    nome: "Trabalho em Altura",
+    pacote: "Construcao Civil",
+    relatedPackages: ["Construcao Civil", "Industria", "Portuario", "Logistica"],
+    ativa: true,
+  },
 ];
 
 export const NR_CATALOG_BY_CODE = NR_CATALOG.reduce((accumulator, item) => {
@@ -30,3 +162,4 @@ export function listActiveNRs() {
 export function findNRByCode(code) {
   return NR_CATALOG_BY_CODE[code];
 }
+

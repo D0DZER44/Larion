@@ -1,196 +1,104 @@
+import {
+  ACTIVITY_TEMPLATES,
+  getChecklistByActivity,
+  getExpectedEvidenceForActivity,
+  getRecommendedActionsForActivity,
+  getRisksByActivity,
+} from "./activityTemplates.js";
+import {
+  getExpectedEvidenceByRisk,
+  getRecommendedActionsByRisk,
+} from "./sectorRiskTemplates.js";
+
 /**
- * Checklist rule catalog for the JavaScript normative engine.
+ * Checklist and normative rule catalog for the JavaScript normative engine.
  */
 
-export const NR_ACTIVITY_TO_NRS = {
-  "uso-de-epi": ["NR-06"],
-  "trabalho-em-altura": ["NR-35", "NR-06"],
-  "espaco-confinado": ["NR-33", "NR-06"],
-  eletricidade: ["NR-10", "NR-06"],
-  "maquina-sem-protecao": ["NR-12", "NR-06"],
-  "movimentacao-de-carga": ["NR-11", "NR-06"],
-  inflamaveis: ["NR-20", "NR-23", "NR-06"],
-  sinalizacao: ["NR-26"],
-  ergonomia: ["NR-17"],
-  "emergencia-incendio": ["NR-23"],
-  "construcao-civil": ["NR-18", "NR-35", "NR-06"],
-};
+function unique(values) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
 
-export const NR_RULES = [
-  {
-    id: "RULE-NR06-EPI-001",
-    nr: "NR-06",
-    atividadeRelacionada: "uso-de-epi",
-    perguntaChecklist: "Os trabalhadores estao utilizando os EPIs obrigatorios?",
-    titulo: "Uso obrigatorio de EPI",
-    descricao: "Falta de uso adequado de EPI em atividade exposta.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Alta",
-    prioridadeSugerida: "Alta",
-    prazoSugeridoDias: 3,
-    acaoRecomendada: "Interromper a atividade ate regularizar o uso de EPI.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR35-ALT-001",
-    nr: "NR-35",
-    atividadeRelacionada: "trabalho-em-altura",
-    perguntaChecklist: "Existe analise de risco para o trabalho em altura?",
-    titulo: "Analise de risco em altura",
-    descricao: "Atividade em altura sem analise de risco valida.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Suspender a atividade ate elaborar e aprovar a analise de risco.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR33-EC-001",
-    nr: "NR-33",
-    atividadeRelacionada: "espaco-confinado",
-    perguntaChecklist: "Existe PET valida para entrada no espaco confinado?",
-    titulo: "PET para espaco confinado",
-    descricao: "Entrada em espaco confinado sem permissao de entrada e trabalho.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Bloquear a entrada ate emissao de PET.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR10-ELE-001",
-    nr: "NR-10",
-    atividadeRelacionada: "eletricidade",
-    perguntaChecklist: "O circuito foi desenergizado e bloqueado?",
-    titulo: "Aplicacao de LOTO",
-    descricao: "Intervencao eletrica sem desenergizacao ou bloqueio.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Reaplicar procedimento LOTO antes de retomar a atividade.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR12-MAQ-001",
-    nr: "NR-12",
-    atividadeRelacionada: "maquina-sem-protecao",
-    perguntaChecklist: "A maquina opera com protecoes instaladas?",
-    titulo: "Protecoes de maquina instaladas",
-    descricao: "Maquina operando sem protecao adequada.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Interditar a maquina ate regularizacao das protecoes.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR11-MOV-001",
-    nr: "NR-11",
-    atividadeRelacionada: "movimentacao-de-carga",
-    perguntaChecklist: "O operador possui habilitacao vigente?",
-    titulo: "Operador habilitado",
-    descricao: "Equipamento de movimentacao operado por profissional nao habilitado.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Alta",
-    prioridadeSugerida: "Alta",
-    prazoSugeridoDias: 3,
-    acaoRecomendada: "Afastar operador e regularizar habilitacao.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR20-INF-001",
-    nr: "NR-20",
-    atividadeRelacionada: "inflamaveis",
-    perguntaChecklist: "Existe APP aprovada para atividade com inflamaveis?",
-    titulo: "APP para inflamaveis",
-    descricao: "Atividade com inflamaveis sem avaliacao previa de perigos.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Bloquear a atividade ate aprovacao da APP.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR26-SIN-001",
-    nr: "NR-26",
-    atividadeRelacionada: "sinalizacao",
-    perguntaChecklist: "A sinalizacao de risco esta visivel e integra?",
-    titulo: "Sinalizacao visivel",
-    descricao: "Sinalizacao de risco ausente, danificada ou ilegivel.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Média",
-    prioridadeSugerida: "Média",
-    prazoSugeridoDias: 7,
-    acaoRecomendada: "Substituir ou repor sinalizacao conforme padrao.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR17-ERG-001",
-    nr: "NR-17",
-    atividadeRelacionada: "ergonomia",
-    perguntaChecklist: "O posto atende aos parametros ergonomicos basicos?",
-    titulo: "Posto ergonomico adequado",
-    descricao: "Posto de trabalho fora de parametros ergonomicos.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Média",
-    prioridadeSugerida: "Média",
-    prazoSugeridoDias: 15,
-    acaoRecomendada: "Ajustar posto de trabalho e registrar adequacao.",
-    exigeEvidencia: false,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR23-EMG-001",
-    nr: "NR-23",
-    atividadeRelacionada: "emergencia-incendio",
-    perguntaChecklist: "Os equipamentos de incendio estao operantes?",
-    titulo: "Combate a incendio operante",
-    descricao: "Equipamentos de emergencia fora de validade ou indisponiveis.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Alta",
-    prioridadeSugerida: "Alta",
-    prazoSugeridoDias: 3,
-    acaoRecomendada: "Regularizar equipamentos e desobstruir acesso.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-  {
-    id: "RULE-NR18-CC-001",
-    nr: "NR-18",
-    atividadeRelacionada: "construcao-civil",
-    perguntaChecklist: "A area possui protecao coletiva contra quedas?",
-    titulo: "Protecao coletiva na construcao",
-    descricao: "Area de obra sem protecao coletiva adequada.",
-    condicaoDisparo: "ANSWER_NEGATIVE",
-    severidadePadrao: "Crítica",
-    prioridadeSugerida: "Crítica",
-    prazoSugeridoDias: 1,
-    acaoRecomendada: "Instalar protecao coletiva e isolar a area.",
-    exigeEvidencia: true,
-    ativa: true,
-  },
-];
+function normalizeActivityKey(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export const NR_ACTIVITY_TO_NRS = ACTIVITY_TEMPLATES.reduce((accumulator, activity) => {
+  const values = unique(activity.relatedNrs || []);
+  accumulator[activity.id] = values;
+  (activity.aliases || []).forEach((alias) => {
+    accumulator[alias] = values;
+    accumulator[normalizeActivityKey(alias)] = values;
+  });
+  accumulator[normalizeActivityKey(activity.id)] = values;
+  return accumulator;
+}, {});
+
+export const NR_RULES = ACTIVITY_TEMPLATES.flatMap((activity) => {
+  const checklist = getChecklistByActivity(activity.id);
+  const risks = getRisksByActivity(activity.id);
+  const recommendedActions = getRecommendedActionsForActivity(activity.id);
+  const expectedEvidence = getExpectedEvidenceForActivity(activity.id);
+
+  return checklist.map((item, index) => {
+    const linkedRisk = risks[index % Math.max(1, risks.length)] || null;
+    const fallbackAction = recommendedActions[index % Math.max(1, recommendedActions.length)] || "regularizar condicao operacional";
+    const fallbackEvidence = expectedEvidence[index % Math.max(1, expectedEvidence.length)] || "registro fotografico";
+    const riskActions = linkedRisk ? getRecommendedActionsByRisk(linkedRisk.id) : [];
+    const riskEvidence = linkedRisk ? getExpectedEvidenceByRisk(linkedRisk.id) : [];
+
+    return {
+      id: `RULE-${activity.id.toUpperCase()}-${String(index + 1).padStart(2, "0")}`,
+      nr: (activity.relatedNrs || [])[index % Math.max(1, (activity.relatedNrs || []).length)] || "NR-01",
+      atividadeRelacionada: activity.id,
+      activityAliases: activity.aliases || [],
+      perguntaChecklist: item.label,
+      titulo: `${activity.nome} - ${item.label}`,
+      descricao: linkedRisk
+        ? `Desvio potencial identificado para ${linkedRisk.nome} durante ${activity.nome}.`
+        : `Desvio potencial identificado durante ${activity.nome}.`,
+      condicaoDisparo: "ANSWER_NEGATIVE",
+      severidadePadrao: linkedRisk?.severidadeSugerida || activity.severidadeSugerida || "Alta",
+      prioridadeSugerida: linkedRisk?.prioridadeSugerida || activity.prioridadeSugerida || "P2",
+      prazoSugeridoDias:
+        linkedRisk?.prazoSugerido === "Imediato" || activity.prazoSugerido === "Imediato"
+          ? 1
+          : linkedRisk?.prazoSugerido?.includes("24")
+            ? 1
+            : linkedRisk?.prazoSugerido?.includes("48")
+              ? 2
+              : linkedRisk?.prazoSugerido?.includes("72")
+                ? 3
+                : 7,
+      acaoRecomendada: riskActions[0] || fallbackAction,
+      acoesRecomendadas: unique([...(riskActions || []), ...recommendedActions]),
+      exigeEvidencia: true,
+      evidenciasEsperadas: unique([...(riskEvidence || []), fallbackEvidence]),
+      riskId: linkedRisk?.id || null,
+      ativa: true,
+    };
+  });
+});
 
 export const NR_RULES_BY_ID = NR_RULES.reduce((accumulator, rule) => {
   accumulator[rule.id] = rule;
   return accumulator;
 }, {});
 
+function matchesActivity(rule, activityType) {
+  const normalized = normalizeActivityKey(activityType);
+  if (normalizeActivityKey(rule.atividadeRelacionada) === normalized) return true;
+  return Array.isArray(rule.activityAliases)
+    ? rule.activityAliases.some((alias) => normalizeActivityKey(alias) === normalized)
+    : false;
+}
+
 export function listRulesByActivity(activityType) {
-  return NR_RULES.filter((rule) => rule.ativa && rule.atividadeRelacionada === activityType);
+  return NR_RULES.filter((rule) => rule.ativa && matchesActivity(rule, activityType));
 }
 
 export function listRulesByNR(nr) {
@@ -200,3 +108,4 @@ export function listRulesByNR(nr) {
 export function getRuleById(ruleId) {
   return NR_RULES_BY_ID[ruleId];
 }
+

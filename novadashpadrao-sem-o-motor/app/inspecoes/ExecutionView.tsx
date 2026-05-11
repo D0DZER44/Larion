@@ -60,7 +60,11 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     () => getTodosChecklistsAtivos(store.checklists || []).map((template: any, index: number) => normalizeTemplate(template, index)),
     [store.checklists],
   );
-  const template = checklistsAtivos.find(c => c.name === inspection?.checklist || c.titulo === inspection?.checklist || c.title === inspection?.checklist || c.id === inspection?.checklistId);
+  const template =
+    checklistsAtivos.find(c => c.name === inspection?.checklist || c.titulo === inspection?.checklist || c.title === inspection?.checklist || c.id === inspection?.checklistId) ||
+    (inspection?.standardChecklistTemplate
+      ? normalizeTemplate(inspection.standardChecklistTemplate, checklistsAtivos.length)
+      : null);
   
   const [items, setItems] = useState<any[]>(() => {
      if (inspection?.items && inspection.items.length > 0) {
