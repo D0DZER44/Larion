@@ -4,6 +4,8 @@ import { calculateActionMetrics } from "../engine/metricsEngine.js";
 import { getActionsByStatusChart } from "../engine/chartEngine.js";
 import { mapStoreStateToMotorDataset } from "../bridge";
 import { buildAutomaticRisksFromInspections, dedupeStrings } from "./automaticRiskAdapter.js";
+import { calculateDueDate, calculatePriority } from "../engine/severityEngine.js";
+import { registerEntityCreated } from "../engine/auditEngine.js";
 
 function normalizeText(value = "") {
   return String(value)
@@ -52,6 +54,246 @@ function getSuggestedDueDate(priority = "", fallbackDate = "") {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + days);
   return dueDate.toISOString().split("T")[0];
+}
+
+function getRiskDisplayTitle(risk = {}) {
+  return (
+    risk.titulo ||
+    risk.title ||
+    risk.tipoDeRisco ||
+    risk.type ||
+    risk.atividade ||
+    risk.activity ||
+    "Risco identificado"
+  );
+}
+
+function normalizeActionOrigin(origin = "") {
+  const rawOrigin = normalizeText(origin);
+  if (rawOrigin.includes("risco")) return "Gerada por risco";
+  if (rawOrigin.includes("inspec")) return "Gerada por inspeção";
+  if (rawOrigin.includes("reab")) return "Reabertura de ação";
+  if (rawOrigin.includes("audit")) return "Auditoria";
+  if (rawOrigin.includes("ocorr")) return "Ocorrência";
+  return "Ação manual";
+}
+
+function getSuggestedActionStatus(origin = "", requiresEvidence = false) {
+  if (normalizeActionOrigin(origin) === "Reabertura de ação") return "Reaberta";
+  if (requiresEvidence) return "Aguardando evidência";
+  return "Aberta";
+}
+
+function buildActionRiskSummary(risk = {}) {
+  const prioridadeSugerida = normalizeActionPriority({
+    prioridade: risk.prioridade || risk.priority || calculatePriority(risk),
+  });
+  const evidenciasEsperadas = dedupeStrings([
+    ...(Array.isArray(risk?.evidenciasEsperadas) ? risk.evidenciasEsperadas : []),
+    ...(Array.isArray(risk?.expectedEvidence) ? risk.expectedEvidence : []),
+  ]);
+
+  return {
+    ...risk,
+    id: risk.id,
+    titulo: getRiskDisplayTitle(risk),
+    setor: risk.setor || risk.category || risk.sectorName || risk.sector_id || "",
+    sectorId: risk.sectorId || risk.sector_id || risk.setorId || "",
+    atividade: risk.atividade || risk.activity || "",
+    activityId: risk.activityId || "",
+    nrCode: risk.nrCode || risk.nrRelacionada || risk.nr || "",
+    criticidade: risk.severidade || risk.severity || prioridadeSugerida,
+    prioridadeSugerida,
+    prazoSugerido: getSuggestedDueDate(
+      prioridadeSugerida,
+      risk.prazo || risk.due_date || risk.deadlineTime || calculateDueDate({ prioridade: prioridadeSugerida }),
+    ),
+    evidenciaEsperada: evidenciasEsperadas,
+    acaoInicial: risk.acaoRecomendada || risk.recommendedAction || "",
+    responsavelSugerido:
+      risk.responsavel || risk.validadorCorrecao || risk.executorCorrecao || "",
+    trabalhadoresExpostos: Number(risk.trabalhadoresExpostos || risk.exposedWorkers || 0),
+    perfilExposto: risk.perfilExposto || risk.exposedProfile || "",
+    impactoHumano: risk.impactoHumano || risk.humanImpact || "",
+  };
+}
+
+export const ACTION_ORIGIN_OPTIONS = [
+  "Gerada por risco",
+  "Gerada por inspeção",
+  "Ação manual",
+  "Reabertura de ação",
+  "Auditoria",
+  "Ocorrência",
+];
+
+export const ACTION_TYPE_OPTIONS = [
+  "Ação corretiva",
+  "Ação preventiva",
+  "Ação emergencial",
+  "Reinspeção",
+  "Validação de evidência",
+  "Adequação de EPI",
+  "Adequação de sinalização",
+  "Adequação de procedimento",
+  "Treinamento/orientação",
+  "Manutenção/correção técnica",
+  "Isolamento de área",
+  "Regularização documental",
+];
+
+export const ACTION_EVIDENCE_OPTIONS = [
+  "Foto da correção",
+  "Foto da área isolada",
+  "Registro/documento",
+  "Assinatura do responsável",
+  "Validação do técnico",
+  "Antes/depois",
+  "Outro",
+];
+
+export const ACTION_STATUS_OPTIONS = [
+  "Aberta",
+  "Em execução",
+  "Aguardando evidência",
+  "Aguardando validação",
+  "Concluída",
+  "Reaberta",
+  "Vencida",
+  "Cancelada",
+];
+
+export function buildActionCreationBinding(formData = {}, state = {}, options = {}) {
+  const activePackages = new Set(options.activePackages || []);
+  const includeInactivePackages = Boolean(options.includeInactivePackages);
+  const explicitRisks = (state.riscos || []).filter((risk) => {
+    const pacote = risk?.pacote || risk?.package || "Base SST";
+    if (includeInactivePackages) return true;
+    return pacote === "Base SST" || activePackages.has(pacote);
+  });
+  const automaticRisks = buildAutomaticRisksFromInspections(state, options);
+  const availableRisks = [...explicitRisks, ...automaticRisks]
+    .filter((risk) => risk?.id)
+    .map((risk) => buildActionRiskSummary(risk))
+    .sort((a, b) => getRiskDisplayTitle(a).localeCompare(getRiskDisplayTitle(b)));
+
+  const linkedRisk =
+    availableRisks.find((risk) => risk.id === (formData.riskId || formData.riscoId)) || null;
+  const evidenciasEsperadas = dedupeStrings([
+    ...(linkedRisk?.evidenciaEsperada || []),
+    formData.evidenciaNecessariaConcluir || "",
+    formData.evidenciaNecessariaOutro || "",
+  ]);
+  const requiresEvidence = evidenciasEsperadas.length > 0;
+  const prioridadeSugerida = linkedRisk?.prioridadeSugerida || normalizeActionPriority({
+    prioridade: formData.prioridade || "Média",
+  });
+  const prazoSugerido =
+    linkedRisk?.prazoSugerido ||
+    getSuggestedDueDate(
+      prioridadeSugerida,
+      formData.prazo || calculateDueDate({ prioridade: prioridadeSugerida }),
+    );
+  const statusSugerido = getSuggestedActionStatus(formData.origemAcao, requiresEvidence);
+  const completionRules = {
+    requiresEvidence,
+    canCloseWithoutEvidence: canCloseAction(
+      {
+        prioridade: prioridadeSugerida,
+        exigeEvidencia: requiresEvidence,
+        evidencias: [],
+      },
+      [],
+      {},
+    ),
+    blockedStatus: requiresEvidence ? "Aguardando evidência" : "Aguardando validação",
+  };
+
+  return {
+    availableRisks,
+    linkedRisk,
+    prioridadeSugerida,
+    prazoSugerido,
+    evidenciasEsperadas,
+    requiresEvidence,
+    statusSugerido,
+    completionRules,
+    originOptions: ACTION_ORIGIN_OPTIONS,
+    typeOptions: ACTION_TYPE_OPTIONS,
+    evidenceOptions: ACTION_EVIDENCE_OPTIONS,
+    statusOptions: ACTION_STATUS_OPTIONS,
+  };
+}
+
+export function prepareActionCreationPayload(formData = {}, binding = {}, options = {}) {
+  const linkedRisk = binding.linkedRisk || null;
+  const prioridade = formData.prioridade || binding.prioridadeSugerida || "Média";
+  const prazo =
+    formData.prazo ||
+    binding.prazoSugerido ||
+    getSuggestedDueDate(prioridade, calculateDueDate({ prioridade }, options.referenceDate));
+  const evidenciasEsperadas = dedupeStrings([
+    ...(binding.evidenciasEsperadas || []),
+    formData.evidenciaNecessariaConcluir || "",
+    formData.evidenciaNecessariaOutro || "",
+  ]);
+  const requiresEvidence = Boolean(binding.requiresEvidence) || evidenciasEsperadas.length > 0;
+  const origem = normalizeActionOrigin(formData.origemAcao);
+  const statusOperacional = getSuggestedActionStatus(origem, requiresEvidence);
+
+  const payload = {
+    titulo: formData.correcaoNecessaria || formData.titulo || "",
+    descricao: formData.descricao || "",
+    prioridade,
+    prazo,
+    setor: formData.setor || linkedRisk?.setor || "",
+    responsavel: formData.responsavel || linkedRisk?.responsavelSugerido || "",
+    executor: formData.executor || linkedRisk?.responsavelSugerido || "",
+    validador: formData.responsavel || linkedRisk?.responsavelSugerido || "",
+    trabalhadoresExpostos: Number(formData.trabalhadoresExpostos || linkedRisk?.trabalhadoresExpostos || 0),
+    perfilExposto: formData.perfilExposto || linkedRisk?.perfilExposto || "",
+    impactoHumano: formData.impactoHumano || linkedRisk?.impactoHumano || "",
+    origem,
+    origemDetalhada: formData.origemAcao || origem,
+    justificativaOrigem: formData.justificativaOrigem || "",
+    justificativaAjusteManual: formData.justificativaAjusteManual || "",
+    tipoAcao: formData.tipoAcao || "Ação corretiva",
+    status: statusOperacional === "Reaberta" ? "Pendente" : "Pendente",
+    statusOperacional,
+    faseExecucao:
+      statusOperacional === "Aguardando evidência"
+        ? "Aguardando Evidência"
+        : statusOperacional === "Aguardando validação"
+          ? "Aguardando Validação"
+          : undefined,
+    riskId: linkedRisk?.id,
+    riscoId: linkedRisk?.id,
+    riscoVinculado: linkedRisk?.titulo || "",
+    nrCode: linkedRisk?.nrCode || "",
+    nrRelacionada: linkedRisk?.nrCode || "",
+    sectorId: linkedRisk?.sectorId || "",
+    activityId: linkedRisk?.activityId || "",
+    criticidade: linkedRisk?.criticidade || prioridade,
+    prioridadeSugerida: binding.prioridadeSugerida || prioridade,
+    prazoSugerido: binding.prazoSugerido || prazo,
+    acaoInicialRecomendada: linkedRisk?.acaoInicial || "",
+    evidenciasEsperadas,
+    expectedEvidence: evidenciasEsperadas,
+    evidenciaNecessariaConcluir: formData.evidenciaNecessariaConcluir || "",
+    exigeEvidencia: requiresEvidence,
+    completionRules: binding.completionRules || {
+      requiresEvidence,
+      canCloseWithoutEvidence: false,
+      blockedStatus: "Aguardando evidência",
+    },
+    manualAction: origem === "Ação manual",
+    preparedForDashboard: true,
+  };
+
+  return {
+    ...payload,
+    auditLog: registerEntityCreated("Action", "pending-action", payload, origem),
+  };
 }
 
 function buildDerivedActionFromRisk(risk = {}) {
