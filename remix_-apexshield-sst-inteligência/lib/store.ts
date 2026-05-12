@@ -5,6 +5,17 @@ import { normalizeActionDraft } from './action-rules';
 import { INITIAL_CHECKLISTS } from './checklists';
 import { INITIAL_RISK_RULES } from './riskRules';
 import { NivelRisco, Prioridade, StatusRisco, StatusAcao, StatusInspecao, Pacote, Risco, Acao, Inspecao, Alerta, LogEntry, User, Sector, Organization, RulePackage, RiskRule, ChecklistTemplate, ChecklistSection } from '@/lib/types';
+import {
+  legacyActionToOperationalItem,
+  legacyInspectionToFieldInput,
+  legacyRiskToOperationalItem,
+} from '@/src/lib/adapters/legacyToOperationalItem';
+import {
+  operationalItemToLegacyAction,
+  operationalItemToLegacyRisk,
+} from '@/src/lib/adapters/operationalItemToLegacy';
+import type { FieldInput } from '@/src/types/fieldInput';
+import type { OperationalItem, OperationalItemDraft } from '@/src/types/operationalItem';
 
 export type Rule = {
   id: string;
@@ -104,6 +115,9 @@ type AppStore = {
   deleteRule: (id: string) => void;
 
   // System Core Data
+  // Legacy runtime: telas atuais ainda leem riscos, acoes e inspecoes daqui.
+  // Target runtime: OperationalItem deve assumir esse papel ao final da migracao.
+  // Esta camada permanece temporaria para manter compatibilidade sem quebrar a UI.
   acoes: Acao[];
   riscos: Risco[];
   inspecoes: Inspecao[];
@@ -178,6 +192,100 @@ const processAutoActions = () => {
   // Legacy function deactivated: automation generation is strictly handled by AutomationEngine.processInspection now.
 };
 
+export type LegacyRuntimeState = Pick<AppStore, 'acoes' | 'riscos' | 'inspecoes'>;
+
+export interface LegacyOperationalItemsSelectorResult {
+  items: OperationalItem[];
+  inspectionInputs: FieldInput[];
+  warnings: string[];
+  errors: string[];
+}
+
+export interface LegacyViewsFromOperationalItemsResult {
+  riscos: ReturnType<typeof operationalItemToLegacyRisk>[];
+  acoes: ReturnType<typeof operationalItemToLegacyAction>[];
+}
+
+function buildOperationalItemFromDraft(
+  draft: OperationalItemDraft,
+  fallbackId: string,
+  fallbackCreatedAt: string
+): OperationalItem {
+  const createdAt = draft.createdAt || fallbackCreatedAt;
+  const updatedAt = draft.updatedAt || createdAt;
+
+  return {
+    ...draft,
+    id: draft.id || fallbackId,
+    history: draft.history || [
+      {
+        toStatus: draft.status,
+        changedAt: createdAt,
+        changedBy: 'legacy-bridge',
+        note: 'Item derivado temporariamente do runtime legado.',
+      },
+    ],
+    createdAt,
+    updatedAt,
+  };
+}
+
+function isInspectionRelevantForOperationalItem(conversion: ReturnType<typeof legacyInspectionToFieldInput>['data']) {
+  return Boolean(conversion.suggestedOperationalItem);
+}
+
+// Ponte temporaria de leitura: converte runtime legado em OperationalItem sem alterar a UI atual.
+export function getOperationalItemsFromLegacyState(
+  state: LegacyRuntimeState = useAppStore.getState()
+): LegacyOperationalItemsSelectorResult {
+  const riskResults = state.riscos.map(legacyRiskToOperationalItem);
+  const actionResults = state.acoes.map(legacyActionToOperationalItem);
+  const inspectionResults = state.inspecoes.map(legacyInspectionToFieldInput);
+
+  const inspectionItems = inspectionResults
+    .filter((result) => isInspectionRelevantForOperationalItem(result.data))
+    .map((result) =>
+      buildOperationalItemFromDraft(
+        result.data.suggestedOperationalItem as OperationalItemDraft,
+        `compat-inspection-item-${result.data.fieldInput.id}`,
+        result.data.fieldInput.createdAt
+      )
+    );
+
+  return {
+    items: [
+      ...riskResults.map((result) => result.data.item),
+      ...actionResults.map((result) => result.data.item),
+      ...inspectionItems,
+    ],
+    inspectionInputs: inspectionResults.map((result) => result.data.fieldInput),
+    warnings: [
+      ...riskResults.flatMap((result) => result.warnings),
+      ...actionResults.flatMap((result) => result.warnings),
+      ...inspectionResults.flatMap((result) => result.warnings),
+    ],
+    errors: [
+      ...riskResults.flatMap((result) => result.errors),
+      ...actionResults.flatMap((result) => result.errors),
+      ...inspectionResults.flatMap((result) => result.errors),
+    ],
+  };
+}
+
+// Ponte inversa temporaria: permite reconstruir visoes legadas enquanto a migracao convive com telas antigas.
+export function getLegacyViewsFromOperationalItems(
+  items: OperationalItem[]
+): LegacyViewsFromOperationalItemsResult {
+  return {
+    riscos: items
+      .filter((item) => Boolean(item.legacyReferences?.some((reference) => reference.riskId && !reference.actionId)))
+      .map((item) => operationalItemToLegacyRisk(item)),
+    acoes: items
+      .filter((item) => Boolean(item.legacyReferences?.some((reference) => reference.actionId)))
+      .map((item) => operationalItemToLegacyAction(item)),
+  };
+}
+
 export const AppState = {
   get(key?: string) {
     const state = useAppStore.getState();
@@ -198,6 +306,9 @@ export const AppState = {
   sync() {
     console.log('[AppState] Synced with remote servers (Mock).');
     return true;
+  },
+  getOperationalItemsFromLegacyState() {
+    return getOperationalItemsFromLegacyState(useAppStore.getState());
   }
 };
 
@@ -305,6 +416,7 @@ export const useAppStore = create<AppStore>()(
          set((state) => ({ rules: state.rules.filter((r) => r.id !== id) }))
       },
 
+      // LEGACY_SEED_DATA - remover apos migracao completa.
       acoes: [
         {
           id: 'act-1',
@@ -355,6 +467,7 @@ export const useAppStore = create<AppStore>()(
           historico: []
         }
       ],
+      // LEGACY_SEED_DATA - remover apos migracao completa.
       riscos: [
         applyManualRules({ id: 'r1', atividade: 'Trabalho em altura', setor: 'Operacional', nr: 'NR-35', hasEpiEpc: false, hasProcedimento: false, hasTreinamento: true, status: 'Aberto', trabalhadoresExpostos: 2, perfilExposto: 'Pintor Predial', impactoHumano: 'Queda de nÃ­vel (fraturas graves ou Ã³bito)', executorCorrecao: 'Equipe Especializada NR-35', validadorCorrecao: 'Rafael Oliveira (Eng. Seg.)' }),
         applyManualRules({ id: 'r2', atividade: 'ManutenÃ§Ã£o elÃ©trica', setor: 'ManutenÃ§Ã£o', nr: 'NR-10', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em anÃ¡lise', trabalhadoresExpostos: 1, perfilExposto: 'Eletricista NÃ­vel II', impactoHumano: 'Choque elÃ©trico (queimaduras ou parada cardÃ­aca)', executorCorrecao: 'Contratada ElÃ©trica', validadorCorrecao: 'JoÃ£o Silva (Sup. Manut.)' }),
@@ -365,6 +478,7 @@ export const useAppStore = create<AppStore>()(
         applyManualRules({ id: 'r7', atividade: 'Trabalho a quente', setor: 'ManutenÃ§Ã£o', nr: 'NR-34', hasEpiEpc: true, hasProcedimento: false, hasTreinamento: true, status: 'Em anÃ¡lise' }),
         applyManualRules({ id: 'r8', atividade: 'Trabalho em altura', setor: 'Administrativo', nr: 'NR-35', hasEpiEpc: true, hasProcedimento: true, hasTreinamento: true, status: 'Em anÃ¡lise' }),
       ],
+      // LEGACY_SEED_DATA - remover apos migracao completa.
       inspecoes: [
         {
           id: 'ins-1',

@@ -7,25 +7,21 @@ import {
   ArrowRight, ShieldCheck, Activity
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { 
-  calcularPrioridade, 
-  calcularPrazo, 
-  calcularMultaEstimada, 
-  calcularChanceIncidente, 
-  calcularImpactoOperacional, 
-  calcularNivelConformidade,
-  formatCurrency,
-  RiskInstance,
-  applyManualRules
-} from '@/lib/risk-calculations';
 import { getTodosChecklistsAtivos } from '@/lib/normativeChecklists';
-import { AutomationEngine } from '@/lib/engines';
+import { inspectionInputService } from '@/src/services/inspectionInputService';
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+}
 
 export default function ExecutionView({ inspectionId, onClose }: { inspectionId: string, onClose: () => void }) {
   const store = useAppStore();
   const inspection = store.inspecoes?.find(i => i.id === inspectionId);
-  const addRisco = store.addRisco;
-  const addAcao = store.addAcao;
+  const inspectionRuntime = useMemo(() => inspection || ({ id: inspectionId } as any), [inspection, inspectionId]);
   const updateInspecao = store.updateInspecao;
 
   // Initialize questions if empty
@@ -53,7 +49,6 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
      return [];
   });
   const [initialItems, setInitialItems] = useState<string>(JSON.stringify(items));
-  const [filter, setFilter] = useState('Todas as perguntas');
   const [confirmExitOpen, setConfirmExitOpen] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -71,47 +66,65 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
     }
   }, [inspection, updateInspecao]);
 
-  const risks = useMemo(() => {
+  const legacyRiskPreview = useMemo(() => {
     return items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').map((nc: any) => {
-      const isCritica = nc.riskMap === 'Crítica';
-      const isAlta = nc.riskMap === 'Alta';
-      const activity = inspection?.tipoInspecao || inspection?.checklist || 'Trabalho em altura';
+      const severity = nc.riskMap || 'Média';
+      const priority = severity === 'Crítica' ? 'Crítica' : severity === 'Alta' ? 'Alta' : severity === 'Média' ? 'Média' : 'Baixa';
       const nr = nc.nr || 'NR-35';
-      
-      const payload: Partial<RiskInstance> = {
-        atividade: activity,
-        nr: nr,
-        severidade: nc.riskMap || 'Média',
-        respostaOrigem: nc.status,
-        hasEpiEpc: true,
-      };
-
-      const calibrated = applyManualRules(payload);
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + (severity === 'Crítica' ? 1 : severity === 'Alta' ? 3 : severity === 'Média' ? 7 : 15));
       
       return {
         ...nc,
         nrRef: nr,
-        severidade: nc.riskMap,
-        prioridade: calibrated.prioridade,
-        prazo: calibrated.prazo,
-        multa: formatCurrency(calibrated.multaEstimada || 0),
-        chance: calibrated.chanceIncidente,
-        impactoScore: isCritica ? -15 : isAlta ? -10 : -5,
+        severidade: severity,
+        prioridade: priority,
+        prazo: dueDate.toISOString().split('T')[0],
+        multa: formatCurrency(Number(nc.multaEstimada || 0)),
+        chance: severity === 'Crítica' ? 85 : severity === 'Alta' ? 65 : severity === 'Média' ? 40 : 20,
+        impactoScore: severity === 'Crítica' ? -15 : severity === 'Alta' ? -10 : -5,
         acaoSugerida: getAcaoSugerida(nc.text),
-        alerta: isCritica ? 'Alerta Crítico: Risco de incidente grave detectado. Recomenda-se paralisação imediata para correção.' : null
+        alerta: severity === 'Crítica' ? 'Alerta Crítico: Risco de incidente grave detectado. Recomenda-se paralisação imediata para correção.' : null
       };
     });
-  }, [items, inspection?.tipoInspecao, inspection?.checklist]);
+  }, [items]);
 
-  const ncsDetectadasCount = items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').length;
-  const acoesGeradasCount = ncsDetectadasCount;
+  const legacyNcsDetectadasCount = items.filter((i: any) => i.status === 'Não' || i.status === 'Parcialmente').length;
+  const legacyAcoesGeradasCount = legacyNcsDetectadasCount;
+
+  const legacyProgresso = items.length > 0 ? items.filter(i => i.status !== 'Pendente').length / items.length : 0;
+  const legacyRespostasCertas = items.filter(i => i.status === 'Sim' || i.status === 'N/A').length;
+  const legacyItensRespondidos = items.filter(i => i.status !== 'Pendente').length;
+  const legacyConformidade = legacyItensRespondidos > 0 ? legacyRespostasCertas / legacyItensRespondidos : 0;
+
+  const triagePreparation = useMemo(
+    () => inspectionInputService.prepareLegacyForTriage({ inspection: inspectionRuntime, items }),
+    [inspectionRuntime, items]
+  );
+
+  const risks = useMemo(() => {
+    if (!triagePreparation.success) return legacyRiskPreview;
+    return triagePreparation.data.summary.riskPreviews.map((preview) => ({
+      ...preview,
+      multa: formatCurrency(preview.multa),
+    }));
+  }, [legacyRiskPreview, triagePreparation]);
+
+  const ncsDetectadasCount = triagePreparation.success
+    ? triagePreparation.data.summary.criticalAnswersCount
+    : legacyNcsDetectadasCount;
+  const acoesGeradasCount = triagePreparation.success
+    ? triagePreparation.data.summary.suggestedInputsCount
+    : legacyAcoesGeradasCount;
+  const progresso = triagePreparation.success ? triagePreparation.data.summary.progress : legacyProgresso;
+  const itensRespondidos = triagePreparation.success
+    ? triagePreparation.data.summary.answeredItems
+    : legacyItensRespondidos;
+  const conformidade = triagePreparation.success
+    ? triagePreparation.data.summary.conformity
+    : legacyConformidade;
 
   if (!inspection) return null;
-
-  const progresso = items.length > 0 ? items.filter(i => i.status !== 'Pendente').length / items.length : 0;
-  const respostasCertas = items.filter(i => i.status === 'Sim' || i.status === 'N/A').length;
-  const itensRespondidos = items.filter(i => i.status !== 'Pendente').length;
-  const conformidade = itensRespondidos > 0 ? respostasCertas / itensRespondidos : 0;
   
   const handleAnswer = (index: number, answer: string) => {
     const newItems = [...items];
@@ -129,26 +142,20 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
 
   const handleSalvar = () => {
     setIsSaving(true);
+    const prepared = inspectionInputService.prepareLegacyForTriage({ inspection, items });
     updateInspecao(inspection.id, { 
       items,
       status: 'Em andamento',
-      situacao: 'Em andamento'
+      situacao: 'Em andamento',
+      ...prepared.data.inspectionPatch
     });
-    
-    // Process automation flow
-    AutomationEngine.processInspection(inspection.id);
 
     setInitialItems(JSON.stringify(items));
-    setSaveMessage("Respostas salvas. O motor de riscos processou as não conformidades.");
+    setSaveMessage("Respostas salvas. A inspeção foi preparada para Triagem.");
     setTimeout(() => {
       setSaveMessage(null);
       setIsSaving(false);
     }, 3000);
-  };
-
-  const syncRisks = (currentItems: any[]) => {
-    // Legacy syncRisks is now handled by AutomationEngine.processInspection
-    AutomationEngine.processInspection(inspection.id);
   };
 
   const handleConfirmarConclusao = () => {
@@ -156,16 +163,15 @@ export default function ExecutionView({ inspectionId, onClose }: { inspectionId:
   };
 
   const executeConcluir = () => {
+    const prepared = inspectionInputService.prepareLegacyForTriage({ inspection, items });
     updateInspecao(inspection.id, { 
       items, 
       status: 'Concluída', 
       situacao: 'Concluída',
       dataConclusao: new Date().toISOString(),
-      finalizadaEm: new Date().toISOString()
+      finalizadaEm: new Date().toISOString(),
+      ...prepared.data.inspectionPatch
     });
-    
-    // Standardize automation at the end
-    AutomationEngine.processInspection(inspection.id);
 
     onClose();
   };
@@ -687,15 +693,4 @@ function getAcaoSugerida(text: string) {
   if (t.includes('ferramentas')) return 'Implementar o uso de alças de segurança (leashes) em todas as ferramentas manuais e equipamentos portáteis.';
   if (t.includes('climáticas')) return 'Suspender trabalhos em altura em caso de ventos fortes, chuvas ou descargas elétricas conforme análise de risco local.';
   return 'Realizar correção imediata do desvio identificado e registrar evidência fotográfica da conformidade restabelecida.';
-}
-
-function getAcaoTitulo(text: string) {
-  const t = text.toLowerCase();
-  if (t.includes('linha de vida')) return 'Regularizar linha de vida';
-  if (t.includes('epi')) return 'Regularizar EPI obrigatório';
-  if (t.includes('bloqueio elétrico') || t.includes('bloqueio eletrico')) return 'Regularizar bloqueio e etiquetagem';
-  if (t.includes('espaço confinado') || t.includes('espaco confinado')) return 'Regularizar procedimento de entrada em espaço confinado';
-  if (t.includes('máquina') || t.includes('maquina') || t.includes('proteção') || t.includes('protecao')) return 'Regularizar proteção de máquina/equipamento';
-  if (t.includes('químico') || t.includes('quimico')) return 'Regularizar controle de produto químico';
-  return 'Tratar não conformidade identificada na inspeção';
 }

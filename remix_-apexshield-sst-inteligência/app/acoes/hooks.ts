@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useAppStore } from '@/lib/store';
-import { normalizeActionDraft, validateActionCompletion, validateActionDraft } from '@/lib/action-rules';
-import { ActionItem, AcaoStatus, AcaoPrioridade, ActionFollowUp } from './types';
+import { normalizeActionDraft, validateActionDraft } from '@/lib/action-rules';
+import { ActionItem, ActionFollowUp } from './types';
 import { useMemo, useCallback, useState } from 'react';
+import { actionWorkflowService } from '@/src/services/actionWorkflowService';
 
 export function useAcoes() {
   const storeAcoes = useAppStore(state => state.acoes);
@@ -12,202 +13,21 @@ export function useAcoes() {
   const activePackageNames = useMemo(() => rulePackages.filter(p => p.isActive).map(p => p.name), [rulePackages]);
   const addAcao = useAppStore(state => state.addAcao);
   const updateAcao = useAppStore(state => state.updateAcao);
-  const addLog = useAppStore(state => state.addLog);
 
   const allAcoes: ActionItem[] = useMemo(() => {
-    return (storeAcoes || []).filter(a => {
-      if (!a) return false;
-      const textFields = [a.title, a.titulo, a.description, a.descricao, a.category].filter(Boolean).join(' ').toLowerCase();
-      if (textFields.includes('dasda') || textFields.includes('dasd') || textFields.includes('teste')) return false;
-      if (!a.title && !a.titulo && !a.description && !a.descricao && !a.category) return false;
-      return true;
-    }).map((a: any) => {
-      // Logic to parse status
-      let baseStatus: AcaoStatus = 'Pendente';
-      const rawStatus = typeof a.status === 'string' ? a.status.toLowerCase() : '';
-      
-      if (rawStatus === 'concluÃ­da' || rawStatus === 'concluÃ­do' || rawStatus === 'fechada') {
-        baseStatus = 'ConcluÃ­da';
-      } else if (rawStatus === 'cancelada') {
-        baseStatus = 'Cancelada';
-      } else if (rawStatus === 'em andamento' || a.progresso > 0) {
-        baseStatus = 'Em andamento';
-      }
-      
-      const prazoStr = a.prazo || a.due_date || a.deadlineTime;
-      // Calculate Vencida if pending/em andamento and deadline has passed
-      if ((baseStatus === 'Pendente' || baseStatus === 'Em andamento') && prazoStr) {
-        const prazoDate = new Date(prazoStr);
-        prazoDate.setHours(23, 59, 59, 999);
-        if (new Date() > prazoDate) {
-           baseStatus = 'Vencida';
-        }
-      }
-
-      // Logic to parse priority
-      let basePrioridade: AcaoPrioridade = 'MÃ©dia';
-      const pri = a.priority || a.prioridade;
-      const rawPri = typeof pri === 'string' ? pri.toLowerCase() : '';
-      if (rawPri.includes('crÃ­tic') || rawPri === 'p1') basePrioridade = 'CrÃ­tica';
-      else if (rawPri.includes('alta') || rawPri === 'p2') basePrioridade = 'Alta';
-      else if (rawPri.includes('mÃ©dia') || rawPri === 'p3') basePrioridade = 'MÃ©dia';
-      else if (rawPri.includes('baixa') || rawPri === 'p4') basePrioridade = 'Baixa';
-
-      // Find risk
-      const relatedRisk = storeRiscos.find(r => r.id === (a.risk_id || a.riscoId || a.item_origem_id));
-      const pacote = a.pacote || relatedRisk?.pacote || relatedRisk?.package || 'Base SST';
-
-      const normalized = normalizeActionDraft({
-        id: a.id,
-        titulo: a.title || a.titulo || '',
-        descricao: a.description || a.descricao || '',
-        prioridade: basePrioridade,
-        status: baseStatus,
-        setor: a.category || a.setor || a.sector_id || '',
-        responsavel: a.responsavel || a.responsible?.name || '',
-        prazo: (typeof a.prazo === 'string' ? a.prazo : null) || (typeof a.due_date === 'string' ? a.due_date : null) || (typeof a.deadlineTime === 'string' ? a.deadlineTime : null) || '',
-        progresso: a.progresso || 0,
-        origem: a.origem || a.originText || (a.item_origem_tipo === 'inspecao' ? 'InspeÃ§Ã£o' : a.item_origem_tipo === 'risco' ? 'Risco' : 'Manual'),
-        riscoId: a.riscoId || a.risk_id || (a.item_origem_tipo === 'risco' ? a.item_origem_id : undefined),
-        riscoVinculado: a.riscoVinculado || relatedRisk?.titulo || relatedRisk?.title || '',
-        inspecaoId: a.inspecaoId || (a.item_origem_tipo === 'inspecao' ? a.item_origem_id : undefined),
-        checklistId: a.checklistId || '',
-        perguntaOrigem: a.perguntaOrigem || '',
-        respostaOrigem: a.respostaOrigem || '',
-        nrRelacionada: a.nrRelacionada || a.nr || relatedRisk?.nr,
-        pacote,
-        multaEstimada: a.multaEstimada || 0,
-        chanceIncidente: a.chanceIncidente || 'Baixa',
-        criadoEm: a.criadoEm || a.createdAt || new Date().toISOString(),
-        atualizadoEm: a.atualizadoEm || new Date().toISOString(),
-        iniciadoEm: a.iniciadoEm || null,
-        concluidoEm: a.concluidoEm || null,
-        oQue: a.oQue,
-        porQue: a.porQue,
-        onde: a.onde,
-        quem: a.quem,
-        quando: a.quando,
-        como: a.como,
-        quantoCusta: a.quantoCusta ?? a.valorEstimado,
-        exigeEvidencia: a.exigeEvidencia,
-        evidencia: a.evidencia || [],
-        historico: a.historico || []
-      });
-
-      return normalized as ActionItem;
-    }).sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+    return actionWorkflowService.prepareActionsForView(storeAcoes as any[], storeRiscos as any[]) as ActionItem[];
   }, [storeAcoes, storeRiscos]);
 
   const [showInactive, setShowInactive] = useState(false);
 
   const acoes = useMemo(() => {
-    if (showInactive) return allAcoes;
-    return allAcoes.filter(a => {
-      const p = (a as any).pacote || 'Base SST';
-      return p === 'Base SST' || activePackageNames.includes(p);
-    });
+    return actionWorkflowService.filterVisibleActions(allAcoes as any[], activePackageNames, showInactive) as ActionItem[];
   }, [allAcoes, showInactive, activePackageNames]);
 
   const calcularFollowUp = useCallback((action: ActionItem) => {
-    if (action.status === 'ConcluÃ­da' || action.status === 'Cancelada') {
-      return {
-        ativo: false,
-        nivel: 'normal' as ActionFollowUp['nivel'],
-        proximoFollowUpEm: null,
-        mensagem: '',
-        precisaFollowUp: false,
-        precisaEscalonamento: false
-      };
-    }
-
-    let nivel: ActionFollowUp['nivel'] = 'normal';
-    let precisaFollowUp = false;
-    let precisaEscalonamento = false;
-    let mensagem = '';
-    let hasBloqueio = false;
-
-    // Check for comment blocks? Assuming no complex block mechanism, generic check:
-    if (action.comentarios?.some(c => c.toLowerCase().includes('bloquei') || c.toLowerCase().includes('impediment'))) {
-      hasBloqueio = true;
-      nivel = 'bloqueada';
-      precisaFollowUp = true;
-      mensagem = "Esta aÃ§Ã£o possui impedimento informado. Verifique o bloqueio e atualize o status.";
-    }
-
-    const agora = new Date();
-    const vencimentoStr = action.prazo ? new Date(action.prazo) : null;
-    if (vencimentoStr) {
-      vencimentoStr.setHours(23, 59, 59, 999);
-    }
-    
-    // Time without update
-    const ultimaAtualizacao = new Date(action.atualizadoEm || action.criadoEm);
-    const horasSemAtualizacao = (agora.getTime() - ultimaAtualizacao.getTime()) / (1000 * 60 * 60);
-
-    const isVencida = action.status === 'Vencida' || (vencimentoStr && agora > vencimentoStr);
-    const isVenceHoje = vencimentoStr && 
-      vencimentoStr.getDate() === agora.getDate() && 
-      vencimentoStr.getMonth() === agora.getMonth() && 
-      vencimentoStr.getFullYear() === agora.getFullYear();
-
-    if (isVencida) {
-      nivel = 'urgente';
-      precisaFollowUp = true;
-      mensagem = "Esta aÃ§Ã£o estÃ¡ vencida e precisa de prioridade imediata.";
-    } else if (isVenceHoje) {
-      nivel = 'atenÃ§Ã£o';
-      precisaFollowUp = true;
-      mensagem = "Esta aÃ§Ã£o vence hoje. Atualize o progresso ou conclua a execuÃ§Ã£o.";
-    }
-
-    // Rules by priority
-    let proximoFollowUpTemp = new Date(ultimaAtualizacao);
-    if (!precisaFollowUp && !hasBloqueio) {
-      if (action.prioridade === 'CrÃ­tica') {
-        proximoFollowUpTemp.setHours(proximoFollowUpTemp.getHours() + 4);
-        if (horasSemAtualizacao >= 8) precisaEscalonamento = true;
-        if (horasSemAtualizacao >= 4) {
-          precisaFollowUp = true;
-          mensagem = action.status === 'Pendente' ? 
-            "Esta aÃ§Ã£o crÃ­tica ainda nÃ£o foi iniciada. Inicie a execuÃ§Ã£o ou justifique o atraso." : 
-            "Esta aÃ§Ã£o estÃ¡ em andamento, mas nÃ£o recebeu atualizaÃ§Ã£o recente.";
-        }
-      } else if (action.prioridade === 'Alta') {
-        proximoFollowUpTemp.setHours(proximoFollowUpTemp.getHours() + 24);
-        if (horasSemAtualizacao >= 48) precisaEscalonamento = true;
-        if (horasSemAtualizacao >= 24) {
-          precisaFollowUp = true;
-          mensagem = "Esta aÃ§Ã£o estÃ¡ em andamento, mas nÃ£o recebeu atualizaÃ§Ã£o recente.";
-        }
-      } else if (action.prioridade === 'MÃ©dia') {
-        proximoFollowUpTemp.setDate(proximoFollowUpTemp.getDate() + 2);
-        if (horasSemAtualizacao >= 96) precisaEscalonamento = true;
-        if (horasSemAtualizacao >= 48) {
-          precisaFollowUp = true;
-          mensagem = "Esta aÃ§Ã£o estÃ¡ em andamento, mas nÃ£o recebeu atualizaÃ§Ã£o recente.";
-        }
-      } else {
-        proximoFollowUpTemp.setDate(proximoFollowUpTemp.getDate() + 7);
-        if (horasSemAtualizacao >= 168) precisaEscalonamento = true;
-        if (horasSemAtualizacao >= 168) {
-          precisaFollowUp = true;
-          mensagem = "Esta aÃ§Ã£o estÃ¡ em andamento, mas nÃ£o recebeu atualizaÃ§Ã£o recente.";
-        }
-      }
-    }
-
-    if (precisaEscalonamento) {
-      mensagem = "Esta aÃ§Ã£o foi escalonada automaticamente por atraso ou ausÃªncia de atualizaÃ§Ã£o.";
-      nivel = 'urgente';
-    }
-
-    return {
-      ativo: true,
-      nivel,
-      proximoFollowUpEm: proximoFollowUpTemp.toISOString(),
-      mensagem,
-      precisaFollowUp,
-      precisaEscalonamento
+    return actionWorkflowService.evaluateFollowUp(action) as ActionFollowUp & {
+      mensagem: string;
+      precisaEscalonamento: boolean;
     };
   }, []);
 
@@ -268,24 +88,13 @@ export function useAcoes() {
     if (modified.riscoId) {
        const riskId = modified.riscoId;
        const relatedActions = useAppStore.getState().acoes.filter(a => a.riscoId === riskId && a.id !== id).concat([modified as any]);
-       
-       const criticalActions = relatedActions.filter(a => ['CrÃ­tica', 'Alta'].includes(a.prioridade));
-       // If risk has critical actions, require ALL critical actions to be validated for the risk to consider mitigated
-       
-       const relevantActions = criticalActions.length > 0 ? criticalActions : relatedActions;
-       
-       if (relevantActions.length > 0) {
-          const allValidated = relevantActions.every(a => a.faseExecucao === 'Validada' || a.status === 'Cancelada');
-          const allCompleted = relevantActions.every(a => ['ConcluÃ­da', 'Cancelada'].includes(a.status));
-          
-          if (allValidated && allCompleted) {
-             useAppStore.getState().updateRisco(riskId, { status: 'Mitigado', atualizadoEm: dataHora, justificativa: 'Risco mitigado automaticamente pois todas as aÃ§Ãµes relevantes foram validadas.' });
-          } else if (modified.faseExecucao === 'Aguardando ValidaÃ§Ã£o' || modified.status === 'ConcluÃ­da') {
-             // Let's ensure it stays open/reviewing
-             useAppStore.getState().updateRisco(riskId, { status: 'Em anÃ¡lise', atualizadoEm: dataHora, justificativa: 'Aguardando validaÃ§Ã£o de aÃ§Ãµes pendentes.' });
-          } else {
-             useAppStore.getState().updateRisco(riskId, { status: 'Aberto', atualizadoEm: dataHora, justificativa: 'Risco reaberto ou em andamento.' });
-          }
+       if (relatedActions.length > 0) {
+          const riskUpdate = actionWorkflowService.deriveRiskStatusFromActions(relatedActions as any[]);
+          useAppStore.getState().updateRisco(riskId, {
+            status: riskUpdate.status,
+            atualizadoEm: dataHora,
+            justificativa: riskUpdate.justification,
+          });
        }
     }
   }, [acoes, updateAcao]);
@@ -318,7 +127,7 @@ export function useAcoes() {
       const existingStatus = acao.status;
       const vencimentoStr = acao.prazo ? new Date(acao.prazo) : null;
       if (vencimentoStr) vencimentoStr.setHours(23, 59, 59, 999);
-      const isNowVencida = vencimentoStr && new Date() > vencimentoStr && existingStatus !== 'Vencida' && existingStatus !== 'ConcluÃ­da' && existingStatus !== 'Cancelada';
+      const isNowVencida = vencimentoStr && new Date() > vencimentoStr && existingStatus !== 'Vencida' && existingStatus !== 'Concluída' && existingStatus !== 'Cancelada';
 
       if (isNowVencida) {
         updates.status = 'Vencida';
@@ -402,7 +211,7 @@ export function useAcoes() {
       atualizadoEm: new Date().toISOString(),
       historico: [{
         id: crypto.randomUUID(),
-        evento: 'AÃ§Ã£o criada',
+        evento: 'Ação criada',
         dataHora: new Date().toISOString(),
         usuario: 'Sistema'
       }]
@@ -411,59 +220,24 @@ export function useAcoes() {
   };
 
   const criarAcaoAutomatica = (origem: string, risco: any, inspecao: any, checklistResposta: any) => {
-    // Evitar duplicidade
-    const acaoExistente = acoes.find(a => 
-      a.riscoId === risco?.id && 
-      a.inspecaoId === inspecao?.id &&
-      a.perguntaOrigem === checklistResposta?.pergunta
-    );
+    const generated = actionWorkflowService.buildAutomaticActionDraft({
+      origem,
+      risco,
+      inspecao,
+      checklistResposta,
+      existingActions: acoes as any[],
+    });
 
-    if (acaoExistente) {
-      // Se necessÃ¡rio atualizar algo na existente, farÃ­amos aqui, mas o requisito diz para nÃ£o criar nova.
-      // updateActionStatus(acaoExistente.id, { ... }, 'AtualizaÃ§Ã£o automÃ¡tica');
-      return acaoExistente;
+    if (generated.duplicated) {
+      return generated.action;
     }
-
-    const gerarTituloAcao = (riscoNome: string) => {
-      const r = (riscoNome || '').toLowerCase();
-      if (r.includes('linha de vida')) return 'Regularizar linha de vida';
-      if (r.includes('epi')) return 'Regularizar EPI obrigatÃ³rio';
-      if (r.includes('bloqueio elÃ©trico') || r.includes('loto')) return 'Regularizar bloqueio e etiquetagem';
-      if (r.includes('espaÃ§o confinado')) return 'Regularizar procedimento de espaÃ§o confinado';
-      if (r.includes('mÃ¡quina') || r.includes('equipamento') || r.includes('proteÃ§Ã£o')) return 'Regularizar proteÃ§Ã£o de mÃ¡quina/equipamento';
-      if (r.includes('produto quÃ­mico')) return 'Regularizar controle de produto quÃ­mico';
-      if (r.includes('sinalizaÃ§Ã£o')) return 'Regularizar sinalizaÃ§Ã£o de seguranÃ§a';
-      return 'Tratar nÃ£o conformidade identificada';
-    };
-
-    const prioridade = risco?.prioridade || 'MÃ©dia';
-    
-    let prazo = risco?.prazo;
-    if (!prazo) {
-      const hoje = new Date();
-      if (prioridade === 'CrÃ­tica') hoje.setDate(hoje.getDate() + 1);
-      else if (prioridade === 'Alta') hoje.setDate(hoje.getDate() + 3);
-      else if (prioridade === 'MÃ©dia') hoje.setDate(hoje.getDate() + 7);
-      else hoje.setDate(hoje.getDate() + 15);
-      prazo = hoje.toISOString();
-    }
-
-    const responsavel = inspecao?.responsavel || risco?.responsavel || 'SST + Supervisor da Ã¡rea';
-    const setor = inspecao?.setor || risco?.setor || '';
-    const nrRelacionada = risco?.nr || risco?.nrRelacionada || '';
-
-    const descricao = `Esta aÃ§Ã£o foi criada automaticamente a partir de uma nÃ£o conformidade identificada na inspeÃ§Ã£o. Deve ser tratada para reduzir o risco vinculado e atualizar o status operacional.
-    Risco: ${risco?.titulo || risco?.nome || '-'}
-    NR: ${nrRelacionada}
-    Setor: ${setor}
-    Resposta da InspeÃ§Ã£o: ${checklistResposta?.texto ? checklistResposta.texto : (checklistResposta?.resposta || '-')}`;
 
     const dataHora = new Date().toISOString();
-    const idAcao = `AC-${crypto.randomUUID().split('-')[0].toUpperCase()}`;
-
-    const historicoEvent = {
+    const newAction = {
+      ...generated.action,
+      historico: [{
         id: crypto.randomUUID(),
-        actionId: idAcao,
+        actionId: generated.action.id,
         evento: 'CriaÃ§Ã£o automÃ¡tica',
         origem: 'AutomÃ¡tica',
         usuario: 'Sistema',
@@ -473,52 +247,14 @@ export function useAcoes() {
           { campo: 'Status', anterior: '-', novo: 'Pendente' },
           { campo: 'Origem', anterior: '-', novo: origem || 'AutomÃ¡tica' },
           { campo: 'Risco vinculado', anterior: '-', novo: risco?.titulo || risco?.nome || '-' },
-          { campo: 'ResponsÃ¡vel', anterior: '-', novo: responsavel },
-          { campo: 'Prazo', anterior: '-', novo: new Date(prazo).toLocaleDateString() }
+          { campo: 'ResponsÃ¡vel', anterior: '-', novo: generated.action.responsavel || '-' },
+          { campo: 'Prazo', anterior: '-', novo: new Date(generated.action.prazo).toLocaleDateString() }
         ],
-        justificativa: 'AÃ§Ã£o criada automaticamente a partir do risco gerado pela inspeÃ§Ã£o/checklist.',
-        hash: idAcao, // Simple mock for new creation
+        justificativa: 'Ação criada automaticamente a partir do risco gerado pela inspeção/checklist.',
+        hash: generated.action.id,
         versao: '1.0',
         integridade: 'Verificada'
-    };
-
-    const newAction = {
-      id: idAcao,
-      titulo: gerarTituloAcao(risco?.titulo || risco?.nome),
-      descricao,
-      oQue: gerarTituloAcao(risco?.titulo || risco?.nome),
-      porQue: (risco?.titulo || risco?.nome)
-        ? `Reduzir o risco identificado: ${risco?.titulo || risco?.nome}`
-        : 'Eliminar a nao conformidade identificada na inspecao.',
-      onde: setor,
-      quem: responsavel,
-      quando: typeof prazo === 'string' ? prazo : new Date(prazo).toISOString().split('T')[0],
-      como: checklistResposta?.acaoSugerida || risco?.acaoVinculada || 'Executar a correcao, testar o controle implantado e registrar a evidencia final.',
-      quantoCusta: risco?.multaEstimada || undefined,
-      prioridade,
-      status: 'Pendente',
-      setor,
-      responsavel,
-      prazo,
-      progresso: 0,
-      origem: origem || 'InspeÃ§Ã£o',
-      riscoId: risco?.id,
-      riscoVinculado: risco?.titulo || risco?.nome,
-      inspecaoId: inspecao?.id,
-      checklistId: checklistResposta?.checklistId,
-      perguntaOrigem: checklistResposta?.pergunta,
-      respostaOrigem: checklistResposta?.resposta || checklistResposta?.texto,
-      nrRelacionada,
-      multaEstimada: risco?.multaEstimada || 0,
-      chanceIncidente: risco?.chanceIncidente || 'MÃ©dia',
-      criadoEm: dataHora,
-      atualizadoEm: dataHora,
-      iniciadoEm: null,
-      concluidoEm: null,
-      canceladoEm: null,
-      exigeEvidencia: typeof prioridade === 'string' && prioridade.toLowerCase().includes('cr'),
-      evidencia: [],
-      historico: [historicoEvent]
+      }]
     };
 
     addAcao(newAction);
@@ -560,13 +296,17 @@ export function useAcoes() {
   const concluirAcao = (id: string, observacaoFinal?: string, validacaoPayload?: any, evidenciaPayloads?: any[]) => {
     const acaoObj = acoes.find(a => a.id === id);
     if (!acaoObj) return;
-    const completionErrors = validateActionCompletion(acaoObj, evidenciaPayloads || []);
-    if (completionErrors.length > 0) {
-      throw new Error(completionErrors[0]);
+    const validation = actionWorkflowService.validateTransition({
+      action: acaoObj,
+      targetStatus: 'Concluída',
+      evidencePayloads: evidenciaPayloads || [],
+    });
+    if (!validation.success) {
+      throw new Error(validation.errors[0]);
     }
 
     const updates: Partial<ActionItem> = {
-      status: 'ConcluÃ­da',
+      status: 'Concluída',
       faseExecucao: 'Validada',
       progresso: 100,
       concluidoEm: new Date().toISOString()
@@ -592,7 +332,7 @@ export function useAcoes() {
     }
 
     const justificativa = acaoObj.riscoId
-      ? 'AÃ§Ã£o concluÃ­da. Risco vinculado deve ser revisado para avaliaÃ§Ã£o de mitigaÃ§Ã£o.'
+      ? 'Ação concluída. Risco vinculado deve ser revisado para avaliação de mitigação.'
       : observacaoFinal;
 
     updateActionStatus(id, updates, 'ConclusÃ£o', justificativa);
@@ -601,13 +341,17 @@ export function useAcoes() {
   const enviarParaValidacao = (id: string, observacao?: string, evidenciaPayloads?: any[]) => {
     const acaoObj = acoes.find(a => a.id === id);
     if (!acaoObj) return;
-    const completionErrors = validateActionCompletion(acaoObj, evidenciaPayloads || []);
-    if (completionErrors.length > 0) {
-      throw new Error(completionErrors[0]);
+    const validation = actionWorkflowService.validateTransition({
+      action: acaoObj,
+      targetStatus: 'Aguardando Validação',
+      evidencePayloads: evidenciaPayloads || [],
+    });
+    if (!validation.success) {
+      throw new Error(validation.errors[0]);
     }
 
     const updates: Partial<ActionItem> = {
-      faseExecucao: 'Aguardando ValidaÃ§Ã£o',
+      faseExecucao: 'Aguardando Validação',
       progresso: 99,
     };
 
@@ -643,7 +387,7 @@ export function useAcoes() {
        comentarios: motivo
     };
 
-    updateActionStatus(id, updates, 'ValidaÃ§Ã£o rejeitada. Retornou para execuÃ§Ã£o.');
+    updateActionStatus(id, updates, 'Validação rejeitada. Retornou para execução.');
   };
 
   const reatribuirAcao = (id: string, novoResponsavel: string, justificativa: string) => {
@@ -668,6 +412,14 @@ export function useAcoes() {
   const reabrirAcao = (id: string, justificativa: string) => {
     const acaoObj = acoes.find(a => a.id === id);
     if (!acaoObj) return;
+    const validation = actionWorkflowService.validateTransition({
+      action: acaoObj,
+      targetStatus: 'Em andamento',
+      justification: justificativa,
+    });
+    if (!validation.success) {
+      throw new Error(validation.errors[0]);
+    }
 
     updateActionStatus(id, {
       status: 'Em andamento',
@@ -708,7 +460,7 @@ export function getEmAndamento(acoes: ActionItem[]) {
 
 export function getConcluidas(acoes: ActionItem[]) {
   if (!Array.isArray(acoes)) return [];
-  return acoes.filter(a => a.status === 'ConcluÃ­da' || a.status === 'Cancelada');
+  return acoes.filter(a => a.status === 'Concluída' || a.status === 'Cancelada');
 }
 
 
